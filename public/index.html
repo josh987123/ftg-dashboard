@@ -361,13 +361,16 @@
           </div>
 
           <div id="isMatrixControls" class="hidden">
-            <div id="isMatrixYearControls" class="hidden">
-              <label>Years:</label>
-              <input type="range" id="isMatrixYearStart" min="2015" max="2025" value="2020">
-              <span id="isMatrixYearStartLabel">2020</span>
-              <span>to</span>
-              <input type="range" id="isMatrixYearEnd" min="2015" max="2025" value="2025">
-              <span id="isMatrixYearEndLabel">2025</span>
+            <div id="isMatrixYearControls" class="range-wrapper hidden">
+              <label>Select Range:</label>
+              <div class="range-container">
+                <input type="range" id="isMatrixYearStart" min="2015" max="2025" value="2020" step="1">
+                <input type="range" id="isMatrixYearEnd" min="2015" max="2025" value="2025" step="1">
+              </div>
+              <div class="range-labels">
+                <span id="isMatrixYearStartLabel">2020</span>
+                <span id="isMatrixYearEndLabel">2025</span>
+              </div>
             </div>
 
             <label class="is-checkbox-label">
@@ -442,6 +445,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=31"></script>
+  <script src="dashboard.js?v=32"></script>
 </body>
 </html>
