@@ -1523,15 +1523,27 @@ function initIncomeStatementControls() {
 function updateMatrixControlsVisibility() {
   const viewMode = document.getElementById("isViewMode").value;
   const periodType = document.getElementById("isPeriodType").value;
+  const periodTypeSelect = document.getElementById("isPeriodType");
   const yearControls = document.getElementById("isMatrixYearControls");
   const singleControls = document.getElementById("isSingleControls");
   const matrixControls = document.getElementById("isMatrixControls");
   const periodSelectLabel = document.getElementById("isPeriodSelectLabel");
   const periodSelect = document.getElementById("isPeriodSelect");
   
+  const ytdOption = periodTypeSelect.querySelector('option[value="ytd"]');
+  const ttmOption = periodTypeSelect.querySelector('option[value="ttm"]');
+  
   if (viewMode === "matrix") {
     singleControls.classList.add("hidden");
     matrixControls.classList.remove("hidden");
+    
+    if (ytdOption) ytdOption.disabled = true;
+    if (ttmOption) ttmOption.disabled = true;
+    
+    if (periodType === "ytd" || periodType === "ttm") {
+      periodTypeSelect.value = "month";
+      populatePeriodOptions();
+    }
     
     if (periodType === "year") {
       yearControls.classList.remove("hidden");
@@ -1541,13 +1553,31 @@ function updateMatrixControlsVisibility() {
       yearControls.classList.add("hidden");
       periodSelect.classList.remove("hidden");
       if (periodSelectLabel) periodSelectLabel.classList.remove("hidden");
+      
+      if (periodType === "quarter" || periodType === "month") {
+        populateMatrixYearOptions();
+      }
     }
   } else {
     singleControls.classList.remove("hidden");
     matrixControls.classList.add("hidden");
     periodSelect.classList.remove("hidden");
     if (periodSelectLabel) periodSelectLabel.classList.remove("hidden");
+    
+    if (ytdOption) ytdOption.disabled = false;
+    if (ttmOption) ttmOption.disabled = false;
   }
+}
+
+function populateMatrixYearOptions() {
+  const periodSelect = document.getElementById("isPeriodSelect");
+  const months = getAvailableMonths();
+  const years = new Set();
+  months.forEach(m => years.add(m.split("-")[0]));
+  
+  periodSelect.innerHTML = Array.from(years).sort().reverse().map(y => 
+    `<option value="${y}">${y}</option>`
+  ).join("");
 }
 
 function setupMatrixYearSliders() {
@@ -1964,12 +1994,7 @@ function renderIncomeStatement() {
     const yearStart = document.getElementById("isMatrixYearStart").value;
     const yearEnd = document.getElementById("isMatrixYearEnd").value;
     
-    let selectedYear = "";
-    if (periodType === "month" && periodValue) {
-      selectedYear = periodValue.split("-")[0];
-    } else if (periodType === "quarter" && periodValue) {
-      selectedYear = periodValue.split("-")[0];
-    }
+    let selectedYear = periodValue;
     
     renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, showSubtotal, thead, tbody);
   } else {
