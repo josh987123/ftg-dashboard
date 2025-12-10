@@ -893,18 +893,26 @@ function setupAccountUI(data) {
   document.getElementById("acctTrendline").onchange = () => updateAccountView(data);
 }
 
+function isIncomeAccount(accountNum) {
+  const num = parseInt(accountNum) || 0;
+  return (num >= 4000 && num < 5000) || (num >= 8000 && num < 9000);
+}
+
 function getAccountMonthlyValues(accountNum, year, data) {
   if (!data.gl_history_all) return Array(12).fill(0);
   
   const row = data.gl_history_all.find(r => r.Account_Num === accountNum);
   if (!row) return Array(12).fill(0);
   
+  const flipSign = isIncomeAccount(accountNum);
+  
   const months = [];
   for (let m = 1; m <= 12; m++) {
     const key = `${year}-${String(m).padStart(2, "0")}`;
     const rawVal = row[key];
-    const val = (rawVal === "" || rawVal === null || rawVal === undefined) ? 0 : parseFloat(rawVal);
-    months.push(isNaN(val) ? 0 : val);
+    let val = (rawVal === "" || rawVal === null || rawVal === undefined) ? 0 : parseFloat(rawVal);
+    if (isNaN(val)) val = 0;
+    months.push(flipSign ? Math.abs(val) : val);
   }
   return months;
 }
