@@ -7,37 +7,58 @@
 ------------------------------------------------------------ */
 const SITE_PASSWORD = "Ftgb2025$";
 
-(function checkAuth() {
+function initAuth() {
   const loginScreen = document.getElementById("loginScreen");
+  const loginBtn = document.getElementById("loginBtn");
+  const loginPassword = document.getElementById("loginPassword");
+  const loginError = document.getElementById("loginError");
+  const logoutBtn = document.getElementById("logoutBtn");
+  
+  if (!loginScreen || !loginBtn || !loginPassword) {
+    console.error("Login elements not found");
+    return;
+  }
+  
   const isAuthenticated = localStorage.getItem("ftg_authenticated");
   
   if (isAuthenticated === "true") {
     loginScreen.classList.add("hidden");
   }
   
-  document.getElementById("loginBtn").addEventListener("click", attemptLogin);
-  document.getElementById("loginPassword").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") attemptLogin();
-  });
-  
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    localStorage.removeItem("ftg_authenticated");
-    loginScreen.classList.remove("hidden");
-  });
-  
   function attemptLogin() {
-    const password = document.getElementById("loginPassword").value;
-    const errorEl = document.getElementById("loginError");
+    const password = loginPassword.value;
+    console.log("Login attempt with password length:", password.length);
     
     if (password === SITE_PASSWORD) {
       localStorage.setItem("ftg_authenticated", "true");
       loginScreen.classList.add("hidden");
-      errorEl.textContent = "";
+      if (loginError) loginError.textContent = "";
+      console.log("Login successful");
     } else {
-      errorEl.textContent = "Incorrect password. Please try again.";
+      if (loginError) loginError.textContent = "Incorrect password. Please try again.";
+      console.log("Login failed - password mismatch");
     }
   }
-})();
+  
+  loginBtn.onclick = attemptLogin;
+  
+  loginPassword.onkeypress = function(e) {
+    if (e.key === "Enter") attemptLogin();
+  };
+  
+  if (logoutBtn) {
+    logoutBtn.onclick = function() {
+      localStorage.removeItem("ftg_authenticated");
+      loginScreen.classList.remove("hidden");
+    };
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initAuth);
+} else {
+  initAuth();
+}
 
 /* ------------------------------------------------------------
    MOBILE SIDEBAR NAVIGATION
