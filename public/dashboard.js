@@ -20,6 +20,11 @@ const SITE_PASSWORD = "Ftgb2025$";
     if (e.key === "Enter") attemptLogin();
   });
   
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("ftg_authenticated");
+    loginScreen.classList.remove("hidden");
+  });
+  
   function attemptLogin() {
     const password = document.getElementById("loginPassword").value;
     const errorEl = document.getElementById("loginError");
