@@ -76,6 +76,32 @@
       <section id="revenue" class="dashboard-section">
         <h2>Revenue View</h2>
 
+        <!-- KPI Summary Cards -->
+        <div id="revKpiCards" class="rev-kpi-container">
+          <div class="rev-kpi-card">
+            <div class="rev-kpi-label">Total Revenue (YTD)</div>
+            <div class="rev-kpi-value" id="kpiTotalRevenue">--</div>
+          </div>
+          <div class="rev-kpi-card">
+            <div class="rev-kpi-label">YoY Growth</div>
+            <div class="rev-kpi-value" id="kpiYoyGrowth">--</div>
+          </div>
+          <div class="rev-kpi-card">
+            <div class="rev-kpi-label">Best Month</div>
+            <div class="rev-kpi-value" id="kpiBestMonth">--</div>
+          </div>
+          <div class="rev-kpi-card">
+            <div class="rev-kpi-label">Average Monthly</div>
+            <div class="rev-kpi-value" id="kpiAvgMonthly">--</div>
+          </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="export-bar">
+          <button id="exportCsvBtn" class="export-btn"><span class="export-icon">📄</span> Export CSV</button>
+          <button id="exportPdfBtn" class="export-btn"><span class="export-icon">📑</span> Export PDF</button>
+        </div>
+
         <div class="rev-controls">
 
           <!-- Mode -->
@@ -127,7 +153,11 @@
         </div>
 
         <!-- Revenue Chart -->
-        <div class="chart-box">
+        <div class="chart-box" id="revChartBox">
+          <div id="revLoadingSpinner" class="loading-spinner hidden">
+            <div class="spinner"></div>
+            <span>Loading data...</span>
+          </div>
           <div class="chart-title">
             <div id="revChartTitleLine1">FTG Builders Revenue</div>
             <div id="revChartTitleLine2">Monthly – 2025</div>

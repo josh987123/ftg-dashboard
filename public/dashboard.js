@@ -227,24 +227,167 @@ function renderFinancialBar(id, label, labels, values) {
 
 let revenueDataCache = null;
 let revChartInstance = null;
+let currentTableData = { labels: [], datasets: [] };
 
 /* ------------------------------------------------------------
    INIT MODULE
 ------------------------------------------------------------ */
 async function initRevenueModule() {
+  const spinner = document.getElementById("revLoadingSpinner");
+  const chart = document.getElementById("revChart");
+  
   try {
-    // Load JSON only once
+    spinner.classList.remove("hidden");
+    chart.style.display = "none";
+    
     if (!revenueDataCache) {
       const response = await fetch("./data/financials.json");
       revenueDataCache = await response.json();
     }
 
     setupRevenueUI(revenueDataCache);
+    setupExportButtons();
     updateRevenueView(revenueDataCache);
+    updateKpiCards(revenueDataCache);
 
   } catch (err) {
     console.error("Revenue module error:", err);
+  } finally {
+    spinner.classList.add("hidden");
+    chart.style.display = "block";
   }
+}
+
+/* ------------------------------------------------------------
+   KPI CARDS
+------------------------------------------------------------ */
+function formatCurrency(value) {
+  if (value >= 1000000) {
+    return "$" + (value / 1000000).toFixed(1) + "M";
+  } else if (value >= 1000) {
+    return "$" + (value / 1000).toFixed(0) + "K";
+  }
+  return "$" + value.toLocaleString();
+}
+
+function updateKpiCards(data) {
+  const year = parseInt(document.getElementById("revYear").value);
+  const currentData = data.revenue[year] || [];
+  const priorData = data.revenue[year - 1] || [];
+  
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  
+  if (currentData.length === 0) {
+    document.getElementById("kpiTotalRevenue").textContent = "--";
+    document.getElementById("kpiYoyGrowth").textContent = "--";
+    document.getElementById("kpiBestMonth").textContent = "--";
+    document.getElementById("kpiAvgMonthly").textContent = "--";
+    return;
+  }
+  
+  const totalCurrent = currentData.reduce((a, b) => a + b, 0);
+  const totalPrior = priorData.slice(0, currentData.length).reduce((a, b) => a + b, 0);
+  
+  const yoyGrowth = totalPrior > 0 ? ((totalCurrent - totalPrior) / totalPrior * 100) : 0;
+  
+  const bestMonthIdx = currentData.indexOf(Math.max(...currentData));
+  const bestMonth = months[bestMonthIdx] || "--";
+  const bestMonthValue = currentData[bestMonthIdx] || 0;
+  
+  const avgMonthly = currentData.length > 0 ? totalCurrent / currentData.length : 0;
+  
+  document.getElementById("kpiTotalRevenue").textContent = formatCurrency(totalCurrent);
+  
+  const yoyEl = document.getElementById("kpiYoyGrowth");
+  const yoySign = yoyGrowth >= 0 ? "+" : "";
+  yoyEl.textContent = yoySign + yoyGrowth.toFixed(1) + "%";
+  yoyEl.className = "rev-kpi-value " + (yoyGrowth >= 0 ? "positive" : "negative");
+  
+  document.getElementById("kpiBestMonth").textContent = bestMonth + " (" + formatCurrency(bestMonthValue) + ")";
+  document.getElementById("kpiAvgMonthly").textContent = formatCurrency(avgMonthly);
+}
+
+/* ------------------------------------------------------------
+   EXPORT FUNCTIONALITY
+------------------------------------------------------------ */
+function setupExportButtons() {
+  document.getElementById("exportCsvBtn").onclick = exportToCsv;
+  document.getElementById("exportPdfBtn").onclick = exportToPdf;
+}
+
+function exportToCsv() {
+  const { labels, datasets } = currentTableData;
+  if (!labels.length) return alert("No data to export");
+  
+  let csv = "Period," + datasets.map(ds => ds.label).join(",") + "\n";
+  
+  labels.forEach((lbl, i) => {
+    let row = lbl;
+    datasets.forEach(ds => {
+      row += "," + (ds.data[i] || 0);
+    });
+    csv += row + "\n";
+  });
+  
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "ftg_revenue_" + new Date().toISOString().split("T")[0] + ".csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportToPdf() {
+  const { labels, datasets } = currentTableData;
+  if (!labels.length) return alert("No data to export");
+  
+  const view = document.getElementById("revViewType").value;
+  const year = document.getElementById("revYear").value;
+  
+  let html = `
+    <html>
+    <head>
+      <title>FTG Revenue Report</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 40px; }
+        h1 { color: #1f2937; }
+        h2 { color: #6b7280; font-weight: normal; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #d1d5db; padding: 12px; text-align: left; }
+        th { background: #f3f4f6; }
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+        .footer { margin-top: 40px; color: #9ca3af; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <h1>FTG Builders Revenue Report</h1>
+      <h2>${view.charAt(0).toUpperCase() + view.slice(1)} View – ${year}</h2>
+      <table>
+        <tr><th>Period</th>${datasets.map(ds => `<th>${ds.label}</th>`).join("")}</tr>
+  `;
+  
+  labels.forEach((lbl, i) => {
+    html += `<tr><td>${lbl}</td>`;
+    datasets.forEach(ds => {
+      const v = ds.data[i] || 0;
+      html += `<td>$${v.toLocaleString()}</td>`;
+    });
+    html += "</tr>";
+  });
+  
+  html += `
+      </table>
+      <div class="footer">Generated on ${new Date().toLocaleDateString()}</div>
+    </body>
+    </html>
+  `;
+  
+  const printWindow = window.open("", "_blank");
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.print();
 }
 
 /* ------------------------------------------------------------
@@ -304,8 +447,10 @@ function setupRevenueUI(data) {
   };
 
   /* ------------------ UPDATE BUTTON ------------------ */
-  document.getElementById("revUpdateBtn").onclick = () =>
+  document.getElementById("revUpdateBtn").onclick = () => {
     updateRevenueView(data);
+    updateKpiCards(data);
+  };
 }
 
 /* ============================================================
@@ -445,8 +590,11 @@ function updateRevenueView(data) {
   /* ============================================================
      APPLY UPDATES
   ============================================================= */
+  const tableDatasets = datasets.filter(ds => ds.type !== "line");
+  currentTableData = { labels, datasets: tableDatasets };
+  
   renderRevenueChart(labels, datasets);
-  renderRevenueTable(labels, datasets.filter(ds => ds.type !== "line"));
+  renderRevenueTable(labels, tableDatasets);
   updateTimestamp();
 }
 
@@ -481,8 +629,24 @@ function renderRevenueChart(labels, datasets) {
     options: {
       responsive: true,
       aspectRatio: 2.0,
+      animation: {
+        duration: 600,
+        easing: "easeOutQuart"
+      },
       plugins: {
-        legend: { position: "bottom" }
+        legend: { position: "bottom" },
+        tooltip: {
+          backgroundColor: "rgba(31, 41, 55, 0.95)",
+          titleFont: { size: 14 },
+          bodyFont: { size: 13 },
+          padding: 12,
+          callbacks: {
+            label: function(context) {
+              const value = context.parsed.y;
+              return context.dataset.label + ": $" + value.toLocaleString();
+            }
+          }
+        }
       },
       scales: {
         x: {
@@ -505,7 +669,7 @@ function renderRevenueChart(labels, datasets) {
 }
 
 /* ------------------------------------------------------------
-   TABLE RENDERING
+   TABLE RENDERING WITH GROWTH INDICATORS
 ------------------------------------------------------------ */
 function renderRevenueTable(labels, datasets) {
   const head = document.getElementById("revTableHead");
@@ -514,21 +678,37 @@ function renderRevenueTable(labels, datasets) {
   head.innerHTML = "";
   body.innerHTML = "";
 
-  // header
+  const hasComparison = datasets.length > 1;
+
   let header = "<tr><th>Period</th>";
   datasets.forEach(ds => {
     header += `<th>${ds.label}</th>`;
   });
+  if (hasComparison) {
+    header += "<th>Change</th>";
+  }
   header += "</tr>";
   head.innerHTML = header;
 
-  // rows
   labels.forEach((lbl, i) => {
     let row = `<tr><td>${lbl}</td>`;
+    
+    const values = datasets.map(ds => ds.data[i] || 0);
+    
     datasets.forEach(ds => {
       const v = ds.data[i] || 0;
       row += `<td>$${v.toLocaleString()}</td>`;
     });
+    
+    if (hasComparison && values.length >= 2) {
+      const prior = values[0];
+      const current = values[1];
+      const change = prior > 0 ? ((current - prior) / prior * 100) : 0;
+      const sign = change >= 0 ? "+" : "";
+      const colorClass = change > 0 ? "growth-positive" : change < 0 ? "growth-negative" : "growth-neutral";
+      row += `<td class="${colorClass}">${sign}${change.toFixed(1)}%</td>`;
+    }
+    
     row += "</tr>";
     body.innerHTML += row;
   });
