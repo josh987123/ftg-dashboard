@@ -24,15 +24,22 @@ Preferred communication style: Simple, everyday language.
 - **Login flow**: Modal overlay blocks access until correct password is entered
 
 ### Data Management
-- **Static JSON files**: Financial data is stored in `/public/data/financials.json`
+- **Static JSON files**: Financial data is stored in `/public/data/financials.json` and account hierarchy in `/public/data/account_groups.json`
 - **Data structure**: Organized by metric type (revenue, accounts_receivable, accounts_payable) with yearly arrays containing monthly values
 - **GL History**: `gl_history_all` array contains individual GL account data with monthly columns in "YYYY-MM" format
 - **Accounts**: `accounts` array contains account metadata (account_no, description, debit_credit)
+- **Account Groups**: `income_statement.groups` array defines hierarchical P&L structure with accounts, accounts_range, formulas, levels, and row types (header, detail, subtotal, ratio)
 - **Historical range**: Covers 2015-2025 with monthly granularity
 
 ### Dashboard Views
-- **Revenue View**: Monthly/quarterly/annual revenue charts with year comparison, trendlines, and export options (Print/PDF/CSV)
-- **Account View**: GL account drilldown with dropdown selector, monthly/quarterly/annual views, trendlines, and data tables
+- **Revenue View**: Monthly/quarterly/annual revenue charts with year comparison, trendlines, summary KPI tiles (Average, Largest, Smallest, CAGR), and export options (Print/PDF/CSV). Partial periods shown in orange with "Exclude Current Period" option.
+- **Account View**: GL account drilldown with dropdown selector (accounts 4000+), monthly/quarterly/annual views, trendlines, and data tables. Income accounts (4000-4999, 8000-8999) display as positive values.
+- **Income Statement**: Full P&L statement with hierarchical account groups from account_groups.json:
+  - Period types: Month, Quarter, Year, YTD, TTM
+  - Comparison modes: None, Prior Period, Prior Year (with $ and % variance)
+  - View modes: Single Period or Matrix (3/6/9/12 months, 4 quarters, 5 years)
+  - Expand/collapse hierarchy with disclosure icons
+  - Accounting format: Whole dollars with parentheses for negatives, percentages for ratios
 - **Other sections**: Overview, Financials, Projects, Operations, Reports show "UNDER CONSTRUCTION" banners
 
 ### Responsive Design
