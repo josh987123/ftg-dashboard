@@ -26,7 +26,14 @@ Preferred communication style: Simple, everyday language.
 ### Data Management
 - **Static JSON files**: Financial data is stored in `/public/data/financials.json`
 - **Data structure**: Organized by metric type (revenue, accounts_receivable, accounts_payable) with yearly arrays containing monthly values
+- **GL History**: `gl_history_all` array contains individual GL account data with monthly columns in "YYYY-MM" format
+- **Accounts**: `accounts` array contains account metadata (account_no, description, debit_credit)
 - **Historical range**: Covers 2015-2025 with monthly granularity
+
+### Dashboard Views
+- **Revenue View**: Monthly/quarterly/annual revenue charts with year comparison, trendlines, and export options (Print/PDF/CSV)
+- **Account View**: GL account drilldown with dropdown selector, monthly/quarterly/annual views, trendlines, and data tables
+- **Other sections**: Overview, Financials, Projects, Operations, Reports show "UNDER CONSTRUCTION" banners
 
 ### Responsive Design
 - **Mobile-first approach**: Sidebar navigation with hamburger menu toggle for mobile devices
