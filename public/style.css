@@ -84,6 +84,11 @@ body {
   font-size: 12px;
 }
 
+/* Utility class for hiding elements */
+.hidden {
+  display: none !important;
+}
+
 /* LOGIN SCREEN */
 .login-screen {
   position: fixed;
