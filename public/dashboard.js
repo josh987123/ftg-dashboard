@@ -1424,8 +1424,6 @@ function initIncomeStatementControls() {
   const periodSelect = document.getElementById("isPeriodSelect");
   const compare = document.getElementById("isCompare");
   const viewMode = document.getElementById("isViewMode");
-  const matrixWrapper = document.getElementById("isMatrixWrapper");
-  const matrixCount = document.getElementById("isMatrixCount");
   const expandAll = document.getElementById("isExpandAll");
   const collapseAll = document.getElementById("isCollapseAll");
   
@@ -1441,16 +1439,12 @@ function initIncomeStatementControls() {
   
   viewMode.onchange = () => {
     if (viewMode.value === "matrix") {
-      matrixWrapper.classList.remove("hidden");
       compare.disabled = true;
     } else {
-      matrixWrapper.classList.add("hidden");
       compare.disabled = false;
     }
     renderIncomeStatement();
   };
-  
-  matrixCount.onchange = () => renderIncomeStatement();
   
   expandAll.onclick = () => {
     Object.keys(isRowStates).forEach(k => isRowStates[k] = true);
@@ -1673,7 +1667,8 @@ function buildIncomeStatementRows(periodMonths, groups, computedValues = {}) {
       level: group.level,
       type: group.type,
       value: value,
-      hasChildren: hasChildRows(groups, idx)
+      hasChildren: hasChildRows(groups, idx),
+      isIncome: group.isIncome || false
     });
   });
   
@@ -1778,19 +1773,42 @@ function formatPercent(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
 
-function formatVariance(current, prior) {
+function formatVariance(current, prior, isIncome) {
   const diff = current - prior;
   const pct = prior !== 0 ? ((current - prior) / Math.abs(prior)) * 100 : 0;
   
-  const diffFormatted = diff < 0 
-    ? `<span class="is-variance-negative">($${Math.abs(Math.round(diff)).toLocaleString()})</span>`
-    : `<span class="is-variance-positive">$${Math.round(diff).toLocaleString()}</span>`;
+  const isPositiveVariance = isIncome ? diff >= 0 : diff <= 0;
+  const colorClass = isPositiveVariance ? "is-variance-positive" : "is-variance-negative";
   
-  const pctFormatted = pct < 0
-    ? `<span class="is-variance-negative">${pct.toFixed(1)}%</span>`
-    : `<span class="is-variance-positive">${pct.toFixed(1)}%</span>`;
+  const diffFormatted = diff < 0 
+    ? `<span class="${colorClass}">($${Math.abs(Math.round(diff)).toLocaleString()})</span>`
+    : `<span class="${colorClass}">$${Math.round(diff).toLocaleString()}</span>`;
+  
+  const pctFormatted = `<span class="${colorClass}">${pct.toFixed(1)}%</span>`;
   
   return { diff: diffFormatted, pct: pctFormatted };
+}
+
+function formatPeriodLabel(periodValue, periodType) {
+  if (periodType === "month") {
+    const [y, mo] = periodValue.split("-");
+    const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
+    return `${monthName} ${y}`;
+  } else if (periodType === "quarter") {
+    return periodValue;
+  } else if (periodType === "year") {
+    return `FY ${periodValue}`;
+  } else if (periodType === "ytd") {
+    const parts = periodValue.split("-YTD-");
+    const monthName = new Date(parts[0], parseInt(parts[1]) - 1).toLocaleString("default", { month: "short" });
+    return `YTD ${monthName} ${parts[0]}`;
+  } else if (periodType === "ttm") {
+    const endMonth = periodValue.replace("TTM-", "");
+    const [y, mo] = endMonth.split("-");
+    const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
+    return `TTM ${monthName} ${y}`;
+  }
+  return periodValue;
 }
 
 function renderIncomeStatement() {
@@ -1798,14 +1816,13 @@ function renderIncomeStatement() {
   const periodValue = document.getElementById("isPeriodSelect").value;
   const compare = document.getElementById("isCompare").value;
   const viewMode = document.getElementById("isViewMode").value;
-  const matrixCount = document.getElementById("isMatrixCount").value;
   
   const groups = isAccountGroups.income_statement.groups;
   const thead = document.getElementById("isTableHead");
   const tbody = document.getElementById("isTableBody");
   
   if (viewMode === "matrix") {
-    renderMatrixView(groups, matrixCount, thead, tbody);
+    renderMatrixView(groups, "12m", thead, tbody);
   } else {
     renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody);
   }
@@ -1814,29 +1831,31 @@ function renderIncomeStatement() {
 function renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody) {
   const periodMonths = getPeriodMonths(periodValue, periodType);
   const rows = buildIncomeStatementRows(periodMonths, groups);
+  const currentLabel = formatPeriodLabel(periodValue, periodType);
   
   let comparisonRows = null;
   let compPeriodLabel = "";
+  let compPeriod = null;
   
   if (compare !== "none") {
-    let compPeriod;
     if (compare === "prior_period") {
       compPeriod = getPriorPeriod(periodValue, periodType);
-      compPeriodLabel = "Prior Period";
     } else {
       compPeriod = getPriorYearPeriod(periodValue, periodType);
-      compPeriodLabel = "Prior Year";
     }
     
     if (compPeriod) {
+      compPeriodLabel = formatPeriodLabel(compPeriod, periodType);
       const compMonths = getPeriodMonths(compPeriod, periodType);
       comparisonRows = buildIncomeStatementRows(compMonths, groups);
     }
   }
   
-  let headerHtml = "<tr><th>Account</th><th>Current</th>";
+  let headerHtml = "<tr><th>Account</th>";
   if (comparisonRows) {
-    headerHtml += `<th>${compPeriodLabel}</th><th>$ Var</th><th>% Var</th>`;
+    headerHtml += `<th>${compPeriodLabel}</th><th>${currentLabel}</th><th>$ Var</th><th>% Var</th>`;
+  } else {
+    headerHtml += `<th>${currentLabel}</th>`;
   }
   headerHtml += "</tr>";
   thead.innerHTML = headerHtml;
@@ -1847,6 +1866,7 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
     const hiddenClass = isVisible ? "" : "is-row-hidden";
     const typeClass = `is-row-${row.type}`;
     const indentClass = `is-indent-${row.level}`;
+    const isIncome = row.isIncome || false;
     
     let toggleHtml = "";
     if (row.level === 0 && row.hasChildren && row.type !== "ratio") {
@@ -1865,29 +1885,32 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
     
     bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
-    bodyHtml += `<td>${valueHtml}</td>`;
     
     if (comparisonRows) {
       const compRow = comparisonRows[i];
       let compValueHtml = "";
       
       if (row.type === "header") {
-        compValueHtml = "";
-        bodyHtml += `<td></td><td></td><td></td>`;
+        bodyHtml += `<td></td><td></td><td></td><td></td>`;
       } else if (row.type === "ratio") {
         compValueHtml = formatPercent(compRow.value);
         const diffPct = (row.value - compRow.value) * 100;
-        const pctClass = diffPct >= 0 ? "is-variance-positive" : "is-variance-negative";
+        const isPositiveVar = isIncome ? diffPct >= 0 : diffPct <= 0;
+        const pctClass = isPositiveVar ? "is-variance-positive" : "is-variance-negative";
         bodyHtml += `<td>${compValueHtml}</td>`;
+        bodyHtml += `<td>${valueHtml}</td>`;
         bodyHtml += `<td>-</td>`;
         bodyHtml += `<td class="${pctClass}">${diffPct.toFixed(1)}%</td>`;
       } else {
         compValueHtml = formatAccountingNumber(compRow.value);
-        const variance = formatVariance(row.value, compRow.value);
+        const variance = formatVariance(row.value, compRow.value, isIncome);
         bodyHtml += `<td>${compValueHtml}</td>`;
+        bodyHtml += `<td>${valueHtml}</td>`;
         bodyHtml += `<td>${variance.diff}</td>`;
         bodyHtml += `<td>${variance.pct}</td>`;
       }
+    } else {
+      bodyHtml += `<td>${valueHtml}</td>`;
     }
     
     bodyHtml += "</tr>";

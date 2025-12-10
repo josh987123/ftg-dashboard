@@ -2,18 +2,32 @@
   "income_statement": {
     "groups": [
       {
+        "label": "Contract Revenue",
+        "level": 1,
+        "type": "detail",
+        "accounts": [4000],
+        "isIncome": true
+      },
+      {
+        "label": "Other Revenue",
+        "level": 1,
+        "type": "detail",
+        "accounts": [4090],
+        "isIncome": true
+      },
+      {
         "label": "Revenue",
         "level": 0,
         "type": "subtotal",
-        "accounts": [4000, 4090]
+        "formula": "Contract Revenue + Other Revenue",
+        "isIncome": true
       },
 
       {
-        "label": "Cost of Sales",
+        "label": "Direct Expenses",
         "level": 0,
         "type": "header"
       },
-
       {
         "label": "Direct Labor",
         "level": 1,
@@ -39,19 +53,23 @@
         "accounts": [5410]
       },
       {
-        "label": "Other Direct Job Costs",
+        "label": "Other Direct Costs",
         "level": 1,
         "type": "detail",
         "accounts": [5500]
       },
-
       {
-        "label": "Direct Expenses",
+        "label": "Total Direct Expenses",
         "level": 0,
         "type": "subtotal",
-        "formula": "Direct Labor + Materials + Subcontracts + Rented Equipment + Other Direct Job Costs"
+        "formula": "Direct Labor + Materials + Subcontracts + Rented Equipment + Other Direct Costs"
       },
 
+      {
+        "label": "Indirect Expenses",
+        "level": 0,
+        "type": "header"
+      },
       {
         "label": "Indirect Labor",
         "level": 1,
@@ -71,44 +89,45 @@
         "accounts_range": [6070, 6097]
       },
       {
-        "label": "Supplies & Other Indirect (Detail)",
-        "level": 2,
-        "type": "detail",
-        "accounts_range": [6098, 6150]
-      },
-      {
-        "label": "Supplies & Other Indirect (Subtotal)",
+        "label": "Supplies",
         "level": 1,
-        "type": "subtotal",
-        "formula": "Supplies & Other Indirect (Detail)"
+        "type": "detail",
+        "accounts_range": [6098, 6120]
       },
-
       {
-        "label": "Indirect Expenses Total",
+        "label": "Other Indirect",
+        "level": 1,
+        "type": "detail",
+        "accounts_range": [6121, 6150]
+      },
+      {
+        "label": "Total Indirect Expenses",
         "level": 0,
         "type": "subtotal",
-        "formula": "Indirect Labor + Depreciation + Vehicle Expense + Supplies & Other Indirect (Subtotal)"
+        "formula": "Indirect Labor + Depreciation + Vehicle Expense + Supplies + Other Indirect"
       },
 
       {
         "label": "Total Cost of Sales",
         "level": 0,
         "type": "subtotal",
-        "formula": "Direct Expenses + Indirect Expenses Total"
+        "formula": "Total Direct Expenses + Total Indirect Expenses"
       },
 
       {
         "label": "Gross Profit",
         "level": 0,
         "type": "subtotal",
-        "formula": "Revenue - Total Cost of Sales"
+        "formula": "Revenue - Total Cost of Sales",
+        "isIncome": true
       },
 
       {
         "label": "Gross Margin %",
         "level": 0,
         "type": "ratio",
-        "formula": "Gross Profit / Revenue"
+        "formula": "Gross Profit / Revenue",
+        "isIncome": true
       }
     ]
   }
