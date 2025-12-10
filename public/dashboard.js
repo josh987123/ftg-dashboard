@@ -89,8 +89,7 @@ navItems.forEach(item => {
 /* ------------------------------------------------------------
    EXECUTIVE OVERVIEW (STATIC KPI CARDS)
 ------------------------------------------------------------ */
-document.getElementById("currentUser").innerText =
-  "Logged in as: FTG Internal Access";
+document.getElementById("currentUser").innerText = "";
 
 function loadOverviewKPIs() {
   const container = document.getElementById("overviewCards");
@@ -606,7 +605,7 @@ function renderRevenueChart(labels, datasets) {
     data: { labels, datasets },
     options: {
       responsive: true,
-      aspectRatio: 2.0,
+      aspectRatio: 1.5,
       animation: {
         duration: 600,
         easing: "easeOutQuart"
