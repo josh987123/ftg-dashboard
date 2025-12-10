@@ -248,7 +248,6 @@ async function initRevenueModule() {
     setupRevenueUI(revenueDataCache);
     setupExportButtons();
     updateRevenueView(revenueDataCache);
-    updateKpiCards(revenueDataCache);
 
   } catch (err) {
     console.error("Revenue module error:", err);
@@ -256,55 +255,6 @@ async function initRevenueModule() {
     spinner.classList.add("hidden");
     chart.style.display = "block";
   }
-}
-
-/* ------------------------------------------------------------
-   KPI CARDS
------------------------------------------------------------- */
-function formatCurrency(value) {
-  if (value >= 1000000) {
-    return "$" + (value / 1000000).toFixed(1) + "M";
-  } else if (value >= 1000) {
-    return "$" + (value / 1000).toFixed(0) + "K";
-  }
-  return "$" + value.toLocaleString();
-}
-
-function updateKpiCards(data) {
-  const year = parseInt(document.getElementById("revYear").value);
-  const currentData = data.revenue[year] || [];
-  const priorData = data.revenue[year - 1] || [];
-  
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  
-  if (currentData.length === 0) {
-    document.getElementById("kpiTotalRevenue").textContent = "--";
-    document.getElementById("kpiYoyGrowth").textContent = "--";
-    document.getElementById("kpiBestMonth").textContent = "--";
-    document.getElementById("kpiAvgMonthly").textContent = "--";
-    return;
-  }
-  
-  const totalCurrent = currentData.reduce((a, b) => a + b, 0);
-  const totalPrior = priorData.slice(0, currentData.length).reduce((a, b) => a + b, 0);
-  
-  const yoyGrowth = totalPrior > 0 ? ((totalCurrent - totalPrior) / totalPrior * 100) : 0;
-  
-  const bestMonthIdx = currentData.indexOf(Math.max(...currentData));
-  const bestMonth = months[bestMonthIdx] || "--";
-  const bestMonthValue = currentData[bestMonthIdx] || 0;
-  
-  const avgMonthly = currentData.length > 0 ? totalCurrent / currentData.length : 0;
-  
-  document.getElementById("kpiTotalRevenue").textContent = formatCurrency(totalCurrent);
-  
-  const yoyEl = document.getElementById("kpiYoyGrowth");
-  const yoySign = yoyGrowth >= 0 ? "+" : "";
-  yoyEl.textContent = yoySign + yoyGrowth.toFixed(1) + "%";
-  yoyEl.className = "rev-kpi-value " + (yoyGrowth >= 0 ? "positive" : "negative");
-  
-  document.getElementById("kpiBestMonth").textContent = bestMonth + " (" + formatCurrency(bestMonthValue) + ")";
-  document.getElementById("kpiAvgMonthly").textContent = formatCurrency(avgMonthly);
 }
 
 /* ------------------------------------------------------------
@@ -449,7 +399,6 @@ function setupRevenueUI(data) {
   /* ------------------ UPDATE BUTTON ------------------ */
   document.getElementById("revUpdateBtn").onclick = () => {
     updateRevenueView(data);
-    updateKpiCards(data);
   };
 }
 
