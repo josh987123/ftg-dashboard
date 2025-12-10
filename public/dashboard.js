@@ -1507,6 +1507,9 @@ function initIncomeStatementControls() {
   compare.onchange = () => renderIncomeStatement();
   showSubtotal.onchange = () => renderIncomeStatement();
   
+  const showThousands = document.getElementById("isShowThousands");
+  showThousands.onchange = () => renderIncomeStatement();
+  
   matrixYearStart.oninput = () => {
     document.getElementById("isMatrixYearStartLabel").textContent = matrixYearStart.value;
     if (parseInt(matrixYearStart.value) > parseInt(matrixYearEnd.value)) {
@@ -1892,11 +1895,21 @@ function getPriorYearPeriod(periodValue, periodType) {
 
 function formatAccountingNumber(value) {
   if (value === null || value === undefined) return "";
+  const showThousands = document.getElementById("isShowThousands")?.checked;
   const rounded = Math.round(value);
-  if (rounded < 0) {
-    return `<span class="is-negative">($${Math.abs(rounded).toLocaleString()})</span>`;
+  
+  if (showThousands) {
+    const inK = rounded / 1000;
+    if (rounded < 0) {
+      return `<span class="is-negative">($${Math.abs(inK).toFixed(1)}K)</span>`;
+    }
+    return `$${inK.toFixed(1)}K`;
+  } else {
+    if (rounded < 0) {
+      return `<span class="is-negative">($${Math.abs(rounded).toLocaleString()})</span>`;
+    }
+    return `$${rounded.toLocaleString()}`;
   }
-  return `$${rounded.toLocaleString()}`;
 }
 
 function formatPercent(value) {
@@ -1905,15 +1918,24 @@ function formatPercent(value) {
 }
 
 function formatVariance(current, prior, isIncome) {
+  const showThousands = document.getElementById("isShowThousands")?.checked;
   const diff = current - prior;
   const pct = prior !== 0 ? ((current - prior) / Math.abs(prior)) * 100 : 0;
   
   const isPositiveVariance = isIncome ? diff >= 0 : diff <= 0;
   const colorClass = isPositiveVariance ? "is-variance-positive" : "is-variance-negative";
   
-  const diffFormatted = diff < 0 
-    ? `<span class="${colorClass}">($${Math.abs(Math.round(diff)).toLocaleString()})</span>`
-    : `<span class="${colorClass}">$${Math.round(diff).toLocaleString()}</span>`;
+  let diffFormatted;
+  if (showThousands) {
+    const diffK = Math.abs(Math.round(diff)) / 1000;
+    diffFormatted = diff < 0 
+      ? `<span class="${colorClass}">($${diffK.toFixed(1)}K)</span>`
+      : `<span class="${colorClass}">$${diffK.toFixed(1)}K</span>`;
+  } else {
+    diffFormatted = diff < 0 
+      ? `<span class="${colorClass}">($${Math.abs(Math.round(diff)).toLocaleString()})</span>`
+      : `<span class="${colorClass}">$${Math.round(diff).toLocaleString()}</span>`;
+  }
   
   const pctFormatted = `<span class="${colorClass}">${pct.toFixed(1)}%</span>`;
   
