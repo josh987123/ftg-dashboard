@@ -58,7 +58,21 @@ document.addEventListener("DOMContentLoaded", function() {
   initAuth();
   initSidebar();
   initNavigation();
+  initConfigPanels();
 });
+
+function initConfigPanels() {
+  document.querySelectorAll(".config-header").forEach(header => {
+    header.addEventListener("click", () => {
+      const targetId = header.dataset.target;
+      const body = document.getElementById(targetId);
+      if (body) {
+        body.classList.toggle("collapsed");
+        header.classList.toggle("collapsed");
+      }
+    });
+  });
+}
 
 function initSidebar() {
   const sidebar = document.getElementById("sidebar");
@@ -488,9 +502,22 @@ function setupRevenueUI(data) {
   document.getElementById("revExcludeCurrent").onchange = () => {
     updateRevenueView(data);
   };
-
-  /* ------------------ UPDATE BUTTON ------------------ */
-  document.getElementById("revUpdateBtn").onclick = () => {
+  
+  document.getElementById("revRangeStart").oninput = () => {
+    const start = parseInt(document.getElementById("revRangeStart").value);
+    const end = parseInt(document.getElementById("revRangeEnd").value);
+    if (start > end) document.getElementById("revRangeEnd").value = start;
+    document.getElementById("revRangeStartLabel").textContent = start;
+    document.getElementById("revRangeEndLabel").textContent = document.getElementById("revRangeEnd").value;
+    updateRevenueView(data);
+  };
+  
+  document.getElementById("revRangeEnd").oninput = () => {
+    const start = parseInt(document.getElementById("revRangeStart").value);
+    const end = parseInt(document.getElementById("revRangeEnd").value);
+    if (end < start) document.getElementById("revRangeStart").value = end;
+    document.getElementById("revRangeStartLabel").textContent = document.getElementById("revRangeStart").value;
+    document.getElementById("revRangeEndLabel").textContent = end;
     updateRevenueView(data);
   };
 }

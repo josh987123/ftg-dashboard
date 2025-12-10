@@ -105,60 +105,58 @@
       <section id="revenue" class="dashboard-section">
         <h2>Revenue View</h2>
 
-        <div class="rev-controls">
-
-          <!-- Mode -->
-          <label>View:</label>
-          <select id="revViewType">
-            <option value="monthly">Monthly</option>
-            <option value="quarterly">Quarterly</option>
-            <option value="annual">Annual</option>
-          </select>
-
-          <!-- Year -->
-          <div id="revYearWrapper">
-            <label>Year:</label>
-            <select id="revYear"></select>
+        <div class="config-panel">
+          <div class="config-header" data-target="revConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
           </div>
+          <div class="config-body" id="revConfigBody">
+            <div class="rev-controls">
+              <label>View:</label>
+              <select id="revViewType">
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="annual">Annual</option>
+              </select>
 
-          <!-- Comparison -->
-          <div id="revCompareWrapper">
-            <label class="checkbox-label">
-              <input type="checkbox" id="revCompare">
-              Compare to Prior Year
-            </label>
-          </div>
+              <div id="revYearWrapper">
+                <label>Year:</label>
+                <select id="revYear"></select>
+              </div>
 
-          <!-- Trendline -->
-          <div id="revTrendWrapper">
-            <label class="checkbox-label">
-              <input type="checkbox" id="revTrendline">
-              Show Trendline
-            </label>
-          </div>
-          <div id="revExcludeWrapper">
-            <label class="checkbox-label">
-              <input type="checkbox" id="revExcludeCurrent">
-              <span id="revExcludeLabel">Exclude Current Month</span>
-            </label>
-          </div>
+              <div id="revCompareWrapper">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="revCompare">
+                  Compare to Prior Year
+                </label>
+              </div>
 
-          <!-- Annual Range Slider -->
-          <div id="revRangeWrapper" class="range-wrapper hidden">
-            <label>Select Range:</label>
+              <div id="revTrendWrapper">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="revTrendline">
+                  Show Trendline
+                </label>
+              </div>
+              <div id="revExcludeWrapper">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="revExcludeCurrent">
+                  <span id="revExcludeLabel">Exclude Current Month</span>
+                </label>
+              </div>
 
-            <div class="range-container">
-              <input type="range" id="revRangeStart" min="2015" max="2025" value="2018" step="1">
-              <input type="range" id="revRangeEnd" min="2015" max="2025" value="2025" step="1">
+              <div id="revRangeWrapper" class="range-wrapper hidden">
+                <label>Select Range:</label>
+                <div class="range-container">
+                  <input type="range" id="revRangeStart" min="2015" max="2025" value="2018" step="1">
+                  <input type="range" id="revRangeEnd" min="2015" max="2025" value="2025" step="1">
+                </div>
+                <div class="range-labels">
+                  <span id="revRangeStartLabel">2018</span>
+                  <span id="revRangeEndLabel">2025</span>
+                </div>
+              </div>
             </div>
-
-            <div class="range-labels">
-              <span id="revRangeStartLabel">2018</span>
-              <span id="revRangeEndLabel">2025</span>
-            </div>
           </div>
-
-          <button id="revUpdateBtn">Update</button>
         </div>
 
         <!-- Revenue Chart with Summary Tiles -->
@@ -218,61 +216,61 @@
       <section id="accounts" class="dashboard-section">
         <h2>Account View</h2>
 
-        <div class="rev-controls">
-
-          <!-- GL Account Selector -->
-          <label>Account:</label>
-          <select id="acctSelect"></select>
-
-          <!-- View Mode -->
-          <label>View:</label>
-          <select id="acctViewType">
-            <option value="monthly">Monthly</option>
-            <option value="quarterly">Quarterly</option>
-            <option value="annual">Annual</option>
-          </select>
-
-          <!-- Year -->
-          <div id="acctYearWrapper">
-            <label>Year:</label>
-            <select id="acctYear"></select>
+        <div class="config-panel">
+          <div class="config-header" data-target="acctConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
           </div>
+          <div class="config-body" id="acctConfigBody">
+            <div class="rev-controls">
+              <label>Account:</label>
+              <select id="acctSelect"></select>
 
-          <!-- Comparison -->
-          <div id="acctCompareWrapper">
-            <label class="checkbox-label">
-              <input type="checkbox" id="acctCompare">
-              Compare to Prior Year
-            </label>
-          </div>
+              <label>View:</label>
+              <select id="acctViewType">
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="annual">Annual</option>
+              </select>
 
-          <!-- Annual Range Slider -->
-          <div id="acctRangeWrapper" class="range-wrapper hidden">
-            <label>Select Range:</label>
-            <div class="range-container">
-              <input type="range" id="acctRangeStart" min="2015" max="2025" value="2015" step="1">
-              <input type="range" id="acctRangeEnd" min="2015" max="2025" value="2025" step="1">
+              <div id="acctYearWrapper">
+                <label>Year:</label>
+                <select id="acctYear"></select>
+              </div>
+
+              <div id="acctCompareWrapper">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="acctCompare">
+                  Compare to Prior Year
+                </label>
+              </div>
+
+              <div id="acctRangeWrapper" class="range-wrapper hidden">
+                <label>Select Range:</label>
+                <div class="range-container">
+                  <input type="range" id="acctRangeStart" min="2015" max="2025" value="2015" step="1">
+                  <input type="range" id="acctRangeEnd" min="2015" max="2025" value="2025" step="1">
+                </div>
+                <div class="range-labels">
+                  <span id="acctRangeStartLabel">2015</span>
+                  <span id="acctRangeEndLabel">2025</span>
+                </div>
+              </div>
+
+              <div id="acctTrendWrapper">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="acctTrendline">
+                  Show Trendline
+                </label>
+              </div>
+              <div id="acctExcludeWrapper">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="acctExcludeCurrent">
+                  <span id="acctExcludeLabel">Exclude Current Month</span>
+                </label>
+              </div>
             </div>
-            <div class="range-labels">
-              <span id="acctRangeStartLabel">2015</span>
-              <span id="acctRangeEndLabel">2025</span>
-            </div>
           </div>
-
-          <!-- Trendline -->
-          <div id="acctTrendWrapper">
-            <label class="checkbox-label">
-              <input type="checkbox" id="acctTrendline">
-              Show Trendline
-            </label>
-          </div>
-          <div id="acctExcludeWrapper">
-            <label class="checkbox-label">
-              <input type="checkbox" id="acctExcludeCurrent">
-              <span id="acctExcludeLabel">Exclude Current Month</span>
-            </label>
-          </div>
-
         </div>
 
         <!-- Account Chart with Summary Tiles -->
@@ -332,57 +330,65 @@
       <section id="incomeStatement" class="dashboard-section">
         <h2>Income Statement</h2>
 
-        <div class="is-controls">
-          <label>View:</label>
-          <select id="isViewMode">
-            <option value="single">Single Period</option>
-            <option value="matrix">Matrix</option>
-          </select>
-
-          <label>Period Type:</label>
-          <select id="isPeriodType">
-            <option value="month">Month</option>
-            <option value="quarter">Quarter</option>
-            <option value="year">Year</option>
-            <option value="ytd">YTD</option>
-            <option value="ttm">TTM</option>
-          </select>
-
-          <label id="isPeriodSelectLabel">Period:</label>
-          <select id="isPeriodSelect"></select>
-
-          <div id="isSingleControls">
-            <label>Compare:</label>
-            <select id="isCompare">
-              <option value="none">None</option>
-              <option value="prior_period">Prior Period</option>
-              <option value="prior_year">Prior Year</option>
-            </select>
+        <div class="config-panel">
+          <div class="config-header" data-target="isConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
           </div>
+          <div class="config-body" id="isConfigBody">
+            <div class="is-controls">
+              <label>View:</label>
+              <select id="isViewMode">
+                <option value="single">Single Period</option>
+                <option value="matrix">Matrix</option>
+              </select>
 
-          <div id="isMatrixControls" class="hidden">
-            <div id="isMatrixYearControls" class="range-wrapper hidden">
-              <label>Select Range:</label>
-              <div class="range-container">
-                <input type="range" id="isMatrixYearStart" min="2015" max="2025" value="2020" step="1">
-                <input type="range" id="isMatrixYearEnd" min="2015" max="2025" value="2025" step="1">
+              <label>Period Type:</label>
+              <select id="isPeriodType">
+                <option value="month">Month</option>
+                <option value="quarter">Quarter</option>
+                <option value="year">Year</option>
+                <option value="ytd">YTD</option>
+                <option value="ttm">TTM</option>
+              </select>
+
+              <label id="isPeriodSelectLabel">Period:</label>
+              <select id="isPeriodSelect"></select>
+
+              <div id="isSingleControls">
+                <label>Compare:</label>
+                <select id="isCompare">
+                  <option value="none">None</option>
+                  <option value="prior_period">Prior Period</option>
+                  <option value="prior_year">Prior Year</option>
+                </select>
               </div>
-              <div class="range-labels">
-                <span id="isMatrixYearStartLabel">2020</span>
-                <span id="isMatrixYearEndLabel">2025</span>
+
+              <div id="isMatrixControls" class="hidden">
+                <div id="isMatrixYearControls" class="range-wrapper hidden">
+                  <label>Select Range:</label>
+                  <div class="range-container">
+                    <input type="range" id="isMatrixYearStart" min="2015" max="2025" value="2020" step="1">
+                    <input type="range" id="isMatrixYearEnd" min="2015" max="2025" value="2025" step="1">
+                  </div>
+                  <div class="range-labels">
+                    <span id="isMatrixYearStartLabel">2020</span>
+                    <span id="isMatrixYearEndLabel">2025</span>
+                  </div>
+                </div>
+
+                <label class="is-checkbox-label">
+                  <input type="checkbox" id="isShowSubtotal">
+                  Show Subtotal
+                </label>
               </div>
+
+              <label class="is-checkbox-label">
+                <input type="checkbox" id="isShowThousands">
+                Show in Thousands
+              </label>
             </div>
-
-            <label class="is-checkbox-label">
-              <input type="checkbox" id="isShowSubtotal">
-              Show Subtotal
-            </label>
           </div>
-
-          <label class="is-checkbox-label">
-            <input type="checkbox" id="isShowThousands">
-            Show in Thousands
-          </label>
         </div>
 
         <div class="is-table-box">

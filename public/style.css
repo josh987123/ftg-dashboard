@@ -8,6 +8,82 @@ body {
   overflow-x:hidden;
 }
 
+/* CONFIG PANEL - Collapsible Configuration Options */
+.config-panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  user-select: none;
+}
+
+.config-header:hover {
+  background: #f3f4f6;
+}
+
+.config-toggle {
+  font-size: 10px;
+  color: #6b7280;
+  transition: transform 0.2s;
+}
+
+.config-header.collapsed .config-toggle {
+  transform: rotate(-90deg);
+}
+
+.config-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.config-body {
+  padding: 12px 14px;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  overflow: hidden;
+}
+
+.config-body.collapsed {
+  max-height: 0 !important;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top: none;
+}
+
+.config-panel .rev-controls,
+.config-panel .is-controls {
+  font-size: 13px;
+}
+
+.config-panel .rev-controls label,
+.config-panel .is-controls label {
+  font-size: 12px;
+}
+
+.config-panel .rev-controls select,
+.config-panel .is-controls select {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.config-panel .checkbox-label,
+.config-panel .is-checkbox-label {
+  font-size: 12px;
+}
+
 /* LOGIN SCREEN */
 .login-screen {
   position: fixed;
