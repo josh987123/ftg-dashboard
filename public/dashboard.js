@@ -1247,13 +1247,12 @@ function updateAccountView(data) {
     partialLegend.classList.add("hidden");
   }
   
-  const now = new Date();
-  const t = now.toLocaleDateString(undefined, {
+  const timestamp = now.toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric"
   });
-  document.getElementById("acctChartUpdated").innerText = `Updated: ${t}`;
+  document.getElementById("acctChartUpdated").innerText = `Updated: ${timestamp}`;
 }
 
 function renderAccountChart(labels, datasets) {
