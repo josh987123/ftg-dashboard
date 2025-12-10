@@ -810,12 +810,16 @@ function renderRevenueChart(labels, datasets) {
     revChartInstance = new Chart(ctx, {
       type: "bar",
       data: { labels, datasets },
+      plugins: [ChartDataLabels],
       options: {
         responsive: true,
         maintainAspectRatio: false,
         animation: {
           duration: 600,
           easing: "easeOutQuart"
+        },
+        layout: {
+          padding: { top: 30 }
         },
         plugins: {
           legend: { position: "bottom" },
@@ -829,6 +833,27 @@ function renderRevenueChart(labels, datasets) {
                 const value = context.parsed.y;
                 return context.dataset.label + ": $" + value.toLocaleString();
               }
+            }
+          },
+          datalabels: {
+            anchor: "end",
+            align: "top",
+            offset: 4,
+            font: {
+              size: 10,
+              weight: "600"
+            },
+            color: function(context) {
+              return context.dataset.borderColor || "#374151";
+            },
+            formatter: function(value) {
+              if (value === 0 || value === null) return "";
+              if (Math.abs(value) >= 1000000) {
+                return "$" + (value / 1000000).toFixed(1) + "M";
+              } else if (Math.abs(value) >= 1000) {
+                return "$" + (value / 1000).toFixed(0) + "K";
+              }
+              return "$" + value.toLocaleString();
             }
           }
         },
@@ -1287,12 +1312,16 @@ function renderAccountChart(labels, datasets) {
   acctChartInstance = new Chart(ctx, {
     type: "bar",
     data: { labels, datasets },
+    plugins: [ChartDataLabels],
     options: {
       responsive: true,
       maintainAspectRatio: false,
       animation: {
         duration: 600,
         easing: "easeOutQuart"
+      },
+      layout: {
+        padding: { top: 30 }
       },
       plugins: {
         legend: { position: "bottom" },
@@ -1303,6 +1332,27 @@ function renderAccountChart(labels, datasets) {
               const value = context.parsed.y;
               return context.dataset.label + ": $" + value.toLocaleString();
             }
+          }
+        },
+        datalabels: {
+          anchor: "end",
+          align: "top",
+          offset: 4,
+          font: {
+            size: 10,
+            weight: "600"
+          },
+          color: function(context) {
+            return context.dataset.borderColor || "#374151";
+          },
+          formatter: function(value) {
+            if (value === 0 || value === null) return "";
+            if (Math.abs(value) >= 1000000) {
+              return "$" + (value / 1000000).toFixed(1) + "M";
+            } else if (Math.abs(value) >= 1000) {
+              return "$" + (value / 1000).toFixed(0) + "K";
+            }
+            return "$" + value.toLocaleString();
           }
         }
       },
