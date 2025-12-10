@@ -1,0 +1,16 @@
+run = "python3 -m http.server 3000 --directory public"
+
+[env]
+PORT = "3000"
+
+[web]
+  assets = "public"
+  port = 3000
+  start = "python3 -m http.server 3000 --directory public"
+
+[agent]
+expertMode = true
+
+[[ports]]
+localPort = 3000
+externalPort = 80

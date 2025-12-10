@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FTG Dashboard</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <!-- HEADER -->
+  <header class="header">
+    <button id="mobileMenuButton" class="mobile-menu-btn">☰</button>
+
+    <div class="header-left">
+      <!-- YOUR LOGO HERE -->
+      <img src="logo.png" alt="FTG Logo" class="header-logo">
+      <h1 class="logo">FTG Dashboard</h1>
+    </div>
+
+    <div class="header-right">
+      <span id="currentUser" class="user-label"></span>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <nav>
+        <ul>
+          <li class="nav-item active" data-section="overview">Overview</li>
+          <li class="nav-item" data-section="revenue">Revenue View</li>
+          <li class="nav-item" data-section="financials">Financials</li>
+          <li class="nav-item" data-section="projects">Projects</li>
+          <li class="nav-item" data-section="operations">Operations</li>
+          <li class="nav-item" data-section="reports">Reports</li>
+        </ul>
+      </nav>
+    </aside>
+
+    <div id="overlay" class="overlay hidden"></div>
+
+    <!-- MAIN CONTENT -->
+    <main class="content">
+
+      <!-- OVERVIEW SECTION -->
+      <section id="overview" class="dashboard-section visible">
+        <h2>Executive Overview</h2>
+        <div id="overviewCards" class="card-container"></div>
+      </section>
+
+      <!-- ============================================================
+           REVENUE VIEW
+      ============================================================= -->
+      <section id="revenue" class="dashboard-section">
+        <h2>Revenue View</h2>
+
+        <div class="rev-controls">
+
+          <!-- Mode -->
+          <label>View:</label>
+          <select id="revViewType">
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="annual">Annual</option>
+          </select>
+
+          <!-- Year -->
+          <div id="revYearWrapper">
+            <label>Year:</label>
+            <select id="revYear"></select>
+          </div>
+
+          <!-- Comparison -->
+          <div id="revCompareWrapper">
+            <label class="checkbox-label">
+              <input type="checkbox" id="revCompare">
+              Compare to Prior Year
+            </label>
+          </div>
+
+          <!-- Annual Range Slider -->
+          <div id="revRangeWrapper" class="range-wrapper hidden">
+            <label>Select Range:</label>
+
+            <div class="range-container">
+              <input type="range" id="revRangeStart" min="2015" max="2025" value="2018" step="1">
+              <input type="range" id="revRangeEnd" min="2015" max="2025" value="2025" step="1">
+            </div>
+
+            <div class="range-labels">
+              <span id="revRangeStartLabel">2018</span>
+              <span id="revRangeEndLabel">2025</span>
+            </div>
+          </div>
+
+          <button id="revUpdateBtn">Update</button>
+        </div>
+
+        <!-- Revenue Chart -->
+        <div class="chart-box">
+          <div class="chart-title">
+            <div id="revChartTitleLine1">FTG Builders Revenue</div>
+            <div id="revChartTitleLine2">Monthly – 2025</div>
+            <div id="revChartUpdated" class="chart-updated">Updated:</div>
+          </div>
+          <canvas id="revChart"></canvas>
+        </div>
+
+        <div class="rev-table-box">
+          <h3>Revenue Breakdown</h3>
+          <div class="table-scroll">
+            <table id="revTable">
+              <thead id="revTableHead"></thead>
+              <tbody id="revTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================================
+           FINANCIALS
+      ============================================================= -->
+      <section id="financials" class="dashboard-section">
+        <h2>Financial Performance</h2>
+
+        <div class="chart-box">
+          <h3>Monthly Revenue</h3>
+          <canvas id="revenueChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Accounts Receivable</h3>
+          <canvas id="arChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Accounts Payable</h3>
+          <canvas id="apChart"></canvas>
+        </div>
+      </section>
+
+      <section id="projects" class="dashboard-section">
+        <h2>Project Metrics</h2>
+        <div id="projectsContent"></div>
+      </section>
+
+      <section id="operations" class="dashboard-section">
+        <h2>Operations Snapshot</h2>
+        <div id="operationsContent"></div>
+      </section>
+
+      <section id="reports" class="dashboard-section">
+        <h2>Reports & Downloads</h2>
+        <div id="reportsContent"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- JS LIBRARIES -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- MAIN SCRIPT -->
+  <script src="dashboard.js" defer></script>
+</body>
+</html>
