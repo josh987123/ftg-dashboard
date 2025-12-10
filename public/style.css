@@ -887,6 +887,10 @@ body {
   border-top: 1px solid #9ca3af;
 }
 
+.is-row-subtotal.is-no-bold td {
+  font-weight: 400;
+}
+
 .is-highlight-revenue td,
 .is-highlight-grossProfit td,
 .is-highlight-costOfSales td {

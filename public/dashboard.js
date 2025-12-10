@@ -2132,6 +2132,8 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
     const indentClass = `is-indent-${row.level}`;
     const highlightClass = row.highlight ? `is-highlight-${row.highlight}` : "";
     const isIncome = row.isIncome || false;
+    const noBoldLabels = ["Direct Labor", "Vehicle Expense", "Indirect Labor"];
+    const noBoldClass = noBoldLabels.includes(row.label) ? "is-no-bold" : "";
     
     let toggleHtml = "";
     if (row.expandable) {
@@ -2148,7 +2150,7 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
       valueHtml = formatAccountingNumber(row.value);
     }
     
-    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${highlightClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${highlightClass} ${noBoldClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
     
     if (comparisonRows) {
@@ -2230,6 +2232,8 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
     const typeClass = `is-row-${row.type}`;
     const indentClass = `is-indent-${row.level}`;
     const highlightClass = row.highlight ? `is-highlight-${row.highlight}` : "";
+    const noBoldLabels = ["Direct Labor", "Vehicle Expense", "Indirect Labor"];
+    const noBoldClass = noBoldLabels.includes(row.label) ? "is-no-bold" : "";
     
     let toggleHtml = "";
     if (row.expandable) {
@@ -2237,7 +2241,7 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
       toggleHtml = `<span class="is-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
     }
     
-    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${highlightClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${highlightClass} ${noBoldClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
     
     let rowSubtotal = 0;
