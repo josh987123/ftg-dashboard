@@ -618,30 +618,32 @@ function updateTimestamp() {
 }
 
 /* ------------------------------------------------------------
-   CHART RENDERING (GRADIENT BARS + RESPONSIVE)
+   CHART RENDERING (SOLID BARS + RESPONSIVE)
 ------------------------------------------------------------ */
 function renderRevenueChart(labels, datasets) {
   try {
-    const ctx = document.getElementById("revChart");
-    if (!ctx) {
+    const canvas = document.getElementById("revChart");
+    if (!canvas) {
       console.error("Chart canvas not found");
+      showChartError("Canvas element not found");
       return;
     }
     
-    if (revChartInstance) revChartInstance.destroy();
+    if (revChartInstance) {
+      revChartInstance.destroy();
+      revChartInstance = null;
+    }
 
-    // Use solid colors as fallback if gradient fails
-    const safeDatasets = datasets.map(ds => {
-      if (ds.backgroundColor && typeof ds.backgroundColor === 'object') {
-        // Gradient - keep it but provide fallback
-        return ds;
-      }
-      return ds;
-    });
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      console.error("Could not get 2D context");
+      showChartError("Could not initialize chart");
+      return;
+    }
 
     revChartInstance = new Chart(ctx, {
       type: "bar",
-      data: { labels, datasets: safeDatasets },
+      data: { labels, datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -683,9 +685,30 @@ function renderRevenueChart(labels, datasets) {
         }
       }
     });
+    
+    hideChartError();
   } catch (err) {
     console.error("Chart render error:", err);
+    showChartError("Error: " + err.message);
   }
+}
+
+function showChartError(msg) {
+  let errDiv = document.getElementById("chartErrorMsg");
+  if (!errDiv) {
+    errDiv = document.createElement("div");
+    errDiv.id = "chartErrorMsg";
+    errDiv.style.cssText = "padding:40px;text-align:center;color:#ef4444;font-weight:600;";
+    const container = document.querySelector(".chart-container");
+    if (container) container.appendChild(errDiv);
+  }
+  errDiv.textContent = msg;
+  errDiv.style.display = "block";
+}
+
+function hideChartError() {
+  const errDiv = document.getElementById("chartErrorMsg");
+  if (errDiv) errDiv.style.display = "none";
 }
 
 /* ------------------------------------------------------------
