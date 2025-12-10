@@ -922,6 +922,10 @@ body {
   margin-left: 4px;
 }
 
+.is-subtotal-col {
+  border-left: 1px solid #000 !important;
+}
+
 .is-row-ratio td {
   font-style: italic;
   color: #6b7280;

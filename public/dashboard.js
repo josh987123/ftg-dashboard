@@ -2208,7 +2208,7 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
     headerHtml += `<th>${p.label}${partialIndicator}</th>`;
   });
   if (showSubtotal) {
-    headerHtml += "<th>Subtotal</th>";
+    headerHtml += "<th class=\"is-subtotal-col\">Subtotal</th>";
   }
   headerHtml += "</tr>";
   thead.innerHTML = headerHtml;
@@ -2261,9 +2261,9 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
     
     if (showSubtotal) {
       if (row.type === "header" || row.type === "ratio") {
-        bodyHtml += "<td></td>";
+        bodyHtml += "<td class=\"is-subtotal-col\"></td>";
       } else {
-        bodyHtml += `<td><strong>${formatAccountingNumber(rowSubtotal)}</strong></td>`;
+        bodyHtml += `<td class="is-subtotal-col"><strong>${formatAccountingNumber(rowSubtotal)}</strong></td>`;
       }
     }
     
