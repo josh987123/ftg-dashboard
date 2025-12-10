@@ -250,11 +250,12 @@ body {
 }
 
 .chart-box canvas {
-  width: 80% !important;     /* fill 80% of container width */
-  height: auto !important;   /* allow Chart.js to control height */
-  max-height: 420px;         /* prevents overly tall charts */
+  width: 100% !important;
+  max-width: 900px;
+  height: auto !important;
+  max-height: 420px;
   display: block;
-  margin: 0 auto;            /* center horizontally */
+  margin: 0 auto;
 }
 
 .chart-title div {
@@ -271,6 +272,12 @@ body {
   flex-wrap:wrap;
   gap:18px;
   margin-bottom:20px;
+  align-items:center;
+}
+
+.rev-controls > label {
+  font-weight:500;
+  white-space:nowrap;
 }
 
 .rev-controls select,
@@ -286,6 +293,14 @@ body {
   color:#fff;
   font-weight:600;
   border:none;
+}
+
+#revYearWrapper,
+#revCompareWrapper,
+#revTrendWrapper {
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
 .checkbox-label { display:flex; align-items:center; gap:6px; }
@@ -346,14 +361,25 @@ body {
 }
 
 /* TABLE */
+.rev-table-box {
+  background:#fff;
+  padding:24px 30px;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+.rev-table-box h3 {
+  margin-bottom:16px;
+  font-size:18px;
+}
+
 .table-scroll{ overflow-x:auto; }
 
 #revTable{
   width:100%;
-  table-layout:fixed;
   border-collapse:separate;
   border-spacing:0;
-  min-width:450px;
+  min-width:400px;
 }
 
 #revTable th, #revTable td{
@@ -367,16 +393,36 @@ body {
   font-weight:700;
 }
 
+#revTable td {
+  border-bottom:1px solid #e5e7eb;
+}
+
 /* RESPONSIVE */
 @media (max-width:768px){
   .content{ padding:18px; }
-  .rev-controls{ flex-direction:column; width:100%; }
+  .rev-controls{ 
+    flex-direction:column; 
+    width:100%; 
+    align-items:stretch;
+    gap:14px;
+  }
+  .rev-controls > label { margin-bottom:-8px; }
   .rev-controls select, .rev-controls button{ width:100%; }
+  #revYearWrapper,
+  #revCompareWrapper,
+  #revTrendWrapper {
+    flex-direction:row;
+    justify-content:space-between;
+  }
+  #revYearWrapper select { flex:1; }
   .range-container{ width:100%; }
   .chart-title div{ font-size:17px; }
+  .chart-box { padding:20px; }
+  .rev-table-box { padding:16px; }
 }
 
 @media (max-width:500px){
   h2{ font-size:22px; }
   .chart-title div{ font-size:16px; }
+  .logout-btn { padding:5px 10px; font-size:12px; }
 }
