@@ -467,6 +467,49 @@ function toPositive(arr) {
   return (arr || []).map(v => Math.abs(v));
 }
 
+function formatTileValue(val) {
+  const absVal = Math.abs(val);
+  if (absVal >= 1000000) {
+    return "$" + (val / 1000000).toFixed(1) + "M";
+  } else if (absVal >= 1000) {
+    return "$" + (val / 1000).toFixed(0) + "K";
+  }
+  return "$" + val.toLocaleString();
+}
+
+function calculateCAGR(values) {
+  if (values.length < 2) return 0;
+  const first = values[0];
+  const last = values[values.length - 1];
+  if (first <= 0 || last <= 0) return 0;
+  const years = values.length - 1;
+  return (Math.pow(last / first, 1 / years) - 1) * 100;
+}
+
+function updateSummaryTiles(prefix, values, labels) {
+  const avg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+  
+  let maxVal = -Infinity, maxIdx = 0;
+  let minVal = Infinity, minIdx = 0;
+  
+  values.forEach((v, i) => {
+    if (v > maxVal) { maxVal = v; maxIdx = i; }
+    if (v < minVal) { minVal = v; minIdx = i; }
+  });
+  
+  if (!isFinite(maxVal)) maxVal = 0;
+  if (!isFinite(minVal)) minVal = 0;
+  
+  const cagr = calculateCAGR(values);
+  
+  document.getElementById(prefix + "AvgValue").innerText = formatTileValue(avg);
+  document.getElementById(prefix + "MaxValue").innerText = formatTileValue(maxVal);
+  document.getElementById(prefix + "MaxPeriod").innerText = labels[maxIdx] || "-";
+  document.getElementById(prefix + "MinValue").innerText = formatTileValue(minVal);
+  document.getElementById(prefix + "MinPeriod").innerText = labels[minIdx] || "-";
+  document.getElementById(prefix + "CagrValue").innerText = (cagr >= 0 ? "+" : "") + cagr.toFixed(1) + "%";
+}
+
 function updateRevenueView(data) {
   const view = document.getElementById("revViewType").value;
   const compare = document.getElementById("revCompare").checked;
@@ -602,6 +645,10 @@ function updateRevenueView(data) {
   renderRevenueChart(labels, datasets);
   renderRevenueTable(labels, tableDatasets);
   updateTimestamp();
+  
+  const currentYearDataset = tableDatasets.find(ds => ds.label === String(year)) || tableDatasets[tableDatasets.length - 1];
+  const currentValues = currentYearDataset ? currentYearDataset.data : [];
+  updateSummaryTiles("rev", currentValues, labels);
 }
 
 /* ------------------------------------------------------------
@@ -1041,6 +1088,10 @@ function updateAccountView(data) {
   renderAccountChart(labels, datasets);
   const tableDatasets = datasets.filter(ds => ds.type !== "line");
   renderAccountTable(labels, tableDatasets);
+  
+  const currentYearDataset = tableDatasets.find(ds => ds.label === String(year)) || tableDatasets[tableDatasets.length - 1];
+  const currentValues = currentYearDataset ? currentYearDataset.data : [];
+  updateSummaryTiles("acct", currentValues, labels);
   
   const now = new Date();
   const t = now.toLocaleDateString(undefined, {

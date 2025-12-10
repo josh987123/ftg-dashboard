@@ -138,18 +138,40 @@
           <button id="revUpdateBtn">Update</button>
         </div>
 
-        <!-- Revenue Chart -->
-        <div class="chart-box" id="revChartBox">
-          <div id="revLoadingSpinner" class="loading-spinner hidden">
-            <div class="spinner"></div>
-            <span>Loading data...</span>
+        <!-- Revenue Chart with Summary Tiles -->
+        <div class="chart-with-tiles">
+          <div class="summary-tiles" id="revSummaryTiles">
+            <div class="summary-tile">
+              <div class="tile-label">Average</div>
+              <div class="tile-value" id="revAvgValue">$0</div>
+            </div>
+            <div class="summary-tile">
+              <div class="tile-label">Largest</div>
+              <div class="tile-value" id="revMaxValue">$0</div>
+              <div class="tile-sub" id="revMaxPeriod">-</div>
+            </div>
+            <div class="summary-tile">
+              <div class="tile-label">Smallest</div>
+              <div class="tile-value" id="revMinValue">$0</div>
+              <div class="tile-sub" id="revMinPeriod">-</div>
+            </div>
+            <div class="summary-tile">
+              <div class="tile-label">CAGR</div>
+              <div class="tile-value" id="revCagrValue">0%</div>
+            </div>
           </div>
-          <div class="chart-title">
-            <div id="revChartTitleLine1">FTG Builders Revenue</div>
-            <div id="revChartTitleLine2">Monthly – 2025</div>
-            <div id="revChartUpdated" class="chart-updated">Updated:</div>
+          <div class="chart-box" id="revChartBox">
+            <div id="revLoadingSpinner" class="loading-spinner hidden">
+              <div class="spinner"></div>
+              <span>Loading data...</span>
+            </div>
+            <div class="chart-title">
+              <div id="revChartTitleLine1">FTG Builders Revenue</div>
+              <div id="revChartTitleLine2">Monthly – 2025</div>
+              <div id="revChartUpdated" class="chart-updated">Updated:</div>
+            </div>
+            <canvas id="revChart" style="width:100%; height:300px;"></canvas>
           </div>
-          <canvas id="revChart" style="width:100%; height:300px;"></canvas>
         </div>
 
         <div class="rev-table-box">
@@ -221,18 +243,40 @@
 
         </div>
 
-        <!-- Account Chart -->
-        <div class="chart-box" id="acctChartBox">
-          <div id="acctLoadingSpinner" class="loading-spinner hidden">
-            <div class="spinner"></div>
-            <span>Loading data...</span>
+        <!-- Account Chart with Summary Tiles -->
+        <div class="chart-with-tiles">
+          <div class="summary-tiles" id="acctSummaryTiles">
+            <div class="summary-tile">
+              <div class="tile-label">Average</div>
+              <div class="tile-value" id="acctAvgValue">$0</div>
+            </div>
+            <div class="summary-tile">
+              <div class="tile-label">Largest</div>
+              <div class="tile-value" id="acctMaxValue">$0</div>
+              <div class="tile-sub" id="acctMaxPeriod">-</div>
+            </div>
+            <div class="summary-tile">
+              <div class="tile-label">Smallest</div>
+              <div class="tile-value" id="acctMinValue">$0</div>
+              <div class="tile-sub" id="acctMinPeriod">-</div>
+            </div>
+            <div class="summary-tile">
+              <div class="tile-label">CAGR</div>
+              <div class="tile-value" id="acctCagrValue">0%</div>
+            </div>
           </div>
-          <div class="chart-title">
-            <div id="acctChartTitleLine1">Account Activity</div>
-            <div id="acctChartTitleLine2">Monthly – 2025</div>
-            <div id="acctChartUpdated" class="chart-updated">Updated:</div>
+          <div class="chart-box" id="acctChartBox">
+            <div id="acctLoadingSpinner" class="loading-spinner hidden">
+              <div class="spinner"></div>
+              <span>Loading data...</span>
+            </div>
+            <div class="chart-title">
+              <div id="acctChartTitleLine1">Account Activity</div>
+              <div id="acctChartTitleLine2">Monthly – 2025</div>
+              <div id="acctChartUpdated" class="chart-updated">Updated:</div>
+            </div>
+            <canvas id="acctChart" style="width:100%; height:300px;"></canvas>
           </div>
-          <canvas id="acctChart" style="width:100%; height:300px;"></canvas>
         </div>
 
         <div class="rev-table-box">
@@ -295,6 +339,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=15"></script>
+  <script src="dashboard.js?v=16"></script>
 </body>
 </html>
