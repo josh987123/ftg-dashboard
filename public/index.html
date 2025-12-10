@@ -61,6 +61,7 @@
         <ul>
           <li class="nav-item active" data-section="overview">Overview</li>
           <li class="nav-item" data-section="revenue">Revenue View</li>
+          <li class="nav-item" data-section="accounts">Account View</li>
           <li class="nav-item" data-section="financials">Financials</li>
           <li class="nav-item" data-section="projects">Projects</li>
           <li class="nav-item" data-section="operations">Operations</li>
@@ -157,6 +158,94 @@
             <table id="revTable">
               <thead id="revTableHead"></thead>
               <tbody id="revTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================================
+           ACCOUNT VIEW
+      ============================================================= -->
+      <section id="accounts" class="dashboard-section">
+        <h2>Account View</h2>
+
+        <div class="rev-controls">
+
+          <!-- Account Selector -->
+          <label>Account:</label>
+          <select id="acctSelect">
+            <option value="revenue">Revenue</option>
+            <option value="accounts_receivable">Accounts Receivable</option>
+            <option value="accounts_payable">Accounts Payable</option>
+          </select>
+
+          <!-- View Mode -->
+          <label>View:</label>
+          <select id="acctViewType">
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="annual">Annual</option>
+          </select>
+
+          <!-- Year -->
+          <div id="acctYearWrapper">
+            <label>Year:</label>
+            <select id="acctYear"></select>
+          </div>
+
+          <!-- Comparison -->
+          <div id="acctCompareWrapper">
+            <label class="checkbox-label">
+              <input type="checkbox" id="acctCompare">
+              Compare to Prior Year
+            </label>
+          </div>
+
+          <!-- Trendline -->
+          <div id="acctTrendWrapper">
+            <label class="checkbox-label">
+              <input type="checkbox" id="acctTrendline">
+              Show Trendline
+            </label>
+          </div>
+
+          <!-- Annual Range Slider -->
+          <div id="acctRangeWrapper" class="range-wrapper hidden">
+            <label>Select Range:</label>
+            <div class="range-container">
+              <input type="range" id="acctRangeStart" min="2015" max="2025" value="2015" step="1">
+              <input type="range" id="acctRangeEnd" min="2015" max="2025" value="2025" step="1">
+            </div>
+            <div class="range-labels">
+              <span id="acctRangeStartLabel">2015</span>
+              <span id="acctRangeEndLabel">2025</span>
+            </div>
+          </div>
+
+          <button id="acctUpdateBtn">Update</button>
+        </div>
+
+        <!-- Account Chart -->
+        <div class="chart-box" id="acctChartBox">
+          <div id="acctLoadingSpinner" class="loading-spinner hidden">
+            <div class="spinner"></div>
+            <span>Loading data...</span>
+          </div>
+          <div class="chart-title">
+            <div id="acctChartTitleLine1">Account Trend</div>
+            <div id="acctChartTitleLine2">Monthly – 2025</div>
+            <div id="acctChartUpdated" class="chart-updated">Updated:</div>
+          </div>
+          <canvas id="acctChart" style="width:100%; height:300px;"></canvas>
+        </div>
+
+        <div class="rev-table-box">
+          <h3>Account Breakdown</h3>
+          <div class="table-scroll">
+            <table id="acctTable">
+              <thead id="acctTableHead"></thead>
+              <tbody id="acctTableBody"></tbody>
             </table>
           </div>
         </div>
