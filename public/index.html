@@ -333,33 +333,51 @@
         <h2>Income Statement</h2>
 
         <div class="is-controls">
-          <label>Period Type:</label>
-          <select id="isPeriodType">
-            <option value="month">Month</option>
-            <option value="quarter">Quarter</option>
-            <option value="year">Year</option>
-            <option value="ytd">YTD</option>
-            <option value="ttm">TTM</option>
-          </select>
-
-          <div id="isPeriodWrapper">
-            <label>Period:</label>
-            <select id="isPeriodSelect"></select>
-          </div>
-
-          <label>Compare:</label>
-          <select id="isCompare">
-            <option value="none">None</option>
-            <option value="prior_period">Prior Period</option>
-            <option value="prior_year">Prior Year</option>
-          </select>
-
-          <label>View Mode:</label>
+          <label>View:</label>
           <select id="isViewMode">
             <option value="single">Single Period</option>
             <option value="matrix">Matrix</option>
           </select>
 
+          <div id="isSingleControls">
+            <label>Period Type:</label>
+            <select id="isPeriodType">
+              <option value="month">Month</option>
+              <option value="quarter">Quarter</option>
+              <option value="year">Year</option>
+              <option value="ytd">YTD</option>
+              <option value="ttm">TTM</option>
+            </select>
+
+            <label>Period:</label>
+            <select id="isPeriodSelect"></select>
+
+            <label>Compare:</label>
+            <select id="isCompare">
+              <option value="none">None</option>
+              <option value="prior_period">Prior Period</option>
+              <option value="prior_year">Prior Year</option>
+            </select>
+          </div>
+
+          <div id="isMatrixControls" class="hidden">
+            <label>Show by:</label>
+            <select id="isMatrixPeriodType">
+              <option value="year">Year</option>
+              <option value="quarter">Quarter</option>
+              <option value="month">Month</option>
+            </select>
+
+            <div id="isMatrixYearWrapper" class="hidden">
+              <label>Year:</label>
+              <select id="isMatrixYear"></select>
+            </div>
+
+            <label class="is-checkbox-label">
+              <input type="checkbox" id="isShowSubtotal">
+              Show Subtotal
+            </label>
+          </div>
 
           <button id="isExpandAll" class="is-toggle-btn">Expand All</button>
           <button id="isCollapseAll" class="is-toggle-btn">Collapse All</button>
@@ -421,6 +439,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=26"></script>
+  <script src="dashboard.js?v=27"></script>
 </body>
 </html>
