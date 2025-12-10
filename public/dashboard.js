@@ -750,7 +750,8 @@ function updateRevenueView(data) {
         borderWidth: 2,
         borderDash: [5, 5],
         pointRadius: 0,
-        tension: 0
+        tension: 0,
+        datalabels: { display: false }
       });
     });
   }
@@ -1295,7 +1296,8 @@ function updateAccountView(data) {
           borderWidth: 2,
           borderDash: [5, 5],
           pointRadius: 0,
-          tension: 0
+          tension: 0,
+          datalabels: { display: false }
         });
       }
     });
