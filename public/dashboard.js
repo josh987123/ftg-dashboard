@@ -451,6 +451,9 @@ function setupRevenueUI(data) {
   document.getElementById("revTrendline").onchange = () => {
     updateRevenueView(data);
   };
+  document.getElementById("revExcludeCurrent").onchange = () => {
+    updateRevenueView(data);
+  };
 
   /* ------------------ UPDATE BUTTON ------------------ */
   document.getElementById("revUpdateBtn").onclick = () => {
@@ -487,12 +490,15 @@ function calculateCAGR(values) {
 }
 
 function updateSummaryTiles(prefix, values, labels) {
-  const avg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+  const validValues = values.filter(v => v !== null && v !== undefined);
+  const validLabels = values.map((v, i) => v !== null && v !== undefined ? labels[i] : null).filter(l => l !== null);
+  
+  const avg = validValues.length > 0 ? validValues.reduce((a, b) => a + b, 0) / validValues.length : 0;
   
   let maxVal = -Infinity, maxIdx = 0;
   let minVal = Infinity, minIdx = 0;
   
-  values.forEach((v, i) => {
+  validValues.forEach((v, i) => {
     if (v > maxVal) { maxVal = v; maxIdx = i; }
     if (v < minVal) { minVal = v; minIdx = i; }
   });
@@ -500,13 +506,13 @@ function updateSummaryTiles(prefix, values, labels) {
   if (!isFinite(maxVal)) maxVal = 0;
   if (!isFinite(minVal)) minVal = 0;
   
-  const cagr = calculateCAGR(values);
+  const cagr = calculateCAGR(validValues);
   
   document.getElementById(prefix + "AvgValue").innerText = formatTileValue(avg);
   document.getElementById(prefix + "MaxValue").innerText = formatTileValue(maxVal);
-  document.getElementById(prefix + "MaxPeriod").innerText = labels[maxIdx] || "-";
+  document.getElementById(prefix + "MaxPeriod").innerText = validLabels[maxIdx] || "-";
   document.getElementById(prefix + "MinValue").innerText = formatTileValue(minVal);
-  document.getElementById(prefix + "MinPeriod").innerText = labels[minIdx] || "-";
+  document.getElementById(prefix + "MinPeriod").innerText = validLabels[minIdx] || "-";
   document.getElementById(prefix + "CagrValue").innerText = (cagr >= 0 ? "+" : "") + cagr.toFixed(1) + "%";
 }
 
@@ -514,9 +520,15 @@ function updateRevenueView(data) {
   const view = document.getElementById("revViewType").value;
   const compare = document.getElementById("revCompare").checked;
   const year = parseInt(document.getElementById("revYear").value);
+  const excludeCurrent = document.getElementById("revExcludeCurrent").checked;
+  
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
 
   let labels = [];
   let datasets = [];
+  let hasPartialPeriod = false;
 
   /* ============================================================
      MONTHLY VIEW
@@ -524,8 +536,22 @@ function updateRevenueView(data) {
   if (view === "monthly") {
     labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-    const current = toPositive(data.revenue[year]);
+    let current = toPositive(data.revenue[year]);
     const prior = toPositive(data.revenue[year - 1]);
+    
+    const isCurrentYear = year === currentYear;
+    
+    if (excludeCurrent && isCurrentYear && current) {
+      current = current.map((v, i) => i === currentMonth ? null : v);
+    }
+    
+    const barColors = current ? current.map((v, i) => {
+      if (isCurrentYear && i === currentMonth && !excludeCurrent) {
+        hasPartialPeriod = true;
+        return "#f59e0b";
+      }
+      return "#3b82f6";
+    }) : "#3b82f6";
 
     // Prior year FIRST (left)
     if (compare && prior) {
@@ -540,7 +566,8 @@ function updateRevenueView(data) {
     datasets.push({
       label: `${year}`,
       data: current,
-      backgroundColor: "#3b82f6"
+      backgroundColor: barColors,
+      partialIndex: isCurrentYear && !excludeCurrent ? currentMonth : -1
     });
 
     setRevenueTitle(`Monthly – ${year}`);
@@ -551,13 +578,33 @@ function updateRevenueView(data) {
   ============================================================= */
   else if (view === "quarterly") {
     labels = ["Q1","Q2","Q3","Q4"];
+    
+    const isCurrentYear = year === currentYear;
+    const currentQuarter = Math.floor(currentMonth / 3);
 
-    const months = toPositive(data.revenue[year]);
+    let months = toPositive(data.revenue[year]);
+    
+    if (excludeCurrent && isCurrentYear && months) {
+      months = months.map((v, i) => i === currentMonth ? 0 : v);
+    }
+    
     const sumQ = q => {
-      const slice = months.slice((q - 1) * 3, q * 3);
+      const slice = months ? months.slice((q - 1) * 3, q * 3) : [];
       return slice.length > 0 ? slice.reduce((a,b) => a + b, 0) : 0;
     };
-    const currentQ = [sumQ(1), sumQ(2), sumQ(3), sumQ(4)];
+    let currentQ = [sumQ(1), sumQ(2), sumQ(3), sumQ(4)];
+    
+    if (excludeCurrent && isCurrentYear) {
+      currentQ = currentQ.map((v, i) => i === currentQuarter ? null : v);
+    }
+    
+    const barColors = currentQ.map((v, i) => {
+      if (isCurrentYear && i === currentQuarter && !excludeCurrent) {
+        hasPartialPeriod = true;
+        return "#f59e0b";
+      }
+      return "#3b82f6";
+    });
 
     if (compare && data.revenue[year - 1]) {
       const pm = toPositive(data.revenue[year - 1]);
@@ -580,7 +627,7 @@ function updateRevenueView(data) {
     datasets.push({
       label: `${year}`,
       data: currentQ,
-      backgroundColor: "#3b82f6"
+      backgroundColor: barColors
     });
 
     setRevenueTitle(`Quarterly – ${year}`);
@@ -595,18 +642,37 @@ function updateRevenueView(data) {
 
     labels = [];
     const annualTotals = [];
+    const barColors = [];
+    
     for (let y = start; y <= end; y++) {
       labels.push(y.toString());
-      const yearData = toPositive(data.revenue[y]);
-      const total = yearData.length > 0 ? yearData.reduce((a,b) => a + b, 0) : 0;
-      annualTotals.push(total);
+      let yearData = toPositive(data.revenue[y]);
+      
+      if (excludeCurrent && y === currentYear && yearData) {
+        yearData = yearData.map((v, i) => i === currentMonth ? 0 : v);
+      }
+      
+      const total = yearData && yearData.length > 0 ? yearData.reduce((a,b) => a + b, 0) : 0;
+      
+      if (excludeCurrent && y === currentYear) {
+        annualTotals.push(null);
+      } else {
+        annualTotals.push(total);
+      }
+      
+      if (y === currentYear && !excludeCurrent) {
+        hasPartialPeriod = true;
+        barColors.push("#f59e0b");
+      } else {
+        barColors.push("#3b82f6");
+      }
     }
 
     datasets = [
       {
         label: "Annual Revenue",
         data: annualTotals,
-        backgroundColor: "#3b82f6"
+        backgroundColor: barColors
       }
     ];
 
@@ -649,6 +715,13 @@ function updateRevenueView(data) {
   const currentYearDataset = tableDatasets.find(ds => ds.label === String(year)) || tableDatasets[tableDatasets.length - 1];
   const currentValues = currentYearDataset ? currentYearDataset.data : [];
   updateSummaryTiles("rev", currentValues, labels);
+  
+  const partialLegend = document.getElementById("revPartialLegend");
+  if (hasPartialPeriod) {
+    partialLegend.classList.remove("hidden");
+  } else {
+    partialLegend.classList.add("hidden");
+  }
 }
 
 /* ------------------------------------------------------------
@@ -942,6 +1015,7 @@ function setupAccountUI(data) {
   yearSelect.onchange = () => updateAccountView(data);
   document.getElementById("acctCompare").onchange = () => updateAccountView(data);
   document.getElementById("acctTrendline").onchange = () => updateAccountView(data);
+  document.getElementById("acctExcludeCurrent").onchange = () => updateAccountView(data);
 }
 
 function isIncomeAccount(accountNum) {
@@ -996,6 +1070,12 @@ function updateAccountView(data) {
   const view = document.getElementById("acctViewType").value;
   const year = parseInt(document.getElementById("acctYear").value);
   const compare = document.getElementById("acctCompare").checked;
+  const excludeCurrent = document.getElementById("acctExcludeCurrent").checked;
+  
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const currentQuarter = Math.floor(currentMonth / 3);
   
   const row = data.gl_history_all.find(r => r.Account_Num === acctNum);
   const acctDesc = row ? row.Account_Description : "";
@@ -1003,10 +1083,24 @@ function updateAccountView(data) {
   let labels = [];
   let datasets = [];
   let subtitle = "";
+  let hasPartialPeriod = false;
   
   if (view === "monthly") {
     labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    const currentValues = getAccountMonthlyValues(acctNum, year, data);
+    let currentValues = getAccountMonthlyValues(acctNum, year, data);
+    const isCurrentYear = year === currentYear;
+    
+    if (excludeCurrent && isCurrentYear) {
+      currentValues = currentValues.map((v, i) => i === currentMonth ? null : v);
+    }
+    
+    const barColors = currentValues.map((v, i) => {
+      if (isCurrentYear && i === currentMonth && !excludeCurrent) {
+        hasPartialPeriod = true;
+        return "#f59e0b";
+      }
+      return "#3b82f6";
+    });
     
     if (compare) {
       const priorValues = getAccountMonthlyValues(acctNum, year - 1, data);
@@ -1020,13 +1114,26 @@ function updateAccountView(data) {
     datasets.push({
       label: `${year}`,
       data: currentValues,
-      backgroundColor: "#3b82f6"
+      backgroundColor: barColors
     });
     
     subtitle = `Monthly – ${year}`;
   } else if (view === "quarterly") {
     labels = ["Q1","Q2","Q3","Q4"];
-    const currentValues = getAccountQuarterlyValues(acctNum, year, data);
+    let currentValues = getAccountQuarterlyValues(acctNum, year, data);
+    const isCurrentYear = year === currentYear;
+    
+    if (excludeCurrent && isCurrentYear) {
+      currentValues = currentValues.map((v, i) => i === currentQuarter ? null : v);
+    }
+    
+    const barColors = currentValues.map((v, i) => {
+      if (isCurrentYear && i === currentQuarter && !excludeCurrent) {
+        hasPartialPeriod = true;
+        return "#f59e0b";
+      }
+      return "#3b82f6";
+    });
     
     if (compare) {
       const priorValues = getAccountQuarterlyValues(acctNum, year - 1, data);
@@ -1040,7 +1147,7 @@ function updateAccountView(data) {
     datasets.push({
       label: `${year}`,
       data: currentValues,
-      backgroundColor: "#3b82f6"
+      backgroundColor: barColors
     });
     
     subtitle = `Quarterly – ${year}`;
@@ -1048,14 +1155,29 @@ function updateAccountView(data) {
     const start = +document.getElementById("acctRangeStart").value;
     const end = +document.getElementById("acctRangeEnd").value;
     const annualValues = [];
+    const barColors = [];
+    
     for (let y = start; y <= end; y++) {
       labels.push(y.toString());
-      annualValues.push(getAccountAnnualValue(acctNum, y, data));
+      
+      if (excludeCurrent && y === currentYear) {
+        annualValues.push(null);
+      } else {
+        annualValues.push(getAccountAnnualValue(acctNum, y, data));
+      }
+      
+      if (y === currentYear && !excludeCurrent) {
+        hasPartialPeriod = true;
+        barColors.push("#f59e0b");
+      } else {
+        barColors.push("#3b82f6");
+      }
     }
+    
     datasets.push({
       label: `Account ${acctNum}`,
       data: annualValues,
-      backgroundColor: "#3b82f6"
+      backgroundColor: barColors
     });
     subtitle = `Annual – ${start} to ${end}`;
   }
@@ -1092,6 +1214,13 @@ function updateAccountView(data) {
   const currentYearDataset = tableDatasets.find(ds => ds.label === String(year)) || tableDatasets[tableDatasets.length - 1];
   const currentValues = currentYearDataset ? currentYearDataset.data : [];
   updateSummaryTiles("acct", currentValues, labels);
+  
+  const partialLegend = document.getElementById("acctPartialLegend");
+  if (hasPartialPeriod) {
+    partialLegend.classList.remove("hidden");
+  } else {
+    partialLegend.classList.add("hidden");
+  }
   
   const now = new Date();
   const t = now.toLocaleDateString(undefined, {
