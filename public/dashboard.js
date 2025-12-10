@@ -1484,14 +1484,7 @@ function initIncomeStatementControls() {
   setupMatrixYearSliders();
   
   viewMode.onchange = () => {
-    if (viewMode.value === "matrix") {
-      singleControls.classList.add("hidden");
-      matrixControls.classList.remove("hidden");
-      updateMatrixControlsVisibility();
-    } else {
-      singleControls.classList.remove("hidden");
-      matrixControls.classList.add("hidden");
-    }
+    updateMatrixControlsVisibility();
     renderIncomeStatement();
   };
   
@@ -1531,11 +1524,29 @@ function updateMatrixControlsVisibility() {
   const viewMode = document.getElementById("isViewMode").value;
   const periodType = document.getElementById("isPeriodType").value;
   const yearControls = document.getElementById("isMatrixYearControls");
+  const singleControls = document.getElementById("isSingleControls");
+  const matrixControls = document.getElementById("isMatrixControls");
+  const periodSelectLabel = document.getElementById("isPeriodSelectLabel");
+  const periodSelect = document.getElementById("isPeriodSelect");
   
-  if (viewMode === "matrix" && periodType === "year") {
-    yearControls.classList.remove("hidden");
+  if (viewMode === "matrix") {
+    singleControls.classList.add("hidden");
+    matrixControls.classList.remove("hidden");
+    
+    if (periodType === "year") {
+      yearControls.classList.remove("hidden");
+      periodSelect.classList.add("hidden");
+      if (periodSelectLabel) periodSelectLabel.classList.add("hidden");
+    } else {
+      yearControls.classList.add("hidden");
+      periodSelect.classList.remove("hidden");
+      if (periodSelectLabel) periodSelectLabel.classList.remove("hidden");
+    }
   } else {
-    yearControls.classList.add("hidden");
+    singleControls.classList.remove("hidden");
+    matrixControls.classList.add("hidden");
+    periodSelect.classList.remove("hidden");
+    if (periodSelectLabel) periodSelectLabel.classList.remove("hidden");
   }
 }
 
