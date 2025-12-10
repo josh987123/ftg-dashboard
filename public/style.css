@@ -806,20 +806,35 @@ body {
   border-top: 1px solid #9ca3af;
 }
 
-.is-highlight-revenue td {
-  background: #f3f4f6 !important;
-  border-top: 1px solid #000 !important;
-  border-bottom: 3px solid #000 !important;
-}
-
+.is-highlight-revenue td,
+.is-highlight-grossProfit td,
 .is-highlight-costOfSales td {
-  background: #f3f4f6 !important;
+  font-weight: 700;
 }
 
-.is-highlight-grossProfit td {
-  background: #e5e7eb !important;
-  border-top: 1px solid #000 !important;
-  border-bottom: 3px solid #000 !important;
+.is-spacer-row td {
+  height: 12px;
+  background: #fff !important;
+  border: none !important;
+}
+
+#incomeStatementTable tbody tr:nth-child(odd) {
+  background: #fff;
+}
+
+#incomeStatementTable tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+#incomeStatementTable tbody tr.is-spacer-row {
+  background: #fff !important;
+}
+
+.is-partial-indicator {
+  color: #d97706;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 4px;
 }
 
 .is-row-ratio td {

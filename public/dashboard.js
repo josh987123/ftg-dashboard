@@ -1821,6 +1821,20 @@ function buildIncomeStatementRows(periodMonths, groups, computedValues = {}) {
       highlight: group.highlight || null,
       isIncome: group.isIncome || false
     });
+    
+    if (group.label === "Revenue" || group.label === "Total Cost of Sales") {
+      rows.push({
+        id: `spacer-after-${group.label.replace(/\s+/g, '_')}`,
+        label: "",
+        level: 0,
+        type: "spacer",
+        value: null,
+        expandable: false,
+        parent: null,
+        highlight: null,
+        isIncome: false
+      });
+    }
   });
   
   return rows;
@@ -1959,26 +1973,65 @@ function formatVariance(current, prior, isIncome) {
   return { diff: diffFormatted, pct: pctFormatted };
 }
 
-function formatPeriodLabel(periodValue, periodType) {
+function formatPeriodLabel(periodValue, periodType, includePartialIndicator = false) {
+  let label = "";
+  let isPartial = false;
+  
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const currentQuarter = Math.ceil(currentMonth / 3);
+  
   if (periodType === "month") {
-    const [y, mo] = periodValue.split("-");
+    const [y, mo] = periodValue.split("-").map(Number);
     const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
-    return `${monthName} ${y}`;
+    label = `${monthName} ${y}`;
+    isPartial = (y === currentYear && mo === currentMonth);
   } else if (periodType === "quarter") {
-    return periodValue;
+    const [y, qStr] = periodValue.split("-Q");
+    const q = parseInt(qStr);
+    label = periodValue;
+    isPartial = (parseInt(y) === currentYear && q === currentQuarter);
   } else if (periodType === "year") {
-    return `FY ${periodValue}`;
+    label = `FY ${periodValue}`;
+    isPartial = (parseInt(periodValue) === currentYear);
   } else if (periodType === "ytd") {
     const parts = periodValue.split("-YTD-");
     const monthName = new Date(parts[0], parseInt(parts[1]) - 1).toLocaleString("default", { month: "short" });
-    return `YTD ${monthName} ${parts[0]}`;
+    label = `YTD ${monthName} ${parts[0]}`;
+    isPartial = (parseInt(parts[0]) === currentYear);
   } else if (periodType === "ttm") {
     const endMonth = periodValue.replace("TTM-", "");
-    const [y, mo] = endMonth.split("-");
+    const [y, mo] = endMonth.split("-").map(Number);
     const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
-    return `TTM ${monthName} ${y}`;
+    label = `TTM ${monthName} ${y}`;
+    isPartial = (y === currentYear && mo === currentMonth);
+  } else {
+    label = periodValue;
   }
-  return periodValue;
+  
+  if (includePartialIndicator && isPartial) {
+    return `${label}<span class="is-partial-indicator">*</span>`;
+  }
+  return label;
+}
+
+function isPartialPeriod(periodValue, periodType) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const currentQuarter = Math.ceil(currentMonth / 3);
+  
+  if (periodType === "month") {
+    const [y, mo] = periodValue.split("-").map(Number);
+    return (y === currentYear && mo === currentMonth);
+  } else if (periodType === "quarter") {
+    const [y, qStr] = periodValue.split("-Q");
+    return (parseInt(y) === currentYear && parseInt(qStr) === currentQuarter);
+  } else if (periodType === "year") {
+    return (parseInt(periodValue) === currentYear);
+  }
+  return false;
 }
 
 function renderIncomeStatement() {
@@ -2006,7 +2059,7 @@ function renderIncomeStatement() {
 function renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody) {
   const periodMonths = getPeriodMonths(periodValue, periodType);
   const rows = buildIncomeStatementRows(periodMonths, groups);
-  const currentLabel = formatPeriodLabel(periodValue, periodType);
+  const currentLabel = formatPeriodLabel(periodValue, periodType, true);
   
   let comparisonRows = null;
   let compPeriodLabel = "";
@@ -2020,7 +2073,7 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
     }
     
     if (compPeriod) {
-      compPeriodLabel = formatPeriodLabel(compPeriod, periodType);
+      compPeriodLabel = formatPeriodLabel(compPeriod, periodType, true);
       const compMonths = getPeriodMonths(compPeriod, periodType);
       comparisonRows = buildIncomeStatementRows(compMonths, groups);
     }
@@ -2036,7 +2089,14 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
   thead.innerHTML = headerHtml;
   
   let bodyHtml = "";
+  const colCount = comparisonRows ? 5 : 2;
+  
   rows.forEach((row, i) => {
+    if (row.type === "spacer") {
+      bodyHtml += `<tr class="is-spacer-row"><td colspan="${colCount}"></td></tr>`;
+      return;
+    }
+    
     const isVisible = isRowVisibleByParent(row, rows);
     const hiddenClass = isVisible ? "" : "is-row-hidden";
     const typeClass = `is-row-${row.type}`;
@@ -2113,7 +2173,8 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
   
   let headerHtml = "<tr><th>Account</th>";
   periods.forEach(p => {
-    headerHtml += `<th>${p.label}</th>`;
+    const partialIndicator = p.isPartial ? '<span class="is-partial-indicator">*</span>' : '';
+    headerHtml += `<th>${p.label}${partialIndicator}</th>`;
   });
   if (showSubtotal) {
     headerHtml += "<th>Subtotal</th>";
@@ -2127,7 +2188,14 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
   
   const firstRows = allPeriodRows[0];
   let bodyHtml = "";
+  const colCount = periods.length + 1 + (showSubtotal ? 1 : 0);
+  
   firstRows.forEach((row, i) => {
+    if (row.type === "spacer") {
+      bodyHtml += `<tr class="is-spacer-row"><td colspan="${colCount}"></td></tr>`;
+      return;
+    }
+    
     const isVisible = isRowVisibleByParent(row, firstRows);
     const hiddenClass = isVisible ? "" : "is-row-hidden";
     const typeClass = `is-row-${row.type}`;
@@ -2147,7 +2215,7 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
     allPeriodRows.forEach(periodRows => {
       const pRow = periodRows[i];
       let valueHtml = "";
-      if (pRow.type === "header") {
+      if (pRow.type === "header" || pRow.type === "spacer") {
         valueHtml = "";
       } else if (pRow.type === "ratio") {
         valueHtml = formatPercent(pRow.value);
@@ -2177,6 +2245,11 @@ function getMatrixPeriodsNew(periodType, selectedYear, yearStart, yearEnd) {
   const months = getAvailableMonths();
   const periods = [];
   
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const currentQuarter = Math.ceil(currentMonth / 3);
+  
   if (periodType === "year") {
     const startYr = parseInt(yearStart);
     const endYr = parseInt(yearEnd);
@@ -2185,11 +2258,13 @@ function getMatrixPeriodsNew(periodType, selectedYear, yearStart, yearEnd) {
       if (yearMonths.length > 0) {
         periods.push({
           label: String(y),
-          months: yearMonths
+          months: yearMonths,
+          isPartial: y === currentYear
         });
       }
     }
   } else if (periodType === "quarter") {
+    const selYear = parseInt(selectedYear);
     for (let q = 1; q <= 4; q++) {
       const startMonth = (q - 1) * 3 + 1;
       const quarterMonths = [];
@@ -2200,18 +2275,21 @@ function getMatrixPeriodsNew(periodType, selectedYear, yearStart, yearEnd) {
       if (quarterMonths.length > 0) {
         periods.push({
           label: `Q${q}`,
-          months: quarterMonths
+          months: quarterMonths,
+          isPartial: selYear === currentYear && q === currentQuarter
         });
       }
     }
   } else if (periodType === "month") {
+    const selYear = parseInt(selectedYear);
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     for (let m = 1; m <= 12; m++) {
       const key = `${selectedYear}-${String(m).padStart(2, "0")}`;
       if (months.includes(key)) {
         periods.push({
           label: monthNames[m - 1],
-          months: [key]
+          months: [key],
+          isPartial: selYear === currentYear && m === currentMonth
         });
       }
     }
