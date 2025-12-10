@@ -461,6 +461,11 @@ function setupRevenueUI(data) {
    REVENUE VIEW — MAIN UPDATE ENGINE
 ============================================================ */
 
+// Helper: flip negative values to positive for display
+function toPositive(arr) {
+  return (arr || []).map(v => Math.abs(v));
+}
+
 function updateRevenueView(data) {
   const view = document.getElementById("revViewType").value;
   const compare = document.getElementById("revCompare").checked;
@@ -475,8 +480,8 @@ function updateRevenueView(data) {
   if (view === "monthly") {
     labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-    const current = data.revenue[year] || [];
-    const prior = data.revenue[year - 1];
+    const current = toPositive(data.revenue[year]);
+    const prior = toPositive(data.revenue[year - 1]);
 
     // Prior year FIRST (left)
     if (compare && prior) {
@@ -503,7 +508,7 @@ function updateRevenueView(data) {
   else if (view === "quarterly") {
     labels = ["Q1","Q2","Q3","Q4"];
 
-    const months = data.revenue[year] || [];
+    const months = toPositive(data.revenue[year]);
     const sumQ = q => {
       const slice = months.slice((q - 1) * 3, q * 3);
       return slice.length > 0 ? slice.reduce((a,b) => a + b, 0) : 0;
@@ -511,7 +516,7 @@ function updateRevenueView(data) {
     const currentQ = [sumQ(1), sumQ(2), sumQ(3), sumQ(4)];
 
     if (compare && data.revenue[year - 1]) {
-      const pm = data.revenue[year - 1] || [];
+      const pm = toPositive(data.revenue[year - 1]);
       const sumPQ = q => {
         const slice = pm.slice((q - 1) * 3, q * 3);
         return slice.length > 0 ? slice.reduce((a,b) => a + b, 0) : 0;
@@ -548,7 +553,7 @@ function updateRevenueView(data) {
     const annualTotals = [];
     for (let y = start; y <= end; y++) {
       labels.push(y.toString());
-      const yearData = data.revenue[y] || [];
+      const yearData = toPositive(data.revenue[y]);
       const total = yearData.length > 0 ? yearData.reduce((a,b) => a + b, 0) : 0;
       annualTotals.push(total);
     }
