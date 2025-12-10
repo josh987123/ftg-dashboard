@@ -1886,11 +1886,11 @@ function formatAccountingNumber(value) {
   const rounded = Math.round(value);
   
   if (showThousands) {
-    const inK = rounded / 1000;
+    const inK = Math.round(rounded / 1000);
     if (rounded < 0) {
-      return `<span class="is-negative">($${Math.abs(inK).toFixed(1)}K)</span>`;
+      return `<span class="is-negative">($${Math.abs(inK).toLocaleString()}K)</span>`;
     }
-    return `$${inK.toFixed(1)}K`;
+    return `$${inK.toLocaleString()}K`;
   } else {
     if (rounded < 0) {
       return `<span class="is-negative">($${Math.abs(rounded).toLocaleString()})</span>`;
@@ -1914,10 +1914,10 @@ function formatVariance(current, prior, isIncome) {
   
   let diffFormatted;
   if (showThousands) {
-    const diffK = Math.abs(Math.round(diff)) / 1000;
+    const diffK = Math.round(Math.abs(Math.round(diff)) / 1000);
     diffFormatted = diff < 0 
-      ? `<span class="${colorClass}">($${diffK.toFixed(1)}K)</span>`
-      : `<span class="${colorClass}">$${diffK.toFixed(1)}K</span>`;
+      ? `<span class="${colorClass}">($${diffK.toLocaleString()}K)</span>`
+      : `<span class="${colorClass}">$${diffK.toLocaleString()}K</span>`;
   } else {
     diffFormatted = diff < 0 
       ? `<span class="${colorClass}">($${Math.abs(Math.round(diff)).toLocaleString()})</span>`
