@@ -339,19 +339,19 @@
             <option value="matrix">Matrix</option>
           </select>
 
+          <label>Period Type:</label>
+          <select id="isPeriodType">
+            <option value="month">Month</option>
+            <option value="quarter">Quarter</option>
+            <option value="year">Year</option>
+            <option value="ytd">YTD</option>
+            <option value="ttm">TTM</option>
+          </select>
+
+          <label>Period:</label>
+          <select id="isPeriodSelect"></select>
+
           <div id="isSingleControls">
-            <label>Period Type:</label>
-            <select id="isPeriodType">
-              <option value="month">Month</option>
-              <option value="quarter">Quarter</option>
-              <option value="year">Year</option>
-              <option value="ytd">YTD</option>
-              <option value="ttm">TTM</option>
-            </select>
-
-            <label>Period:</label>
-            <select id="isPeriodSelect"></select>
-
             <label>Compare:</label>
             <select id="isCompare">
               <option value="none">None</option>
@@ -361,17 +361,6 @@
           </div>
 
           <div id="isMatrixControls" class="hidden">
-            <div class="is-matrix-tabs">
-              <button class="is-matrix-tab active" data-period="month">Month</button>
-              <button class="is-matrix-tab" data-period="quarter">Quarter</button>
-              <button class="is-matrix-tab" data-period="year">Year</button>
-            </div>
-
-            <div id="isMatrixMonthQuarterControls">
-              <label>Year:</label>
-              <select id="isMatrixYear"></select>
-            </div>
-
             <div id="isMatrixYearControls" class="hidden">
               <label>Years:</label>
               <input type="range" id="isMatrixYearStart" min="2015" max="2025" value="2020">
@@ -448,6 +437,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=29"></script>
+  <script src="dashboard.js?v=30"></script>
 </body>
 </html>

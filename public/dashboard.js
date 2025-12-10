@@ -1469,8 +1469,6 @@ function buildGLLookup() {
   });
 }
 
-let isMatrixPeriodType = "month";
-
 function initIncomeStatementControls() {
   const viewMode = document.getElementById("isViewMode");
   const singleControls = document.getElementById("isSingleControls");
@@ -1478,16 +1476,13 @@ function initIncomeStatementControls() {
   const periodType = document.getElementById("isPeriodType");
   const periodSelect = document.getElementById("isPeriodSelect");
   const compare = document.getElementById("isCompare");
-  const matrixYear = document.getElementById("isMatrixYear");
   const showSubtotal = document.getElementById("isShowSubtotal");
   const expandAll = document.getElementById("isExpandAll");
   const collapseAll = document.getElementById("isCollapseAll");
-  const matrixTabs = document.querySelectorAll(".is-matrix-tab");
   const matrixYearStart = document.getElementById("isMatrixYearStart");
   const matrixYearEnd = document.getElementById("isMatrixYearEnd");
   
   populatePeriodOptions();
-  populateMatrixYearOptions();
   setupMatrixYearSliders();
   
   viewMode.onchange = () => {
@@ -1504,23 +1499,12 @@ function initIncomeStatementControls() {
   
   periodType.onchange = () => {
     populatePeriodOptions();
+    updateMatrixControlsVisibility();
     renderIncomeStatement();
   };
   
   periodSelect.onchange = () => renderIncomeStatement();
   compare.onchange = () => renderIncomeStatement();
-  
-  matrixTabs.forEach(tab => {
-    tab.onclick = () => {
-      matrixTabs.forEach(t => t.classList.remove("active"));
-      tab.classList.add("active");
-      isMatrixPeriodType = tab.dataset.period;
-      updateMatrixControlsVisibility();
-      renderIncomeStatement();
-    };
-  });
-  
-  matrixYear.onchange = () => renderIncomeStatement();
   showSubtotal.onchange = () => renderIncomeStatement();
   
   matrixYearStart.oninput = () => {
@@ -1565,14 +1549,13 @@ function initIncomeStatementControls() {
 }
 
 function updateMatrixControlsVisibility() {
-  const monthQuarterControls = document.getElementById("isMatrixMonthQuarterControls");
+  const viewMode = document.getElementById("isViewMode").value;
+  const periodType = document.getElementById("isPeriodType").value;
   const yearControls = document.getElementById("isMatrixYearControls");
   
-  if (isMatrixPeriodType === "year") {
-    monthQuarterControls.classList.add("hidden");
+  if (viewMode === "matrix" && periodType === "year") {
     yearControls.classList.remove("hidden");
   } else {
-    monthQuarterControls.classList.remove("hidden");
     yearControls.classList.add("hidden");
   }
 }
@@ -1601,17 +1584,6 @@ function setupMatrixYearSliders() {
     document.getElementById("isMatrixYearStartLabel").textContent = startSlider.value;
     document.getElementById("isMatrixYearEndLabel").textContent = endSlider.value;
   }
-}
-
-function populateMatrixYearOptions() {
-  const matrixYear = document.getElementById("isMatrixYear");
-  const months = getAvailableMonths();
-  const years = new Set();
-  months.forEach(m => years.add(m.split("-")[0]));
-  
-  matrixYear.innerHTML = Array.from(years).sort().reverse().map(y => 
-    `<option value="${y}">${y}</option>`
-  ).join("");
 }
 
 function populatePeriodOptions() {
@@ -1972,19 +1944,26 @@ function formatPeriodLabel(periodValue, periodType) {
 
 function renderIncomeStatement() {
   const viewMode = document.getElementById("isViewMode").value;
+  const periodType = document.getElementById("isPeriodType").value;
+  const periodValue = document.getElementById("isPeriodSelect").value;
   const groups = isAccountGroups.income_statement.groups;
   const thead = document.getElementById("isTableHead");
   const tbody = document.getElementById("isTableBody");
   
   if (viewMode === "matrix") {
-    const matrixYear = document.getElementById("isMatrixYear").value;
     const showSubtotal = document.getElementById("isShowSubtotal").checked;
     const yearStart = document.getElementById("isMatrixYearStart").value;
     const yearEnd = document.getElementById("isMatrixYearEnd").value;
-    renderMatrixView(groups, isMatrixPeriodType, matrixYear, yearStart, yearEnd, showSubtotal, thead, tbody);
+    
+    let selectedYear = "";
+    if (periodType === "month" && periodValue) {
+      selectedYear = periodValue.split("-")[0];
+    } else if (periodType === "quarter" && periodValue) {
+      selectedYear = periodValue.split("-")[0];
+    }
+    
+    renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, showSubtotal, thead, tbody);
   } else {
-    const periodType = document.getElementById("isPeriodType").value;
-    const periodValue = document.getElementById("isPeriodSelect").value;
     const compare = document.getElementById("isCompare").value;
     renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody);
   }
@@ -2083,11 +2062,17 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
   attachToggleListeners();
 }
 
-function renderMatrixView(groups, matrixPeriodType, selectedYear, yearStart, yearEnd, showSubtotal, thead, tbody) {
-  const periods = getMatrixPeriodsNew(matrixPeriodType, selectedYear, yearStart, yearEnd);
+function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, showSubtotal, thead, tbody) {
+  if (periodType === "ytd" || periodType === "ttm") {
+    thead.innerHTML = "<tr><th colspan='2'>Matrix view is not available for YTD or TTM period types</th></tr>";
+    tbody.innerHTML = "";
+    return;
+  }
+  
+  const periods = getMatrixPeriodsNew(periodType, selectedYear, yearStart, yearEnd);
   
   if (periods.length === 0) {
-    thead.innerHTML = "<tr><th>No data available</th></tr>";
+    thead.innerHTML = "<tr><th>No data available for selected period</th></tr>";
     tbody.innerHTML = "";
     return;
   }
@@ -2154,11 +2139,11 @@ function renderMatrixView(groups, matrixPeriodType, selectedYear, yearStart, yea
   attachToggleListeners();
 }
 
-function getMatrixPeriodsNew(matrixPeriodType, selectedYear, yearStart, yearEnd) {
+function getMatrixPeriodsNew(periodType, selectedYear, yearStart, yearEnd) {
   const months = getAvailableMonths();
   const periods = [];
   
-  if (matrixPeriodType === "year") {
+  if (periodType === "year") {
     const startYr = parseInt(yearStart);
     const endYr = parseInt(yearEnd);
     for (let y = startYr; y <= endYr; y++) {
@@ -2170,7 +2155,7 @@ function getMatrixPeriodsNew(matrixPeriodType, selectedYear, yearStart, yearEnd)
         });
       }
     }
-  } else if (matrixPeriodType === "quarter") {
+  } else if (periodType === "quarter") {
     for (let q = 1; q <= 4; q++) {
       const startMonth = (q - 1) * 3 + 1;
       const quarterMonths = [];
@@ -2185,7 +2170,7 @@ function getMatrixPeriodsNew(matrixPeriodType, selectedYear, yearStart, yearEnd)
         });
       }
     }
-  } else if (matrixPeriodType === "month") {
+  } else if (periodType === "month") {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     for (let m = 1; m <= 12; m++) {
       const key = `${selectedYear}-${String(m).padStart(2, "0")}`;
@@ -2196,6 +2181,8 @@ function getMatrixPeriodsNew(matrixPeriodType, selectedYear, yearStart, yearEnd)
         });
       }
     }
+  } else if (periodType === "ytd" || periodType === "ttm") {
+    return [];
   }
   
   return periods;
