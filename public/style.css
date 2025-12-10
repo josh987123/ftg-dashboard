@@ -310,15 +310,17 @@ body {
 /* CHART BOX */
 .chart-box {
   background:#fff;
-  padding:30px 40px; /* more left/right margin */
+  padding:30px 40px;
   border-radius:10px;
   margin-bottom:32px;
   box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  max-height: 70vh;
+  overflow: hidden;
 }
 
-#revChart {
+#revChart, #acctChart {
   width: 100% !important;
-  height: 300px !important;
+  height: min(400px, 55vh) !important;
   max-width: 900px;
   margin: 20px auto 0 auto;
   display: block;

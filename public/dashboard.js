@@ -825,10 +825,15 @@ function setupAccountUI(data) {
     return;
   }
   
-  const accounts = data.gl_history_all.map(row => ({
-    num: row.Account_Num || "",
-    desc: row.Account_Description || ""
-  }));
+  const accounts = data.gl_history_all
+    .map(row => ({
+      num: row.Account_Num || "",
+      desc: row.Account_Description || ""
+    }))
+    .filter(a => {
+      const numVal = parseInt(a.num) || 0;
+      return numVal >= 4000;
+    });
   
   accounts.sort((a, b) => {
     const numA = parseInt(a.num) || 0;
