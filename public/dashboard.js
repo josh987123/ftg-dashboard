@@ -644,7 +644,7 @@ function renderRevenueChart(labels, datasets) {
       data: { labels, datasets: safeDatasets },
       options: {
         responsive: true,
-        aspectRatio: 1.8,
+        maintainAspectRatio: false,
         animation: {
           duration: 600,
           easing: "easeOutQuart"

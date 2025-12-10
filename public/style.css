@@ -319,7 +319,7 @@ body {
 .chart-box canvas {
   width: 100% !important;
   max-width: 900px;
-  height: auto !important;
+  min-height: 280px;
   display: block;
   margin: 0 auto;
 }
