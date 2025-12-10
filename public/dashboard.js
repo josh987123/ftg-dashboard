@@ -120,7 +120,8 @@ loadOverviewKPIs();
 ============================================================ */
 async function loadFinancialCharts() {
   try {
-    const response = await fetch("./data/financials.json");
+    const response = await fetch("https://ftg-dashboard.netlify.app/data/financials.json");
+
     const data = await response.json();
 
     const months = ["Jan","Feb","Mar","Apr","May","Jun"];
@@ -248,7 +249,7 @@ async function initRevenueModule() {
     spinner.classList.remove("hidden");
     
     if (!revenueDataCache) {
-      const response = await fetch("./data/financials.json");
+      const response = await fetch("https://ftg-dashboard.netlify.app/data/financials.json");
       revenueDataCache = await response.json();
     }
 
