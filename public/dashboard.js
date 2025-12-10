@@ -83,6 +83,7 @@ navItems.forEach(item => {
     // Section-specific loaders
     if (id === "financials") loadFinancialCharts();
     if (id === "revenue") initRevenueModule();
+    if (id === "accounts") initAccountModule();
   });
 });
 
@@ -775,6 +776,292 @@ function renderRevenueTable(labels, datasets) {
     row += "</tr>";
     body.innerHTML += row;
   });
+}
+
+/* ============================================================
+   ACCOUNT VIEW MODULE — GL ACCOUNT DRILLDOWN
+============================================================ */
+
+let acctChartInstance = null;
+let acctDataCache = null;
+let acctUIInitialized = false;
+
+async function initAccountModule() {
+  const spinner = document.getElementById("acctLoadingSpinner");
+  
+  try {
+    spinner.classList.remove("hidden");
+    
+    if (!acctDataCache) {
+      if (revenueDataCache) {
+        acctDataCache = revenueDataCache;
+      } else {
+        const response = await fetch("https://ftg-dashboard.netlify.app/data/financials.json");
+        acctDataCache = await response.json();
+        revenueDataCache = acctDataCache;
+      }
+    }
+
+    if (!acctUIInitialized) {
+      setupAccountUI(acctDataCache);
+      acctUIInitialized = true;
+    }
+    
+    spinner.classList.add("hidden");
+    updateAccountView(acctDataCache);
+
+  } catch (err) {
+    console.error("Account module error:", err);
+    spinner.classList.add("hidden");
+  }
+}
+
+function setupAccountUI(data) {
+  const acctSelect = document.getElementById("acctSelect");
+  const yearSelect = document.getElementById("acctYear");
+  
+  if (!data.gl_history_all || data.gl_history_all.length === 0) {
+    acctSelect.innerHTML = '<option value="">No accounts available</option>';
+    return;
+  }
+  
+  const accounts = data.gl_history_all.map(row => ({
+    num: row.Account_Num || "",
+    desc: row.Account_Description || ""
+  }));
+  
+  accounts.sort((a, b) => {
+    const numA = parseInt(a.num) || 0;
+    const numB = parseInt(b.num) || 0;
+    return numA - numB;
+  });
+  
+  acctSelect.innerHTML = accounts.map(a => 
+    `<option value="${a.num}">${a.num} – ${a.desc}</option>`
+  ).join("");
+  
+  if (accounts.length > 0) {
+    acctSelect.value = accounts[0].num;
+  }
+  
+  const years = Object.keys(data.revenue).map(Number).sort((a, b) => a - b);
+  yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
+  yearSelect.value = Math.max(...years);
+  
+  const s = document.getElementById("acctRangeStart");
+  const e = document.getElementById("acctRangeEnd");
+  s.min = e.min = years[0];
+  s.max = e.max = years[years.length - 1];
+  s.value = years[0];
+  e.value = years[years.length - 1];
+  document.getElementById("acctRangeStartLabel").innerText = s.value;
+  document.getElementById("acctRangeEndLabel").innerText = e.value;
+  
+  s.oninput = () => {
+    if (+s.value > +e.value) s.value = e.value;
+    document.getElementById("acctRangeStartLabel").innerText = s.value;
+    updateAccountView(data);
+  };
+  e.oninput = () => {
+    if (+e.value < +s.value) e.value = s.value;
+    document.getElementById("acctRangeEndLabel").innerText = e.value;
+    updateAccountView(data);
+  };
+  
+  document.getElementById("acctViewType").onchange = () => {
+    const view = document.getElementById("acctViewType").value;
+    const yearWrap = document.getElementById("acctYearWrapper");
+    const rangeWrap = document.getElementById("acctRangeWrapper");
+    
+    if (view === "annual") {
+      yearWrap.style.display = "none";
+      rangeWrap.classList.remove("hidden");
+    } else {
+      yearWrap.style.display = "flex";
+      rangeWrap.classList.add("hidden");
+    }
+    updateAccountView(data);
+  };
+  
+  acctSelect.onchange = () => updateAccountView(data);
+  yearSelect.onchange = () => updateAccountView(data);
+  document.getElementById("acctTrendline").onchange = () => updateAccountView(data);
+}
+
+function getAccountMonthlyValues(accountNum, year, data) {
+  if (!data.gl_history_all) return Array(12).fill(0);
+  
+  const row = data.gl_history_all.find(r => r.Account_Num === accountNum);
+  if (!row) return Array(12).fill(0);
+  
+  const months = [];
+  for (let m = 1; m <= 12; m++) {
+    const key = `${year}-${String(m).padStart(2, "0")}`;
+    const rawVal = row[key];
+    const val = (rawVal === "" || rawVal === null || rawVal === undefined) ? 0 : parseFloat(rawVal);
+    months.push(isNaN(val) ? 0 : val);
+  }
+  return months;
+}
+
+function getAccountQuarterlyValues(accountNum, year, data) {
+  const monthly = getAccountMonthlyValues(accountNum, year, data);
+  return [
+    monthly.slice(0, 3).reduce((a, b) => a + b, 0),
+    monthly.slice(3, 6).reduce((a, b) => a + b, 0),
+    monthly.slice(6, 9).reduce((a, b) => a + b, 0),
+    monthly.slice(9, 12).reduce((a, b) => a + b, 0)
+  ];
+}
+
+function getAccountAnnualValue(accountNum, year, data) {
+  const monthly = getAccountMonthlyValues(accountNum, year, data);
+  return monthly.reduce((a, b) => a + b, 0);
+}
+
+function updateAccountView(data) {
+  if (!data.gl_history_all || data.gl_history_all.length === 0) {
+    document.getElementById("acctChartTitleLine1").innerText = "No Account Data";
+    document.getElementById("acctChartTitleLine2").innerText = "GL history not available";
+    return;
+  }
+  
+  const acctNum = document.getElementById("acctSelect").value;
+  if (!acctNum) return;
+  
+  const view = document.getElementById("acctViewType").value;
+  const year = parseInt(document.getElementById("acctYear").value);
+  
+  const row = data.gl_history_all.find(r => r.Account_Num === acctNum);
+  const acctDesc = row ? row.Account_Description : "";
+  
+  let labels = [];
+  let values = [];
+  let subtitle = "";
+  
+  if (view === "monthly") {
+    labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    values = getAccountMonthlyValues(acctNum, year, data);
+    subtitle = `Monthly – ${year}`;
+  } else if (view === "quarterly") {
+    labels = ["Q1","Q2","Q3","Q4"];
+    values = getAccountQuarterlyValues(acctNum, year, data);
+    subtitle = `Quarterly – ${year}`;
+  } else if (view === "annual") {
+    const start = +document.getElementById("acctRangeStart").value;
+    const end = +document.getElementById("acctRangeEnd").value;
+    for (let y = start; y <= end; y++) {
+      labels.push(y.toString());
+      values.push(getAccountAnnualValue(acctNum, y, data));
+    }
+    subtitle = `Annual – ${start} to ${end}`;
+  }
+  
+  document.getElementById("acctChartTitleLine1").innerText = `${acctNum}: ${acctDesc}`;
+  document.getElementById("acctChartTitleLine2").innerText = subtitle;
+  
+  let datasets = [{
+    label: `Account ${acctNum}`,
+    data: values,
+    backgroundColor: "#3b82f6"
+  }];
+  
+  const showTrendline = document.getElementById("acctTrendline").checked;
+  if (showTrendline && values.length > 1) {
+    const trendData = calculateTrendline(values);
+    datasets.push({
+      label: "Trend",
+      data: trendData,
+      type: "line",
+      borderColor: "#10b981",
+      backgroundColor: "transparent",
+      borderWidth: 2,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      tension: 0
+    });
+  }
+  
+  renderAccountChart(labels, datasets);
+  renderAccountTable(labels, values, acctNum);
+  
+  const now = new Date();
+  const t = now.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+  document.getElementById("acctChartUpdated").innerText = `Updated: ${t}`;
+}
+
+function renderAccountChart(labels, datasets) {
+  const canvas = document.getElementById("acctChart");
+  if (!canvas) return;
+  
+  if (acctChartInstance) {
+    acctChartInstance.destroy();
+    acctChartInstance = null;
+  }
+  
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  
+  acctChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 600,
+        easing: "easeOutQuart"
+      },
+      plugins: {
+        legend: { position: "bottom" },
+        tooltip: {
+          backgroundColor: "rgba(31, 41, 55, 0.95)",
+          callbacks: {
+            label: function(context) {
+              const value = context.parsed.y;
+              return context.dataset.label + ": $" + value.toLocaleString();
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { drawOnChartArea: false }
+        },
+        y: {
+          ticks: {
+            callback: v => {
+              if (Math.abs(v) >= 1000000) {
+                return "$" + (v / 1000000).toFixed(1) + "M";
+              } else if (Math.abs(v) >= 1000) {
+                return "$" + (v / 1000).toFixed(0) + "K";
+              }
+              return "$" + v.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderAccountTable(labels, values, acctNum) {
+  const head = document.getElementById("acctTableHead");
+  const body = document.getElementById("acctTableBody");
+  
+  head.innerHTML = "<tr><th>Period</th><th>Amount</th></tr>";
+  
+  body.innerHTML = labels.map((lbl, i) => {
+    const v = values[i] || 0;
+    const formatted = v < 0 
+      ? `<span class="growth-negative">($${Math.abs(v).toLocaleString()})</span>`
+      : `$${v.toLocaleString()}`;
+    return `<tr><td>${lbl}</td><td>${formatted}</td></tr>`;
+  }).join("");
 }
 
 /* ------------------------------------------------------------

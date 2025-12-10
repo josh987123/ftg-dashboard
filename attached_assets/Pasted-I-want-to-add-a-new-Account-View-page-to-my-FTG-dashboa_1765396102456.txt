@@ -1,0 +1,91 @@
+I want to add a new “Account View” page to my FTG dashboard. 
+Please modify my Replit project to add a fully functional account drilldown module, using the same UI style and architecture as the existing Revenue View.
+
+Here is what I want:
+
+============================================================
+✅ NEW SECTION IN index.html
+============================================================
+• Add a new nav item in the sidebar called “Account View” with data-section="accountView".
+• Add a new <div class="dashboard-section" id="accountView"> section.
+• Inside this section, include:
+  - A dropdown <select id="accountSelector"></select> to choose an account.
+  - A year selector <select id="accountYear"></select>.
+  - A canvas <canvas id="accountChart"></canvas> for chart rendering.
+  - A data table similar to the revenue table, with <thead id="accountTableHead"> and <tbody id="accountTableBody">.
+
+============================================================
+✅ JAVASCRIPT UPDATES (dashboard.js)
+============================================================
+Add a new module similar to the Revenue module with functions:
+  1. initAccountModule()
+     - loads financials.json once (reuse revenueDataCache if appropriate)
+     - populates account dropdown
+     - sets up year selector
+     - calls updateAccountView()
+
+  2. setupAccountUI(data)
+     - extracts accounts from data.accounts
+     - populates #accountSelector with account numbers + descriptions
+     - populates #accountYear with available years from data.revenue or computed from gl_history_all
+
+  3. getAccountMonthlyValues(accountNumber, data)
+     - scans data.gl_history_all for the matching Account_Num
+     - returns an array of 12 values for selected year
+     - values come from YYYY-MM formatted columns
+
+  4. updateAccountView(data)
+     - reads selected account and year
+     - extracts monthly values
+     - calls renderAccountChart(labels, values)
+     - calls renderAccountTable(labels, values)
+
+  5. renderAccountChart(labels, values)
+     - same chart style as revenue chart (bar chart with gradient)
+     - title: “Account Activity – {Account Number}: {Description} – {Year}”
+
+  6. renderAccountTable(labels, values)
+     - table with Month and Amount columns
+
+Integrate initAccountModule into the navigation click handler so clicking the new nav item loads the module.
+
+============================================================
+✅ STYLE UPDATES (style.css)
+============================================================
+If needed, add minimal styling similar to #revenue section:
+• chart container
+• table layout
+• spacing
+• dropdown alignment
+
+============================================================
+DATA FORMAT NOTES (IMPORTANT)
+============================================================
+My financials.json includes:
+{
+  "revenue": { "2015": [...], "2016": [...], ... },
+  "accounts_receivable": {...},
+  "accounts_payable": {...},
+  "accounts": [...],
+  "gl_history": [...],
+  "gl_history_all": [
+      { "Account_Num": "4000", "Account_Description": "...", "2015-01": "1234", ... },
+      ...
+  ]
+}
+
+Use gl_history_all for extracting monthly values for individual account drilldown.
+
+============================================================
+FINAL GOAL
+============================================================
+Add a fully functional “Account View” page where:
+• User chooses an account from a dropdown.
+• User chooses a year.
+• A monthly chart for that account appears.
+• A data table appears under the chart.
+• Everything looks consistent with the existing dashboard UI.
+
+Make all code changes automatically across index.html, dashboard.js, and style.css. 
+After implementing, tell me exactly what changed in each file.
+

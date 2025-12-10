@@ -172,13 +172,9 @@
 
         <div class="rev-controls">
 
-          <!-- Account Selector -->
+          <!-- GL Account Selector -->
           <label>Account:</label>
-          <select id="acctSelect">
-            <option value="revenue">Revenue</option>
-            <option value="accounts_receivable">Accounts Receivable</option>
-            <option value="accounts_payable">Accounts Payable</option>
-          </select>
+          <select id="acctSelect"></select>
 
           <!-- View Mode -->
           <label>View:</label>
@@ -194,22 +190,6 @@
             <select id="acctYear"></select>
           </div>
 
-          <!-- Comparison -->
-          <div id="acctCompareWrapper">
-            <label class="checkbox-label">
-              <input type="checkbox" id="acctCompare">
-              Compare to Prior Year
-            </label>
-          </div>
-
-          <!-- Trendline -->
-          <div id="acctTrendWrapper">
-            <label class="checkbox-label">
-              <input type="checkbox" id="acctTrendline">
-              Show Trendline
-            </label>
-          </div>
-
           <!-- Annual Range Slider -->
           <div id="acctRangeWrapper" class="range-wrapper hidden">
             <label>Select Range:</label>
@@ -223,7 +203,14 @@
             </div>
           </div>
 
-          <button id="acctUpdateBtn">Update</button>
+          <!-- Trendline -->
+          <div id="acctTrendWrapper">
+            <label class="checkbox-label">
+              <input type="checkbox" id="acctTrendline">
+              Show Trendline
+            </label>
+          </div>
+
         </div>
 
         <!-- Account Chart -->
@@ -233,7 +220,7 @@
             <span>Loading data...</span>
           </div>
           <div class="chart-title">
-            <div id="acctChartTitleLine1">Account Trend</div>
+            <div id="acctChartTitleLine1">Account Activity</div>
             <div id="acctChartTitleLine2">Monthly – 2025</div>
             <div id="acctChartUpdated" class="chart-updated">Updated:</div>
           </div>
@@ -300,6 +287,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=7"></script>
+  <script src="dashboard.js?v=11"></script>
 </body>
 </html>
