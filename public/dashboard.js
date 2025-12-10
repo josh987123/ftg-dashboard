@@ -447,15 +447,23 @@ function setupRevenueUI(data) {
     const compareWrap = document.getElementById("revCompareWrapper");
     const yearWrap = document.getElementById("revYearWrapper");
     const rangeWrap = document.getElementById("revRangeWrapper");
+    const excludeLabel = document.getElementById("revExcludeLabel");
 
     if (view === "annual") {
       compareWrap.style.display = "none";
       yearWrap.style.display = "none";
       rangeWrap.classList.remove("hidden");
+      excludeLabel.textContent = "Exclude Current Year";
+    } else if (view === "quarterly") {
+      compareWrap.style.display = "flex";
+      yearWrap.style.display = "flex";
+      rangeWrap.classList.add("hidden");
+      excludeLabel.textContent = "Exclude Current Quarter";
     } else {
       compareWrap.style.display = "flex";
       yearWrap.style.display = "flex";
       rangeWrap.classList.add("hidden");
+      excludeLabel.textContent = "Exclude Current Month";
     }
     
     // Auto-update chart when view changes
@@ -1015,15 +1023,23 @@ function setupAccountUI(data) {
     const yearWrap = document.getElementById("acctYearWrapper");
     const compareWrap = document.getElementById("acctCompareWrapper");
     const rangeWrap = document.getElementById("acctRangeWrapper");
+    const excludeLabel = document.getElementById("acctExcludeLabel");
     
     if (view === "annual") {
       yearWrap.style.display = "none";
       compareWrap.style.display = "none";
       rangeWrap.classList.remove("hidden");
+      excludeLabel.textContent = "Exclude Current Year";
+    } else if (view === "quarterly") {
+      yearWrap.style.display = "flex";
+      compareWrap.style.display = "flex";
+      rangeWrap.classList.add("hidden");
+      excludeLabel.textContent = "Exclude Current Quarter";
     } else {
       yearWrap.style.display = "flex";
       compareWrap.style.display = "flex";
       rangeWrap.classList.add("hidden");
+      excludeLabel.textContent = "Exclude Current Month";
     }
     updateAccountView(data);
   };
