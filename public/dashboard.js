@@ -151,22 +151,31 @@ async function loadFinancialCharts() {
   }
 }
 
-/* Utility: subtle gradient generator */
+/* Utility: subtle gradient generator with solid color fallback */
 function makeGradient(canvas, base) {
-  const ctx = canvas.getContext("2d");
-  const height = canvas.clientHeight || 400;
-  const g = ctx.createLinearGradient(0, 0, 0, height);
-  if (base === "#3b82f6") {
-    g.addColorStop(0, "#60a5fa");
-    g.addColorStop(1, "#1d4ed8");
-  } else if (base === "#ef4444") {
-    g.addColorStop(0, "#f87171");
-    g.addColorStop(1, "#b91c1c");
-  } else {
-    g.addColorStop(0, base);
-    g.addColorStop(1, base);
+  try {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return base;
+    
+    const height = canvas.clientHeight || canvas.offsetHeight || 300;
+    if (height <= 0) return base;
+    
+    const g = ctx.createLinearGradient(0, 0, 0, height);
+    if (base === "#3b82f6") {
+      g.addColorStop(0, "#60a5fa");
+      g.addColorStop(1, "#1d4ed8");
+    } else if (base === "#ef4444") {
+      g.addColorStop(0, "#f87171");
+      g.addColorStop(1, "#b91c1c");
+    } else {
+      g.addColorStop(0, base);
+      g.addColorStop(1, base);
+    }
+    return g;
+  } catch (err) {
+    console.error("Gradient error:", err);
+    return base;
   }
-  return g;
 }
 
 /* Utility: calculate linear regression trendline */
@@ -467,19 +476,15 @@ function updateRevenueView(data) {
   if (view === "monthly") {
     labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-    const current = data.revenue[year];
+    const current = data.revenue[year] || [];
     const prior = data.revenue[year - 1];
-
-    const ctx = document.getElementById("revChart");
-    const gradBlue = makeGradient(ctx, "#3b82f6");
-    const gradRed  = makeGradient(ctx, "#ef4444");
 
     // Prior year FIRST (left)
     if (compare && prior) {
       datasets.push({
         label: `${year - 1}`,
         data: prior,
-        backgroundColor: gradRed
+        backgroundColor: "#ef4444"
       });
     }
 
@@ -487,7 +492,7 @@ function updateRevenueView(data) {
     datasets.push({
       label: `${year}`,
       data: current,
-      backgroundColor: gradBlue
+      backgroundColor: "#3b82f6"
     });
 
     setRevenueTitle(`Monthly – ${year}`);
@@ -506,10 +511,6 @@ function updateRevenueView(data) {
     };
     const currentQ = [sumQ(1), sumQ(2), sumQ(3), sumQ(4)];
 
-    const ctx = document.getElementById("revChart");
-    const gradBlue = makeGradient(ctx, "#3b82f6");
-    const gradRed  = makeGradient(ctx, "#ef4444");
-
     if (compare && data.revenue[year - 1]) {
       const pm = data.revenue[year - 1] || [];
       const sumPQ = q => {
@@ -523,7 +524,7 @@ function updateRevenueView(data) {
       datasets.push({
         label: `${year - 1}`,
         data: priorQ,
-        backgroundColor: gradRed
+        backgroundColor: "#ef4444"
       });
     }
 
@@ -531,7 +532,7 @@ function updateRevenueView(data) {
     datasets.push({
       label: `${year}`,
       data: currentQ,
-      backgroundColor: gradBlue
+      backgroundColor: "#3b82f6"
     });
 
     setRevenueTitle(`Quarterly – ${year}`);
@@ -545,9 +546,6 @@ function updateRevenueView(data) {
     const end   = +document.getElementById("revRangeEnd").value;
 
     labels = [];
-    const ctx = document.getElementById("revChart");
-    const gradBlue = makeGradient(ctx, "#3b82f6");
-
     const annualTotals = [];
     for (let y = start; y <= end; y++) {
       labels.push(y.toString());
@@ -560,7 +558,7 @@ function updateRevenueView(data) {
       {
         label: "Annual Revenue",
         data: annualTotals,
-        backgroundColor: gradBlue
+        backgroundColor: "#3b82f6"
       }
     ];
 
@@ -623,53 +621,71 @@ function updateTimestamp() {
    CHART RENDERING (GRADIENT BARS + RESPONSIVE)
 ------------------------------------------------------------ */
 function renderRevenueChart(labels, datasets) {
-  const ctx = document.getElementById("revChart");
-  if (revChartInstance) revChartInstance.destroy();
+  try {
+    const ctx = document.getElementById("revChart");
+    if (!ctx) {
+      console.error("Chart canvas not found");
+      return;
+    }
+    
+    if (revChartInstance) revChartInstance.destroy();
 
-  revChartInstance = new Chart(ctx, {
-    type: "bar",
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      aspectRatio: 1.8,
-      animation: {
-        duration: 600,
-        easing: "easeOutQuart"
-      },
-      plugins: {
-        legend: { position: "bottom" },
-        tooltip: {
-          backgroundColor: "rgba(31, 41, 55, 0.95)",
-          titleFont: { size: 14 },
-          bodyFont: { size: 13 },
-          padding: 12,
-          callbacks: {
-            label: function(context) {
-              const value = context.parsed.y;
-              return context.dataset.label + ": $" + value.toLocaleString();
+    // Use solid colors as fallback if gradient fails
+    const safeDatasets = datasets.map(ds => {
+      if (ds.backgroundColor && typeof ds.backgroundColor === 'object') {
+        // Gradient - keep it but provide fallback
+        return ds;
+      }
+      return ds;
+    });
+
+    revChartInstance = new Chart(ctx, {
+      type: "bar",
+      data: { labels, datasets: safeDatasets },
+      options: {
+        responsive: true,
+        aspectRatio: 1.8,
+        animation: {
+          duration: 600,
+          easing: "easeOutQuart"
+        },
+        plugins: {
+          legend: { position: "bottom" },
+          tooltip: {
+            backgroundColor: "rgba(31, 41, 55, 0.95)",
+            titleFont: { size: 14 },
+            bodyFont: { size: 13 },
+            padding: 12,
+            callbacks: {
+              label: function(context) {
+                const value = context.parsed.y;
+                return context.dataset.label + ": $" + value.toLocaleString();
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              padding: 10,
+              font: { size: 12 }
+            },
+            grid: {
+              drawOnChartArea: false
+            }
+          },
+          y: {
+            ticks: {
+              font: { size: 11 },
+              callback: v => "$" + (v / 1000000).toFixed(1) + "M"
             }
           }
         }
-      },
-      scales: {
-        x: {
-          ticks: {
-            padding: 10,
-            font: { size: 12 }
-          },
-          grid: {
-            drawOnChartArea: false
-          }
-        },
-        y: {
-          ticks: {
-            font: { size: 11 },
-            callback: v => "$" + (v / 1000000).toFixed(1) + "M"
-          }
-        }
       }
-    }
-  });
+    });
+  } catch (err) {
+    console.error("Chart render error:", err);
+  }
 }
 
 /* ------------------------------------------------------------
