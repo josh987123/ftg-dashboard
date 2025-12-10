@@ -361,16 +361,24 @@
           </div>
 
           <div id="isMatrixControls" class="hidden">
-            <label>Show by:</label>
-            <select id="isMatrixPeriodType">
-              <option value="year">Year</option>
-              <option value="quarter">Quarter</option>
-              <option value="month">Month</option>
-            </select>
+            <div class="is-matrix-tabs">
+              <button class="is-matrix-tab active" data-period="month">Month</button>
+              <button class="is-matrix-tab" data-period="quarter">Quarter</button>
+              <button class="is-matrix-tab" data-period="year">Year</button>
+            </div>
 
-            <div id="isMatrixYearWrapper" class="hidden">
+            <div id="isMatrixMonthQuarterControls">
               <label>Year:</label>
               <select id="isMatrixYear"></select>
+            </div>
+
+            <div id="isMatrixYearControls" class="hidden">
+              <label>Years:</label>
+              <input type="range" id="isMatrixYearStart" min="2015" max="2025" value="2020">
+              <span id="isMatrixYearStartLabel">2020</span>
+              <span>to</span>
+              <input type="range" id="isMatrixYearEnd" min="2015" max="2025" value="2025">
+              <span id="isMatrixYearEndLabel">2025</span>
             </div>
 
             <label class="is-checkbox-label">
@@ -439,6 +447,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=27"></script>
+  <script src="dashboard.js?v=28"></script>
 </body>
 </html>
