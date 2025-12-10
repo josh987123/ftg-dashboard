@@ -20,11 +20,27 @@
       <img src="logo.png" alt="FTG Logo" class="login-logo">
       <h2>FTG Dashboard</h2>
       <p>Please enter the password to continue</p>
-      <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="off">
-      <button id="loginBtn">Login</button>
+      <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="off" onkeypress="if(event.key==='Enter')doLogin()">
+      <button id="loginBtn" onclick="doLogin()">Login</button>
       <p id="loginError" class="login-error"></p>
     </div>
   </div>
+  <script>
+    function doLogin() {
+      var pwd = document.getElementById('loginPassword').value;
+      var err = document.getElementById('loginError');
+      if (pwd === 'Ftgb2025$') {
+        localStorage.setItem('ftg_authenticated', 'true');
+        document.getElementById('loginScreen').classList.add('hidden');
+        err.textContent = '';
+      } else {
+        err.textContent = 'Incorrect password. Please try again.';
+      }
+    }
+    if (localStorage.getItem('ftg_authenticated') === 'true') {
+      document.getElementById('loginScreen').classList.add('hidden');
+    }
+  </script>
 
   <!-- HEADER -->
   <header class="header">
@@ -357,6 +373,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=19"></script>
+  <script src="dashboard.js?v=20"></script>
 </body>
 </html>

@@ -54,59 +54,63 @@ function initAuth() {
   }
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initAuth);
-} else {
+document.addEventListener("DOMContentLoaded", function() {
   initAuth();
-}
-
-/* ------------------------------------------------------------
-   MOBILE SIDEBAR NAVIGATION
------------------------------------------------------------- */
-const sidebar = document.getElementById("sidebar");
-const overlay = document.getElementById("overlay");
-const mobileBtn = document.getElementById("mobileMenuButton");
-
-mobileBtn.addEventListener("click", () => {
-  sidebar.classList.add("open");
-  overlay.classList.remove("hidden");
+  initSidebar();
+  initNavigation();
 });
 
-overlay.addEventListener("click", () => {
-  sidebar.classList.remove("open");
-  overlay.classList.add("hidden");
-});
+function initSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  const mobileBtn = document.getElementById("mobileMenuButton");
 
-/* ------------------------------------------------------------
-   NAVIGATION LINKS (DESKTOP + MOBILE)
------------------------------------------------------------- */
-const navItems = document.querySelectorAll(".nav-item");
-const sections = document.querySelectorAll(".dashboard-section");
+  if (mobileBtn) {
+    mobileBtn.addEventListener("click", () => {
+      sidebar.classList.add("open");
+      overlay.classList.remove("hidden");
+    });
+  }
 
-navItems.forEach(item => {
-  item.addEventListener("click", () => {
-    // Remove old states
-    navItems.forEach(i => i.classList.remove("active"));
-    sections.forEach(s => s.classList.remove("visible"));
-
-    // Activate clicked
-    item.classList.add("active");
-    const id = item.dataset.section;
-    const section = document.getElementById(id);
-    if (section) section.classList.add("visible");
-
-    // Auto-close sidebar on mobile
-    if (window.innerWidth <= 768) {
+  if (overlay) {
+    overlay.addEventListener("click", () => {
       sidebar.classList.remove("open");
       overlay.classList.add("hidden");
-    }
+    });
+  }
+}
 
-    // Section-specific loaders
-    if (id === "financials") loadFinancialCharts();
-    if (id === "revenue") initRevenueModule();
-    if (id === "accounts") initAccountModule();
+function initNavigation() {
+  const navItems = document.querySelectorAll(".nav-item");
+  const sections = document.querySelectorAll(".dashboard-section");
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+
+  navItems.forEach(item => {
+    item.addEventListener("click", () => {
+      // Remove old states
+      navItems.forEach(i => i.classList.remove("active"));
+      sections.forEach(s => s.classList.remove("visible"));
+
+      // Activate clicked
+      item.classList.add("active");
+      const id = item.dataset.section;
+      const section = document.getElementById(id);
+      if (section) section.classList.add("visible");
+
+      // Auto-close sidebar on mobile
+      if (window.innerWidth <= 768 && sidebar && overlay) {
+        sidebar.classList.remove("open");
+        overlay.classList.add("hidden");
+      }
+
+      // Section-specific loaders
+      if (id === "financials") loadFinancialCharts();
+      if (id === "revenue") initRevenueModule();
+      if (id === "accounts") initAccountModule();
+    });
   });
-});
+}
 
 /* ------------------------------------------------------------
    EXECUTIVE OVERVIEW (STATIC KPI CARDS)
