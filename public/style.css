@@ -114,6 +114,7 @@ body {
 
 .dashboard-section { display:none; }
 .dashboard-section.visible { display:block; }
+.dashboard-section h2 { margin-bottom:20px; }
 
 /* KPI CARDS */
 .card-container {
