@@ -1447,12 +1447,24 @@ function initIncomeStatementControls() {
   };
   
   expandAll.onclick = () => {
-    Object.keys(isRowStates).forEach(k => isRowStates[k] = true);
+    const groups = isAccountGroups.income_statement.groups;
+    groups.forEach(g => {
+      if (g.expandable) {
+        const rowId = `is-row-${g.label.replace(/\s+/g, '_')}`;
+        isRowStates[rowId] = true;
+      }
+    });
     renderIncomeStatement();
   };
   
   collapseAll.onclick = () => {
-    Object.keys(isRowStates).forEach(k => isRowStates[k] = false);
+    const groups = isAccountGroups.income_statement.groups;
+    groups.forEach(g => {
+      if (g.expandable) {
+        const rowId = `is-row-${g.label.replace(/\s+/g, '_')}`;
+        isRowStates[rowId] = false;
+      }
+    });
     renderIncomeStatement();
   };
 }
@@ -1636,7 +1648,7 @@ function buildIncomeStatementRows(periodMonths, groups, computedValues = {}) {
   const rows = [];
   
   groups.forEach((group, idx) => {
-    const rowId = `is-row-${idx}`;
+    const rowId = `is-row-${group.label.replace(/\s+/g, '_')}`;
     let value = null;
     
     if (group.accounts) {
@@ -1655,9 +1667,9 @@ function buildIncomeStatementRows(periodMonths, groups, computedValues = {}) {
     
     computedValues[group.label] = value;
     
-    if (group.level === 0 && group.type !== "ratio") {
+    if (group.expandable) {
       if (isRowStates[rowId] === undefined) {
-        isRowStates[rowId] = true;
+        isRowStates[rowId] = false;
       }
     }
     
@@ -1667,7 +1679,9 @@ function buildIncomeStatementRows(periodMonths, groups, computedValues = {}) {
       level: group.level,
       type: group.type,
       value: value,
-      hasChildren: hasChildRows(groups, idx),
+      expandable: group.expandable || false,
+      parent: group.parent || null,
+      highlight: group.highlight || null,
       isIncome: group.isIncome || false
     });
   });
@@ -1862,15 +1876,16 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
   
   let bodyHtml = "";
   rows.forEach((row, i) => {
-    const isVisible = isRowVisible(groups, i);
+    const isVisible = isRowVisibleByParent(row, rows);
     const hiddenClass = isVisible ? "" : "is-row-hidden";
     const typeClass = `is-row-${row.type}`;
     const indentClass = `is-indent-${row.level}`;
+    const highlightClass = row.highlight ? `is-highlight-${row.highlight}` : "";
     const isIncome = row.isIncome || false;
     
     let toggleHtml = "";
-    if (row.level === 0 && row.hasChildren && row.type !== "ratio") {
-      const expanded = isRowStates[row.id] !== false;
+    if (row.expandable) {
+      const expanded = isRowStates[row.id] === true;
       toggleHtml = `<span class="is-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
     }
     
@@ -1883,7 +1898,7 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
       valueHtml = formatAccountingNumber(row.value);
     }
     
-    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${highlightClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
     
     if (comparisonRows) {
@@ -1934,21 +1949,22 @@ function renderMatrixView(groups, matrixCount, thead, tbody) {
     return buildIncomeStatementRows(p.months, groups);
   });
   
+  const firstRows = allPeriodRows[0];
   let bodyHtml = "";
-  groups.forEach((group, i) => {
-    const row = allPeriodRows[0][i];
-    const isVisible = isRowVisible(groups, i);
+  firstRows.forEach((row, i) => {
+    const isVisible = isRowVisibleByParent(row, firstRows);
     const hiddenClass = isVisible ? "" : "is-row-hidden";
     const typeClass = `is-row-${row.type}`;
     const indentClass = `is-indent-${row.level}`;
+    const highlightClass = row.highlight ? `is-highlight-${row.highlight}` : "";
     
     let toggleHtml = "";
-    if (row.level === 0 && row.hasChildren && row.type !== "ratio") {
-      const expanded = isRowStates[row.id] !== false;
+    if (row.expandable) {
+      const expanded = isRowStates[row.id] === true;
       toggleHtml = `<span class="is-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
     }
     
-    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${highlightClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
     
     allPeriodRows.forEach(periodRows => {
@@ -1983,6 +1999,16 @@ function isRowVisible(groups, idx) {
     }
   }
   return true;
+}
+
+function isRowVisibleByParent(row, rows) {
+  if (!row.parent) return true;
+  
+  const parentRow = rows.find(r => r.label === row.parent);
+  if (!parentRow) return true;
+  
+  const parentExpanded = isRowStates[parentRow.id] === true;
+  return parentExpanded;
 }
 
 function attachToggleListeners() {

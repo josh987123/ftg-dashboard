@@ -753,7 +753,8 @@ body {
 }
 
 #incomeStatementTable {
-  width: 100%;
+  width: 80%;
+  max-width: 900px;
   border-collapse: collapse;
   font-size: 13px;
 }
@@ -803,6 +804,20 @@ body {
 .is-row-subtotal td {
   font-weight: 700;
   border-top: 1px solid #9ca3af;
+}
+
+.is-highlight-revenue td {
+  background: #f3f4f6 !important;
+}
+
+.is-highlight-costOfSales td {
+  background: #f3f4f6 !important;
+}
+
+.is-highlight-grossProfit td {
+  background: #e5e7eb !important;
+  border-top: 2px solid #6b7280 !important;
+  border-bottom: 2px solid #6b7280 !important;
 }
 
 .is-row-ratio td {
