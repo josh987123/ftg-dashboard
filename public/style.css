@@ -280,6 +280,7 @@ body {
   border-radius:10px;
   box-shadow:0 2px 8px rgba(0,0,0,0.08);
   transition:transform 0.2s ease, box-shadow 0.2s ease;
+  border-left:4px solid #3b82f6;
 }
 
 .rev-kpi-card:hover {
@@ -469,11 +470,14 @@ body {
   padding:24px 30px;
   border-radius:10px;
   box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  margin-top:12px;
 }
 
 .rev-table-box h3 {
-  margin-bottom:16px;
+  margin-bottom:18px;
   font-size:18px;
+  color:#1f2937;
+  font-weight:600;
 }
 
 .table-scroll{ overflow-x:auto; }
@@ -494,6 +498,8 @@ body {
 #revTable th{
   background:#f3f4f6;
   font-weight:700;
+  position:sticky;
+  top:0;
 }
 
 #revTable td {
@@ -508,36 +514,82 @@ body {
   background:#f9fafb;
 }
 
+/* Ensure table is readable on small screens */
+.table-scroll {
+  max-height:400px;
+  overflow-y:auto;
+}
+
 /* RESPONSIVE */
 @media (max-width:768px){
   .content{ padding:18px; }
-  .rev-kpi-container { grid-template-columns:repeat(2, 1fr); gap:12px; }
-  .rev-kpi-value { font-size:20px; }
-  .export-bar { flex-wrap:wrap; }
-  .export-btn { flex:1; min-width:140px; justify-content:center; }
+  
+  .rev-kpi-container { grid-template-columns:repeat(2, 1fr); gap:14px; margin-bottom:24px; }
+  .rev-kpi-card { padding:16px 18px; }
+  .rev-kpi-label { font-size:11px; }
+  .rev-kpi-value { font-size:22px; line-height:1.3; }
+  
+  .export-bar { gap:10px; margin-bottom:24px; }
+  .export-btn { 
+    flex:1; 
+    min-height:44px;
+    padding:12px 14px;
+    font-size:14px;
+  }
+  
   .rev-controls{ 
     flex-direction:column; 
     width:100%; 
     align-items:stretch;
-    gap:14px;
+    gap:16px;
+    margin-bottom:24px;
   }
-  .rev-controls > label { margin-bottom:-8px; }
-  .rev-controls select, .rev-controls button{ width:100%; }
+  .rev-controls > label { margin-bottom:-6px; font-size:13px; }
+  .rev-controls select, .rev-controls button{ width:100%; min-height:44px; font-size:14px; }
+  
   #revYearWrapper,
   #revCompareWrapper,
   #revTrendWrapper {
     flex-direction:row;
     justify-content:space-between;
+    align-items:center;
   }
-  #revYearWrapper select { flex:1; }
+  #revYearWrapper label,
+  #revCompareWrapper label,
+  #revTrendWrapper label { font-size:13px; }
+  #revYearWrapper select { flex:1; margin-left:8px; }
+  
   .range-container{ width:100%; }
-  .chart-title div{ font-size:17px; }
-  .chart-box { padding:20px; }
-  .rev-table-box { padding:16px; }
+  .range-wrapper { margin-bottom:12px; }
+  
+  .chart-box { padding:20px 18px; margin-bottom:28px; }
+  .chart-title div { font-size:17px; }
+  
+  .rev-table-box { padding:18px; }
+  #revTable th, #revTable td { padding:11px 12px; font-size:13px; }
 }
 
 @media (max-width:500px){
-  h2{ font-size:22px; }
-  .chart-title div{ font-size:16px; }
-  .logout-btn { padding:5px 10px; font-size:12px; }
+  .content { padding:14px; }
+  h2{ font-size:20px; margin-bottom:18px; }
+  
+  .rev-kpi-container { grid-template-columns:repeat(2, 1fr); gap:12px; margin-bottom:18px; }
+  .rev-kpi-card { padding:14px 16px; }
+  .rev-kpi-label { font-size:10px; }
+  .rev-kpi-value { font-size:20px; }
+  
+  .export-bar { gap:8px; flex-direction:column; margin-bottom:18px; }
+  .export-btn { font-size:13px; padding:11px 12px; }
+  
+  .rev-controls { gap:14px; margin-bottom:18px; }
+  .rev-controls select, .rev-controls button { font-size:13px; }
+  
+  .chart-box { padding:16px 14px; margin-bottom:22px; }
+  .chart-title div { font-size:15px; }
+  
+  .rev-table-box { padding:14px; }
+  #revTable { min-width:320px; }
+  #revTable th, #revTable td { padding:9px 10px; font-size:12px; }
+  
+  .logout-btn { padding:6px 10px; font-size:12px; }
 }
