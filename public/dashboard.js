@@ -1477,8 +1477,6 @@ function initIncomeStatementControls() {
   const periodSelect = document.getElementById("isPeriodSelect");
   const compare = document.getElementById("isCompare");
   const showSubtotal = document.getElementById("isShowSubtotal");
-  const expandAll = document.getElementById("isExpandAll");
-  const collapseAll = document.getElementById("isCollapseAll");
   const matrixYearStart = document.getElementById("isMatrixYearStart");
   const matrixYearEnd = document.getElementById("isMatrixYearEnd");
   
@@ -1525,28 +1523,6 @@ function initIncomeStatementControls() {
       matrixYearStart.value = matrixYearEnd.value;
       document.getElementById("isMatrixYearStartLabel").textContent = matrixYearStart.value;
     }
-    renderIncomeStatement();
-  };
-  
-  expandAll.onclick = () => {
-    const groups = isAccountGroups.income_statement.groups;
-    groups.forEach(g => {
-      if (g.expandable) {
-        const rowId = `is-row-${g.label.replace(/\s+/g, '_')}`;
-        isRowStates[rowId] = true;
-      }
-    });
-    renderIncomeStatement();
-  };
-  
-  collapseAll.onclick = () => {
-    const groups = isAccountGroups.income_statement.groups;
-    groups.forEach(g => {
-      if (g.expandable) {
-        const rowId = `is-row-${g.label.replace(/\s+/g, '_')}`;
-        isRowStates[rowId] = false;
-      }
-    });
     renderIncomeStatement();
   };
 }
