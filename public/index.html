@@ -78,6 +78,7 @@
           <li class="nav-item active" data-section="overview">Overview</li>
           <li class="nav-item" data-section="revenue">Revenue View</li>
           <li class="nav-item" data-section="accounts">Account View</li>
+          <li class="nav-item" data-section="incomeStatement">Income Statement</li>
           <li class="nav-item" data-section="financials">Financials</li>
           <li class="nav-item" data-section="projects">Projects</li>
           <li class="nav-item" data-section="operations">Operations</li>
@@ -326,6 +327,64 @@
       </section>
 
       <!-- ============================================================
+           INCOME STATEMENT
+      ============================================================= -->
+      <section id="incomeStatement" class="dashboard-section">
+        <h2>Income Statement</h2>
+
+        <div class="is-controls">
+          <label>Period Type:</label>
+          <select id="isPeriodType">
+            <option value="month">Month</option>
+            <option value="quarter">Quarter</option>
+            <option value="year">Year</option>
+            <option value="ytd">YTD</option>
+            <option value="ttm">TTM</option>
+          </select>
+
+          <div id="isPeriodWrapper">
+            <label>Period:</label>
+            <select id="isPeriodSelect"></select>
+          </div>
+
+          <label>Compare:</label>
+          <select id="isCompare">
+            <option value="none">None</option>
+            <option value="prior_period">Prior Period</option>
+            <option value="prior_year">Prior Year</option>
+          </select>
+
+          <label>View Mode:</label>
+          <select id="isViewMode">
+            <option value="single">Single Period</option>
+            <option value="matrix">Matrix</option>
+          </select>
+
+          <div id="isMatrixWrapper" class="hidden">
+            <label>Matrix Count:</label>
+            <select id="isMatrixCount">
+              <option value="3m">3 Months</option>
+              <option value="6m">6 Months</option>
+              <option value="9m">9 Months</option>
+              <option value="12m">12 Months</option>
+              <option value="4q">4 Quarters</option>
+              <option value="5y">5 Years</option>
+            </select>
+          </div>
+
+          <button id="isExpandAll" class="is-toggle-btn">Expand All</button>
+          <button id="isCollapseAll" class="is-toggle-btn">Collapse All</button>
+        </div>
+
+        <div class="is-table-box">
+          <table id="incomeStatementTable">
+            <thead id="isTableHead"></thead>
+            <tbody id="isTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============================================================
            FINANCIALS
       ============================================================= -->
       <section id="financials" class="dashboard-section">
@@ -373,6 +432,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=22"></script>
+  <script src="dashboard.js?v=23"></script>
 </body>
 </html>

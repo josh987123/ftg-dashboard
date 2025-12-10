@@ -108,6 +108,7 @@ function initNavigation() {
       if (id === "financials") loadFinancialCharts();
       if (id === "revenue") initRevenueModule();
       if (id === "accounts") initAccountModule();
+      if (id === "incomeStatement") loadIncomeStatement();
     });
   });
 }
@@ -1367,6 +1368,609 @@ function renderAccountTable(labels, datasets) {
     row += "</tr>";
     return row;
   }).join("");
+}
+
+/* ============================================================
+   INCOME STATEMENT MODULE
+============================================================ */
+
+let isData = null;
+let isAccountGroups = null;
+let isGLLookup = {};
+let isRowStates = {};
+
+async function loadIncomeStatement() {
+  if (!isData || !isAccountGroups) {
+    try {
+      const [financialsRes, groupsRes] = await Promise.all([
+        fetch("/data/financials.json"),
+        fetch("/data/account_groups.json")
+      ]);
+      isData = await financialsRes.json();
+      isAccountGroups = await groupsRes.json();
+      buildGLLookup();
+      initIncomeStatementControls();
+    } catch (err) {
+      console.error("Failed to load Income Statement data:", err);
+      return;
+    }
+  }
+  renderIncomeStatement();
+}
+
+function buildGLLookup() {
+  isGLLookup = {};
+  const glHistory = isData.gl_history_all || [];
+  
+  glHistory.forEach(row => {
+    const acctNum = parseInt(row.Account_Num || row.Account, 10);
+    if (isNaN(acctNum)) return;
+    
+    if (!isGLLookup[acctNum]) {
+      isGLLookup[acctNum] = {};
+    }
+    
+    Object.keys(row).forEach(key => {
+      if (/^\d{4}-\d{2}$/.test(key)) {
+        const val = parseFloat(row[key]) || 0;
+        isGLLookup[acctNum][key] = val;
+      }
+    });
+  });
+}
+
+function initIncomeStatementControls() {
+  const periodType = document.getElementById("isPeriodType");
+  const periodSelect = document.getElementById("isPeriodSelect");
+  const compare = document.getElementById("isCompare");
+  const viewMode = document.getElementById("isViewMode");
+  const matrixWrapper = document.getElementById("isMatrixWrapper");
+  const matrixCount = document.getElementById("isMatrixCount");
+  const expandAll = document.getElementById("isExpandAll");
+  const collapseAll = document.getElementById("isCollapseAll");
+  
+  populatePeriodOptions();
+  
+  periodType.onchange = () => {
+    populatePeriodOptions();
+    renderIncomeStatement();
+  };
+  
+  periodSelect.onchange = () => renderIncomeStatement();
+  compare.onchange = () => renderIncomeStatement();
+  
+  viewMode.onchange = () => {
+    if (viewMode.value === "matrix") {
+      matrixWrapper.classList.remove("hidden");
+      compare.disabled = true;
+    } else {
+      matrixWrapper.classList.add("hidden");
+      compare.disabled = false;
+    }
+    renderIncomeStatement();
+  };
+  
+  matrixCount.onchange = () => renderIncomeStatement();
+  
+  expandAll.onclick = () => {
+    Object.keys(isRowStates).forEach(k => isRowStates[k] = true);
+    renderIncomeStatement();
+  };
+  
+  collapseAll.onclick = () => {
+    Object.keys(isRowStates).forEach(k => isRowStates[k] = false);
+    renderIncomeStatement();
+  };
+}
+
+function populatePeriodOptions() {
+  const periodType = document.getElementById("isPeriodType").value;
+  const periodSelect = document.getElementById("isPeriodSelect");
+  
+  const months = getAvailableMonths();
+  if (months.length === 0) return;
+  
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  
+  let options = [];
+  
+  if (periodType === "month") {
+    months.forEach(m => {
+      const [y, mo] = m.split("-");
+      const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
+      options.push({ value: m, label: `${monthName} ${y}` });
+    });
+  } else if (periodType === "quarter") {
+    const quarters = new Set();
+    months.forEach(m => {
+      const [y, mo] = m.split("-").map(Number);
+      const q = Math.ceil(mo / 3);
+      quarters.add(`${y}-Q${q}`);
+    });
+    Array.from(quarters).sort().reverse().forEach(q => {
+      options.push({ value: q, label: q });
+    });
+  } else if (periodType === "year") {
+    const years = new Set();
+    months.forEach(m => years.add(m.split("-")[0]));
+    Array.from(years).sort().reverse().forEach(y => {
+      options.push({ value: y, label: y });
+    });
+  } else if (periodType === "ytd") {
+    const years = new Set();
+    months.forEach(m => years.add(m.split("-")[0]));
+    Array.from(years).sort().reverse().forEach(y => {
+      for (let mo = 12; mo >= 1; mo--) {
+        const key = `${y}-${String(mo).padStart(2, "0")}`;
+        if (months.includes(key)) {
+          const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
+          options.push({ value: `${y}-YTD-${mo}`, label: `YTD ${monthName} ${y}` });
+          break;
+        }
+      }
+    });
+  } else if (periodType === "ttm") {
+    months.slice(-24).reverse().forEach(m => {
+      const [y, mo] = m.split("-");
+      const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
+      options.push({ value: `TTM-${m}`, label: `TTM ending ${monthName} ${y}` });
+    });
+  }
+  
+  periodSelect.innerHTML = options.map(o => 
+    `<option value="${o.value}">${o.label}</option>`
+  ).join("");
+}
+
+function getAvailableMonths() {
+  const allMonths = new Set();
+  Object.values(isGLLookup).forEach(acctData => {
+    Object.keys(acctData).forEach(k => {
+      if (/^\d{4}-\d{2}$/.test(k)) allMonths.add(k);
+    });
+  });
+  return Array.from(allMonths).sort();
+}
+
+function getPeriodMonths(periodValue, periodType) {
+  const months = getAvailableMonths();
+  
+  if (periodType === "month") {
+    return [periodValue];
+  } else if (periodType === "quarter") {
+    const [y, qStr] = periodValue.split("-Q");
+    const q = parseInt(qStr);
+    const startMonth = (q - 1) * 3 + 1;
+    const result = [];
+    for (let m = startMonth; m < startMonth + 3; m++) {
+      const key = `${y}-${String(m).padStart(2, "0")}`;
+      if (months.includes(key)) result.push(key);
+    }
+    return result;
+  } else if (periodType === "year") {
+    return months.filter(m => m.startsWith(periodValue + "-"));
+  } else if (periodType === "ytd") {
+    const parts = periodValue.split("-YTD-");
+    const y = parts[0];
+    const endMonth = parseInt(parts[1]);
+    const result = [];
+    for (let m = 1; m <= endMonth; m++) {
+      const key = `${y}-${String(m).padStart(2, "0")}`;
+      if (months.includes(key)) result.push(key);
+    }
+    return result;
+  } else if (periodType === "ttm") {
+    const endMonth = periodValue.replace("TTM-", "");
+    const endIdx = months.indexOf(endMonth);
+    if (endIdx < 0) return [];
+    const startIdx = Math.max(0, endIdx - 11);
+    return months.slice(startIdx, endIdx + 1);
+  }
+  return [];
+}
+
+function getMatrixPeriods(matrixCount) {
+  const months = getAvailableMonths();
+  const periods = [];
+  
+  if (matrixCount.endsWith("m")) {
+    const count = parseInt(matrixCount);
+    const recent = months.slice(-count);
+    recent.forEach(m => {
+      periods.push({ label: formatMonthLabel(m), months: [m] });
+    });
+  } else if (matrixCount === "4q") {
+    const quarters = [];
+    months.forEach(m => {
+      const [y, mo] = m.split("-").map(Number);
+      const q = Math.ceil(mo / 3);
+      const qKey = `${y}-Q${q}`;
+      if (!quarters.find(x => x.key === qKey)) {
+        quarters.push({ key: qKey, months: [] });
+      }
+      quarters.find(x => x.key === qKey).months.push(m);
+    });
+    quarters.slice(-4).forEach(q => {
+      periods.push({ label: q.key, months: q.months });
+    });
+  } else if (matrixCount === "5y") {
+    const years = [...new Set(months.map(m => m.split("-")[0]))];
+    years.slice(-5).forEach(y => {
+      const yMonths = months.filter(m => m.startsWith(y + "-"));
+      periods.push({ label: y, months: yMonths });
+    });
+  }
+  
+  return periods;
+}
+
+function formatMonthLabel(m) {
+  const [y, mo] = m.split("-");
+  const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
+  return `${monthName} ${y}`;
+}
+
+function sumAccountsForPeriod(accounts, periodMonths, isRange = false) {
+  let total = 0;
+  
+  let acctList = [];
+  if (isRange && accounts.length === 2) {
+    const [start, end] = accounts;
+    Object.keys(isGLLookup).forEach(acct => {
+      const num = parseInt(acct);
+      if (num >= start && num <= end) acctList.push(num);
+    });
+  } else {
+    acctList = accounts;
+  }
+  
+  acctList.forEach(acct => {
+    const acctData = isGLLookup[acct];
+    if (acctData) {
+      periodMonths.forEach(m => {
+        total += acctData[m] || 0;
+      });
+    }
+  });
+  
+  return total;
+}
+
+function buildIncomeStatementRows(periodMonths, groups, computedValues = {}) {
+  const rows = [];
+  
+  groups.forEach((group, idx) => {
+    const rowId = `is-row-${idx}`;
+    let value = null;
+    
+    if (group.accounts) {
+      value = sumAccountsForPeriod(group.accounts, periodMonths, false);
+      if (isIncomeAccountGroup(group)) {
+        value = Math.abs(value);
+      }
+    } else if (group.accounts_range) {
+      value = sumAccountsForPeriod(group.accounts_range, periodMonths, true);
+      if (isIncomeAccountGroup(group)) {
+        value = Math.abs(value);
+      }
+    } else if (group.formula) {
+      value = evaluateFormula(group.formula, computedValues);
+    }
+    
+    computedValues[group.label] = value;
+    
+    if (group.level === 0 && group.type !== "ratio") {
+      if (isRowStates[rowId] === undefined) {
+        isRowStates[rowId] = true;
+      }
+    }
+    
+    rows.push({
+      id: rowId,
+      label: group.label,
+      level: group.level,
+      type: group.type,
+      value: value,
+      hasChildren: hasChildRows(groups, idx)
+    });
+  });
+  
+  return rows;
+}
+
+function isIncomeAccountGroup(group) {
+  if (group.accounts) {
+    return group.accounts.some(a => (a >= 4000 && a < 5000) || (a >= 8000 && a < 9000));
+  }
+  if (group.accounts_range) {
+    const [start, end] = group.accounts_range;
+    return (start >= 4000 && end < 5000) || (start >= 8000 && end < 9000);
+  }
+  return false;
+}
+
+function hasChildRows(groups, idx) {
+  const currentLevel = groups[idx].level;
+  for (let i = idx + 1; i < groups.length; i++) {
+    if (groups[i].level <= currentLevel) return false;
+    if (groups[i].level > currentLevel) return true;
+  }
+  return false;
+}
+
+function evaluateFormula(formula, computedValues) {
+  let expr = formula;
+  
+  Object.keys(computedValues).sort((a, b) => b.length - a.length).forEach(label => {
+    const val = computedValues[label] || 0;
+    expr = expr.split(label).join(`(${val})`);
+  });
+  
+  try {
+    expr = expr.replace(/[^0-9+\-*/().]/g, "");
+    return eval(expr) || 0;
+  } catch (e) {
+    console.error("Formula eval error:", formula, e);
+    return 0;
+  }
+}
+
+function getPriorPeriod(periodValue, periodType) {
+  const months = getAvailableMonths();
+  
+  if (periodType === "month") {
+    const idx = months.indexOf(periodValue);
+    return idx > 0 ? months[idx - 1] : null;
+  } else if (periodType === "quarter") {
+    const [y, qStr] = periodValue.split("-Q");
+    const q = parseInt(qStr);
+    if (q > 1) return `${y}-Q${q - 1}`;
+    return `${parseInt(y) - 1}-Q4`;
+  } else if (periodType === "year") {
+    return String(parseInt(periodValue) - 1);
+  } else if (periodType === "ytd") {
+    const parts = periodValue.split("-YTD-");
+    return `${parseInt(parts[0]) - 1}-YTD-${parts[1]}`;
+  } else if (periodType === "ttm") {
+    const endMonth = periodValue.replace("TTM-", "");
+    const idx = months.indexOf(endMonth);
+    if (idx >= 12) {
+      return `TTM-${months[idx - 1]}`;
+    }
+    return null;
+  }
+  return null;
+}
+
+function getPriorYearPeriod(periodValue, periodType) {
+  if (periodType === "month") {
+    const [y, mo] = periodValue.split("-");
+    return `${parseInt(y) - 1}-${mo}`;
+  } else if (periodType === "quarter") {
+    const [y, q] = periodValue.split("-Q");
+    return `${parseInt(y) - 1}-Q${q}`;
+  } else if (periodType === "year") {
+    return String(parseInt(periodValue) - 1);
+  } else if (periodType === "ytd") {
+    const parts = periodValue.split("-YTD-");
+    return `${parseInt(parts[0]) - 1}-YTD-${parts[1]}`;
+  } else if (periodType === "ttm") {
+    const endMonth = periodValue.replace("TTM-", "");
+    const [y, mo] = endMonth.split("-");
+    return `TTM-${parseInt(y) - 1}-${mo}`;
+  }
+  return null;
+}
+
+function formatAccountingNumber(value) {
+  if (value === null || value === undefined) return "";
+  const rounded = Math.round(value);
+  if (rounded < 0) {
+    return `<span class="is-negative">($${Math.abs(rounded).toLocaleString()})</span>`;
+  }
+  return `$${rounded.toLocaleString()}`;
+}
+
+function formatPercent(value) {
+  if (value === null || value === undefined || !isFinite(value)) return "";
+  return `${(value * 100).toFixed(1)}%`;
+}
+
+function formatVariance(current, prior) {
+  const diff = current - prior;
+  const pct = prior !== 0 ? ((current - prior) / Math.abs(prior)) * 100 : 0;
+  
+  const diffFormatted = diff < 0 
+    ? `<span class="is-variance-negative">($${Math.abs(Math.round(diff)).toLocaleString()})</span>`
+    : `<span class="is-variance-positive">$${Math.round(diff).toLocaleString()}</span>`;
+  
+  const pctFormatted = pct < 0
+    ? `<span class="is-variance-negative">${pct.toFixed(1)}%</span>`
+    : `<span class="is-variance-positive">${pct.toFixed(1)}%</span>`;
+  
+  return { diff: diffFormatted, pct: pctFormatted };
+}
+
+function renderIncomeStatement() {
+  const periodType = document.getElementById("isPeriodType").value;
+  const periodValue = document.getElementById("isPeriodSelect").value;
+  const compare = document.getElementById("isCompare").value;
+  const viewMode = document.getElementById("isViewMode").value;
+  const matrixCount = document.getElementById("isMatrixCount").value;
+  
+  const groups = isAccountGroups.income_statement.groups;
+  const thead = document.getElementById("isTableHead");
+  const tbody = document.getElementById("isTableBody");
+  
+  if (viewMode === "matrix") {
+    renderMatrixView(groups, matrixCount, thead, tbody);
+  } else {
+    renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody);
+  }
+}
+
+function renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody) {
+  const periodMonths = getPeriodMonths(periodValue, periodType);
+  const rows = buildIncomeStatementRows(periodMonths, groups);
+  
+  let comparisonRows = null;
+  let compPeriodLabel = "";
+  
+  if (compare !== "none") {
+    let compPeriod;
+    if (compare === "prior_period") {
+      compPeriod = getPriorPeriod(periodValue, periodType);
+      compPeriodLabel = "Prior Period";
+    } else {
+      compPeriod = getPriorYearPeriod(periodValue, periodType);
+      compPeriodLabel = "Prior Year";
+    }
+    
+    if (compPeriod) {
+      const compMonths = getPeriodMonths(compPeriod, periodType);
+      comparisonRows = buildIncomeStatementRows(compMonths, groups);
+    }
+  }
+  
+  let headerHtml = "<tr><th>Account</th><th>Current</th>";
+  if (comparisonRows) {
+    headerHtml += `<th>${compPeriodLabel}</th><th>$ Var</th><th>% Var</th>`;
+  }
+  headerHtml += "</tr>";
+  thead.innerHTML = headerHtml;
+  
+  let bodyHtml = "";
+  rows.forEach((row, i) => {
+    const isVisible = isRowVisible(groups, i);
+    const hiddenClass = isVisible ? "" : "is-row-hidden";
+    const typeClass = `is-row-${row.type}`;
+    const indentClass = `is-indent-${row.level}`;
+    
+    let toggleHtml = "";
+    if (row.level === 0 && row.hasChildren && row.type !== "ratio") {
+      const expanded = isRowStates[row.id] !== false;
+      toggleHtml = `<span class="is-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
+    }
+    
+    let valueHtml = "";
+    if (row.type === "header") {
+      valueHtml = "";
+    } else if (row.type === "ratio") {
+      valueHtml = formatPercent(row.value);
+    } else {
+      valueHtml = formatAccountingNumber(row.value);
+    }
+    
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
+    bodyHtml += `<td>${valueHtml}</td>`;
+    
+    if (comparisonRows) {
+      const compRow = comparisonRows[i];
+      let compValueHtml = "";
+      
+      if (row.type === "header") {
+        compValueHtml = "";
+        bodyHtml += `<td></td><td></td><td></td>`;
+      } else if (row.type === "ratio") {
+        compValueHtml = formatPercent(compRow.value);
+        const diffPct = (row.value - compRow.value) * 100;
+        const pctClass = diffPct >= 0 ? "is-variance-positive" : "is-variance-negative";
+        bodyHtml += `<td>${compValueHtml}</td>`;
+        bodyHtml += `<td>-</td>`;
+        bodyHtml += `<td class="${pctClass}">${diffPct.toFixed(1)}%</td>`;
+      } else {
+        compValueHtml = formatAccountingNumber(compRow.value);
+        const variance = formatVariance(row.value, compRow.value);
+        bodyHtml += `<td>${compValueHtml}</td>`;
+        bodyHtml += `<td>${variance.diff}</td>`;
+        bodyHtml += `<td>${variance.pct}</td>`;
+      }
+    }
+    
+    bodyHtml += "</tr>";
+  });
+  
+  tbody.innerHTML = bodyHtml;
+  attachToggleListeners();
+}
+
+function renderMatrixView(groups, matrixCount, thead, tbody) {
+  const periods = getMatrixPeriods(matrixCount);
+  
+  let headerHtml = "<tr><th>Account</th>";
+  periods.forEach(p => {
+    headerHtml += `<th>${p.label}</th>`;
+  });
+  headerHtml += "</tr>";
+  thead.innerHTML = headerHtml;
+  
+  const allPeriodRows = periods.map(p => {
+    return buildIncomeStatementRows(p.months, groups);
+  });
+  
+  let bodyHtml = "";
+  groups.forEach((group, i) => {
+    const row = allPeriodRows[0][i];
+    const isVisible = isRowVisible(groups, i);
+    const hiddenClass = isVisible ? "" : "is-row-hidden";
+    const typeClass = `is-row-${row.type}`;
+    const indentClass = `is-indent-${row.level}`;
+    
+    let toggleHtml = "";
+    if (row.level === 0 && row.hasChildren && row.type !== "ratio") {
+      const expanded = isRowStates[row.id] !== false;
+      toggleHtml = `<span class="is-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
+    }
+    
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
+    
+    allPeriodRows.forEach(periodRows => {
+      const pRow = periodRows[i];
+      let valueHtml = "";
+      if (pRow.type === "header") {
+        valueHtml = "";
+      } else if (pRow.type === "ratio") {
+        valueHtml = formatPercent(pRow.value);
+      } else {
+        valueHtml = formatAccountingNumber(pRow.value);
+      }
+      bodyHtml += `<td>${valueHtml}</td>`;
+    });
+    
+    bodyHtml += "</tr>";
+  });
+  
+  tbody.innerHTML = bodyHtml;
+  attachToggleListeners();
+}
+
+function isRowVisible(groups, idx) {
+  const currentLevel = groups[idx].level;
+  if (currentLevel === 0) return true;
+  
+  for (let i = idx - 1; i >= 0; i--) {
+    if (groups[i].level < currentLevel) {
+      const parentId = `is-row-${i}`;
+      if (isRowStates[parentId] === false) return false;
+      if (groups[i].level === 0) return true;
+    }
+  }
+  return true;
+}
+
+function attachToggleListeners() {
+  document.querySelectorAll(".is-toggle").forEach(toggle => {
+    toggle.onclick = (e) => {
+      e.stopPropagation();
+      const rowId = toggle.dataset.row;
+      isRowStates[rowId] = !isRowStates[rowId];
+      renderIncomeStatement();
+    };
+  });
 }
 
 /* ------------------------------------------------------------

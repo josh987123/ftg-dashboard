@@ -1,0 +1,115 @@
+{
+  "income_statement": {
+    "groups": [
+      {
+        "label": "Revenue",
+        "level": 0,
+        "type": "subtotal",
+        "accounts": [4000, 4090]
+      },
+
+      {
+        "label": "Cost of Sales",
+        "level": 0,
+        "type": "header"
+      },
+
+      {
+        "label": "Direct Labor",
+        "level": 1,
+        "type": "subtotal",
+        "accounts_range": [5000, 5025]
+      },
+      {
+        "label": "Materials",
+        "level": 1,
+        "type": "detail",
+        "accounts": [5200]
+      },
+      {
+        "label": "Subcontracts",
+        "level": 1,
+        "type": "detail",
+        "accounts": [5300]
+      },
+      {
+        "label": "Rented Equipment",
+        "level": 1,
+        "type": "detail",
+        "accounts": [5410]
+      },
+      {
+        "label": "Other Direct Job Costs",
+        "level": 1,
+        "type": "detail",
+        "accounts": [5500]
+      },
+
+      {
+        "label": "Direct Expenses",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Direct Labor + Materials + Subcontracts + Rented Equipment + Other Direct Job Costs"
+      },
+
+      {
+        "label": "Indirect Labor",
+        "level": 1,
+        "type": "subtotal",
+        "accounts_range": [6010, 6050]
+      },
+      {
+        "label": "Depreciation",
+        "level": 1,
+        "type": "detail",
+        "accounts": [6060]
+      },
+      {
+        "label": "Vehicle Expense",
+        "level": 1,
+        "type": "subtotal",
+        "accounts_range": [6070, 6097]
+      },
+      {
+        "label": "Supplies & Other Indirect (Detail)",
+        "level": 2,
+        "type": "detail",
+        "accounts_range": [6098, 6150]
+      },
+      {
+        "label": "Supplies & Other Indirect (Subtotal)",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Supplies & Other Indirect (Detail)"
+      },
+
+      {
+        "label": "Indirect Expenses Total",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Indirect Labor + Depreciation + Vehicle Expense + Supplies & Other Indirect (Subtotal)"
+      },
+
+      {
+        "label": "Total Cost of Sales",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Direct Expenses + Indirect Expenses Total"
+      },
+
+      {
+        "label": "Gross Profit",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Revenue - Total Cost of Sales"
+      },
+
+      {
+        "label": "Gross Margin %",
+        "level": 0,
+        "type": "ratio",
+        "formula": "Gross Profit / Revenue"
+      }
+    ]
+  }
+}

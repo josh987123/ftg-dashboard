@@ -1,0 +1,125 @@
+I want to add a fully functional “Income Statement” page to my FTG dashboard. 
+The dashboard already has financials.json and account_groups.json in /public/data. 
+Use ONLY those two files for building the Income Statement—do NOT integrate Excel or PowerShell logic on the frontend.
+
+Please implement the following in my project:
+
+===========================================================
+1. NAVIGATION + HTML SECTION
+===========================================================
+• Add a new navigation item: “Income Statement” with data-section="incomeStatement".
+• Add a new <div id="incomeStatement" class="dashboard-section hidden"> below the Revenue section in index.html.
+• Inside that div, create:
+  - Controls for:
+      Period Type: Month | Quarter | Year | YTD | TTM
+      Period Selector: dynamic dropdown
+      Comparison Selector: None | Prior Period | Prior Year
+      View Mode: Single Period | Matrix
+      Matrix Count: 3, 6, 9, 12 months, 4 quarters, 5 years
+      Expand All / Collapse All buttons
+  - An empty table:
+      <table id="incomeStatementTable">
+         <thead id="isTableHead"></thead>
+         <tbody id="isTableBody"></tbody>
+      </table>
+
+===========================================================
+2. LOAD DATA
+===========================================================
+• Load /public/data/financials.json (already includes gl_history_all).
+• Load /public/data/account_groups.json (I already created this file with the full group hierarchy).
+• Build an account → period → value lookup from gl_history_all.
+
+===========================================================
+3. PERIOD AGGREGATION ENGINE
+===========================================================
+Implement JS functions to aggregate monthly data into:
+• Month (pick 1 month)
+• Quarter (sum 3 months)
+• Year (sum 12 months)
+• YTD (sum Jan → selected month)
+• TTM (rolling 12-month window)
+• For Matrix view, allow selecting:
+  last 3, 6, 9, 12 months OR last 4 quarters OR last 5 years.
+
+===========================================================
+4. GROUP LOGIC (BASED ON account_groups.json)
+===========================================================
+For each group in income_statement.groups:
+• If "accounts" → sum those exact account numbers.
+• If "accounts_range" → sum all accounts between that range.
+• If "formula" → evaluate the subtotal or ratio using values previously computed.
+• Use “level” for indentation in the UI.
+• Apply correct row type:
+    header (no values, bold)
+    detail (simple row)
+    subtotal (bold, with line above)
+    ratio (percentage, 1 decimal)
+
+===========================================================
+5. COMPARISON LOGIC
+===========================================================
+If user selects Compare = "prior period":
+• Compute $ variance
+• Compute % variance
+
+If Compare = "prior year":
+• Compare the same period 12 months earlier.
+
+===========================================================
+6. FORMATTING RULES
+===========================================================
+• Whole dollars only.
+• Negative numbers must use parentheses: ($123,456)
+• Ratio rows use 1 decimal place (e.g., 31.7%).
+• Subtotal rows bold.
+• Header rows bold and non-clickable.
+• Expand/collapse UI:
+    level 0 → ▼ expanded, ▶ collapsed
+    level 1+ hidden/shown when parent toggles.
+
+===========================================================
+7. RENDERING ENGINE
+===========================================================
+Implement functions:
+• loadIncomeStatement()
+• buildIncomeStatementRows()
+• renderIncomeStatementTable()
+• toggleExpandCollapse()
+• formatAccountingNumber()
+• formatPercent()
+
+These functions should:
+• Build a row array based on groups + values.
+• Render either:
+    - Single Period (1 value column + comparison columns)
+    - Multi-Period Matrix (N value columns)
+• Create dynamic table headers matching the selected view.
+• Insert indentation based on “level”.
+• Apply expand/collapse behavior using disclosure icons.
+
+===========================================================
+8. INTEGRATION
+===========================================================
+• Update the nav click handler in dashboard.js to call loadIncomeStatement() 
+  when the “Income Statement” nav item is selected.
+• Ensure the section uses the same styling conventions as the rest of the dashboard.
+• Make the entire module self-contained and fully functional.
+
+===========================================================
+SUMMARY
+===========================================================
+Please implement:
+• Full Income Statement UI (HTML)
+• Full JS rendering engine (dashboard.js)
+• Period aggregation (Month/Qtr/Year/YTD/TTM)
+• Single-period and matrix view
+• Prior period & prior year comparison
+• Variance $ and %
+• Expand/collapse hierarchy based on "level"
+• Accounting format negatives
+• Percent formatting for ratios
+
+Use financials.json for all GL monthly data and account_groups.json for the hierarchy and formulas.
+
+When finished, list all files you modified and summarize what changed.
