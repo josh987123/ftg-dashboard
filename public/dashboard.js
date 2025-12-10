@@ -594,12 +594,8 @@ function updateRevenueView(data) {
     };
     let currentQ = [sumQ(1), sumQ(2), sumQ(3), sumQ(4)];
     
-    if (excludeCurrent && isCurrentYear) {
-      currentQ = currentQ.map((v, i) => i === currentQuarter ? null : v);
-    }
-    
     const barColors = currentQ.map((v, i) => {
-      if (isCurrentYear && i === currentQuarter && !excludeCurrent) {
+      if (isCurrentYear && i === currentQuarter) {
         hasPartialPeriod = true;
         return "#f59e0b";
       }
@@ -654,13 +650,9 @@ function updateRevenueView(data) {
       
       const total = yearData && yearData.length > 0 ? yearData.reduce((a,b) => a + b, 0) : 0;
       
-      if (excludeCurrent && y === currentYear) {
-        annualTotals.push(null);
-      } else {
-        annualTotals.push(total);
-      }
+      annualTotals.push(total);
       
-      if (y === currentYear && !excludeCurrent) {
+      if (y === currentYear) {
         hasPartialPeriod = true;
         barColors.push("#f59e0b");
       } else {
@@ -1120,15 +1112,22 @@ function updateAccountView(data) {
     subtitle = `Monthly – ${year}`;
   } else if (view === "quarterly") {
     labels = ["Q1","Q2","Q3","Q4"];
-    let currentValues = getAccountQuarterlyValues(acctNum, year, data);
     const isCurrentYear = year === currentYear;
     
+    let monthly = getAccountMonthlyValues(acctNum, year, data);
     if (excludeCurrent && isCurrentYear) {
-      currentValues = currentValues.map((v, i) => i === currentQuarter ? null : v);
+      monthly = monthly.map((v, i) => i === currentMonth ? 0 : v);
     }
     
+    let currentValues = [
+      monthly.slice(0, 3).reduce((a, b) => a + b, 0),
+      monthly.slice(3, 6).reduce((a, b) => a + b, 0),
+      monthly.slice(6, 9).reduce((a, b) => a + b, 0),
+      monthly.slice(9, 12).reduce((a, b) => a + b, 0)
+    ];
+    
     const barColors = currentValues.map((v, i) => {
-      if (isCurrentYear && i === currentQuarter && !excludeCurrent) {
+      if (isCurrentYear && i === currentQuarter) {
         hasPartialPeriod = true;
         return "#f59e0b";
       }
@@ -1160,13 +1159,14 @@ function updateAccountView(data) {
     for (let y = start; y <= end; y++) {
       labels.push(y.toString());
       
+      let monthly = getAccountMonthlyValues(acctNum, y, data);
       if (excludeCurrent && y === currentYear) {
-        annualValues.push(null);
-      } else {
-        annualValues.push(getAccountAnnualValue(acctNum, y, data));
+        monthly = monthly.map((v, i) => i === currentMonth ? 0 : v);
       }
+      const annualTotal = monthly.reduce((a, b) => a + b, 0);
+      annualValues.push(annualTotal);
       
-      if (y === currentYear && !excludeCurrent) {
+      if (y === currentYear) {
         hasPartialPeriod = true;
         barColors.push("#f59e0b");
       } else {
