@@ -423,6 +423,24 @@ function setupRevenueUI(data) {
       yearWrap.style.display = "flex";
       rangeWrap.classList.add("hidden");
     }
+    
+    // Auto-update chart when view changes
+    updateRevenueView(data);
+  };
+  
+  // Also update when year changes
+  document.getElementById("revYear").onchange = () => {
+    updateRevenueView(data);
+  };
+  
+  // Update when compare checkbox changes
+  document.getElementById("revCompare").onchange = () => {
+    updateRevenueView(data);
+  };
+  
+  // Update when trendline checkbox changes  
+  document.getElementById("revTrendline").onchange = () => {
+    updateRevenueView(data);
   };
 
   /* ------------------ UPDATE BUTTON ------------------ */
@@ -481,8 +499,11 @@ function updateRevenueView(data) {
   else if (view === "quarterly") {
     labels = ["Q1","Q2","Q3","Q4"];
 
-    const months = data.revenue[year];
-    const sumQ = q => months.slice((q - 1) * 3, q * 3).reduce((a,b) => a + b, 0);
+    const months = data.revenue[year] || [];
+    const sumQ = q => {
+      const slice = months.slice((q - 1) * 3, q * 3);
+      return slice.length > 0 ? slice.reduce((a,b) => a + b, 0) : 0;
+    };
     const currentQ = [sumQ(1), sumQ(2), sumQ(3), sumQ(4)];
 
     const ctx = document.getElementById("revChart");
@@ -490,8 +511,11 @@ function updateRevenueView(data) {
     const gradRed  = makeGradient(ctx, "#ef4444");
 
     if (compare && data.revenue[year - 1]) {
-      const pm = data.revenue[year - 1];
-      const sumPQ = q => pm.slice((q - 1) * 3, q * 3).reduce((a,b) => a + b, 0);
+      const pm = data.revenue[year - 1] || [];
+      const sumPQ = q => {
+        const slice = pm.slice((q - 1) * 3, q * 3);
+        return slice.length > 0 ? slice.reduce((a,b) => a + b, 0) : 0;
+      };
 
       const priorQ = [sumPQ(1), sumPQ(2), sumPQ(3), sumPQ(4)];
 
@@ -527,7 +551,8 @@ function updateRevenueView(data) {
     const annualTotals = [];
     for (let y = start; y <= end; y++) {
       labels.push(y.toString());
-      const total = data.revenue[y].reduce((a,b) => a + b, 0);
+      const yearData = data.revenue[y] || [];
+      const total = yearData.length > 0 ? yearData.reduce((a,b) => a + b, 0) : 0;
       annualTotals.push(total);
     }
 
