@@ -258,11 +258,40 @@ async function initRevenueModule() {
 }
 
 /* ------------------------------------------------------------
-   EXPORT FUNCTIONALITY
+   EXPORT DROPDOWN & FUNCTIONALITY
 ------------------------------------------------------------ */
 function setupExportButtons() {
-  document.getElementById("exportCsvBtn").onclick = exportToCsv;
-  document.getElementById("exportPdfBtn").onclick = exportToPdf;
+  const dropdown = document.getElementById("exportDropdownMenu");
+  const dropdownBtn = document.getElementById("exportDropdownBtn");
+  
+  // Toggle dropdown
+  dropdownBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle("hidden");
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".export-dropdown")) {
+      dropdown.classList.add("hidden");
+    }
+  });
+  
+  // Export button handlers
+  document.getElementById("exportPrintBtn").onclick = () => {
+    dropdown.classList.add("hidden");
+    window.print();
+  };
+  
+  document.getElementById("exportPdfBtn").onclick = () => {
+    dropdown.classList.add("hidden");
+    exportToPdf();
+  };
+  
+  document.getElementById("exportCsvBtn").onclick = () => {
+    dropdown.classList.add("hidden");
+    exportToCsv();
+  };
 }
 
 function exportToCsv() {

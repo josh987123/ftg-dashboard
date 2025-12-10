@@ -38,6 +38,17 @@
 
     <div class="header-right">
       <span id="currentUser" class="user-label"></span>
+      
+      <!-- Export Dropdown -->
+      <div class="export-dropdown">
+        <button id="exportDropdownBtn" class="export-dropdown-btn" title="Export options">⬇️</button>
+        <div id="exportDropdownMenu" class="dropdown-menu hidden">
+          <button id="exportPrintBtn" class="dropdown-item">🖨️ Print</button>
+          <button id="exportPdfBtn" class="dropdown-item">📄 PDF</button>
+          <button id="exportCsvBtn" class="dropdown-item">📊 CSV</button>
+        </div>
+      </div>
+      
       <button id="logoutBtn" class="logout-btn">Logout</button>
     </div>
   </header>
@@ -75,12 +86,6 @@
       ============================================================= -->
       <section id="revenue" class="dashboard-section">
         <h2>Revenue View</h2>
-
-        <!-- Export Buttons -->
-        <div class="export-bar">
-          <button id="exportCsvBtn" class="export-btn"><span class="export-icon">📄</span> Export CSV</button>
-          <button id="exportPdfBtn" class="export-btn"><span class="export-icon">📑</span> Export PDF</button>
-        </div>
 
         <div class="rev-controls">
 
