@@ -319,11 +319,13 @@ body {
 .chart-box canvas {
   width: 100% !important;
   max-width: 900px;
-  height: auto !important;
-  max-height: 420px;
   display: block;
   margin: 0 auto;
-  min-height: 300px;
+}
+
+#revChart {
+  height: 380px !important;
+  min-height: 380px;
 }
 
 .chart-title div {
@@ -585,7 +587,7 @@ body {
   .rev-controls select, .rev-controls button { font-size:13px; }
   
   .chart-box { padding:16px 14px; margin-bottom:22px; }
-  .chart-box canvas { max-height: 500px; min-height: 400px; }
+  #revChart { height: 420px !important; min-height: 420px; }
   .chart-title div { font-size:15px; }
   
   .rev-table-box { padding:14px; }

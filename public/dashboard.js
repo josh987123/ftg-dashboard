@@ -154,7 +154,8 @@ async function loadFinancialCharts() {
 /* Utility: subtle gradient generator */
 function makeGradient(canvas, base) {
   const ctx = canvas.getContext("2d");
-  const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  const height = canvas.clientHeight || 400;
+  const g = ctx.createLinearGradient(0, 0, 0, height);
   if (base === "#3b82f6") {
     g.addColorStop(0, "#60a5fa");
     g.addColorStop(1, "#1d4ed8");
@@ -605,13 +606,19 @@ function renderRevenueChart(labels, datasets) {
     data: { labels, datasets },
     options: {
       responsive: true,
-      aspectRatio: 1.5,
+      maintainAspectRatio: false,
       animation: {
         duration: 600,
         easing: "easeOutQuart"
       },
       plugins: {
-        legend: { position: "bottom" },
+        legend: { 
+          position: "bottom",
+          labels: {
+            font: { size: 12, weight: "normal" },
+            padding: 15
+          }
+        },
         tooltip: {
           backgroundColor: "rgba(31, 41, 55, 0.95)",
           titleFont: { size: 14 },
@@ -628,8 +635,10 @@ function renderRevenueChart(labels, datasets) {
       scales: {
         x: {
           ticks: {
-            padding: 10,
-            font: { size: 11 }
+            padding: 8,
+            font: { size: 12, weight: "normal" },
+            maxRotation: 0,
+            autoSkip: false
           },
           grid: {
             drawOnChartArea: false
@@ -637,7 +646,12 @@ function renderRevenueChart(labels, datasets) {
         },
         y: {
           ticks: {
-            callback: v => "$" + v.toLocaleString()
+            padding: 8,
+            font: { size: 11, weight: "normal" },
+            callback: v => "$" + (v / 1000000).toFixed(1) + "M"
+          },
+          grid: {
+            color: "rgba(0,0,0,0.05)"
           }
         }
       }
