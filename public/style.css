@@ -116,6 +116,18 @@ body {
 .dashboard-section.visible { display:block; }
 .dashboard-section h2 { margin-bottom:20px; }
 
+.under-construction {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  padding: 10px 20px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  letter-spacing: 2px;
+}
+
 /* KPI CARDS */
 .card-container {
   display:grid;
