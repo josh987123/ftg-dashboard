@@ -406,6 +406,7 @@ body {
 #revCompareWrapper,
 #revTrendWrapper,
 #acctYearWrapper,
+#acctCompareWrapper,
 #acctTrendWrapper {
   display:flex;
   align-items:center;

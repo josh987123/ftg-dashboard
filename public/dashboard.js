@@ -876,13 +876,16 @@ function setupAccountUI(data) {
   document.getElementById("acctViewType").onchange = () => {
     const view = document.getElementById("acctViewType").value;
     const yearWrap = document.getElementById("acctYearWrapper");
+    const compareWrap = document.getElementById("acctCompareWrapper");
     const rangeWrap = document.getElementById("acctRangeWrapper");
     
     if (view === "annual") {
       yearWrap.style.display = "none";
+      compareWrap.style.display = "none";
       rangeWrap.classList.remove("hidden");
     } else {
       yearWrap.style.display = "flex";
+      compareWrap.style.display = "flex";
       rangeWrap.classList.add("hidden");
     }
     updateAccountView(data);
@@ -890,6 +893,7 @@ function setupAccountUI(data) {
   
   acctSelect.onchange = () => updateAccountView(data);
   yearSelect.onchange = () => updateAccountView(data);
+  document.getElementById("acctCompare").onchange = () => updateAccountView(data);
   document.getElementById("acctTrendline").onchange = () => updateAccountView(data);
 }
 
@@ -944,59 +948,99 @@ function updateAccountView(data) {
   
   const view = document.getElementById("acctViewType").value;
   const year = parseInt(document.getElementById("acctYear").value);
+  const compare = document.getElementById("acctCompare").checked;
   
   const row = data.gl_history_all.find(r => r.Account_Num === acctNum);
   const acctDesc = row ? row.Account_Description : "";
   
   let labels = [];
-  let values = [];
+  let datasets = [];
   let subtitle = "";
   
   if (view === "monthly") {
     labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    values = getAccountMonthlyValues(acctNum, year, data);
+    const currentValues = getAccountMonthlyValues(acctNum, year, data);
+    
+    if (compare) {
+      const priorValues = getAccountMonthlyValues(acctNum, year - 1, data);
+      datasets.push({
+        label: `${year - 1}`,
+        data: priorValues,
+        backgroundColor: "#ef4444"
+      });
+    }
+    
+    datasets.push({
+      label: `${year}`,
+      data: currentValues,
+      backgroundColor: "#3b82f6"
+    });
+    
     subtitle = `Monthly – ${year}`;
   } else if (view === "quarterly") {
     labels = ["Q1","Q2","Q3","Q4"];
-    values = getAccountQuarterlyValues(acctNum, year, data);
+    const currentValues = getAccountQuarterlyValues(acctNum, year, data);
+    
+    if (compare) {
+      const priorValues = getAccountQuarterlyValues(acctNum, year - 1, data);
+      datasets.push({
+        label: `${year - 1}`,
+        data: priorValues,
+        backgroundColor: "#ef4444"
+      });
+    }
+    
+    datasets.push({
+      label: `${year}`,
+      data: currentValues,
+      backgroundColor: "#3b82f6"
+    });
+    
     subtitle = `Quarterly – ${year}`;
   } else if (view === "annual") {
     const start = +document.getElementById("acctRangeStart").value;
     const end = +document.getElementById("acctRangeEnd").value;
+    const annualValues = [];
     for (let y = start; y <= end; y++) {
       labels.push(y.toString());
-      values.push(getAccountAnnualValue(acctNum, y, data));
+      annualValues.push(getAccountAnnualValue(acctNum, y, data));
     }
+    datasets.push({
+      label: `Account ${acctNum}`,
+      data: annualValues,
+      backgroundColor: "#3b82f6"
+    });
     subtitle = `Annual – ${start} to ${end}`;
   }
   
   document.getElementById("acctChartTitleLine1").innerText = `${acctNum}: ${acctDesc}`;
   document.getElementById("acctChartTitleLine2").innerText = subtitle;
   
-  let datasets = [{
-    label: `Account ${acctNum}`,
-    data: values,
-    backgroundColor: "#3b82f6"
-  }];
-  
   const showTrendline = document.getElementById("acctTrendline").checked;
-  if (showTrendline && values.length > 1) {
-    const trendData = calculateTrendline(values);
-    datasets.push({
-      label: "Trend",
-      data: trendData,
-      type: "line",
-      borderColor: "#10b981",
-      backgroundColor: "transparent",
-      borderWidth: 2,
-      borderDash: [5, 5],
-      pointRadius: 0,
-      tension: 0
+  if (showTrendline && datasets.length > 0) {
+    const trendColors = ["#10b981", "#f59e0b"];
+    const barDatasets = datasets.filter(ds => ds.type !== "line");
+    barDatasets.forEach((ds, idx) => {
+      if (ds.data.length > 1) {
+        const trendData = calculateTrendline(ds.data);
+        datasets.push({
+          label: `${ds.label} Trend`,
+          data: trendData,
+          type: "line",
+          borderColor: trendColors[idx % trendColors.length],
+          backgroundColor: "transparent",
+          borderWidth: 2,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          tension: 0
+        });
+      }
     });
   }
   
   renderAccountChart(labels, datasets);
-  renderAccountTable(labels, values, acctNum);
+  const tableDatasets = datasets.filter(ds => ds.type !== "line");
+  renderAccountTable(labels, tableDatasets);
   
   const now = new Date();
   const t = now.toLocaleDateString(undefined, {
@@ -1062,18 +1106,46 @@ function renderAccountChart(labels, datasets) {
   });
 }
 
-function renderAccountTable(labels, values, acctNum) {
+function renderAccountTable(labels, datasets) {
   const head = document.getElementById("acctTableHead");
   const body = document.getElementById("acctTableBody");
   
-  head.innerHTML = "<tr><th>Period</th><th>Amount</th></tr>";
+  const hasComparison = datasets.length > 1;
+  
+  let header = "<tr><th>Period</th>";
+  datasets.forEach(ds => {
+    header += `<th>${ds.label}</th>`;
+  });
+  if (hasComparison) {
+    header += "<th>Change</th>";
+  }
+  header += "</tr>";
+  head.innerHTML = header;
   
   body.innerHTML = labels.map((lbl, i) => {
-    const v = values[i] || 0;
-    const formatted = v < 0 
-      ? `<span class="growth-negative">($${Math.abs(v).toLocaleString()})</span>`
-      : `$${v.toLocaleString()}`;
-    return `<tr><td>${lbl}</td><td>${formatted}</td></tr>`;
+    let row = `<tr><td>${lbl}</td>`;
+    
+    const values = datasets.map(ds => ds.data[i] || 0);
+    
+    datasets.forEach(ds => {
+      const v = ds.data[i] || 0;
+      const formatted = v < 0 
+        ? `<span class="growth-negative">($${Math.abs(v).toLocaleString()})</span>`
+        : `$${v.toLocaleString()}`;
+      row += `<td>${formatted}</td>`;
+    });
+    
+    if (hasComparison && values.length >= 2) {
+      const prior = values[0];
+      const current = values[1];
+      const change = prior > 0 ? ((current - prior) / prior * 100) : 0;
+      const sign = change >= 0 ? "+" : "";
+      const colorClass = change > 0 ? "growth-positive" : change < 0 ? "growth-negative" : "growth-neutral";
+      row += `<td class="${colorClass}">${sign}${change.toFixed(1)}%</td>`;
+    }
+    
+    row += "</tr>";
+    return row;
   }).join("");
 }
 
