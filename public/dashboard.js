@@ -1477,7 +1477,7 @@ function populatePeriodOptions() {
   let options = [];
   
   if (periodType === "month") {
-    months.forEach(m => {
+    months.slice().reverse().forEach(m => {
       const [y, mo] = m.split("-");
       const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
       options.push({ value: m, label: `${monthName} ${y}` });
