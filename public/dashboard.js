@@ -5,7 +5,7 @@
 /* ------------------------------------------------------------
    PASSWORD PROTECTION
 ------------------------------------------------------------ */
-const SITE_PASSWORD = "ftg2025";
+const SITE_PASSWORD = "Ftgb2025$";
 
 (function checkAuth() {
   const loginScreen = document.getElementById("loginScreen");
