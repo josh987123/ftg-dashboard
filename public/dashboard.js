@@ -631,19 +631,13 @@ function renderRevenueChart(labels, datasets) {
     data: { labels, datasets },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
+      aspectRatio: 1.8,
       animation: {
         duration: 600,
         easing: "easeOutQuart"
       },
       plugins: {
-        legend: { 
-          position: "bottom",
-          labels: {
-            font: { size: 12, weight: "normal" },
-            padding: 15
-          }
-        },
+        legend: { position: "bottom" },
         tooltip: {
           backgroundColor: "rgba(31, 41, 55, 0.95)",
           titleFont: { size: 14 },
@@ -660,10 +654,8 @@ function renderRevenueChart(labels, datasets) {
       scales: {
         x: {
           ticks: {
-            padding: 8,
-            font: { size: 12, weight: "normal" },
-            maxRotation: 0,
-            autoSkip: false
+            padding: 10,
+            font: { size: 12 }
           },
           grid: {
             drawOnChartArea: false
@@ -671,12 +663,8 @@ function renderRevenueChart(labels, datasets) {
         },
         y: {
           ticks: {
-            padding: 8,
-            font: { size: 11, weight: "normal" },
+            font: { size: 11 },
             callback: v => "$" + (v / 1000000).toFixed(1) + "M"
-          },
-          grid: {
-            color: "rgba(0,0,0,0.05)"
           }
         }
       }
