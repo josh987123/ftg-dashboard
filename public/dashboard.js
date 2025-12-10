@@ -132,6 +132,25 @@ function makeGradient(canvas, base) {
   return g;
 }
 
+/* Utility: calculate linear regression trendline */
+function calculateTrendline(data) {
+  const n = data.length;
+  if (n === 0) return [];
+  
+  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  for (let i = 0; i < n; i++) {
+    sumX += i;
+    sumY += data[i];
+    sumXY += i * data[i];
+    sumX2 += i * i;
+  }
+  
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+  
+  return data.map((_, i) => slope * i + intercept);
+}
+
 /* Utility renderer for Financials section */
 function renderFinancialBar(id, label, labels, values) {
   const ctx = document.getElementById(id);
@@ -364,10 +383,33 @@ function updateRevenueView(data) {
   }
 
   /* ============================================================
+     ADD TRENDLINES IF ENABLED
+  ============================================================= */
+  const showTrendline = document.getElementById("revTrendline").checked;
+  if (showTrendline) {
+    const trendColors = ["#10b981", "#f59e0b"];
+    const barDatasets = [...datasets];
+    barDatasets.forEach((ds, idx) => {
+      const trendData = calculateTrendline(ds.data);
+      datasets.push({
+        label: `${ds.label} Trend`,
+        data: trendData,
+        type: "line",
+        borderColor: trendColors[idx % trendColors.length],
+        backgroundColor: "transparent",
+        borderWidth: 2,
+        borderDash: [5, 5],
+        pointRadius: 0,
+        tension: 0
+      });
+    });
+  }
+
+  /* ============================================================
      APPLY UPDATES
   ============================================================= */
   renderRevenueChart(labels, datasets);
-  renderRevenueTable(labels, datasets);
+  renderRevenueTable(labels, datasets.filter(ds => ds.type !== "line"));
   updateTimestamp();
 }
 
