@@ -117,10 +117,18 @@ async function loadFinancialCharts() {
 
 /* Utility: subtle gradient generator */
 function makeGradient(canvas, base) {
-  const ctx = canvas.getContext("2d");  // <-- FIX
+  const ctx = canvas.getContext("2d");
   const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  g.addColorStop(0, base);
-  g.addColorStop(1, base + "33"); // transparent tail
+  if (base === "#3b82f6") {
+    g.addColorStop(0, "#60a5fa");
+    g.addColorStop(1, "#1d4ed8");
+  } else if (base === "#ef4444") {
+    g.addColorStop(0, "#f87171");
+    g.addColorStop(1, "#b91c1c");
+  } else {
+    g.addColorStop(0, base);
+    g.addColorStop(1, base);
+  }
   return g;
 }
 
@@ -398,6 +406,15 @@ function renderRevenueChart(labels, datasets) {
         legend: { position: "bottom" }
       },
       scales: {
+        x: {
+          ticks: {
+            padding: 10,
+            font: { size: 11 }
+          },
+          grid: {
+            drawOnChartArea: false
+          }
+        },
         y: {
           ticks: {
             callback: v => "$" + v.toLocaleString()
