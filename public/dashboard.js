@@ -243,11 +243,9 @@ let currentTableData = { labels: [], datasets: [] };
 ------------------------------------------------------------ */
 async function initRevenueModule() {
   const spinner = document.getElementById("revLoadingSpinner");
-  const chart = document.getElementById("revChart");
   
   try {
     spinner.classList.remove("hidden");
-    chart.style.display = "none";
     
     if (!revenueDataCache) {
       const response = await fetch("./data/financials.json");
@@ -256,13 +254,13 @@ async function initRevenueModule() {
 
     setupRevenueUI(revenueDataCache);
     setupExportButtons();
+    
+    spinner.classList.add("hidden");
     updateRevenueView(revenueDataCache);
 
   } catch (err) {
     console.error("Revenue module error:", err);
-  } finally {
     spinner.classList.add("hidden");
-    chart.style.display = "block";
   }
 }
 
@@ -621,8 +619,12 @@ function updateTimestamp() {
    CHART RENDERING (SOLID BARS + RESPONSIVE)
 ------------------------------------------------------------ */
 function renderRevenueChart(labels, datasets) {
+  console.log("renderRevenueChart called", { labels, datasets });
+  
   try {
     const canvas = document.getElementById("revChart");
+    console.log("Canvas element:", canvas);
+    
     if (!canvas) {
       console.error("Chart canvas not found");
       showChartError("Canvas element not found");
@@ -635,11 +637,22 @@ function renderRevenueChart(labels, datasets) {
     }
 
     const ctx = canvas.getContext("2d");
+    console.log("2D context:", ctx);
+    
     if (!ctx) {
       console.error("Could not get 2D context");
       showChartError("Could not initialize chart");
       return;
     }
+    
+    // Check if Chart is available
+    if (typeof Chart === 'undefined') {
+      console.error("Chart.js not loaded");
+      showChartError("Chart library not loaded");
+      return;
+    }
+    
+    console.log("Creating Chart instance...");
 
     revChartInstance = new Chart(ctx, {
       type: "bar",
@@ -686,6 +699,7 @@ function renderRevenueChart(labels, datasets) {
       }
     });
     
+    console.log("Chart created successfully:", revChartInstance);
     hideChartError();
   } catch (err) {
     console.error("Chart render error:", err);
@@ -699,8 +713,8 @@ function showChartError(msg) {
     errDiv = document.createElement("div");
     errDiv.id = "chartErrorMsg";
     errDiv.style.cssText = "padding:40px;text-align:center;color:#ef4444;font-weight:600;";
-    const container = document.querySelector(".chart-container");
-    if (container) container.appendChild(errDiv);
+    const chartBox = document.getElementById("revChartBox");
+    if (chartBox) chartBox.appendChild(errDiv);
   }
   errDiv.textContent = msg;
   errDiv.style.display = "block";
