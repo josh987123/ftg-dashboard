@@ -3,6 +3,38 @@
 ============================================================ */
 
 /* ------------------------------------------------------------
+   PASSWORD PROTECTION
+------------------------------------------------------------ */
+const SITE_PASSWORD = "ftg2025";
+
+(function checkAuth() {
+  const loginScreen = document.getElementById("loginScreen");
+  const isAuthenticated = localStorage.getItem("ftg_authenticated");
+  
+  if (isAuthenticated === "true") {
+    loginScreen.classList.add("hidden");
+  }
+  
+  document.getElementById("loginBtn").addEventListener("click", attemptLogin);
+  document.getElementById("loginPassword").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") attemptLogin();
+  });
+  
+  function attemptLogin() {
+    const password = document.getElementById("loginPassword").value;
+    const errorEl = document.getElementById("loginError");
+    
+    if (password === SITE_PASSWORD) {
+      localStorage.setItem("ftg_authenticated", "true");
+      loginScreen.classList.add("hidden");
+      errorEl.textContent = "";
+    } else {
+      errorEl.textContent = "Incorrect password. Please try again.";
+    }
+  }
+})();
+
+/* ------------------------------------------------------------
    MOBILE SIDEBAR NAVIGATION
 ------------------------------------------------------------ */
 const sidebar = document.getElementById("sidebar");
