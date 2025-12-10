@@ -420,7 +420,20 @@ body {
 .range-container{
   position:relative;
   width:260px;
-  height:20px;
+  height:32px;
+}
+
+/* Gray track line as pseudo-element (behind everything) */
+.range-container::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  height: 7px;
+  background: #d1d5db;
+  border-radius: 4px;
+  z-index: 1;
 }
 
 .range-container input[type="range"]{
@@ -431,30 +444,22 @@ body {
   -webkit-appearance:none;
   background:transparent;
   pointer-events:none;
-  z-index:5;
+  z-index:2;
 }
 
-.range-container #revRangeStart{ z-index:5; }
-.range-container #revRangeEnd{ z-index:6; }
-.range-container #acctRangeStart{ z-index:5; }
-.range-container #acctRangeEnd{ z-index:6; }
-
+/* Both sliders on same z-index, thumbs handle interaction */
 .range-container input[type="range"]::-webkit-slider-runnable-track{
   height:7px;
-  background:#d1d5db;
+  background:transparent;
   border-radius:4px;
   pointer-events:none;
 }
 
-/* Make the end slider's track transparent so the start slider's track shows through */
-.range-container #revRangeEnd::-webkit-slider-runnable-track,
-.range-container #acctRangeEnd::-webkit-slider-runnable-track {
-  background: transparent;
-}
-
-.range-container #revRangeEnd::-moz-range-track,
-.range-container #acctRangeEnd::-moz-range-track {
-  background: transparent;
+.range-container input[type="range"]::-moz-range-track{
+  height:7px;
+  background:transparent;
+  border-radius:4px;
+  pointer-events:none;
 }
 
 .range-container input[type="range"]::-webkit-slider-thumb{
@@ -467,8 +472,6 @@ body {
   pointer-events:auto;
   cursor:grab;
   box-shadow:0 2px 6px rgba(0,0,0,0.2);
-  position:relative;
-  z-index:10;
 }
 
 .range-container input[type="range"]::-webkit-slider-thumb:active {
@@ -484,8 +487,6 @@ body {
   pointer-events:auto;
   cursor:grab;
   box-shadow:0 2px 6px rgba(0,0,0,0.2);
-  position:relative;
-  z-index:10;
 }
 
 .range-container input[type="range"]::-moz-range-thumb:active {
