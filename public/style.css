@@ -808,6 +808,8 @@ body {
 
 .is-highlight-revenue td {
   background: #f3f4f6 !important;
+  border-top: 1px solid #000 !important;
+  border-bottom: 3px solid #000 !important;
 }
 
 .is-highlight-costOfSales td {
@@ -816,8 +818,8 @@ body {
 
 .is-highlight-grossProfit td {
   background: #e5e7eb !important;
-  border-top: 2px solid #6b7280 !important;
-  border-bottom: 2px solid #6b7280 !important;
+  border-top: 1px solid #000 !important;
+  border-bottom: 3px solid #000 !important;
 }
 
 .is-row-ratio td {
