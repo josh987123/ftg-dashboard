@@ -186,9 +186,21 @@ body {
 /* RANGE SLIDER (DUAL) */
 .range-wrapper.hidden{ display:none; }
 
+.range-wrapper {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.range-wrapper > label {
+  font-weight:600;
+  margin-bottom:4px;
+}
+
 .range-container{
   position:relative;
   width:260px;
+  height:20px;
 }
 
 .range-container input[type="range"]{
@@ -223,7 +235,7 @@ body {
   justify-content:space-between;
   font-weight:600;
   font-size:14px;
-  margin-top:2px;
+  margin-top:8px;
 }
 
 /* TABLE */
