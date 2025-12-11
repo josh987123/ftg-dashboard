@@ -1594,8 +1594,8 @@ button, .nav-item, .config-header, .dropdown-item {
 .ai-analysis-content h2,
 .ai-analysis-content h3 {
   color: #166534;
-  margin-top: 12px;
-  margin-bottom: 1px;
+  margin-top: 10px;
+  margin-bottom: 0;
   font-size: 12px;
 }
 
@@ -1607,12 +1607,14 @@ button, .nav-item, .config-header, .dropdown-item {
 
 .ai-analysis-content ul,
 .ai-analysis-content ol {
-  margin: 0 0 8px 0;
+  margin: 0;
   padding-left: 20px;
 }
 
 .ai-analysis-content li {
-  margin-bottom: 0;
+  margin: 0;
+  padding: 0;
+  line-height: 1.4;
 }
 
 .ai-analysis-content strong {
