@@ -1406,7 +1406,7 @@ button, .nav-item, .config-header, .dropdown-item {
   z-index: 1;
   width: auto;
   max-width: 280px;
-  padding-right: 20px;
+  padding-right: 40px;
 }
 
 #incomeStatementTable th:first-child {
@@ -1689,6 +1689,7 @@ button, .nav-item, .config-header, .dropdown-item {
 #balanceSheetTable th:first-child,
 #balanceSheetTable td:first-child {
   text-align: left;
+  padding-right: 40px;
 }
 
 #balanceSheetTable th {
