@@ -1458,6 +1458,57 @@ let isAccountGroups = null;
 let isGLLookup = {};
 let isRowStates = {};
 
+function applyDetailLevel(level) {
+  const summaryExpanded = [];
+  
+  const mediumExpanded = [
+    "Revenue",
+    "Total Cost of Sales",
+    "Total Direct Expenses",
+    "Total Indirect Expenses",
+    "Operating Expenses",
+    "Other Income/(Expense)",
+    "Taxes"
+  ];
+  
+  const accountExpanded = [
+    "Revenue",
+    "Total Cost of Sales",
+    "Total Direct Expenses",
+    "Total Indirect Expenses",
+    "Direct Labor",
+    "Indirect Labor",
+    "Vehicle Expense",
+    "Operating Expenses",
+    "Salaries & Benefits",
+    "Facility",
+    "Travel & Entertainment",
+    "Insurance",
+    "Professional Services",
+    "Administrative & Other",
+    "Other Income/(Expense)",
+    "Taxes"
+  ];
+  
+  let expandedLabels = [];
+  if (level === "summary") {
+    expandedLabels = summaryExpanded;
+  } else if (level === "medium") {
+    expandedLabels = mediumExpanded;
+  } else if (level === "account") {
+    expandedLabels = accountExpanded;
+  }
+  
+  Object.keys(isRowStates).forEach(key => {
+    isRowStates[key] = false;
+  });
+  
+  expandedLabels.forEach(label => {
+    const rowId = `is-row-${label.replace(/\s+/g, '_')}`;
+    isRowStates[rowId] = true;
+  });
+}
+
 async function loadIncomeStatement() {
   if (!isData || !isAccountGroups) {
     try {
@@ -1529,6 +1580,14 @@ function initIncomeStatementControls() {
   
   const showThousands = document.getElementById("isShowThousands");
   showThousands.onchange = () => renderIncomeStatement();
+  
+  const detailLevel = document.getElementById("isDetailLevel");
+  detailLevel.onchange = () => {
+    applyDetailLevel(detailLevel.value);
+    renderIncomeStatement();
+  };
+  
+  applyDetailLevel(detailLevel.value);
   
   matrixYearStart.oninput = () => {
     document.getElementById("isMatrixYearStartLabel").textContent = matrixYearStart.value;
