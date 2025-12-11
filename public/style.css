@@ -1382,7 +1382,7 @@ button, .nav-item, .config-header, .dropdown-item {
 
 #incomeStatementTable th,
 #incomeStatementTable td {
-  padding: 10px 14px;
+  padding: 5px 14px;
   text-align: right;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -1474,7 +1474,7 @@ button, .nav-item, .config-header, .dropdown-item {
 }
 
 .is-spacer-row td {
-  height: 12px;
+  height: 8px;
   background: #fff !important;
   border: none !important;
 }
@@ -1552,7 +1552,7 @@ button, .nav-item, .config-header, .dropdown-item {
 
 #balanceSheetTable th,
 #balanceSheetTable td {
-  padding: 10px 14px;
+  padding: 5px 14px;
   text-align: right;
   border-bottom: 1px solid #e5e7eb;
 }
