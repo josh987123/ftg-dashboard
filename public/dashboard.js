@@ -1493,11 +1493,11 @@ function closeEmailModal() {
   document.getElementById("emailModal").classList.add("hidden");
 }
 
-// EmailJS Configuration - set these after creating your EmailJS account
+// EmailJS Configuration
 const EMAILJS_CONFIG = {
-  publicKey: "",      // Your EmailJS Public Key
-  serviceId: "",      // Your EmailJS Service ID
-  templateId: ""      // Your EmailJS Template ID
+  publicKey: "g7M4wCTIOOn2D65le",
+  serviceId: "service_x8zz5uy",
+  templateId: "template_44g2s84"
 };
 
 async function sendReportEmail() {
