@@ -2334,6 +2334,9 @@ function initIncomeStatementControls() {
   const showThousands = document.getElementById("isShowThousands");
   showThousands.onchange = () => renderIncomeStatement();
   
+  const excludeCurrent = document.getElementById("isExcludeCurrent");
+  excludeCurrent.onchange = () => renderIncomeStatement();
+  
   const detailRadios = document.querySelectorAll('input[name="isDetailLevel"]');
   detailRadios.forEach(radio => {
     radio.onchange = () => {
@@ -2526,41 +2529,53 @@ function getAvailableMonths() {
   return Array.from(allMonths).sort();
 }
 
+function getCurrentMonthKey() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth() + 1;
+  return `${y}-${String(m).padStart(2, "0")}`;
+}
+
 function getPeriodMonths(periodValue, periodType) {
   const months = getAvailableMonths();
+  const excludeCurrent = document.getElementById("isExcludeCurrent")?.checked;
+  const currentMonthKey = getCurrentMonthKey();
+  
+  let result = [];
   
   if (periodType === "month") {
-    return [periodValue];
+    result = [periodValue];
   } else if (periodType === "quarter") {
     const [y, qStr] = periodValue.split("-Q");
     const q = parseInt(qStr);
     const startMonth = (q - 1) * 3 + 1;
-    const result = [];
     for (let m = startMonth; m < startMonth + 3; m++) {
       const key = `${y}-${String(m).padStart(2, "0")}`;
       if (months.includes(key)) result.push(key);
     }
-    return result;
   } else if (periodType === "year") {
-    return months.filter(m => m.startsWith(periodValue + "-"));
+    result = months.filter(m => m.startsWith(periodValue + "-"));
   } else if (periodType === "ytd") {
     const parts = periodValue.split("-YTD-");
     const y = parts[0];
     const endMonth = parseInt(parts[1]);
-    const result = [];
     for (let m = 1; m <= endMonth; m++) {
       const key = `${y}-${String(m).padStart(2, "0")}`;
       if (months.includes(key)) result.push(key);
     }
-    return result;
   } else if (periodType === "ttm") {
     const endMonth = periodValue.replace("TTM-", "");
     const endIdx = months.indexOf(endMonth);
     if (endIdx < 0) return [];
     const startIdx = Math.max(0, endIdx - 11);
-    return months.slice(startIdx, endIdx + 1);
+    result = months.slice(startIdx, endIdx + 1);
   }
-  return [];
+  
+  if (excludeCurrent) {
+    result = result.filter(m => m !== currentMonthKey);
+  }
+  
+  return result;
 }
 
 function getMatrixPeriods(matrixCount) {
@@ -3187,17 +3202,22 @@ function getMatrixPeriodsNew(periodType, selectedYear, yearStart, yearEnd) {
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
   const currentQuarter = Math.ceil(currentMonth / 3);
+  const currentMonthKey = getCurrentMonthKey();
+  const excludeCurrent = document.getElementById("isExcludeCurrent")?.checked;
   
   if (periodType === "year") {
     const startYr = parseInt(yearStart);
     const endYr = parseInt(yearEnd);
     for (let y = startYr; y <= endYr; y++) {
-      const yearMonths = months.filter(m => m.startsWith(y + "-"));
+      let yearMonths = months.filter(m => m.startsWith(y + "-"));
+      if (excludeCurrent) {
+        yearMonths = yearMonths.filter(m => m !== currentMonthKey);
+      }
       if (yearMonths.length > 0) {
         periods.push({
           label: String(y),
           months: yearMonths,
-          isPartial: y === currentYear
+          isPartial: y === currentYear && !excludeCurrent
         });
       }
     }
@@ -3205,16 +3225,19 @@ function getMatrixPeriodsNew(periodType, selectedYear, yearStart, yearEnd) {
     const selYear = parseInt(selectedYear);
     for (let q = 1; q <= 4; q++) {
       const startMonth = (q - 1) * 3 + 1;
-      const quarterMonths = [];
+      let quarterMonths = [];
       for (let m = startMonth; m < startMonth + 3; m++) {
         const key = `${selectedYear}-${String(m).padStart(2, "0")}`;
         if (months.includes(key)) quarterMonths.push(key);
+      }
+      if (excludeCurrent) {
+        quarterMonths = quarterMonths.filter(m => m !== currentMonthKey);
       }
       if (quarterMonths.length > 0) {
         periods.push({
           label: `Q${q}`,
           months: quarterMonths,
-          isPartial: selYear === currentYear && q === currentQuarter
+          isPartial: selYear === currentYear && q === currentQuarter && !excludeCurrent
         });
       }
     }
@@ -3223,11 +3246,12 @@ function getMatrixPeriodsNew(periodType, selectedYear, yearStart, yearEnd) {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     for (let m = 1; m <= 12; m++) {
       const key = `${selectedYear}-${String(m).padStart(2, "0")}`;
+      if (excludeCurrent && key === currentMonthKey) continue;
       if (months.includes(key)) {
         periods.push({
           label: monthNames[m - 1],
           months: [key],
-          isPartial: selYear === currentYear && m === currentMonth
+          isPartial: selYear === currentYear && m === currentMonth && !excludeCurrent
         });
       }
     }
