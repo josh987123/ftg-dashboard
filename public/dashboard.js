@@ -232,9 +232,12 @@ function setupOverviewUI() {
     updateOverviewCharts();
   };
   
+  const excludeCheck = document.getElementById("overviewExclude");
+  
   yearSelect.onchange = () => updateOverviewCharts();
   compareCheck.onchange = () => updateOverviewCharts();
   trendCheck.onchange = () => updateOverviewCharts();
+  excludeCheck.onchange = () => updateOverviewCharts();
   
   rangeStart.oninput = () => {
     if (+rangeStart.value > +rangeEnd.value) rangeStart.value = rangeEnd.value;
@@ -255,8 +258,14 @@ function updateOverviewCharts() {
   const viewType = document.getElementById("overviewViewType").value;
   const year = parseInt(document.getElementById("overviewYear").value);
   const compare = document.getElementById("overviewCompare").checked;
+  const excludeCurrent = document.getElementById("overviewExclude").checked;
   const rangeStart = parseInt(document.getElementById("overviewRangeStart").value);
   const rangeEnd = parseInt(document.getElementById("overviewRangeEnd").value);
+  
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const currentMonthKey = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
   
   let labels = [];
   let periods = [];
@@ -310,7 +319,11 @@ function updateOverviewCharts() {
   };
   
   periods.forEach((periodMonths, idx) => {
-    const rows = buildIncomeStatementRows(periodMonths, groups);
+    let filteredPeriodMonths = periodMonths;
+    if (excludeCurrent) {
+      filteredPeriodMonths = periodMonths.filter(m => m !== currentMonthKey);
+    }
+    const rows = buildIncomeStatementRows(filteredPeriodMonths, groups);
     const revenueRow = rows.find(r => r.label === "Revenue");
     const grossProfitRow = rows.find(r => r.label === "Gross Profit");
     const opexRow = rows.find(r => r.label === "Operating Expenses");

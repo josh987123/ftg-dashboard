@@ -606,6 +606,12 @@ body {
 
 .checkbox-label { display:flex; align-items:center; gap:6px; }
 
+.checkbox-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* RANGE SLIDER (DUAL) */
 .range-wrapper.hidden{ display:none; }
 
