@@ -1440,7 +1440,7 @@ button, .nav-item, .config-header, .dropdown-item {
     border-radius: 6px;
     border: 1px solid #e5e7eb;
     padding: 6px 8px;
-    gap: 16px;
+    gap: 12px;
   }
   
   .is-compare-detail-wrapper .is-options-stack {
@@ -1449,11 +1449,27 @@ button, .nav-item, .config-header, .dropdown-item {
     border-radius: 0;
     padding: 0;
     flex: 1;
+    gap: 0;
   }
   
   .is-compare-detail-wrapper .is-compare-box {
     border-right: 1px solid #e5e7eb;
-    padding-right: 12px;
+    padding-right: 10px;
+  }
+  
+  .is-compare-detail-wrapper .radio-group-stacked {
+    gap: 0;
+  }
+  
+  .is-compare-detail-wrapper .radio-label {
+    padding: 1px 0;
+    font-size: 12px;
+    line-height: 1.3;
+  }
+  
+  .is-compare-detail-wrapper > .is-options-stack > label {
+    font-size: 11px;
+    margin-bottom: 2px;
   }
 }
 
