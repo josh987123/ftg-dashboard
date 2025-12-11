@@ -1376,26 +1376,27 @@ function setupRevenueUI(data) {
   document.getElementById("revViewType").onchange = () => {
     const view = document.getElementById("revViewType").value;
 
-    const compareWrap = document.getElementById("revCompareWrapper");
+    const compareCheckbox = document.getElementById("revCompare");
+    const compareLabel = compareCheckbox ? compareCheckbox.closest("label") : null;
     const yearWrap = document.getElementById("revYearWrapper");
     const rangeWrap = document.getElementById("revRangeWrapper");
     const excludeLabel = document.getElementById("revExcludeLabel");
 
     if (view === "annual") {
-      compareWrap.style.display = "none";
-      yearWrap.style.display = "none";
-      rangeWrap.classList.remove("hidden");
-      excludeLabel.textContent = "Exclude Current Year";
+      if (compareLabel) compareLabel.style.display = "none";
+      if (yearWrap) yearWrap.style.display = "none";
+      if (rangeWrap) rangeWrap.classList.remove("hidden");
+      if (excludeLabel) excludeLabel.textContent = "Exclude Current Year";
     } else if (view === "quarterly") {
-      compareWrap.style.display = "flex";
-      yearWrap.style.display = "flex";
-      rangeWrap.classList.add("hidden");
-      excludeLabel.textContent = "Exclude Current Quarter";
+      if (compareLabel) compareLabel.style.display = "";
+      if (yearWrap) yearWrap.style.display = "flex";
+      if (rangeWrap) rangeWrap.classList.add("hidden");
+      if (excludeLabel) excludeLabel.textContent = "Exclude Current Quarter";
     } else {
-      compareWrap.style.display = "flex";
-      yearWrap.style.display = "flex";
-      rangeWrap.classList.add("hidden");
-      excludeLabel.textContent = "Exclude Current Month";
+      if (compareLabel) compareLabel.style.display = "";
+      if (yearWrap) yearWrap.style.display = "flex";
+      if (rangeWrap) rangeWrap.classList.add("hidden");
+      if (excludeLabel) excludeLabel.textContent = "Exclude Current Month";
     }
     
     // Auto-update chart when view changes
@@ -1657,8 +1658,9 @@ function updateRevenueView(data) {
   const showTrendline = document.getElementById("revTrendline").checked;
   if (showTrendline) {
     const barDatasets = [...datasets];
+    const currentYearLabel = String(year);
     barDatasets.forEach((ds) => {
-      if (ds.label === "Prior Year") return;
+      if (compare && ds.label !== currentYearLabel && ds.label !== "Annual Revenue") return;
       const trendData = calculateTrendline(ds.data);
       datasets.push({
         label: `${ds.label} Trend`,
@@ -2031,25 +2033,26 @@ function setupAccountUI(data) {
   document.getElementById("acctViewType").onchange = () => {
     const view = document.getElementById("acctViewType").value;
     const yearWrap = document.getElementById("acctYearWrapper");
-    const compareWrap = document.getElementById("acctCompareWrapper");
+    const compareCheckbox = document.getElementById("acctCompare");
+    const compareLabel = compareCheckbox ? compareCheckbox.closest("label") : null;
     const rangeWrap = document.getElementById("acctRangeWrapper");
     const excludeLabel = document.getElementById("acctExcludeLabel");
     
     if (view === "annual") {
-      yearWrap.style.display = "none";
-      compareWrap.style.display = "none";
-      rangeWrap.classList.remove("hidden");
-      excludeLabel.textContent = "Exclude Current Year";
+      if (yearWrap) yearWrap.style.display = "none";
+      if (compareLabel) compareLabel.style.display = "none";
+      if (rangeWrap) rangeWrap.classList.remove("hidden");
+      if (excludeLabel) excludeLabel.textContent = "Exclude Current Year";
     } else if (view === "quarterly") {
-      yearWrap.style.display = "flex";
-      compareWrap.style.display = "flex";
-      rangeWrap.classList.add("hidden");
-      excludeLabel.textContent = "Exclude Current Quarter";
+      if (yearWrap) yearWrap.style.display = "flex";
+      if (compareLabel) compareLabel.style.display = "";
+      if (rangeWrap) rangeWrap.classList.add("hidden");
+      if (excludeLabel) excludeLabel.textContent = "Exclude Current Quarter";
     } else {
-      yearWrap.style.display = "flex";
-      compareWrap.style.display = "flex";
-      rangeWrap.classList.add("hidden");
-      excludeLabel.textContent = "Exclude Current Month";
+      if (yearWrap) yearWrap.style.display = "flex";
+      if (compareLabel) compareLabel.style.display = "";
+      if (rangeWrap) rangeWrap.classList.add("hidden");
+      if (excludeLabel) excludeLabel.textContent = "Exclude Current Month";
     }
     updateAccountView(data);
   };
@@ -2239,8 +2242,9 @@ function updateAccountView(data) {
   const showTrendline = document.getElementById("acctTrendline").checked;
   if (showTrendline && datasets.length > 0) {
     const barDatasets = datasets.filter(ds => ds.type !== "line");
+    const currentYearLabel = String(year);
     barDatasets.forEach((ds) => {
-      if (ds.label === "Prior Year") return;
+      if (compare && ds.label !== currentYearLabel && ds.label !== `Account ${acctNum}`) return;
       if (ds.data.length > 1) {
         const trendData = calculateTrendline(ds.data);
         datasets.push({
