@@ -876,25 +876,19 @@ body {
 }
 
 .is-row-header td {
-  font-weight: 700;
+  font-weight: 400;
   background: #f3f4f6 !important;
   border-top: 2px solid #d1d5db;
   color: #1f2937;
 }
 
 .is-row-subtotal td {
-  font-weight: 700;
-  border-top: 1px solid #9ca3af;
-}
-
-.is-row-subtotal.is-no-bold td {
   font-weight: 400;
 }
 
-.is-highlight-revenue td,
-.is-highlight-grossProfit td,
-.is-highlight-costOfSales td {
+.is-major-total td {
   font-weight: 700;
+  background: #e5e7eb !important;
 }
 
 .is-spacer-row td {
