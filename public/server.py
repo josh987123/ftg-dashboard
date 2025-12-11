@@ -4,10 +4,12 @@ import json
 import base64
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Flask, send_from_directory, request, jsonify
+from flask import Flask, send_from_directory, request, jsonify, make_response
+from flask_cors import CORS
 import requests
 
 app = Flask(__name__, static_folder='.')
+CORS(app)
 
 def get_gmail_access_token():
     hostname = os.environ.get('REPLIT_CONNECTORS_HOSTNAME')
