@@ -376,8 +376,8 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior) {
       data: metricData.priorValues,
       backgroundColor: "#ef4444",
       borderRadius: 4,
-      barPercentage: 0.7,
-      categoryPercentage: 0.8
+      barPercentage: 0.9,
+      categoryPercentage: 0.85
     });
   }
   
@@ -386,8 +386,8 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior) {
     data: metricData.values,
     backgroundColor: "#3b82f6",
     borderRadius: 4,
-    barPercentage: 0.7,
-    categoryPercentage: 0.8
+    barPercentage: 0.9,
+    categoryPercentage: 0.85
   });
   
   overviewChartInstances[canvasId] = new Chart(canvas, {
