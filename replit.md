@@ -64,16 +64,25 @@ Preferred communication style: Simple, everyday language.
 - **Google Fonts**: Inter font family (weights: 300, 400, 500, 600, 700) loaded via CDN
 
 ### Backend Services
-- **Flask Server**: Python Flask application (`public/server.py`) serves static files and provides API endpoints
-- **Gmail Integration**: Uses Replit connectors to send emails via Gmail API
-- **API Endpoints**:
-  - `POST /api/send-email` - Send HTML email reports via Gmail
+- **Flask Server**: Python Flask application (`public/server.py`) serves static files for local development
 
 ### Export & Email Features
 - **Universal Export**: Print, PDF, and CSV export work for all three main views (Revenue, Account, Income Statement)
 - **Smart Page Orientation**: Exports automatically use landscape for wide content (matrix views, annual comparison) and portrait for tall content (single period views)
-- **Email Reports**: Modal dialog to email current report view directly via Gmail
+- **Email Reports**: Modal dialog to email current report view via EmailJS
+  - Executive Overview emails include visual chart images (captured using Chart.js toBase64Image)
+  - Charts are combined into a 2x3 grid with titles and stats
+  - Sent as PNG attachment via EmailJS variable attachment feature
+  - Requires EmailJS Personal plan for attachment support
 - **Page Formatting**: Exports are sized to fit on a single page with appropriate font scaling
+
+### EmailJS Configuration
+- **Service**: EmailJS client-side email service (no backend required)
+- **Credentials stored in dashboard.js**:
+  - Public Key: `g7M4wCTIOOn2D65le`
+  - Service ID: `service_x8zz5uy`
+  - Template ID: `template_44g2s84`
+- **Template requires**: Variable attachment named `chart_attachment` for Executive Overview charts
 
 ### Static Assets
 - **Logo**: `logo.png` used in login screen and header
