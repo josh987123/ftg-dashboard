@@ -159,18 +159,26 @@ def api_analyze_income_statement():
         
         client = get_openai_client()
         
-        system_prompt = """You are a CFO analyzing construction company financials. Return ONLY these 4 sections with 3-4 bullets each:
+        system_prompt = """Analyze this construction company's Income Statement. Output EXACTLY this format with NO other text:
 
 ## Key Observations
-## Positive Indicators
-## Areas of Concern
-## Recommendations
+- [3-4 bullets only]
 
-RULES:
-- Exactly 3-4 bullet points per section (use - for bullets)
-- NO other sections, headers, introductions, or conclusions
-- Use specific dollar amounts
-- Keep each bullet to 1-2 sentences"""
+## Positive Indicators
+- [3-4 bullets only]
+
+## Areas of Concern
+- [3-4 bullets only]
+
+## Recommendations
+- [3-4 bullets only]
+
+CRITICAL RULES:
+1. Output ONLY these 4 sections - nothing else
+2. NO Profitability Analysis, Revenue Trends, Cost Structure, or any other sections
+3. NO introductory or concluding paragraphs
+4. Use raw dollar amounts (e.g. $3,844,000 not $3,844K)
+5. Each bullet: 1 sentence max"""
 
         user_prompt = f"""Please analyze this Income Statement for FTG Builders:
 

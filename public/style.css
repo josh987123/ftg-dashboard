@@ -1596,8 +1596,11 @@ button, .nav-item, .config-header, .dropdown-item {
   color: #166534 !important;
   margin: 12px 0 0 0 !important;
   padding: 0 !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
   font-size: 12px !important;
   text-indent: 0 !important;
+  display: block !important;
 }
 
 .ai-analysis-content h1:first-child,
@@ -1609,8 +1612,15 @@ button, .nav-item, .config-header, .dropdown-item {
 .ai-analysis-content ul,
 .ai-analysis-content ol {
   margin: 0 !important;
+  margin-left: 0 !important;
   padding: 0 0 0 18px !important;
   list-style-position: outside !important;
+}
+
+.ai-analysis-content > h2,
+.ai-analysis-content > h3 {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
 }
 
 .ai-analysis-content li {
