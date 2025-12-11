@@ -742,6 +742,24 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend)
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: {
+        duration: 800,
+        easing: 'easeOutQuart',
+        delay: (context) => {
+          let delay = 0;
+          if (context.type === 'data' && context.mode === 'default') {
+            delay = context.dataIndex * 50 + context.datasetIndex * 100;
+          }
+          return delay;
+        }
+      },
+      transitions: {
+        active: {
+          animation: {
+            duration: 200
+          }
+        }
+      },
       layout: {
         padding: { top: showDataLabels ? 20 : 0 }
       },
@@ -2040,8 +2058,18 @@ function renderRevenueChart(labels, datasets) {
         responsive: true,
         maintainAspectRatio: false,
         animation: {
-          duration: 600,
-          easing: "easeOutQuart"
+          duration: 800,
+          easing: "easeOutQuart",
+          delay: (context) => {
+            let delay = 0;
+            if (context.type === 'data' && context.mode === 'default') {
+              delay = context.dataIndex * 40 + context.datasetIndex * 80;
+            }
+            return delay;
+          }
+        },
+        transitions: {
+          active: { animation: { duration: 200 } }
         },
         layout: {
           padding: { top: showDataLabels ? 30 : 0 }
@@ -2581,8 +2609,18 @@ function renderAccountChart(labels, datasets) {
       responsive: true,
       maintainAspectRatio: false,
       animation: {
-        duration: 600,
-        easing: "easeOutQuart"
+        duration: 800,
+        easing: "easeOutQuart",
+        delay: (context) => {
+          let delay = 0;
+          if (context.type === 'data' && context.mode === 'default') {
+            delay = context.dataIndex * 40 + context.datasetIndex * 80;
+          }
+          return delay;
+        }
+      },
+      transitions: {
+        active: { animation: { duration: 200 } }
       },
       layout: {
         padding: { top: showDataLabels ? 30 : 0 }

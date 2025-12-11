@@ -473,8 +473,28 @@ button, .nav-item, .config-header, .dropdown-item {
   }
 }
 
-.dashboard-section { display:none; }
-.dashboard-section.visible { display:block; }
+.dashboard-section { 
+  display: none;
+  opacity: 0;
+  transform: translateY(15px);
+}
+
+.dashboard-section.visible { 
+  display: block;
+  animation: sectionFadeIn 0.35s ease-out forwards;
+}
+
+@keyframes sectionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .dashboard-section h2 { 
   margin-bottom:20px;
   font-size: 24px;
@@ -2345,5 +2365,131 @@ button, .nav-item, .config-header, .dropdown-item {
   
   .sidebar {
     padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ============================================================
+   PWA UPDATE BANNER
+============================================================ */
+.update-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 10001;
+  animation: slideUp 0.4s ease-out;
+}
+
+.update-banner button {
+  background: #fff;
+  color: #2563eb;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.update-banner button:hover {
+  background: #f0f9ff;
+  transform: scale(1.02);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ============================================================
+   VIEW TRANSITION ANIMATIONS
+============================================================ */
+
+/* Fade in animation for content loading */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.overview-metric-tile {
+  animation: fadeInUp 0.4s ease-out backwards;
+}
+
+.overview-metric-tile:nth-child(1) { animation-delay: 0.05s; }
+.overview-metric-tile:nth-child(2) { animation-delay: 0.1s; }
+.overview-metric-tile:nth-child(3) { animation-delay: 0.15s; }
+.overview-metric-tile:nth-child(4) { animation-delay: 0.2s; }
+.overview-metric-tile:nth-child(5) { animation-delay: 0.25s; }
+.overview-metric-tile:nth-child(6) { animation-delay: 0.3s; }
+
+/* Chart container fade in */
+.chart-box,
+.chart-with-tiles,
+.is-table-box,
+.rev-table-box {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* Summary tiles staggered animation */
+.summary-tile {
+  animation: fadeInUp 0.3s ease-out backwards;
+}
+
+.summary-tile:nth-child(1) { animation-delay: 0.1s; }
+.summary-tile:nth-child(2) { animation-delay: 0.15s; }
+.summary-tile:nth-child(3) { animation-delay: 0.2s; }
+.summary-tile:nth-child(4) { animation-delay: 0.25s; }
+
+/* Config panel animation */
+.config-panel {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Stat box hover scale */
+.stat-box {
+  transition: transform 0.2s ease, background 0.15s ease;
+}
+
+.stat-box:hover {
+  transform: scale(1.03);
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-section,
+  .dashboard-section.visible,
+  .overview-metric-tile,
+  .chart-box,
+  .chart-with-tiles,
+  .is-table-box,
+  .rev-table-box,
+  .summary-tile,
+  .config-panel {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .update-banner {
+    animation: none;
   }
 }
