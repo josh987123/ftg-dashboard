@@ -426,16 +426,16 @@
               <label id="isPeriodSelectLabel">Period:</label>
               <select id="isPeriodSelect"></select>
 
-              <div id="isSingleControls">
+              <div id="isSingleControls" class="is-options-stack">
                 <label>Compare:</label>
-                <select id="isCompare">
-                  <option value="none">None</option>
-                  <option value="prior_period">Prior Period</option>
-                  <option value="prior_year">Prior Year</option>
-                </select>
+                <div class="radio-group-stacked">
+                  <label class="radio-label"><input type="radio" name="isCompareRadio" value="none" checked> None</label>
+                  <label class="radio-label"><input type="radio" name="isCompareRadio" value="prior_period"> Prior Period</label>
+                  <label class="radio-label"><input type="radio" name="isCompareRadio" value="prior_year"> Prior Year</label>
+                </div>
               </div>
 
-              <div class="is-detail-radio stacked">
+              <div class="is-options-stack">
                 <label>Detail:</label>
                 <div class="radio-group-stacked">
                   <label class="radio-label"><input type="radio" name="isDetailLevel" value="summary" checked> Summary</label>

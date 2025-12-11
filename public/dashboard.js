@@ -719,7 +719,7 @@ function isAccountWide() {
 function getIncomeStatementSubtitle() {
   const periodType = document.getElementById("isPeriodType")?.value || "month";
   const viewMode = document.getElementById("isViewMode")?.value || "single";
-  const compare = document.getElementById("isCompare")?.value || "none";
+  const compare = document.querySelector('input[name="isCompareRadio"]:checked')?.value || "none";
   
   let subtitle = `${periodType.charAt(0).toUpperCase() + periodType.slice(1)}`;
   if (viewMode === "matrix") subtitle += " - Matrix View";
@@ -2066,7 +2066,6 @@ function initIncomeStatementControls() {
   const matrixControls = document.getElementById("isMatrixControls");
   const periodType = document.getElementById("isPeriodType");
   const periodSelect = document.getElementById("isPeriodSelect");
-  const compare = document.getElementById("isCompare");
   const showSubtotal = document.getElementById("isShowSubtotal");
   const matrixYearStart = document.getElementById("isMatrixYearStart");
   const matrixYearEnd = document.getElementById("isMatrixYearEnd");
@@ -2086,7 +2085,12 @@ function initIncomeStatementControls() {
   };
   
   periodSelect.onchange = () => renderIncomeStatement();
-  compare.onchange = () => renderIncomeStatement();
+  
+  const compareRadios = document.querySelectorAll('input[name="isCompareRadio"]');
+  compareRadios.forEach(radio => {
+    radio.onchange = () => renderIncomeStatement();
+  });
+  
   showSubtotal.onchange = () => renderIncomeStatement();
   
   const showThousands = document.getElementById("isShowThousands");
@@ -2676,7 +2680,7 @@ function renderIncomeStatement() {
     
     hasPartialPeriod = renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, showSubtotal, thead, tbody);
   } else {
-    const compare = document.getElementById("isCompare").value;
+    const compare = document.querySelector('input[name="isCompareRadio"]:checked')?.value || "none";
     hasPartialPeriod = renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody);
   }
   
