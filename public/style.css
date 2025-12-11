@@ -1512,7 +1512,7 @@ button, .nav-item, .config-header, .dropdown-item {
   border-radius: 8px;
   margin-bottom: 20px;
   overflow: hidden;
-  width: 50%;
+  width: 70%;
   min-width: 400px;
 }
 
@@ -1557,13 +1557,13 @@ button, .nav-item, .config-header, .dropdown-item {
 }
 
 .ai-run-btn {
-  padding: 5px 12px;
-  font-size: 11px;
+  padding: 3px 8px;
+  font-size: 10px;
   font-weight: 600;
   color: #fff;
   background: #166534;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
   transition: background 0.2s;
 }
