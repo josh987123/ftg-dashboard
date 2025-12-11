@@ -910,19 +910,12 @@ button, .nav-item, .config-header, .dropdown-item {
   font-weight: 600;
   font-size: 13px;
   color: var(--text-secondary);
-  margin-bottom: 0;
-}
-
-.metric-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .show-all-label {
-  font-size: 12px;
-  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 8px;
 }
 
 .metric-checkboxes {
