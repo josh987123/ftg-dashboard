@@ -4858,15 +4858,11 @@ function renderBalanceSheet() {
       return;
     }
     
-    const isSummaryRow = row.type === "subtotal" && (row.label.startsWith("Total") || row.label.startsWith("TOTAL"));
     const isHeaderRow = row.type === "header";
     const isDetailRow = row.type === "detail";
+    const isSubtotal = row.type === "subtotal";
     
-    if (detailLevel === "summary" && isDetailRow) {
-      return;
-    }
-    
-    if (detailLevel !== "detail" && !isHeaderRow && !isSummaryRow && isDetailRow) {
+    if (detailLevel !== "detail" && isDetailRow) {
       const currentZero = row.value === 0 || row.value === null;
       const compRow = comparisonRows ? comparisonRows[i] : null;
       const compZero = !compRow || compRow.value === 0 || compRow.value === null;
