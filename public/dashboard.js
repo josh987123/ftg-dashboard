@@ -1428,7 +1428,6 @@ function generateReportHtml(data, forEmail = false) {
           <h2>${data.subtitle}</h2>
         </div>
         <div class="logo-section">
-          <div style="font-weight: bold; color: #1f2937;">FTG BUILDERS</div>
         </div>
       </div>
       ${data.tableHtml}
