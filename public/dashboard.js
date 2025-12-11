@@ -367,6 +367,7 @@ function loadUserPreferences() {
     }
     
     applyMetricVisibility();
+    updateShowAllCheckbox();
   } finally {
     isLoadingPreferences = false;
   }
@@ -398,6 +399,15 @@ function updateMetricVisibility() {
     });
     saveUserPreferences({ overviewMetrics: visiblePrefs });
   }
+}
+
+function updateShowAllCheckbox() {
+  const showAllCheck = document.getElementById("showAllMetrics");
+  if (!showAllCheck) return;
+  
+  const metricCheckboxes = document.querySelectorAll("[data-metric]");
+  const allChecked = Array.from(metricCheckboxes).every(cb => cb.checked);
+  showAllCheck.checked = allChecked;
 }
 
 function saveOverviewConfig() {
@@ -529,8 +539,22 @@ function setupOverviewUI() {
   };
   
   document.querySelectorAll("[data-metric]").forEach(cb => {
-    cb.onchange = () => updateMetricVisibility();
+    cb.onchange = () => {
+      updateMetricVisibility();
+      updateShowAllCheckbox();
+    };
   });
+  
+  const showAllCheck = document.getElementById("showAllMetrics");
+  if (showAllCheck) {
+    showAllCheck.onchange = () => {
+      const metricCheckboxes = document.querySelectorAll("[data-metric]");
+      metricCheckboxes.forEach(cb => {
+        cb.checked = showAllCheck.checked;
+      });
+      updateMetricVisibility();
+    };
+  }
   
   loadUserPreferences();
   
