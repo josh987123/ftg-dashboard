@@ -1507,7 +1507,7 @@ async function captureOverviewAsImage() {
   }
   
   try {
-    // Use smaller scale for faster upload
+    // Capture at reasonable scale for email attachment
     const canvas = await html2canvas(tilesGrid, {
       scale: 1,
       useCORS: true,
@@ -1516,37 +1516,15 @@ async function captureOverviewAsImage() {
       allowTaint: true
     });
     
-    // Convert to smaller jpeg
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+    // Convert to PNG for good quality
+    const dataUrl = canvas.toDataURL("image/png", 0.8);
     const base64Data = dataUrl.split(",")[1];
-    console.log("Image size (base64 chars):", base64Data.length);
+    const sizeKB = Math.round(base64Data.length / 1024);
+    console.log("Chart image size:", sizeKB, "KB");
     
-    // Upload to ImgBB (free image hosting)
-    const formData = new FormData();
-    formData.append("image", base64Data);
-    
-    const response = await fetch("https://api.imgbb.com/1/upload?key=00c9ee224d9a82ba7d2efb6024d2d823", {
-      method: "POST",
-      body: formData
-    });
-    
-    if (!response.ok) {
-      console.error("ImgBB HTTP error:", response.status, response.statusText);
-      return null;
-    }
-    
-    const result = await response.json();
-    console.log("ImgBB response:", JSON.stringify(result));
-    
-    if (result.success && result.data && result.data.url) {
-      console.log("Image uploaded:", result.data.url);
-      return result.data.url;
-    } else {
-      console.error("ImgBB upload failed:", result.error || result);
-      return null;
-    }
+    return base64Data;
   } catch (err) {
-    console.error("Chart capture/upload error:", err.message);
+    console.error("Chart capture error:", err.message);
     return null;
   }
 }
@@ -1589,57 +1567,86 @@ async function sendReportEmail() {
     let chartImage = "";
     
     if (view === "overview") {
-      statusEl.textContent = "Step 1: Capturing charts...";
+      statusEl.textContent = "Capturing charts...";
       try {
         chartImage = await captureOverviewAsImage();
-        if (chartImage && chartImage.startsWith("http")) {
-          statusEl.textContent = "Step 2: Image uploaded! Sending...";
+        if (chartImage) {
+          statusEl.textContent = "Sending with chart attachment...";
         } else {
-          statusEl.textContent = "Upload failed, using table...";
-          chartImage = null;
+          statusEl.textContent = "Using table format...";
         }
       } catch (captureErr) {
-        statusEl.textContent = "Error: " + captureErr.message;
+        console.error("Capture error:", captureErr);
         chartImage = null;
       }
-      
-      if (chartImage) {
-        messageHtml = `
-          <div style="font-family: Arial, sans-serif; padding: 20px;">
-            <h1 style="color: #1f2937; margin: 0 0 5px 0;">FTG Builders - ${data.title}</h1>
-            <p style="color: #6b7280; margin: 0 0 20px 0;">${data.subtitle}</p>
-            <img src="${chartImage}" alt="Executive Overview Charts" style="max-width: 100%; height: auto; border: 1px solid #e5e7eb; border-radius: 8px;" />
-            <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()} | FTG Dashboard</p>
-          </div>
-        `;
-      } else {
-        messageHtml = generateReportHtml(data, true);
-      }
-    } else {
-      messageHtml = generateReportHtml(data, true);
     }
+    
+    // Generate simple text message for email body
+    messageHtml = `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h1 style="color: #1f2937; margin: 0 0 5px 0;">FTG Builders - ${data.title}</h1>
+        <p style="color: #6b7280; margin: 0 0 20px 0;">${data.subtitle}</p>
+        ${chartImage ? '<p>Please see the attached chart image.</p>' : generateReportHtml(data, true)}
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()} | FTG Dashboard</p>
+      </div>
+    `;
     
     statusEl.textContent = "Sending...";
     
-    const templateParams = {
-      to_email: toEmail,
-      subject: subject,
-      message_html: messageHtml,
-      report_title: data.title
-    };
-    
-    const response = await emailjs.send(
-      EMAILJS_CONFIG.serviceId,
-      EMAILJS_CONFIG.templateId,
-      templateParams
-    );
-    
-    if (response.status === 200) {
-      statusEl.textContent = "Email sent successfully!";
-      statusEl.className = "email-status success";
-      setTimeout(closeEmailModal, 2000);
+    // Use EmailJS REST API with attachments if we have a chart image
+    if (chartImage) {
+      const payload = {
+        service_id: EMAILJS_CONFIG.serviceId,
+        template_id: EMAILJS_CONFIG.templateId,
+        user_id: EMAILJS_CONFIG.publicKey,
+        template_params: {
+          to_email: toEmail,
+          subject: subject,
+          message_html: messageHtml,
+          report_title: data.title
+        },
+        attachments: [{
+          name: "executive-overview.png",
+          data: chartImage
+        }]
+      };
+      
+      const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        statusEl.textContent = "Email sent with chart!";
+        statusEl.className = "email-status success";
+        setTimeout(closeEmailModal, 2000);
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to send email");
+      }
     } else {
-      throw new Error("Failed to send email");
+      // Fallback to regular emailjs.send for table format
+      const templateParams = {
+        to_email: toEmail,
+        subject: subject,
+        message_html: messageHtml,
+        report_title: data.title
+      };
+      
+      const response = await emailjs.send(
+        EMAILJS_CONFIG.serviceId,
+        EMAILJS_CONFIG.templateId,
+        templateParams
+      );
+      
+      if (response.status === 200) {
+        statusEl.textContent = "Email sent successfully!";
+        statusEl.className = "email-status success";
+        setTimeout(closeEmailModal, 2000);
+      } else {
+        throw new Error("Failed to send email");
+      }
     }
   } catch (err) {
     console.error("EmailJS error:", err);
