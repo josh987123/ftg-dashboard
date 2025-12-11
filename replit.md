@@ -53,7 +53,8 @@ Preferred communication style: Simple, everyday language.
   - Show in Thousands option
   - Account groups: Assets (1000s), Liabilities (2000s), Equity (3000s)
   - Hierarchical structure with expand/collapse for subtotals
-  - Excludes Retained Earnings and current period Net Income (per user preference)
+  - Equity section includes Retained Earnings (cumulative through prior year-end) and Current Year Net Income (Jan 1 through selected date)
+  - Mobile-responsive styling at 768px and 500px breakpoints
 - **Statement of Cash Flows**: Under construction - will display cash flow statements
 - **Over/Under Bill**: Under construction - will track billing variances
 - **Receivables/Payables**: Under construction - will manage AR/AP tracking
