@@ -813,7 +813,7 @@ initOverviewModule();
 ============================================================ */
 async function loadFinancialCharts() {
   try {
-    const response = await fetch("https://ftg-dashboard.netlify.app/data/financials.json");
+    const response = await fetch("/data/financials.json");
 
     const data = await response.json();
 
@@ -939,10 +939,11 @@ async function initRevenueModule() {
   const spinner = document.getElementById("revLoadingSpinner");
   
   try {
-    spinner.classList.remove("hidden");
+    if (spinner) spinner.classList.remove("hidden");
     
     if (!revenueDataCache) {
-      const response = await fetch("https://ftg-dashboard.netlify.app/data/financials.json");
+      const response = await fetch("/data/financials.json");
+      if (!response.ok) throw new Error("Failed to fetch revenue data");
       revenueDataCache = await response.json();
     }
 
@@ -1549,27 +1550,46 @@ async function sendReportEmail() {
    UI SETUP: YEAR DROPDOWN, RANGE SLIDERS, VIEW SWITCHING
 ------------------------------------------------------------ */
 function setupRevenueUI(data) {
-  const years = Object.keys(data.revenue)
-    .map(Number)
-    .sort((a, b) => a - b);
+  try {
+    if (!data || !data.revenue) {
+      console.error("Revenue data not available");
+      return;
+    }
+    
+    const years = Object.keys(data.revenue)
+      .map(Number)
+      .sort((a, b) => a - b);
 
-  /* ------------------ YEAR DROPDOWN ------------------ */
-  const yearSelect = document.getElementById("revYear");
-  yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
-  yearSelect.value = Math.max(...years);
+    if (years.length === 0) {
+      console.error("No years found in revenue data");
+      return;
+    }
 
-  /* ------------------ SLIDER SETUP ------------------ */
-  const s = document.getElementById("revRangeStart");
-  const e = document.getElementById("revRangeEnd");
+    /* ------------------ YEAR DROPDOWN ------------------ */
+    const yearSelect = document.getElementById("revYear");
+    if (!yearSelect) {
+      console.error("Revenue year select not found");
+      return;
+    }
+    
+    yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
+    yearSelect.value = Math.max(...years);
 
-  s.min = e.min = years[0];
-  s.max = e.max = years[years.length - 1];
+    /* ------------------ SLIDER SETUP ------------------ */
+    const s = document.getElementById("revRangeStart");
+    const e = document.getElementById("revRangeEnd");
 
-  s.value = years[0];
-  e.value = years[years.length - 1];
+    if (s && e) {
+      s.min = e.min = years[0];
+      s.max = e.max = years[years.length - 1];
+      s.value = years[0];
+      e.value = years[years.length - 1];
+    }
 
-  document.getElementById("revRangeStartLabel").innerText = s.value;
-  document.getElementById("revRangeEndLabel").innerText = e.value;
+    const startLabel = document.getElementById("revRangeStartLabel");
+    const endLabel = document.getElementById("revRangeEndLabel");
+    if (startLabel && s) startLabel.innerText = s.value;
+    if (endLabel && e) endLabel.innerText = e.value;
 
   // Make sure start ≤ end
   s.oninput = () => {
@@ -1651,6 +1671,9 @@ function setupRevenueUI(data) {
     document.getElementById("revRangeEndLabel").textContent = end;
     updateRevenueView(data);
   };
+  } catch (err) {
+    console.error("Error setting up revenue UI:", err);
+  }
 }
 
 /* ============================================================
@@ -2179,7 +2202,8 @@ async function initAccountModule() {
       if (revenueDataCache) {
         acctDataCache = revenueDataCache;
       } else {
-        const response = await fetch("https://ftg-dashboard.netlify.app/data/financials.json");
+        const response = await fetch("/data/financials.json");
+        if (!response.ok) throw new Error("Failed to fetch account data");
         acctDataCache = await response.json();
         revenueDataCache = acctDataCache;
       }
@@ -2200,13 +2224,19 @@ async function initAccountModule() {
 }
 
 function setupAccountUI(data) {
-  const acctSelect = document.getElementById("acctSelect");
-  const yearSelect = document.getElementById("acctYear");
-  
-  if (!data.gl_history_all || data.gl_history_all.length === 0) {
-    acctSelect.innerHTML = '<option value="">No accounts available</option>';
-    return;
-  }
+  try {
+    const acctSelect = document.getElementById("acctSelect");
+    const yearSelect = document.getElementById("acctYear");
+    
+    if (!acctSelect || !yearSelect) {
+      console.error("Account UI elements not found");
+      return;
+    }
+    
+    if (!data || !data.gl_history_all || data.gl_history_all.length === 0) {
+      acctSelect.innerHTML = '<option value="">No accounts available</option>';
+      return;
+    }
   
   const accounts = data.gl_history_all
     .map(row => ({
@@ -2289,6 +2319,9 @@ function setupAccountUI(data) {
   document.getElementById("acctTrendline").onchange = () => updateAccountView(data);
   document.getElementById("acctDataLabels").onchange = () => updateAccountView(data);
   document.getElementById("acctExcludeCurrent").onchange = () => updateAccountView(data);
+  } catch (err) {
+    console.error("Error setting up account UI:", err);
+  }
 }
 
 function isIncomeAccount(accountNum) {
