@@ -1493,6 +1493,13 @@ function closeEmailModal() {
   document.getElementById("emailModal").classList.add("hidden");
 }
 
+// EmailJS Configuration - set these after creating your EmailJS account
+const EMAILJS_CONFIG = {
+  publicKey: "",      // Your EmailJS Public Key
+  serviceId: "",      // Your EmailJS Service ID
+  templateId: ""      // Your EmailJS Template ID
+};
+
 async function sendReportEmail() {
   const toEmail = document.getElementById("emailTo").value.trim();
   const subject = document.getElementById("emailSubject").value.trim();
@@ -1501,6 +1508,13 @@ async function sendReportEmail() {
   
   if (!toEmail) {
     statusEl.textContent = "Please enter a recipient email address.";
+    statusEl.className = "email-status error";
+    return;
+  }
+  
+  // Check if EmailJS is configured
+  if (!EMAILJS_CONFIG.publicKey || !EMAILJS_CONFIG.serviceId || !EMAILJS_CONFIG.templateId) {
+    statusEl.textContent = "Email service not configured. Please set up EmailJS.";
     statusEl.className = "email-status error";
     return;
   }
@@ -1519,45 +1533,33 @@ async function sendReportEmail() {
   sendBtn.disabled = true;
   
   try {
-    const payload = JSON.stringify({ to: toEmail, subject: subject, html: html });
-    const headers = { 
-      "Content-Type": "application/json",
-      "Accept": "application/json"
+    // Initialize EmailJS
+    emailjs.init(EMAILJS_CONFIG.publicKey);
+    
+    // Send email via EmailJS
+    const templateParams = {
+      to_email: toEmail,
+      subject: subject,
+      message_html: html,
+      report_title: data.title
     };
     
-    const endpoints = ["/api/send-email", "/send-email.json", "/__api__/send-email"];
-    let lastError = null;
+    const response = await emailjs.send(
+      EMAILJS_CONFIG.serviceId,
+      EMAILJS_CONFIG.templateId,
+      templateParams
+    );
     
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: headers,
-          body: payload
-        });
-        
-        const contentType = response.headers.get("content-type");
-        
-        if (contentType && contentType.includes("application/json")) {
-          const result = await response.json();
-          
-          if (result.success) {
-            statusEl.textContent = "Email sent successfully!";
-            statusEl.className = "email-status success";
-            setTimeout(closeEmailModal, 2000);
-            return;
-          } else if (result.error) {
-            lastError = result.error;
-          }
-        }
-      } catch (e) {
-        lastError = e.message;
-      }
+    if (response.status === 200) {
+      statusEl.textContent = "Email sent successfully!";
+      statusEl.className = "email-status success";
+      setTimeout(closeEmailModal, 2000);
+    } else {
+      throw new Error("Failed to send email");
     }
-    
-    throw new Error(lastError || "Email service unavailable. Please try again later.");
   } catch (err) {
-    statusEl.textContent = "Error sending email: " + err.message;
+    console.error("EmailJS error:", err);
+    statusEl.textContent = "Error sending email: " + (err.text || err.message || "Please try again");
     statusEl.className = "email-status error";
   } finally {
     sendBtn.disabled = false;
