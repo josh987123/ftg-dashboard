@@ -1351,6 +1351,11 @@ button, .nav-item, .config-header, .dropdown-item {
   background: #fef9c3 !important;
 }
 
+.is-gray-section-expanded td {
+  font-weight: 600;
+  background: #e5e7eb !important;
+}
+
 .is-spacer-row td {
   height: 12px;
   background: #fff !important;

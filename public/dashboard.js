@@ -4061,8 +4061,10 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
     const isMajorTotal = majorTotalLabels.includes(row.label);
     const profitRowLabels = ["Revenue", "Gross Profit", "Operating Income", "Net Profit Before Taxes", "Net Profit After Taxes"];
     const expenseSectionLabels = ["Total Cost of Sales", "Operating Expenses", "Taxes", "Other Income/Expense"];
+    const graySectionLabels = ["Total Direct Expenses", "Total Indirect Expenses"];
     const isProfitRow = profitRowLabels.includes(row.label);
     const isExpenseSection = expenseSectionLabels.includes(row.label);
+    const isGraySection = graySectionLabels.includes(row.label);
     
     if (!isMajorTotal && row.type !== "ratio" && row.type !== "header") {
       const currentZero = row.value === 0 || row.value === null;
@@ -4082,11 +4084,15 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
     let expandedSubtotalClass = "";
     let childRowClass = "";
     let expenseSectionClass = "";
+    let graySectionClass = "";
     
     if (row.expandable && isRowStates[row.id] === true) {
       expandedSubtotalClass = "is-expanded-subtotal";
       if (isExpenseSection) {
         expenseSectionClass = "is-expense-section-expanded";
+      }
+      if (isGraySection) {
+        graySectionClass = "is-gray-section-expanded";
       }
     }
     
@@ -4112,7 +4118,7 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
       valueHtml = formatAccountingNumber(row.value);
     }
     
-    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${profitRowClass} ${expenseSectionClass} ${expandedSubtotalClass} ${childRowClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${profitRowClass} ${expenseSectionClass} ${graySectionClass} ${expandedSubtotalClass} ${childRowClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
     
     if (comparisonRows) {
@@ -4195,8 +4201,10 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
     const isMajorTotal = majorTotalLabels.includes(row.label);
     const profitRowLabels = ["Revenue", "Gross Profit", "Operating Income", "Net Profit Before Taxes", "Net Profit After Taxes"];
     const expenseSectionLabels = ["Total Cost of Sales", "Operating Expenses", "Taxes", "Other Income/Expense"];
+    const graySectionLabels = ["Total Direct Expenses", "Total Indirect Expenses"];
     const isProfitRow = profitRowLabels.includes(row.label);
     const isExpenseSection = expenseSectionLabels.includes(row.label);
+    const isGraySection = graySectionLabels.includes(row.label);
     
     if (!isMajorTotal && row.type !== "ratio" && row.type !== "header") {
       const allZero = allPeriodRows.every(periodRows => {
@@ -4217,11 +4225,15 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
     let expandedSubtotalClass = "";
     let childRowClass = "";
     let expenseSectionClass = "";
+    let graySectionClass = "";
     
     if (row.expandable && isRowStates[row.id] === true) {
       expandedSubtotalClass = "is-expanded-subtotal";
       if (isExpenseSection) {
         expenseSectionClass = "is-expense-section-expanded";
+      }
+      if (isGraySection) {
+        graySectionClass = "is-gray-section-expanded";
       }
     }
     
@@ -4238,7 +4250,7 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
       toggleHtml = `<span class="is-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
     }
     
-    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${profitRowClass} ${expenseSectionClass} ${expandedSubtotalClass} ${childRowClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${profitRowClass} ${expenseSectionClass} ${graySectionClass} ${expandedSubtotalClass} ${childRowClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
     
     let rowSubtotal = 0;
