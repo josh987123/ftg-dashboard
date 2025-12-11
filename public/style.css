@@ -940,6 +940,16 @@ body {
   background: #e5e7eb !important;
 }
 
+.is-blue-subtotal td {
+  font-weight: 700;
+  background: #dbeafe !important;
+}
+
+.is-blue-subtotal td:first-child {
+  padding-left: 24px !important;
+  background: #dbeafe !important;
+}
+
 .is-spacer-row td {
   height: 12px;
   background: #fff !important;
