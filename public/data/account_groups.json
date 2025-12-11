@@ -1055,99 +1055,67 @@
         "type": "header"
       },
       {
-        "label": "Current Liabilities",
-        "level": 1,
-        "type": "header"
-      },
-      {
         "label": "Contracts Payable",
-        "level": 2,
+        "level": 3,
         "type": "detail",
         "accounts": [2000, 2005],
-        "isDebit": false
+        "isDebit": false,
+        "parent": "Accounts Payable"
       },
       {
         "label": "Retention Payable",
-        "level": 2,
+        "level": 3,
         "type": "detail",
         "accounts": [2010],
-        "isDebit": false
+        "isDebit": false,
+        "parent": "Accounts Payable"
       },
       {
         "label": "Credit Cards",
-        "level": 2,
+        "level": 3,
         "type": "detail",
-        "accounts": [2015, 2016, 2017, 2018, 2019],
-        "isDebit": false
+        "accounts": [2015, 2016, 2017, 2018],
+        "isDebit": false,
+        "parent": "Accounts Payable"
       },
       {
-        "label": "Accrued Payroll & Benefits",
+        "label": "Accounts Payable",
         "level": 2,
-        "type": "detail",
-        "accounts": [2020, 2021, 2022, 2023, 2025, 2028, 2030, 2040],
-        "isDebit": false
+        "type": "subtotal",
+        "formula": "Contracts Payable + Retention Payable + Credit Cards",
+        "isDebit": false,
+        "expandable": true,
+        "parent": "Current Liabilities"
       },
       {
-        "label": "Payroll Taxes Payable",
+        "label": "Accrued Expenses",
         "level": 2,
         "type": "detail",
-        "accounts": [2050, 2060, 2070, 2080, 2090],
-        "isDebit": false
-      },
-      {
-        "label": "Accrued Workers Comp",
-        "level": 2,
-        "type": "detail",
-        "accounts": [2100],
-        "isDebit": false
-      },
-      {
-        "label": "Insurance Financing",
-        "level": 2,
-        "type": "detail",
-        "accounts": [2110],
-        "isDebit": false
+        "accounts": [2021, 2023, 2025, 2028, 2030, 2070, 2100, 2110],
+        "isDebit": false,
+        "parent": "Current Liabilities"
       },
       {
         "label": "Overbillings",
         "level": 2,
         "type": "detail",
         "accounts": [2120],
-        "isDebit": false
+        "isDebit": false,
+        "parent": "Current Liabilities"
       },
       {
-        "label": "Taxes Payable",
+        "label": "Other Current Liabilities",
         "level": 2,
         "type": "detail",
-        "accounts": [2130, 2135, 2140],
-        "isDebit": false
+        "accounts": [2130, 2140, 2200, 2250],
+        "isDebit": false,
+        "parent": "Current Liabilities"
       },
       {
-        "label": "Deferred Tax Liability",
-        "level": 2,
-        "type": "detail",
-        "accounts": [2150],
-        "isDebit": false
-      },
-      {
-        "label": "Uninvoiced Receipts",
-        "level": 2,
-        "type": "detail",
-        "accounts": [2200],
-        "isDebit": false
-      },
-      {
-        "label": "Short-term Notes Payable",
-        "level": 2,
-        "type": "detail",
-        "accounts": [2210, 2250],
-        "isDebit": false
-      },
-      {
-        "label": "Total Current Liabilities",
+        "label": "Current Liabilities",
         "level": 1,
         "type": "subtotal",
-        "formula": "Contracts Payable + Retention Payable + Credit Cards + Accrued Payroll & Benefits + Payroll Taxes Payable + Accrued Workers Comp + Insurance Financing + Overbillings + Taxes Payable + Deferred Tax Liability + Uninvoiced Receipts + Short-term Notes Payable",
+        "formula": "Accounts Payable + Accrued Expenses + Overbillings + Other Current Liabilities",
         "isDebit": false,
         "expandable": true
       },
@@ -1156,36 +1124,42 @@
         "type": "spacer"
       },
       {
-        "label": "Long-term Liabilities",
-        "level": 1,
-        "type": "header"
-      },
-      {
         "label": "Loan - Bridge Bank",
         "level": 2,
         "type": "detail",
         "accounts": [2500],
-        "isDebit": false
+        "isDebit": false,
+        "parent": "Long-Term Liabilities"
       },
       {
         "label": "Note - Vehicles",
         "level": 2,
         "type": "detail",
         "accounts": [2510],
-        "isDebit": false
+        "isDebit": false,
+        "parent": "Long-Term Liabilities"
       },
       {
         "label": "Note - Former Shareholder",
         "level": 2,
         "type": "detail",
         "accounts": [2515],
-        "isDebit": false
+        "isDebit": false,
+        "parent": "Long-Term Liabilities"
       },
       {
-        "label": "Total Long-term Liabilities",
+        "label": "Deferred Tax Liability",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2150],
+        "isDebit": false,
+        "parent": "Long-Term Liabilities"
+      },
+      {
+        "label": "Long-Term Liabilities",
         "level": 1,
         "type": "subtotal",
-        "formula": "Loan - Bridge Bank + Note - Vehicles + Note - Former Shareholder",
+        "formula": "Loan - Bridge Bank + Note - Vehicles + Note - Former Shareholder + Deferred Tax Liability",
         "isDebit": false,
         "expandable": true
       },
@@ -1197,7 +1171,7 @@
         "label": "TOTAL LIABILITIES",
         "level": 0,
         "type": "subtotal",
-        "formula": "Total Current Liabilities + Total Long-term Liabilities",
+        "formula": "Current Liabilities + Long-Term Liabilities",
         "isDebit": false,
         "highlight": "total"
       },

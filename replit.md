@@ -60,7 +60,15 @@ Preferred communication style: Simple, everyday language.
     - Intangible Assets: Organization Costs (1750), Client Knowledge (1800+1805)
     - Prepaid Assets (1500-1600), Other Long-Term Assets (1610, 1700, 1900)
   - **TOTAL ASSETS** = Current Assets + Long-Term Assets
-  - Liabilities (2000s) and Equity (3000s) with existing structure
+  - **Current Liabilities** (expandable subtotal):
+    - Accounts Payable (expandable): Contracts (2000, 2005), Retention (2010), Credit Cards (2015-2018)
+    - Accrued Expenses (2021, 2023, 2025, 2028, 2030, 2070, 2100, 2110)
+    - Overbillings (2120)
+    - Other Current Liabilities (2130, 2140, 2200, 2250)
+  - **Long-Term Liabilities** (expandable subtotal):
+    - Loan - Bridge Bank (2500), Note - Vehicles (2510), Note - Former Shareholder (2515), Deferred Tax Liability (2150)
+  - **TOTAL LIABILITIES** = Current Liabilities + Long-Term Liabilities
+  - Equity (3000s) with existing structure
   - Equity section includes Retained Earnings (cumulative through prior year-end) and Current Year Net Income (Jan 1 through selected date)
   - Multi-level expand/collapse with recursive parent visibility checking
   - Mobile-responsive styling at 768px and 500px breakpoints
