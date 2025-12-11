@@ -45,8 +45,9 @@ Preferred communication style: Simple, everyday language.
 - **Historical range**: Covers 2015-2025 with monthly granularity
 
 ### Dashboard Views
-- **Executive Overview**: Six metric tiles with bar charts showing key financial metrics:
-  - Metrics: Revenue, Gross Profit, Gross Profit %, Operating Expenses, Operating Profit, Operating Profit %
+- **Executive Overview**: Nine metric tiles with bar charts showing key financial metrics:
+  - P&L Metrics: Revenue, Gross Profit, Gross Profit %, Operating Expenses, Operating Profit, Operating Profit %
+  - Balance Sheet Metrics: Cash, Receivables, Accounts Payable (cumulative balances at period end)
   - Configuration options: View type (monthly/quarterly/annual), year selector, year range slider for annual view
   - Compare to prior year option adds red bars for prior year comparison
   - Metric visibility checkboxes allow users to show/hide individual metric tiles
