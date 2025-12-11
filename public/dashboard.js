@@ -4338,39 +4338,33 @@ function initIncomeStatementControls() {
 
 function initAiAnalysis() {
   const analyzeBtn = document.getElementById("isAiAnalyzeBtn");
-  const closeBtn = document.getElementById("isAiCloseBtn");
-  const resultContainer = document.getElementById("isAiAnalysisResult");
+  const panel = document.getElementById("isAiAnalysisPanel");
   const header = document.getElementById("isAiAnalysisHeader");
   
   if (analyzeBtn) {
-    analyzeBtn.addEventListener("click", performAiAnalysis);
-  }
-  
-  if (closeBtn) {
-    closeBtn.addEventListener("click", (e) => {
+    analyzeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      resultContainer.classList.add("hidden");
+      performAiAnalysis();
     });
   }
   
   if (header) {
     header.addEventListener("click", (e) => {
-      if (e.target === closeBtn || closeBtn.contains(e.target)) return;
-      resultContainer.classList.toggle("collapsed");
+      if (e.target === analyzeBtn || analyzeBtn.contains(e.target)) return;
+      panel.classList.toggle("collapsed");
     });
   }
 }
 
 async function performAiAnalysis() {
   const analyzeBtn = document.getElementById("isAiAnalyzeBtn");
-  const resultContainer = document.getElementById("isAiAnalysisResult");
+  const panel = document.getElementById("isAiAnalysisPanel");
   const contentContainer = document.getElementById("isAiAnalysisContent");
   
   // Show loading state
   analyzeBtn.disabled = true;
-  analyzeBtn.innerHTML = '<span class="ai-spinner"></span> Analyzing...';
-  resultContainer.classList.remove("hidden");
-  resultContainer.classList.remove("collapsed");
+  analyzeBtn.textContent = 'Analyzing...';
+  panel.classList.remove("collapsed");
   contentContainer.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing your financial data...</div>';
   
   try {
@@ -4403,7 +4397,7 @@ async function performAiAnalysis() {
     contentContainer.innerHTML = `<div style="color: #dc2626;">Error: ${error.message || "Failed to connect to AI service"}</div>`;
   } finally {
     analyzeBtn.disabled = false;
-    analyzeBtn.textContent = 'AI Analysis';
+    analyzeBtn.textContent = 'Run Analysis';
   }
 }
 
