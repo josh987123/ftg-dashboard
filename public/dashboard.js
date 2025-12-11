@@ -2737,15 +2737,26 @@ async function captureAccountAsImage() {
 
 async function captureOverviewAsImage() {
   try {
-    // Chart configurations with their chart instance keys
-    const chartConfigs = [
-      { id: "overviewRevenueChart", title: "Revenue" },
-      { id: "overviewGrossProfitChart", title: "Gross Profit" },
-      { id: "overviewGrossMarginChart", title: "Gross Margin %" },
-      { id: "overviewOpexChart", title: "Operating Expenses" },
-      { id: "overviewOpProfitChart", title: "Operating Profit" },
-      { id: "overviewOpMarginChart", title: "Operating Margin %" }
+    // Chart configurations with their chart instance keys and metric keys
+    const allChartConfigs = [
+      { id: "overviewRevenueChart", title: "Revenue", metric: "revenue" },
+      { id: "overviewGrossProfitChart", title: "Gross Profit", metric: "grossProfit" },
+      { id: "overviewGrossMarginChart", title: "Gross Margin %", metric: "grossMargin" },
+      { id: "overviewOpexChart", title: "Operating Expenses", metric: "opExpenses" },
+      { id: "overviewOpProfitChart", title: "Operating Profit", metric: "opProfit" },
+      { id: "overviewOpMarginChart", title: "Operating Margin %", metric: "opMargin" }
     ];
+    
+    // Filter to only visible metrics based on checkbox state
+    const chartConfigs = allChartConfigs.filter(cfg => {
+      const checkbox = document.querySelector(`[data-metric="${cfg.metric}"]`);
+      return checkbox && checkbox.checked;
+    });
+    
+    if (chartConfigs.length === 0) {
+      console.log("No visible metrics to capture");
+      return null;
+    }
     
     // Load chart images using Chart.js toBase64Image
     const loadImage = (src) => new Promise((resolve) => {
@@ -2776,14 +2787,27 @@ async function captureOverviewAsImage() {
       return null;
     }
     
-    // Create composite canvas (2x3 grid)
+    // Create composite canvas with dynamic grid based on visible charts
     const chartWidth = 350;
     const chartHeight = 200;
     const titleHeight = 25;
-    const cols = 3;
-    const rows = 2;
     const padding = 12;
     const tileHeight = titleHeight + chartHeight;
+    
+    // Determine grid layout based on number of visible charts
+    let cols, rows;
+    const count = chartImages.length;
+    if (count <= 1) {
+      cols = 1; rows = 1;
+    } else if (count <= 2) {
+      cols = 2; rows = 1;
+    } else if (count <= 3) {
+      cols = 3; rows = 1;
+    } else if (count <= 4) {
+      cols = 2; rows = 2;
+    } else {
+      cols = 3; rows = Math.ceil(count / 3);
+    }
     
     const compositeCanvas = document.createElement("canvas");
     compositeCanvas.width = cols * chartWidth + (cols + 1) * padding;
