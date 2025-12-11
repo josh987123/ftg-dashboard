@@ -5643,6 +5643,62 @@ function evaluateBSFormula(formula, computedValues) {
   }
 }
 
+function setBSDetailLevelStates(detailLevel) {
+  const summaryRows = [
+    "bs-row-Current_Assets",
+    "bs-row-Long-Term_Assets",
+    "bs-row-Current_Liabilities",
+    "bs-row-Long-Term_Liabilities",
+    "bs-row-Equity"
+  ];
+  
+  const mediumExpandRows = [
+    "bs-row-Current_Assets",
+    "bs-row-Long-Term_Assets",
+    "bs-row-Current_Liabilities",
+    "bs-row-Equity"
+  ];
+  
+  const allExpandableRows = [
+    "bs-row-Current_Assets",
+    "bs-row-Cash_&_Cash_Equivalents",
+    "bs-row-Checking",
+    "bs-row-Savings_&_Investments",
+    "bs-row-Receivables",
+    "bs-row-Other_Current_Assets",
+    "bs-row-Long-Term_Assets",
+    "bs-row-Fixed_Assets",
+    "bs-row-Intangible_Assets",
+    "bs-row-Prepaid_Assets",
+    "bs-row-Other_Long-Term_Assets",
+    "bs-row-Current_Liabilities",
+    "bs-row-Accounts_Payable",
+    "bs-row-Accrued_Expenses",
+    "bs-row-Other_Current_Liabilities",
+    "bs-row-Long-Term_Liabilities",
+    "bs-row-Equity",
+    "bs-row-Capital_Contributions",
+    "bs-row-Distributions"
+  ];
+  
+  if (detailLevel === "summary") {
+    allExpandableRows.forEach(rowId => {
+      bsRowStates[rowId] = false;
+    });
+  } else if (detailLevel === "medium") {
+    allExpandableRows.forEach(rowId => {
+      bsRowStates[rowId] = false;
+    });
+    mediumExpandRows.forEach(rowId => {
+      bsRowStates[rowId] = true;
+    });
+  } else if (detailLevel === "account") {
+    allExpandableRows.forEach(rowId => {
+      bsRowStates[rowId] = true;
+    });
+  }
+}
+
 function renderBalanceSheet() {
   if (!bsAccountGroups || !bsAccountGroups.balance_sheet) {
     console.log("Balance sheet groups not loaded yet");
@@ -5651,6 +5707,9 @@ function renderBalanceSheet() {
   
   const viewMode = document.getElementById("bsViewMode")?.value || "single";
   const detailLevel = document.querySelector('input[name="bsDetailLevel"]:checked')?.value || "summary";
+  
+  setBSDetailLevelStates(detailLevel);
+  
   const groups = bsAccountGroups.balance_sheet.groups;
   const thead = document.getElementById("bsTableHead");
   const tbody = document.getElementById("bsTableBody");
@@ -5719,7 +5778,7 @@ function renderBalanceSheet() {
     const isSubtotal = row.type === "subtotal";
     
     let isVisible;
-    if (detailLevel === "detail") {
+    if (detailLevel === "account") {
       isVisible = true;
     } else {
       isVisible = isBSRowVisibleByParent(row, rows);
@@ -5747,7 +5806,7 @@ function renderBalanceSheet() {
     if (row.expandable) {
       const expanded = bsRowStates[row.id] === true;
       toggleHtml = `<span class="bs-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
-    } else if (row.parent && detailLevel !== "detail") {
+    } else if (row.parent && detailLevel !== "account") {
       toggleHtml = `<span class="bs-toggle-placeholder"></span>`;
     }
     
@@ -5889,6 +5948,9 @@ function attachBSToggleListeners() {
 function renderBalanceSheetMatrix() {
   const periodType = document.getElementById("bsPeriodType").value;
   const detailLevel = document.querySelector('input[name="bsDetailLevel"]:checked')?.value || "summary";
+  
+  setBSDetailLevelStates(detailLevel);
+  
   const groups = bsAccountGroups.balance_sheet.groups;
   const thead = document.getElementById("bsTableHead");
   const tbody = document.getElementById("bsTableBody");
@@ -5966,7 +6028,7 @@ function renderBalanceSheetMatrix() {
     const isDetailRow = row.type === "detail";
     
     let isVisible;
-    if (detailLevel === "detail") {
+    if (detailLevel === "account") {
       isVisible = true;
     } else {
       isVisible = isBSRowVisibleByParent(row, baseRows);
@@ -5986,7 +6048,7 @@ function renderBalanceSheetMatrix() {
     if (row.expandable) {
       const expanded = bsRowStates[row.id] === true;
       toggleHtml = `<span class="bs-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
-    } else if (row.parent && detailLevel !== "detail") {
+    } else if (row.parent && detailLevel !== "account") {
       toggleHtml = `<span class="bs-toggle-placeholder"></span>`;
     }
     
