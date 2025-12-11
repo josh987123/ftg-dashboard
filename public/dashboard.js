@@ -1500,51 +1500,73 @@ const EMAILJS_CONFIG = {
 };
 
 async function captureOverviewAsImage() {
-  const tilesGrid = document.querySelector(".overview-tiles-grid");
-  if (!tilesGrid) {
-    console.log("No tiles grid found");
-    return null;
-  }
-  
   try {
-    // Wait a moment for charts to fully render
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Get all overview chart instances
+    const chartIds = [
+      "overviewRevenueChart",
+      "overviewGrossProfitChart", 
+      "overviewGrossMarginChart",
+      "overviewOpexChart",
+      "overviewOpProfitChart",
+      "overviewOpMarginChart"
+    ];
     
-    // Scroll the element into view to ensure it's rendered
-    tilesGrid.scrollIntoView({ behavior: 'instant', block: 'start' });
-    
-    // Capture with options optimized for Canvas elements
-    const canvas = await html2canvas(tilesGrid, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#f8fafc",
-      logging: true,
-      allowTaint: true,
-      foreignObjectRendering: false,
-      removeContainer: true,
-      imageTimeout: 15000,
-      onclone: (clonedDoc) => {
-        // Ensure cloned element is visible
-        const clonedGrid = clonedDoc.querySelector(".overview-tiles-grid");
-        if (clonedGrid) {
-          clonedGrid.style.display = "grid";
-          clonedGrid.style.visibility = "visible";
-          clonedGrid.style.opacity = "1";
+    // Collect chart images using Chart.js built-in method
+    const chartImages = [];
+    for (const id of chartIds) {
+      if (overviewChartInstances[id]) {
+        const imgData = overviewChartInstances[id].toBase64Image("image/png", 1);
+        if (imgData) {
+          chartImages.push(imgData);
         }
       }
-    });
+    }
     
-    // Convert to PNG
-    const dataUrl = canvas.toDataURL("image/png", 0.9);
-    const base64Data = dataUrl.split(",")[1];
-    const sizeKB = Math.round(base64Data.length / 1024);
-    console.log("Chart image size:", sizeKB, "KB", "dimensions:", canvas.width, "x", canvas.height);
-    
-    // Check if we got a valid image (not just white)
-    if (canvas.width < 100 || canvas.height < 100) {
-      console.log("Canvas too small, capture failed");
+    if (chartImages.length === 0) {
+      console.log("No chart images captured");
       return null;
     }
+    
+    // Create composite canvas (2x3 grid)
+    const chartWidth = 400;
+    const chartHeight = 250;
+    const cols = 3;
+    const rows = 2;
+    const padding = 10;
+    
+    const compositeCanvas = document.createElement("canvas");
+    compositeCanvas.width = cols * chartWidth + (cols + 1) * padding;
+    compositeCanvas.height = rows * chartHeight + (rows + 1) * padding;
+    const ctx = compositeCanvas.getContext("2d");
+    
+    // Fill background
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+    
+    // Draw each chart
+    const loadImage = (src) => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+    
+    for (let i = 0; i < chartImages.length && i < 6; i++) {
+      const img = await loadImage(chartImages[i]);
+      if (img) {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = padding + col * (chartWidth + padding);
+        const y = padding + row * (chartHeight + padding);
+        ctx.drawImage(img, x, y, chartWidth, chartHeight);
+      }
+    }
+    
+    // Convert to base64
+    const dataUrl = compositeCanvas.toDataURL("image/png", 0.9);
+    const base64Data = dataUrl.split(",")[1];
+    const sizeKB = Math.round(base64Data.length / 1024);
+    console.log("Composite chart image size:", sizeKB, "KB");
     
     return base64Data;
   } catch (err) {
