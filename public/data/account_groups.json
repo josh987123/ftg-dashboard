@@ -10,7 +10,7 @@
         "parent": "Revenue"
       },
       {
-        "label": "Other Revenue",
+        "label": "Over/Under Billing",
         "level": 1,
         "type": "detail",
         "accounts": [4090],
@@ -22,7 +22,7 @@
         "label": "Revenue",
         "level": 0,
         "type": "subtotal",
-        "formula": "Contract Revenue + Other Revenue",
+        "formula": "Contract Revenue + Over/Under Billing",
         "isIncome": true,
         "expandable": true,
         "highlight": "revenue"

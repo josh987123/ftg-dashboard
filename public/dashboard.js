@@ -1840,13 +1840,16 @@ function initIncomeStatementControls() {
   const showThousands = document.getElementById("isShowThousands");
   showThousands.onchange = () => renderIncomeStatement();
   
-  const detailLevel = document.getElementById("isDetailLevel");
-  detailLevel.onchange = () => {
-    applyDetailLevel(detailLevel.value);
-    renderIncomeStatement();
-  };
+  const detailRadios = document.querySelectorAll('input[name="isDetailLevel"]');
+  detailRadios.forEach(radio => {
+    radio.onchange = () => {
+      applyDetailLevel(radio.value);
+      renderIncomeStatement();
+    };
+  });
   
-  applyDetailLevel(detailLevel.value);
+  const initialDetail = document.querySelector('input[name="isDetailLevel"]:checked');
+  applyDetailLevel(initialDetail ? initialDetail.value : 'summary');
   
   matrixYearStart.oninput = () => {
     document.getElementById("isMatrixYearStartLabel").textContent = matrixYearStart.value;
@@ -2482,6 +2485,20 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
     const isIncome = row.isIncome || false;
     const majorTotalClass = isMajorTotal ? "is-major-total" : "";
     
+    let expandedSubtotalClass = "";
+    let childRowClass = "";
+    
+    if (row.expandable && isRowStates[row.id] === true) {
+      expandedSubtotalClass = "is-expanded-subtotal";
+    }
+    
+    if (row.parent) {
+      const parentRow = rows.find(r => r.label === row.parent);
+      if (parentRow && isRowStates[parentRow.id] === true) {
+        childRowClass = "is-child-row";
+      }
+    }
+    
     let toggleHtml = "";
     if (row.expandable) {
       const expanded = isRowStates[row.id] === true;
@@ -2497,7 +2514,7 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
       valueHtml = formatAccountingNumber(row.value);
     }
     
-    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${majorTotalClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${majorTotalClass} ${expandedSubtotalClass} ${childRowClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
     
     if (comparisonRows) {
@@ -2593,13 +2610,27 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
     const indentClass = `is-indent-${row.level}`;
     const majorTotalClass = isMajorTotal ? "is-major-total" : "";
     
+    let expandedSubtotalClass = "";
+    let childRowClass = "";
+    
+    if (row.expandable && isRowStates[row.id] === true) {
+      expandedSubtotalClass = "is-expanded-subtotal";
+    }
+    
+    if (row.parent) {
+      const parentRow = firstRows.find(r => r.label === row.parent);
+      if (parentRow && isRowStates[parentRow.id] === true) {
+        childRowClass = "is-child-row";
+      }
+    }
+    
     let toggleHtml = "";
     if (row.expandable) {
       const expanded = isRowStates[row.id] === true;
       toggleHtml = `<span class="is-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
     }
     
-    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${majorTotalClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${majorTotalClass} ${expandedSubtotalClass} ${childRowClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
     
     let rowSubtotal = 0;

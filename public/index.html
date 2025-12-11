@@ -353,15 +353,17 @@
                 <option value="ttm">TTM</option>
               </select>
 
-              <label>Detail:</label>
-              <select id="isDetailLevel">
-                <option value="summary">Summary</option>
-                <option value="medium">Medium</option>
-                <option value="account">Account Level</option>
-              </select>
-
               <label id="isPeriodSelectLabel">Period:</label>
               <select id="isPeriodSelect"></select>
+
+              <div class="is-detail-radio">
+                <label>Detail:</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="isDetailLevel" value="summary" checked> Summary</label>
+                  <label class="radio-label"><input type="radio" name="isDetailLevel" value="medium"> Medium</label>
+                  <label class="radio-label"><input type="radio" name="isDetailLevel" value="account"> Account</label>
+                </div>
+              </div>
 
               <div id="isSingleControls">
                 <label>Compare:</label>
@@ -384,17 +386,18 @@
                     <span id="isMatrixYearEndLabel">2025</span>
                   </div>
                 </div>
+              </div>
 
-                <label class="is-checkbox-label">
+              <div class="is-options-stack">
+                <label class="is-checkbox-label small">
                   <input type="checkbox" id="isShowSubtotal">
                   Show Subtotal
                 </label>
+                <label class="is-checkbox-label small">
+                  <input type="checkbox" id="isShowThousands">
+                  Show in Thousands
+                </label>
               </div>
-
-              <label class="is-checkbox-label">
-                <input type="checkbox" id="isShowThousands">
-                Show in Thousands
-              </label>
             </div>
           </div>
         </div>
