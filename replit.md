@@ -38,6 +38,8 @@ Preferred communication style: Simple, everyday language.
   - Metrics: Revenue, Gross Profit, Gross Profit %, Operating Expenses, Operating Profit, Operating Profit %
   - Configuration options: View type (monthly/quarterly/annual), year selector, year range slider for annual view
   - Compare to prior year option adds red bars for prior year comparison
+  - Metric visibility checkboxes allow users to show/hide individual metric tiles
+  - User preferences saved per user (metric visibility, view settings)
   - Responsive grid layout (3 columns desktop, 2 tablet, 1 mobile)
 - **Revenue**: Monthly/quarterly/annual revenue charts with year comparison, trendlines, summary KPI tiles (Average, Largest, Smallest, CAGR), and export options (Print/PDF/CSV). Partial periods shown in orange with "Exclude Current Period" option.
 - **Account Detail**: GL account drilldown with dropdown selector (accounts 4000+), monthly/quarterly/annual views, trendlines, and data tables. Income accounts (4000-4999, 8000-8999) display as positive values.
