@@ -270,6 +270,7 @@ function initNavigation() {
       if (id === "revenue") initRevenueModule();
       if (id === "accounts") initAccountModule();
       if (id === "incomeStatement") loadIncomeStatement();
+      if (id === "balanceSheet") initBalanceSheet();
     });
   });
 }
@@ -4165,6 +4166,420 @@ function attachToggleListeners() {
       const rowId = toggle.dataset.row;
       isRowStates[rowId] = !isRowStates[rowId];
       renderIncomeStatement();
+    };
+  });
+}
+
+/* ------------------------------------------------------------
+   BALANCE SHEET
+------------------------------------------------------------ */
+let bsData = null;
+let bsAccountGroups = null;
+let bsGLLookup = {};
+let bsRowStates = {};
+let bsInceptionDate = "2015-01";
+
+function initBalanceSheet() {
+  if (bsData && bsAccountGroups) {
+    initBalanceSheetControls();
+    renderBalanceSheet();
+    return;
+  }
+  
+  Promise.all([
+    fetch("data/financials.json").then(r => r.json()),
+    fetch("data/account_groups.json").then(r => r.json())
+  ]).then(([financials, accountGroups]) => {
+    bsData = financials;
+    bsAccountGroups = accountGroups;
+    buildBSGLLookup();
+    initBalanceSheetControls();
+    renderBalanceSheet();
+  }).catch(err => {
+    console.error("Balance Sheet data load error:", err);
+  });
+}
+
+function buildBSGLLookup() {
+  bsGLLookup = {};
+  const glHistory = bsData.gl_history_all || [];
+  
+  glHistory.forEach(row => {
+    const acctNum = parseInt(row.Account_Num || row.Account, 10);
+    if (isNaN(acctNum)) return;
+    
+    if (!bsGLLookup[acctNum]) {
+      bsGLLookup[acctNum] = {};
+    }
+    
+    Object.keys(row).forEach(key => {
+      if (/^\d{4}-\d{2}$/.test(key)) {
+        const val = parseFloat(row[key]) || 0;
+        bsGLLookup[acctNum][key] = val;
+      }
+    });
+  });
+}
+
+function initBalanceSheetControls() {
+  const periodSelect = document.getElementById("bsPeriodSelect");
+  
+  populateBSPeriodOptions();
+  
+  periodSelect.onchange = () => renderBalanceSheet();
+  
+  const compareRadios = document.querySelectorAll('input[name="bsCompareRadio"]');
+  compareRadios.forEach(radio => {
+    radio.onchange = () => renderBalanceSheet();
+  });
+  
+  const detailRadios = document.querySelectorAll('input[name="bsDetailLevel"]');
+  detailRadios.forEach(radio => {
+    radio.onchange = () => renderBalanceSheet();
+  });
+  
+  const showThousands = document.getElementById("bsShowThousands");
+  if (showThousands) {
+    showThousands.onchange = () => renderBalanceSheet();
+  }
+  
+  const configHeader = document.querySelector('#balanceSheet .config-header');
+  if (configHeader) {
+    configHeader.onclick = () => {
+      const target = document.getElementById("bsConfigBody");
+      const toggle = configHeader.querySelector('.config-toggle');
+      if (target) {
+        target.classList.toggle("collapsed");
+        if (toggle) toggle.textContent = target.classList.contains("collapsed") ? "▶" : "▼";
+      }
+    };
+  }
+}
+
+function populateBSPeriodOptions() {
+  const periodSelect = document.getElementById("bsPeriodSelect");
+  const months = getBSAvailableMonths();
+  
+  if (months.length === 0) return;
+  
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  periodSelect.innerHTML = months.slice().reverse().map(m => {
+    const [y, mo] = m.split("-");
+    const label = `${monthNames[parseInt(mo) - 1]} ${y}`;
+    return `<option value="${m}">${label}</option>`;
+  }).join("");
+}
+
+function getBSAvailableMonths() {
+  const months = new Set();
+  Object.values(bsGLLookup).forEach(acct => {
+    Object.keys(acct).forEach(key => {
+      if (/^\d{4}-\d{2}$/.test(key)) {
+        months.add(key);
+      }
+    });
+  });
+  return Array.from(months).sort();
+}
+
+function getCumulativeBalance(accounts, asOfMonth, isDebit) {
+  const allMonths = getBSAvailableMonths();
+  const monthsUpTo = allMonths.filter(m => m <= asOfMonth);
+  
+  let total = 0;
+  
+  accounts.forEach(acct => {
+    const acctData = bsGLLookup[acct];
+    if (acctData) {
+      monthsUpTo.forEach(m => {
+        total += acctData[m] || 0;
+      });
+    }
+  });
+  
+  if (isDebit) {
+    return total;
+  } else {
+    return -total;
+  }
+}
+
+function buildBalanceSheetRows(asOfMonth, groups, computedValues = {}) {
+  const rows = [];
+  
+  groups.forEach((group, idx) => {
+    const rowId = `bs-row-${group.label.replace(/\s+/g, '_')}`;
+    let value = null;
+    
+    if (group.accounts) {
+      value = getCumulativeBalance(group.accounts, asOfMonth, group.isDebit);
+    } else if (group.formula) {
+      value = evaluateBSFormula(group.formula, computedValues);
+    }
+    
+    computedValues[group.label] = value;
+    
+    if (group.expandable) {
+      if (bsRowStates[rowId] === undefined) {
+        bsRowStates[rowId] = false;
+      }
+    }
+    
+    if (group.type === "spacer") {
+      rows.push({
+        id: `bs-spacer-${idx}`,
+        label: "",
+        level: 0,
+        type: "spacer",
+        value: null,
+        expandable: false,
+        parent: null,
+        highlight: null
+      });
+    } else {
+      rows.push({
+        id: rowId,
+        label: group.label,
+        level: group.level || 0,
+        type: group.type,
+        value: value,
+        expandable: group.expandable || false,
+        parent: group.parent || null,
+        highlight: group.highlight || null,
+        note: group.note || null
+      });
+    }
+  });
+  
+  return rows;
+}
+
+function evaluateBSFormula(formula, computedValues) {
+  let expr = formula;
+  
+  Object.keys(computedValues).sort((a, b) => b.length - a.length).forEach(label => {
+    const val = computedValues[label] || 0;
+    expr = expr.split(label).join(`(${val})`);
+  });
+  
+  try {
+    expr = expr.replace(/[^0-9+\-*/().]/g, "");
+    return eval(expr) || 0;
+  } catch (e) {
+    console.error("BS Formula eval error:", formula, e);
+    return 0;
+  }
+}
+
+function renderBalanceSheet() {
+  if (!bsAccountGroups || !bsAccountGroups.balance_sheet) {
+    console.log("Balance sheet groups not loaded yet");
+    return;
+  }
+  
+  const periodValue = document.getElementById("bsPeriodSelect").value;
+  const compare = document.querySelector('input[name="bsCompareRadio"]:checked')?.value || "none";
+  const detailLevel = document.querySelector('input[name="bsDetailLevel"]:checked')?.value || "summary";
+  const groups = bsAccountGroups.balance_sheet.groups;
+  const thead = document.getElementById("bsTableHead");
+  const tbody = document.getElementById("bsTableBody");
+  
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const [y, mo] = periodValue.split("-");
+  const currentLabel = `${monthNames[parseInt(mo) - 1]} ${y}`;
+  
+  document.getElementById("bsDataAsOf").textContent = currentLabel;
+  
+  const rows = buildBalanceSheetRows(periodValue, groups);
+  
+  let comparisonRows = null;
+  let compPeriodLabel = "";
+  
+  if (compare === "prior_year") {
+    const priorYear = parseInt(y) - 1;
+    const priorPeriod = `${priorYear}-${mo}`;
+    const availableMonths = getBSAvailableMonths();
+    
+    if (availableMonths.includes(priorPeriod)) {
+      compPeriodLabel = `${monthNames[parseInt(mo) - 1]} ${priorYear}`;
+      comparisonRows = buildBalanceSheetRows(priorPeriod, groups);
+    }
+  }
+  
+  let headerHtml = "<tr><th>Account</th>";
+  if (comparisonRows) {
+    headerHtml += `<th>${compPeriodLabel}</th><th>${currentLabel}</th><th>$ Var</th><th>% Var</th>`;
+  } else {
+    headerHtml += `<th>${currentLabel}</th>`;
+  }
+  headerHtml += "</tr>";
+  thead.innerHTML = headerHtml;
+  
+  let bodyHtml = "";
+  const colCount = comparisonRows ? 5 : 2;
+  
+  rows.forEach((row, i) => {
+    if (row.type === "spacer") {
+      bodyHtml += `<tr class="is-spacer-row"><td colspan="${colCount}"></td></tr>`;
+      return;
+    }
+    
+    const isSummaryRow = row.type === "subtotal" && (row.label.startsWith("Total") || row.label.startsWith("TOTAL"));
+    const isHeaderRow = row.type === "header";
+    const isDetailRow = row.type === "detail";
+    
+    if (detailLevel === "summary" && isDetailRow) {
+      return;
+    }
+    
+    if (!isHeaderRow && !isSummaryRow && isDetailRow) {
+      const currentZero = row.value === 0 || row.value === null;
+      const compZero = !comparisonRows || comparisonRows[i].value === 0 || comparisonRows[i].value === null;
+      if (currentZero && compZero) {
+        return;
+      }
+    }
+    
+    const isVisible = isBSRowVisibleByParent(row, rows);
+    const hiddenClass = isVisible ? "" : "is-row-hidden";
+    const typeClass = `is-row-${row.type}`;
+    const indentClass = `is-indent-${row.level}`;
+    const highlightClass = row.highlight === "total" ? "is-major-total" : "";
+    
+    let expandedSubtotalClass = "";
+    let childRowClass = "";
+    
+    if (row.expandable && bsRowStates[row.id] === true) {
+      expandedSubtotalClass = "is-expanded-subtotal";
+    }
+    
+    if (row.parent) {
+      const parentRow = rows.find(r => r.label === row.parent);
+      if (parentRow && bsRowStates[parentRow.id] === true) {
+        childRowClass = "is-child-row";
+      }
+    }
+    
+    let toggleHtml = "";
+    if (row.expandable) {
+      const expanded = bsRowStates[row.id] === true;
+      toggleHtml = `<span class="bs-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
+    }
+    
+    let valueHtml = "";
+    if (row.type === "header") {
+      valueHtml = "";
+    } else {
+      valueHtml = formatBSNumber(row.value);
+    }
+    
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${highlightClass} ${expandedSubtotalClass} ${childRowClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
+    
+    if (comparisonRows) {
+      const compRow = comparisonRows[i];
+      
+      if (row.type === "header") {
+        bodyHtml += `<td></td><td></td><td></td><td></td>`;
+      } else {
+        const compValueHtml = formatBSNumber(compRow.value);
+        const variance = formatBSVariance(row.value, compRow.value);
+        bodyHtml += `<td>${compValueHtml}</td>`;
+        bodyHtml += `<td>${valueHtml}</td>`;
+        bodyHtml += `<td>${variance.diff}</td>`;
+        bodyHtml += `<td>${variance.pct}</td>`;
+      }
+    } else {
+      if (row.type !== "header") {
+        bodyHtml += `<td>${valueHtml}</td>`;
+      } else {
+        bodyHtml += `<td></td>`;
+      }
+    }
+    
+    bodyHtml += "</tr>";
+  });
+  
+  tbody.innerHTML = bodyHtml;
+  attachBSToggleListeners();
+}
+
+function formatBSNumber(value) {
+  const showThousands = document.getElementById("bsShowThousands")?.checked || false;
+  
+  if (value === null || value === undefined) return "";
+  
+  let displayValue = value;
+  if (showThousands) {
+    displayValue = value / 1000;
+  }
+  
+  const absVal = Math.abs(displayValue);
+  const formatted = absVal.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  
+  if (value < 0) {
+    return `(${formatted})`;
+  }
+  return formatted;
+}
+
+function formatBSVariance(current, prior) {
+  if (current === null || prior === null) {
+    return { diff: "-", pct: "-" };
+  }
+  
+  const diff = current - prior;
+  const showThousands = document.getElementById("bsShowThousands")?.checked || false;
+  let displayDiff = diff;
+  if (showThousands) {
+    displayDiff = diff / 1000;
+  }
+  
+  const absDiff = Math.abs(displayDiff);
+  const diffFormatted = absDiff.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  
+  let pctStr = "-";
+  if (prior !== 0) {
+    const pctChange = ((current - prior) / Math.abs(prior)) * 100;
+    pctStr = pctChange.toLocaleString(undefined, {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
+    }) + "%";
+  }
+  
+  const isPositive = diff >= 0;
+  const pctClass = isPositive ? "is-variance-positive" : "is-variance-negative";
+  
+  return {
+    diff: diff < 0 ? `(${diffFormatted})` : diffFormatted,
+    pct: `<span class="${pctClass}">${pctStr}</span>`
+  };
+}
+
+function isBSRowVisibleByParent(row, rows) {
+  if (!row.parent) return true;
+  
+  const parentRow = rows.find(r => r.label === row.parent);
+  if (!parentRow) return true;
+  
+  const parentExpanded = bsRowStates[parentRow.id] === true;
+  return parentExpanded;
+}
+
+function attachBSToggleListeners() {
+  document.querySelectorAll(".bs-toggle").forEach(toggle => {
+    toggle.onclick = (e) => {
+      e.stopPropagation();
+      const rowId = toggle.dataset.row;
+      bsRowStates[rowId] = !bsRowStates[rowId];
+      renderBalanceSheet();
     };
   });
 }
