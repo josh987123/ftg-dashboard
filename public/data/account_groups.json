@@ -15,6 +15,7 @@
         "type": "detail",
         "accounts": [4090],
         "isIncome": true,
+        "negate": true,
         "parent": "Revenue"
       },
       {
