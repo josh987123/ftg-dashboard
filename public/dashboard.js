@@ -939,10 +939,11 @@ function loadUserPreferences() {
         const dataLabelsEl = document.getElementById("overviewDataLabels");
         if (dataLabelsEl) dataLabelsEl.checked = cfg.dataLabels;
       }
-      if (typeof cfg.excludeCurrent === "boolean") {
-        const excludeEl = document.getElementById("overviewExclude");
-        if (excludeEl) excludeEl.checked = cfg.excludeCurrent;
-      }
+      const excludeEl = document.getElementById("overviewExclude");
+      if (excludeEl) excludeEl.checked = cfg.excludeCurrent !== false;
+    } else {
+      const excludeEl = document.getElementById("overviewExclude");
+      if (excludeEl) excludeEl.checked = true;
     }
     
     applyMetricVisibility();
@@ -1063,8 +1064,7 @@ function saveBalanceSheetConfig() {
 
 function loadRevenueConfig() {
   const prefs = getUserPreferences();
-  const cfg = prefs.revenueConfig;
-  if (!cfg) return;
+  const cfg = prefs.revenueConfig || {};
   
   if (cfg.viewType) {
     const el = document.getElementById("revViewType");
@@ -1086,10 +1086,8 @@ function loadRevenueConfig() {
     const el = document.getElementById("revDataLabels");
     if (el) el.checked = cfg.dataLabels;
   }
-  if (cfg.excludeCurrent !== undefined) {
-    const el = document.getElementById("revExcludeCurrent");
-    if (el) el.checked = cfg.excludeCurrent;
-  }
+  const excludeEl = document.getElementById("revExcludeCurrent");
+  if (excludeEl) excludeEl.checked = cfg.excludeCurrent !== false;
   if (cfg.rangeStart) {
     const el = document.getElementById("revRangeStart");
     if (el) {
@@ -1108,8 +1106,7 @@ function loadRevenueConfig() {
 
 function loadAccountConfig() {
   const prefs = getUserPreferences();
-  const cfg = prefs.accountConfig;
-  if (!cfg) return;
+  const cfg = prefs.accountConfig || {};
   
   if (cfg.account) {
     const el = document.getElementById("acctSelect");
@@ -1131,10 +1128,8 @@ function loadAccountConfig() {
     const el = document.getElementById("acctDataLabels");
     if (el) el.checked = cfg.dataLabels;
   }
-  if (cfg.excludeCurrent !== undefined) {
-    const el = document.getElementById("acctExcludeCurrent");
-    if (el) el.checked = cfg.excludeCurrent;
-  }
+  const excludeEl = document.getElementById("acctExcludeCurrent");
+  if (excludeEl) excludeEl.checked = cfg.excludeCurrent !== false;
   if (cfg.rangeStart) {
     const el = document.getElementById("acctRangeStart");
     if (el) {
@@ -1153,8 +1148,7 @@ function loadAccountConfig() {
 
 function loadIncomeStatementConfig() {
   const prefs = getUserPreferences();
-  const cfg = prefs.incomeStatementConfig;
-  if (!cfg) return;
+  const cfg = prefs.incomeStatementConfig || {};
   
   if (cfg.viewMode) {
     const el = document.getElementById("isViewMode");
@@ -1180,10 +1174,8 @@ function loadIncomeStatementConfig() {
     const el = document.getElementById("isShowThousands");
     if (el) el.checked = cfg.showThousands;
   }
-  if (cfg.excludeCurrent !== undefined) {
-    const el = document.getElementById("isExcludeCurrent");
-    if (el) el.checked = cfg.excludeCurrent;
-  }
+  const excludeEl = document.getElementById("isExcludeCurrent");
+  if (excludeEl) excludeEl.checked = cfg.excludeCurrent !== false;
   if (cfg.matrixMonths) {
     const el = document.getElementById("isMatrixMonths");
     if (el) el.value = cfg.matrixMonths;
@@ -1208,8 +1200,7 @@ function loadIncomeStatementConfig() {
 
 function loadBalanceSheetConfig() {
   const prefs = getUserPreferences();
-  const cfg = prefs.balanceSheetConfig;
-  if (!cfg) return;
+  const cfg = prefs.balanceSheetConfig || {};
   
   if (cfg.viewMode) {
     const el = document.getElementById("bsViewMode");
@@ -1235,10 +1226,8 @@ function loadBalanceSheetConfig() {
     const el = document.getElementById("bsShowThousands");
     if (el) el.checked = cfg.showThousands;
   }
-  if (cfg.excludeCurrentMonth !== undefined) {
-    const el = document.getElementById("bsExcludeCurrentMonth");
-    if (el) el.checked = cfg.excludeCurrentMonth;
-  }
+  const excludeEl = document.getElementById("bsExcludeCurrentMonth");
+  if (excludeEl) excludeEl.checked = cfg.excludeCurrentMonth !== false;
   if (cfg.matrixYear) {
     const el = document.getElementById("bsMatrixYear");
     if (el && el.querySelector(`option[value="${cfg.matrixYear}"]`)) el.value = cfg.matrixYear;
