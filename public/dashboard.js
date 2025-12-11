@@ -376,6 +376,63 @@ function updateOverviewCharts() {
   chartConfigs.forEach(cfg => {
     renderOverviewChart(cfg.id, labels, cfg.data, compare, showTrend);
   });
+  
+  updateOverviewStats(metrics, labels);
+}
+
+function updateOverviewStats(metrics, labels) {
+  const statConfigs = [
+    { key: "revenue", avgId: "revenueAvg", highId: "revenueHigh", lowId: "revenueLow", cagrId: "revenueCagr", isPercent: false },
+    { key: "grossProfit", avgId: "grossProfitAvg", highId: "grossProfitHigh", lowId: "grossProfitLow", cagrId: "grossProfitCagr", isPercent: false },
+    { key: "grossMargin", avgId: "grossMarginAvg", highId: "grossMarginHigh", lowId: "grossMarginLow", cagrId: "grossMarginCagr", isPercent: true },
+    { key: "opex", avgId: "opexAvg", highId: "opexHigh", lowId: "opexLow", cagrId: "opexCagr", isPercent: false },
+    { key: "opProfit", avgId: "opProfitAvg", highId: "opProfitHigh", lowId: "opProfitLow", cagrId: "opProfitCagr", isPercent: false },
+    { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", isPercent: true }
+  ];
+  
+  statConfigs.forEach(cfg => {
+    const values = metrics[cfg.key].values.filter(v => v !== 0);
+    
+    if (values.length === 0) {
+      document.getElementById(cfg.avgId).textContent = "-";
+      document.getElementById(cfg.highId).textContent = "-";
+      document.getElementById(cfg.lowId).textContent = "-";
+      document.getElementById(cfg.cagrId).textContent = "-";
+      return;
+    }
+    
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    const high = Math.max(...values);
+    const low = Math.min(...values);
+    
+    let cagr = 0;
+    const firstNonZeroIdx = metrics[cfg.key].values.findIndex(v => v !== 0);
+    const lastNonZeroIdx = metrics[cfg.key].values.length - 1 - [...metrics[cfg.key].values].reverse().findIndex(v => v !== 0);
+    
+    if (firstNonZeroIdx !== -1 && lastNonZeroIdx !== -1 && firstNonZeroIdx !== lastNonZeroIdx) {
+      const startVal = metrics[cfg.key].values[firstNonZeroIdx];
+      const endVal = metrics[cfg.key].values[lastNonZeroIdx];
+      const periods = lastNonZeroIdx - firstNonZeroIdx;
+      if (startVal > 0 && endVal > 0 && periods > 0) {
+        cagr = (Math.pow(endVal / startVal, 1 / periods) - 1) * 100;
+      }
+    }
+    
+    const formatValue = (val, isPercent) => {
+      if (isPercent) return val.toFixed(1) + "%";
+      if (Math.abs(val) >= 1000000) return "$" + (val / 1000000).toFixed(1) + "M";
+      if (Math.abs(val) >= 1000) return "$" + (val / 1000).toFixed(0) + "K";
+      return "$" + val.toFixed(0);
+    };
+    
+    document.getElementById(cfg.avgId).textContent = formatValue(avg, cfg.isPercent);
+    document.getElementById(cfg.highId).textContent = formatValue(high, cfg.isPercent);
+    document.getElementById(cfg.lowId).textContent = formatValue(low, cfg.isPercent);
+    
+    const cagrEl = document.getElementById(cfg.cagrId);
+    cagrEl.textContent = cagr.toFixed(1) + "%";
+    cagrEl.className = cagr < 0 ? "stat-value negative" : "stat-value";
+  });
 }
 
 function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend) {

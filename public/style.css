@@ -474,6 +474,41 @@ body {
   height: 180px !important;
 }
 
+.metric-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.stat-box {
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 8px 6px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 9px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.stat-value.negative {
+  color: #dc2626;
+}
+
 @media (max-width: 1024px) {
   .overview-tiles-grid {
     grid-template-columns: repeat(2, 1fr);
