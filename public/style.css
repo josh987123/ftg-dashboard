@@ -1629,9 +1629,9 @@ button, .nav-item, .config-header, .dropdown-item {
   }
   
   .config-body .checkbox-label {
-    padding: 4px 0;
+    padding: 2px 0;
     font-size: 13px;
-    min-height: 28px;
+    min-height: 24px;
   }
   
   .config-body .checkbox-label input[type="checkbox"] {
@@ -1642,6 +1642,55 @@ button, .nav-item, .config-header, .dropdown-item {
   
   .config-body .range-wrapper {
     padding: 2px 0;
+  }
+  
+  /* Income Statement compact mobile layout */
+  .is-options-stack {
+    padding: 4px 8px;
+    gap: 2px;
+  }
+  
+  .is-options-stack > label {
+    font-size: 11px;
+    margin-bottom: 0;
+  }
+  
+  .radio-group-stacked {
+    gap: 1px;
+  }
+  
+  .radio-group-stacked .radio-label {
+    font-size: 12px;
+    padding: 1px 0;
+  }
+  
+  .radio-label input[type="radio"] {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .is-controls {
+    gap: 6px !important;
+  }
+  
+  .is-controls > label {
+    font-size: 12px;
+    margin-bottom: -4px;
+  }
+  
+  .is-checkbox-label {
+    font-size: 12px;
+    padding: 2px 0;
+  }
+  
+  .is-checkbox-label.small {
+    font-size: 11px;
+    padding: 2px 0;
+  }
+  
+  .is-checkbox-label input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
   }
   
   .overview-metric-tile {
