@@ -449,20 +449,16 @@ function updateOverviewStats(metrics, labels) {
     } else {
       let totalCurrent = 0;
       let totalPrior = 0;
-      let validPairs = 0;
       
       for (let i = 0; i < allValues.length; i++) {
-        const currVal = allValues[i];
+        const currVal = allValues[i] || 0;
         const priorVal = priorValues[i] || 0;
-        if (currVal !== 0 && priorVal !== 0) {
-          totalCurrent += currVal;
-          totalPrior += priorVal;
-          validPairs++;
-        }
+        totalCurrent += currVal;
+        totalPrior += priorVal;
       }
       
-      if (totalPrior > 0 && validPairs > 0) {
-        growthRate = ((totalCurrent - totalPrior) / totalPrior) * 100;
+      if (Math.abs(totalPrior) > 0) {
+        growthRate = ((totalCurrent - totalPrior) / Math.abs(totalPrior)) * 100;
       }
     }
     
@@ -473,9 +469,18 @@ function updateOverviewStats(metrics, labels) {
       return "$" + val.toFixed(0);
     };
     
-    document.getElementById(cfg.avgId).textContent = formatValue(avg, cfg.isPercent);
-    document.getElementById(cfg.highId).textContent = formatValue(high, cfg.isPercent);
-    document.getElementById(cfg.lowId).textContent = formatValue(low, cfg.isPercent);
+    const avgEl = document.getElementById(cfg.avgId);
+    avgEl.textContent = formatValue(avg, cfg.isPercent);
+    avgEl.className = avg < 0 ? "stat-value negative" : "stat-value";
+    
+    const highEl = document.getElementById(cfg.highId);
+    highEl.textContent = formatValue(high, cfg.isPercent);
+    highEl.className = high < 0 ? "stat-value negative" : "stat-value";
+    
+    const lowEl = document.getElementById(cfg.lowId);
+    lowEl.textContent = formatValue(low, cfg.isPercent);
+    lowEl.className = low < 0 ? "stat-value negative" : "stat-value";
+    
     document.getElementById(cfg.highPeriodId).textContent = highPeriod;
     document.getElementById(cfg.lowPeriodId).textContent = lowPeriod;
     
@@ -559,6 +564,7 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend)
   overviewChartInstances[canvasId] = new Chart(canvas, {
     type: "bar",
     data: { labels, datasets },
+    plugins: [ChartDataLabels],
     options: {
       responsive: true,
       maintainAspectRatio: false,
