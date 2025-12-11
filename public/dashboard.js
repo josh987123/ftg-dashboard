@@ -1125,7 +1125,8 @@ async function sendReportEmail() {
   sendBtn.disabled = true;
   
   try {
-    const response = await fetch("/api/send-email", {
+    const apiUrl = window.location.origin + "/api/send-email";
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ to: toEmail, subject: subject, html: html })
