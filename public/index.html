@@ -415,23 +415,29 @@
           </div>
           <div class="config-body" id="isConfigBody">
             <div class="is-controls">
-              <label>View:</label>
-              <select id="isViewMode">
-                <option value="single">Single Period</option>
-                <option value="matrix">Matrix</option>
-              </select>
-
-              <label>Period Type:</label>
-              <select id="isPeriodType">
-                <option value="month">Month</option>
-                <option value="quarter">Quarter</option>
-                <option value="year">Year</option>
-                <option value="ytd">YTD</option>
-                <option value="ttm">TTM</option>
-              </select>
-
-              <label id="isPeriodSelectLabel">Period:</label>
-              <select id="isPeriodSelect"></select>
+              <div class="is-period-stack">
+                <div class="is-period-row">
+                  <label>View:</label>
+                  <select id="isViewMode">
+                    <option value="single">Single Period</option>
+                    <option value="matrix">Matrix</option>
+                  </select>
+                </div>
+                <div class="is-period-row">
+                  <label>Period Type:</label>
+                  <select id="isPeriodType">
+                    <option value="month">Month</option>
+                    <option value="quarter">Quarter</option>
+                    <option value="year">Year</option>
+                    <option value="ytd">YTD</option>
+                    <option value="ttm">TTM</option>
+                  </select>
+                </div>
+                <div class="is-period-row">
+                  <label id="isPeriodSelectLabel">Period:</label>
+                  <select id="isPeriodSelect"></select>
+                </div>
+              </div>
 
               <div id="isSingleControls" class="is-options-stack">
                 <label>Compare:</label>
