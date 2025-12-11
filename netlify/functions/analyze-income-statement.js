@@ -42,21 +42,18 @@ exports.handler = async function(event, context) {
       };
     }
 
-    const systemPrompt = `You are a seasoned CFO analyzing construction company financials. Provide a brief, focused analysis with exactly these 4 sections:
+    const systemPrompt = `You are a CFO analyzing construction company financials. Return ONLY these 4 sections with 3-4 bullets each:
 
 ## Key Observations
-- 3-4 bullet points on significant trends or patterns
-
 ## Positive Indicators
-- 3-4 bullet points on strong performance areas
-
 ## Areas of Concern
-- 3-4 bullet points on metrics needing attention
-
 ## Recommendations
-- 3-4 actionable bullet points
 
-Be concise. Use specific numbers. No introductions or conclusions.`;
+RULES:
+- Exactly 3-4 bullet points per section (use - for bullets)
+- NO other sections, headers, introductions, or conclusions
+- Use specific dollar amounts
+- Keep each bullet to 1-2 sentences`;
 
     const userPrompt = `Please analyze this Income Statement for FTG Builders:
 

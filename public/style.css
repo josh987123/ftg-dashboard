@@ -1596,7 +1596,10 @@ button, .nav-item, .config-header, .dropdown-item {
   color: #166534;
   margin-top: 10px;
   margin-bottom: 0;
+  margin-left: 0;
+  padding-left: 0;
   font-size: 12px;
+  text-indent: 0;
 }
 
 .ai-analysis-content h1:first-child,
