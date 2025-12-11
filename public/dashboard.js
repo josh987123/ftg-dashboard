@@ -1507,17 +1507,19 @@ async function captureOverviewAsImage() {
   }
   
   try {
+    // Use smaller scale for faster upload
     const canvas = await html2canvas(tilesGrid, {
-      scale: 1.5,
+      scale: 1,
       useCORS: true,
       backgroundColor: "#ffffff",
       logging: false,
       allowTaint: true
     });
     
-    // Get base64 data (remove the data:image/jpeg;base64, prefix for upload)
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    // Convert to smaller jpeg
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
     const base64Data = dataUrl.split(",")[1];
+    console.log("Image size (base64 chars):", base64Data.length);
     
     // Upload to ImgBB (free image hosting)
     const formData = new FormData();
@@ -1528,17 +1530,23 @@ async function captureOverviewAsImage() {
       body: formData
     });
     
-    const result = await response.json();
+    if (!response.ok) {
+      console.error("ImgBB HTTP error:", response.status, response.statusText);
+      return null;
+    }
     
-    if (result.success) {
+    const result = await response.json();
+    console.log("ImgBB response:", JSON.stringify(result));
+    
+    if (result.success && result.data && result.data.url) {
       console.log("Image uploaded:", result.data.url);
-      return result.data.url; // Return URL instead of base64
+      return result.data.url;
     } else {
-      console.error("ImgBB upload failed:", result);
+      console.error("ImgBB upload failed:", result.error || result);
       return null;
     }
   } catch (err) {
-    console.error("Chart capture/upload error:", err);
+    console.error("Chart capture/upload error:", err.message);
     return null;
   }
 }
