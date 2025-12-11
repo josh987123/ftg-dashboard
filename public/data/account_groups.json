@@ -28,10 +28,53 @@
       },
 
       {
+        "label": "Labor - Direct",
+        "level": 3,
+        "type": "detail",
+        "accounts": [5000],
+        "parent": "Direct Labor"
+      },
+      {
+        "label": "Payroll Taxes - Direct",
+        "level": 3,
+        "type": "detail",
+        "accounts": [5005],
+        "parent": "Direct Labor"
+      },
+      {
+        "label": "Workers Comp - Direct",
+        "level": 3,
+        "type": "detail",
+        "accounts": [5010],
+        "parent": "Direct Labor"
+      },
+      {
+        "label": "Benefits - Direct",
+        "level": 3,
+        "type": "detail",
+        "accounts": [5015],
+        "parent": "Direct Labor"
+      },
+      {
+        "label": "401K/PSP - Direct",
+        "level": 3,
+        "type": "detail",
+        "accounts": [5020],
+        "parent": "Direct Labor"
+      },
+      {
+        "label": "Bonus Expense - Direct",
+        "level": 3,
+        "type": "detail",
+        "accounts": [5025],
+        "parent": "Direct Labor"
+      },
+      {
         "label": "Direct Labor",
         "level": 2,
         "type": "subtotal",
-        "accounts_range": [5000, 5025],
+        "formula": "Labor - Direct + Payroll Taxes - Direct + Workers Comp - Direct + Benefits - Direct + 401K/PSP - Direct + Bonus Expense - Direct",
+        "expandable": true,
         "parent": "Total Direct Expenses"
       },
       {
@@ -72,10 +115,60 @@
       },
 
       {
+        "label": "Labor - Indirect",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6010],
+        "parent": "Indirect Labor"
+      },
+      {
+        "label": "Labor - Project Mgr",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6015],
+        "parent": "Indirect Labor"
+      },
+      {
+        "label": "Bonus Expense - Indirect",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6025],
+        "parent": "Indirect Labor"
+      },
+      {
+        "label": "Payroll Taxes - Indirect",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6030],
+        "parent": "Indirect Labor"
+      },
+      {
+        "label": "Workers Comp - Indirect",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6040],
+        "parent": "Indirect Labor"
+      },
+      {
+        "label": "Benefits - Indirect",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6045],
+        "parent": "Indirect Labor"
+      },
+      {
+        "label": "401K/PSP - Indirect",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6050],
+        "parent": "Indirect Labor"
+      },
+      {
         "label": "Indirect Labor",
         "level": 2,
         "type": "subtotal",
-        "accounts_range": [6010, 6050],
+        "formula": "Labor - Indirect + Labor - Project Mgr + Bonus Expense - Indirect + Payroll Taxes - Indirect + Workers Comp - Indirect + Benefits - Indirect + 401K/PSP - Indirect",
+        "expandable": true,
         "parent": "Total Indirect Expenses"
       },
       {
@@ -86,10 +179,179 @@
         "parent": "Total Indirect Expenses"
       },
       {
+        "label": "Vehicle - JVM",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6070],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - LV",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6071],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - JJ",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6072],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - AP",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6073],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - AGM",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6074],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - DD",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6075],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - RR",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6076],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - Field",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6080],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - AM",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6082],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - AMF",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6083],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - ADG",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6084],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - MFF",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6085],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - RET",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6086],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - RJG",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6087],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - GBB",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6088],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - DDC",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6089],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - JPA",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6090],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - TR",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6091],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - SJ",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6092],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - JA",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6093],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - BK",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6094],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - RH",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6095],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - Other1",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6096],
+        "parent": "Vehicle Expense"
+      },
+      {
+        "label": "Vehicle - Other2",
+        "level": 3,
+        "type": "detail",
+        "accounts": [6097],
+        "parent": "Vehicle Expense"
+      },
+      {
         "label": "Vehicle Expense",
         "level": 2,
         "type": "subtotal",
-        "accounts_range": [6070, 6097],
+        "formula": "Vehicle - JVM + Vehicle - LV + Vehicle - JJ + Vehicle - AP + Vehicle - AGM + Vehicle - DD + Vehicle - RR + Vehicle - Field + Vehicle - AM + Vehicle - AMF + Vehicle - ADG + Vehicle - MFF + Vehicle - RET + Vehicle - RJG + Vehicle - GBB + Vehicle - DDC + Vehicle - JPA + Vehicle - TR + Vehicle - SJ + Vehicle - JA + Vehicle - BK + Vehicle - RH + Vehicle - Other1 + Vehicle - Other2",
+        "expandable": true,
         "parent": "Total Indirect Expenses"
       },
       {
