@@ -435,6 +435,20 @@ function updateOverviewStats(metrics, labels) {
   });
 }
 
+function createBarGradient(ctx, chartArea, colorStart, colorEnd) {
+  if (!chartArea) return colorStart;
+  const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+  gradient.addColorStop(0, colorStart);
+  gradient.addColorStop(1, colorEnd);
+  return gradient;
+}
+
+const gradientColors = {
+  blue: { start: "#2563eb", end: "#60a5fa" },
+  red: { start: "#dc2626", end: "#f87171" },
+  orange: { start: "#d97706", end: "#fbbf24" }
+};
+
 function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
@@ -443,13 +457,18 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend)
     overviewChartInstances[canvasId].destroy();
   }
   
+  const ctx = canvas.getContext("2d");
   const datasets = [];
   
   if (showPrior && metricData.priorValues.length > 0) {
     datasets.push({
       label: "Prior Year",
       data: metricData.priorValues,
-      backgroundColor: "#ef4444",
+      backgroundColor: (context) => {
+        const chart = context.chart;
+        const { ctx, chartArea } = chart;
+        return createBarGradient(ctx, chartArea, gradientColors.red.start, gradientColors.red.end);
+      },
       borderRadius: 4,
       barPercentage: 0.9,
       categoryPercentage: 0.85
@@ -459,7 +478,11 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend)
   datasets.push({
     label: "Current",
     data: metricData.values,
-    backgroundColor: "#3b82f6",
+    backgroundColor: (context) => {
+      const chart = context.chart;
+      const { ctx, chartArea } = chart;
+      return createBarGradient(ctx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
+    },
     borderRadius: 4,
     barPercentage: 0.9,
     categoryPercentage: 0.85
@@ -1610,6 +1633,31 @@ function updateTimestamp() {
 /* ------------------------------------------------------------
    CHART RENDERING (SOLID BARS + RESPONSIVE)
 ------------------------------------------------------------ */
+function applyGradientToDatasets(datasets, chart) {
+  const { ctx, chartArea } = chart;
+  if (!chartArea) return;
+  
+  datasets.forEach(ds => {
+    if (ds.type === "line") return;
+    
+    const origBg = ds._originalBg || ds.backgroundColor;
+    ds._originalBg = origBg;
+    
+    if (Array.isArray(origBg)) {
+      ds.backgroundColor = origBg.map(color => {
+        if (color === "#3b82f6") return createBarGradient(ctx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
+        if (color === "#ef4444") return createBarGradient(ctx, chartArea, gradientColors.red.start, gradientColors.red.end);
+        if (color === "#f59e0b") return createBarGradient(ctx, chartArea, gradientColors.orange.start, gradientColors.orange.end);
+        return color;
+      });
+    } else if (typeof origBg === "string") {
+      if (origBg === "#3b82f6") ds.backgroundColor = createBarGradient(ctx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
+      else if (origBg === "#ef4444") ds.backgroundColor = createBarGradient(ctx, chartArea, gradientColors.red.start, gradientColors.red.end);
+      else if (origBg === "#f59e0b") ds.backgroundColor = createBarGradient(ctx, chartArea, gradientColors.orange.start, gradientColors.orange.end);
+    }
+  });
+}
+
 function renderRevenueChart(labels, datasets) {
   console.log("renderRevenueChart called", { labels, datasets });
   
@@ -1645,11 +1693,16 @@ function renderRevenueChart(labels, datasets) {
     }
     
     console.log("Creating Chart instance...");
+    
+    const gradientPlugin = {
+      id: 'gradientPlugin',
+      beforeDraw: (chart) => applyGradientToDatasets(chart.data.datasets, chart)
+    };
 
     revChartInstance = new Chart(ctx, {
       type: "bar",
       data: { labels, datasets },
-      plugins: [ChartDataLabels],
+      plugins: [ChartDataLabels, gradientPlugin],
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -2156,10 +2209,15 @@ function renderAccountChart(labels, datasets) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   
+  const gradientPlugin = {
+    id: 'gradientPlugin',
+    beforeDraw: (chart) => applyGradientToDatasets(chart.data.datasets, chart)
+  };
+  
   acctChartInstance = new Chart(ctx, {
     type: "bar",
     data: { labels, datasets },
-    plugins: [ChartDataLabels],
+    plugins: [ChartDataLabels, gradientPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
