@@ -1507,35 +1507,28 @@ async function captureOverviewAsImage() {
   }
   
   try {
-    // Use lower scale to reduce image size (EmailJS has 50KB limit)
+    // Good quality capture (Personal plan has 500KB limit)
     const canvas = await html2canvas(tilesGrid, {
-      scale: 0.8,
+      scale: 1.5,
       useCORS: true,
       backgroundColor: "#ffffff",
       logging: false,
       allowTaint: true
     });
     
-    // Start with moderate compression and reduce until under 40KB
-    let quality = 0.5;
+    // Start with good quality and reduce if needed
+    let quality = 0.8;
     let dataUrl = canvas.toDataURL("image/jpeg", quality);
     let sizeKB = Math.round(dataUrl.length / 1024);
     
-    // Keep reducing quality until under 40KB (leaving room for other params)
-    while (sizeKB > 40 && quality > 0.1) {
+    // Keep reducing quality until under 450KB (leaving room for other params)
+    while (sizeKB > 450 && quality > 0.3) {
       quality -= 0.1;
       dataUrl = canvas.toDataURL("image/jpeg", quality);
       sizeKB = Math.round(dataUrl.length / 1024);
     }
     
     console.log(`Chart captured: ${sizeKB}KB at quality ${quality.toFixed(1)}`);
-    
-    // If still too big, return null to use table fallback
-    if (sizeKB > 45) {
-      console.log("Image still too large for EmailJS");
-      return null;
-    }
-    
     return dataUrl;
   } catch (err) {
     console.error("html2canvas error:", err);
