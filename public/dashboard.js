@@ -1284,7 +1284,14 @@ function updateRevenueView(data) {
   
   const currentYearDataset = tableDatasets.find(ds => ds.label === String(year)) || tableDatasets[tableDatasets.length - 1];
   const currentValues = currentYearDataset ? currentYearDataset.data : [];
-  updateSummaryTiles("rev", currentValues, labels);
+  
+  let tileLabels = labels;
+  if (view === "monthly") {
+    tileLabels = labels.map(l => `${l} ${year}`);
+  } else if (view === "quarterly") {
+    tileLabels = labels.map(l => `${l} ${year}`);
+  }
+  updateSummaryTiles("rev", currentValues, tileLabels);
   
   const partialLegend = document.getElementById("revPartialLegend");
   if (hasPartialPeriod) {
@@ -1384,7 +1391,7 @@ function renderRevenueChart(labels, datasets) {
             align: "top",
             offset: 4,
             font: {
-              size: 10,
+              size: 12,
               weight: "600"
             },
             color: function(context) {
@@ -1825,7 +1832,14 @@ function updateAccountView(data) {
   
   const currentYearDataset = tableDatasets.find(ds => ds.label === String(year)) || tableDatasets[tableDatasets.length - 1];
   const currentValues = currentYearDataset ? currentYearDataset.data : [];
-  updateSummaryTiles("acct", currentValues, labels);
+  
+  let tileLabels = labels;
+  if (view === "monthly") {
+    tileLabels = labels.map(l => `${l} ${year}`);
+  } else if (view === "quarterly") {
+    tileLabels = labels.map(l => `${l} ${year}`);
+  }
+  updateSummaryTiles("acct", currentValues, tileLabels);
   
   const partialLegend = document.getElementById("acctPartialLegend");
   if (hasPartialPeriod) {
@@ -1884,7 +1898,7 @@ function renderAccountChart(labels, datasets) {
           align: "top",
           offset: 4,
           font: {
-            size: 10,
+            size: 12,
             weight: "600"
           },
           color: function(context) {
