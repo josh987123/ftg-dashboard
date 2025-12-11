@@ -590,9 +590,60 @@
            BALANCE SHEET
       ============================================================= -->
       <section id="balanceSheet" class="dashboard-section">
-        <div class="under-construction">UNDER CONSTRUCTION</div>
         <h2>Balance Sheet</h2>
-        <div id="balanceSheetContent"></div>
+        <div class="data-as-of">Data as of: <span id="bsDataAsOf"></span></div>
+
+        <div class="config-panel">
+          <div class="config-header" data-target="bsConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
+          </div>
+          <div class="config-body" id="bsConfigBody">
+            <div class="is-controls">
+              <div class="is-period-stack">
+                <div class="is-period-row">
+                  <label>As of Date:</label>
+                  <select id="bsPeriodSelect"></select>
+                </div>
+              </div>
+
+              <div class="is-compare-detail-wrapper">
+                <div class="is-options-stack is-compare-box">
+                  <label>Compare:</label>
+                  <div class="radio-group-stacked">
+                    <label class="radio-label"><input type="radio" name="bsCompareRadio" value="none" checked> None</label>
+                    <label class="radio-label"><input type="radio" name="bsCompareRadio" value="prior_year"> Prior Year</label>
+                  </div>
+                </div>
+
+                <div class="is-options-stack is-detail-box">
+                  <label>Detail:</label>
+                  <div class="radio-group-stacked">
+                    <label class="radio-label"><input type="radio" name="bsDetailLevel" value="summary" checked> Summary</label>
+                    <label class="radio-label"><input type="radio" name="bsDetailLevel" value="detail"> Detail</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="is-options-stack">
+                <label class="is-checkbox-label small">
+                  <input type="checkbox" id="bsShowThousands">
+                  Show in Thousands
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="is-table-box">
+          <table id="balanceSheetTable" class="is-table">
+            <thead id="bsTableHead"></thead>
+            <tbody id="bsTableBody"></tbody>
+          </table>
+        </div>
+        <div class="bs-footnote">
+          <em>Note: Excludes Retained Earnings and current period Net Income.</em>
+        </div>
       </section>
 
       <!-- ============================================================
