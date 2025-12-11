@@ -409,12 +409,15 @@ button, .nav-item, .config-header, .dropdown-item {
 }
 
 .nav-item.placeholder {
-  color: #f59e0b;
-  opacity: 0.8;
+  color: #f59e0b !important;
 }
 
 .nav-item.placeholder:hover {
-  opacity: 1;
+  color: #fbbf24 !important;
+}
+
+.nav-item.placeholder.active {
+  color: #f59e0b !important;
 }
 
 /* MOBILE SIDEBAR */
