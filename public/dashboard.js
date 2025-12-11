@@ -1581,16 +1581,17 @@ async function sendReportEmail() {
     let chartImage = "";
     
     if (view === "overview") {
-      statusEl.textContent = "Capturing charts...";
+      statusEl.textContent = "Step 1: Capturing charts...";
       try {
         chartImage = await captureOverviewAsImage();
-        if (chartImage) {
-          statusEl.textContent = "Chart uploaded, sending email...";
+        if (chartImage && chartImage.startsWith("http")) {
+          statusEl.textContent = "Step 2: Image uploaded! Sending...";
         } else {
-          statusEl.textContent = "Chart capture failed, using table format...";
+          statusEl.textContent = "Upload failed, using table...";
+          chartImage = null;
         }
       } catch (captureErr) {
-        statusEl.textContent = "Chart capture error: " + captureErr.message;
+        statusEl.textContent = "Error: " + captureErr.message;
         chartImage = null;
       }
       
