@@ -918,7 +918,7 @@ button, .nav-item, .config-header, .dropdown-item {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 6px 8px;
+  padding: 0 8px 6px 8px;
   background: var(--surface-2);
   border-radius: 4px;
   border: 1px solid var(--border);
