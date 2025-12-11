@@ -4683,15 +4683,21 @@ function renderBalanceSheet() {
       return;
     }
     
-    if (!isHeaderRow && !isSummaryRow && isDetailRow) {
+    if (detailLevel !== "detail" && !isHeaderRow && !isSummaryRow && isDetailRow) {
       const currentZero = row.value === 0 || row.value === null;
-      const compZero = !comparisonRows || comparisonRows[i].value === 0 || comparisonRows[i].value === null;
+      const compRow = comparisonRows ? comparisonRows[i] : null;
+      const compZero = !compRow || compRow.value === 0 || compRow.value === null;
       if (currentZero && compZero) {
         return;
       }
     }
     
-    const isVisible = isBSRowVisibleByParent(row, rows);
+    let isVisible;
+    if (detailLevel === "detail") {
+      isVisible = true;
+    } else {
+      isVisible = isBSRowVisibleByParent(row, rows);
+    }
     const hiddenClass = isVisible ? "" : "is-row-hidden";
     const typeClass = `is-row-${row.type}`;
     const indentClass = `is-indent-${row.level}`;
@@ -4715,6 +4721,8 @@ function renderBalanceSheet() {
     if (row.expandable) {
       const expanded = bsRowStates[row.id] === true;
       toggleHtml = `<span class="bs-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
+    } else if (row.parent && detailLevel !== "detail") {
+      toggleHtml = `<span class="bs-toggle-placeholder"></span>`;
     }
     
     let valueHtml = "";

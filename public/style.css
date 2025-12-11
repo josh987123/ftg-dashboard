@@ -1391,13 +1391,24 @@ button, .nav-item, .config-header, .dropdown-item {
 .bs-toggle {
   cursor: pointer;
   user-select: none;
-  margin-right: 6px;
-  font-size: 10px;
-  color: #6b7280;
+  margin-right: 8px;
+  font-size: 11px;
+  color: #4b5563;
+  display: inline-block;
+  width: 14px;
+  text-align: center;
+  transition: transform 0.15s ease;
 }
 
 .bs-toggle:hover {
   color: #1f2937;
+  transform: scale(1.2);
+}
+
+.bs-toggle-placeholder {
+  display: inline-block;
+  width: 14px;
+  margin-right: 8px;
 }
 
 #balanceSheetTable {
@@ -1466,9 +1477,22 @@ button, .nav-item, .config-header, .dropdown-item {
 }
 
 .is-indent-0 td:first-child { padding-left: 14px; }
-.is-indent-1 td:first-child { padding-left: 34px; }
-.is-indent-2 td:first-child { padding-left: 54px; }
-.is-indent-3 td:first-child { padding-left: 74px; }
+.is-indent-1 td:first-child { padding-left: 28px; }
+.is-indent-2 td:first-child { padding-left: 42px; }
+.is-indent-3 td:first-child { padding-left: 56px; }
+.is-indent-4 td:first-child { padding-left: 70px; }
+
+#balanceSheetTable tr.is-row-subtotal {
+  font-weight: 500;
+}
+
+#balanceSheetTable tr.is-row-subtotal.is-expanded-subtotal {
+  background: #f0f9ff;
+}
+
+#balanceSheetTable tr.is-row-subtotal.is-expanded-subtotal td:first-child {
+  color: #1d4ed8;
+}
 
 .is-toggle {
   cursor: pointer;
