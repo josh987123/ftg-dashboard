@@ -1529,7 +1529,22 @@ async function captureOverviewAsImage() {
           backgroundColor: "#ffffff",
           logging: false,
           allowTaint: true,
-          removeContainer: true
+          removeContainer: true,
+          height: tile.scrollHeight,
+          windowHeight: tile.scrollHeight + 100,
+          onclone: (clonedDoc, clonedElement) => {
+            // Ensure full height is captured including stats
+            clonedElement.style.overflow = "visible";
+            clonedElement.style.height = "auto";
+            clonedElement.style.maxHeight = "none";
+            // Make stats visible
+            const stats = clonedElement.querySelector(".metric-stats");
+            if (stats) {
+              stats.style.display = "flex";
+              stats.style.visibility = "visible";
+              stats.style.opacity = "1";
+            }
+          }
         });
         tileImages.push(canvas);
       } catch (e) {
