@@ -509,6 +509,12 @@ body {
   color: #dc2626;
 }
 
+.stat-period {
+  font-size: 8px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
 @media (max-width: 1024px) {
   .overview-tiles-grid {
     grid-template-columns: repeat(2, 1fr);

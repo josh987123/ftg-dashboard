@@ -382,36 +382,56 @@ function updateOverviewCharts() {
 
 function updateOverviewStats(metrics, labels) {
   const statConfigs = [
-    { key: "revenue", avgId: "revenueAvg", highId: "revenueHigh", lowId: "revenueLow", cagrId: "revenueCagr", isPercent: false },
-    { key: "grossProfit", avgId: "grossProfitAvg", highId: "grossProfitHigh", lowId: "grossProfitLow", cagrId: "grossProfitCagr", isPercent: false },
-    { key: "grossMargin", avgId: "grossMarginAvg", highId: "grossMarginHigh", lowId: "grossMarginLow", cagrId: "grossMarginCagr", isPercent: true },
-    { key: "opex", avgId: "opexAvg", highId: "opexHigh", lowId: "opexLow", cagrId: "opexCagr", isPercent: false },
-    { key: "opProfit", avgId: "opProfitAvg", highId: "opProfitHigh", lowId: "opProfitLow", cagrId: "opProfitCagr", isPercent: false },
-    { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", isPercent: true }
+    { key: "revenue", avgId: "revenueAvg", highId: "revenueHigh", lowId: "revenueLow", cagrId: "revenueCagr", highPeriodId: "revenueHighPeriod", lowPeriodId: "revenueLowPeriod", isPercent: false },
+    { key: "grossProfit", avgId: "grossProfitAvg", highId: "grossProfitHigh", lowId: "grossProfitLow", cagrId: "grossProfitCagr", highPeriodId: "grossProfitHighPeriod", lowPeriodId: "grossProfitLowPeriod", isPercent: false },
+    { key: "grossMargin", avgId: "grossMarginAvg", highId: "grossMarginHigh", lowId: "grossMarginLow", cagrId: "grossMarginCagr", highPeriodId: "grossMarginHighPeriod", lowPeriodId: "grossMarginLowPeriod", isPercent: true },
+    { key: "opex", avgId: "opexAvg", highId: "opexHigh", lowId: "opexLow", cagrId: "opexCagr", highPeriodId: "opexHighPeriod", lowPeriodId: "opexLowPeriod", isPercent: false },
+    { key: "opProfit", avgId: "opProfitAvg", highId: "opProfitHigh", lowId: "opProfitLow", cagrId: "opProfitCagr", highPeriodId: "opProfitHighPeriod", lowPeriodId: "opProfitLowPeriod", isPercent: false },
+    { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", highPeriodId: "opMarginHighPeriod", lowPeriodId: "opMarginLowPeriod", isPercent: true }
   ];
   
+  const viewType = document.getElementById("overviewViewType").value;
+  const year = parseInt(document.getElementById("overviewYear").value);
+  
   statConfigs.forEach(cfg => {
-    const values = metrics[cfg.key].values.filter(v => v !== 0);
+    const allValues = metrics[cfg.key].values;
+    const values = allValues.filter(v => v !== 0);
     
     if (values.length === 0) {
       document.getElementById(cfg.avgId).textContent = "-";
       document.getElementById(cfg.highId).textContent = "-";
       document.getElementById(cfg.lowId).textContent = "-";
       document.getElementById(cfg.cagrId).textContent = "-";
+      document.getElementById(cfg.highPeriodId).textContent = "";
+      document.getElementById(cfg.lowPeriodId).textContent = "";
       return;
     }
     
     const avg = values.reduce((a, b) => a + b, 0) / values.length;
-    const high = Math.max(...values);
+    const high = Math.max(...allValues);
     const low = Math.min(...values);
     
+    const highIdx = allValues.indexOf(high);
+    const lowIdx = allValues.findIndex(v => v === low && v !== 0);
+    
+    let highPeriod = labels[highIdx] || "";
+    let lowPeriod = labels[lowIdx] || "";
+    
+    if (viewType === "monthly") {
+      highPeriod = highPeriod + " " + year;
+      lowPeriod = lowPeriod + " " + year;
+    } else if (viewType === "quarterly") {
+      highPeriod = highPeriod + " " + year;
+      lowPeriod = lowPeriod + " " + year;
+    }
+    
     let cagr = 0;
-    const firstNonZeroIdx = metrics[cfg.key].values.findIndex(v => v !== 0);
-    const lastNonZeroIdx = metrics[cfg.key].values.length - 1 - [...metrics[cfg.key].values].reverse().findIndex(v => v !== 0);
+    const firstNonZeroIdx = allValues.findIndex(v => v !== 0);
+    const lastNonZeroIdx = allValues.length - 1 - [...allValues].reverse().findIndex(v => v !== 0);
     
     if (firstNonZeroIdx !== -1 && lastNonZeroIdx !== -1 && firstNonZeroIdx !== lastNonZeroIdx) {
-      const startVal = metrics[cfg.key].values[firstNonZeroIdx];
-      const endVal = metrics[cfg.key].values[lastNonZeroIdx];
+      const startVal = allValues[firstNonZeroIdx];
+      const endVal = allValues[lastNonZeroIdx];
       const periods = lastNonZeroIdx - firstNonZeroIdx;
       if (startVal > 0 && endVal > 0 && periods > 0) {
         cagr = (Math.pow(endVal / startVal, 1 / periods) - 1) * 100;
@@ -428,6 +448,8 @@ function updateOverviewStats(metrics, labels) {
     document.getElementById(cfg.avgId).textContent = formatValue(avg, cfg.isPercent);
     document.getElementById(cfg.highId).textContent = formatValue(high, cfg.isPercent);
     document.getElementById(cfg.lowId).textContent = formatValue(low, cfg.isPercent);
+    document.getElementById(cfg.highPeriodId).textContent = highPeriod;
+    document.getElementById(cfg.lowPeriodId).textContent = lowPeriod;
     
     const cagrEl = document.getElementById(cfg.cagrId);
     cagrEl.textContent = cagr.toFixed(1) + "%";
