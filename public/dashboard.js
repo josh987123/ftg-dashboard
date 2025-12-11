@@ -4416,11 +4416,50 @@ function buildBSGLLookup() {
 }
 
 function initBalanceSheetControls() {
-  const periodSelect = document.getElementById("bsPeriodSelect");
-  
   populateBSPeriodOptions();
+  populateBSMatrixYearOptions();
+  
+  const viewMode = document.getElementById("bsViewMode");
+  const periodType = document.getElementById("bsPeriodType");
+  const periodSelect = document.getElementById("bsPeriodSelect");
+  const matrixYear = document.getElementById("bsMatrixYear");
+  const matrixYearStart = document.getElementById("bsMatrixYearStart");
+  const matrixYearEnd = document.getElementById("bsMatrixYearEnd");
+  
+  viewMode.onchange = () => {
+    updateBSControlVisibility();
+    renderBalanceSheet();
+  };
+  
+  periodType.onchange = () => {
+    updateBSControlVisibility();
+    renderBalanceSheet();
+  };
   
   periodSelect.onchange = () => renderBalanceSheet();
+  matrixYear.onchange = () => renderBalanceSheet();
+  
+  matrixYearStart.oninput = () => {
+    const startVal = parseInt(matrixYearStart.value);
+    const endVal = parseInt(matrixYearEnd.value);
+    if (startVal > endVal) {
+      matrixYearEnd.value = startVal;
+    }
+    document.getElementById("bsMatrixYearStartLabel").textContent = matrixYearStart.value;
+    document.getElementById("bsMatrixYearEndLabel").textContent = matrixYearEnd.value;
+    renderBalanceSheet();
+  };
+  
+  matrixYearEnd.oninput = () => {
+    const startVal = parseInt(matrixYearStart.value);
+    const endVal = parseInt(matrixYearEnd.value);
+    if (endVal < startVal) {
+      matrixYearStart.value = endVal;
+    }
+    document.getElementById("bsMatrixYearStartLabel").textContent = matrixYearStart.value;
+    document.getElementById("bsMatrixYearEndLabel").textContent = matrixYearEnd.value;
+    renderBalanceSheet();
+  };
   
   const compareRadios = document.querySelectorAll('input[name="bsCompareRadio"]');
   compareRadios.forEach(radio => {
@@ -4437,6 +4476,14 @@ function initBalanceSheetControls() {
     showThousands.onchange = () => renderBalanceSheet();
   }
   
+  const excludeCurrentMonth = document.getElementById("bsExcludeCurrentMonth");
+  if (excludeCurrentMonth) {
+    excludeCurrentMonth.onchange = () => {
+      populateBSPeriodOptions();
+      renderBalanceSheet();
+    };
+  }
+  
   const configHeader = document.querySelector('#balanceSheet .config-header');
   if (configHeader) {
     configHeader.onclick = () => {
@@ -4448,13 +4495,59 @@ function initBalanceSheetControls() {
       }
     };
   }
+  
+  updateBSControlVisibility();
+}
+
+function updateBSControlVisibility() {
+  const viewMode = document.getElementById("bsViewMode").value;
+  const periodType = document.getElementById("bsPeriodType").value;
+  
+  const periodTypeRow = document.getElementById("bsPeriodTypeRow");
+  const singlePeriodRow = document.getElementById("bsSinglePeriodRow");
+  const matrixYearRow = document.getElementById("bsMatrixYearRow");
+  const matrixRangeControls = document.getElementById("bsMatrixRangeControls");
+  const singleCompareBox = document.getElementById("bsSingleCompareBox");
+  
+  if (viewMode === "single") {
+    periodTypeRow.style.display = "none";
+    singlePeriodRow.style.display = "";
+    matrixYearRow.style.display = "none";
+    matrixRangeControls.style.display = "none";
+    singleCompareBox.style.display = "";
+  } else {
+    periodTypeRow.style.display = "";
+    singlePeriodRow.style.display = "none";
+    singleCompareBox.style.display = "none";
+    
+    if (periodType === "annual") {
+      matrixYearRow.style.display = "none";
+      matrixRangeControls.style.display = "";
+    } else {
+      matrixYearRow.style.display = "";
+      matrixRangeControls.style.display = "none";
+    }
+  }
+}
+
+function populateBSMatrixYearOptions() {
+  const yearSelect = document.getElementById("bsMatrixYear");
+  const months = getBSAvailableMonths();
+  const years = [...new Set(months.map(m => m.split("-")[0]))].sort().reverse();
+  
+  yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
 }
 
 function populateBSPeriodOptions() {
   const periodSelect = document.getElementById("bsPeriodSelect");
-  const months = getBSAvailableMonths();
+  let months = getBSAvailableMonths();
   
   if (months.length === 0) return;
+  
+  const excludeCurrentMonth = document.getElementById("bsExcludeCurrentMonth")?.checked || false;
+  if (excludeCurrentMonth && months.length > 0) {
+    months = months.slice(0, -1);
+  }
   
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   
@@ -4628,14 +4721,24 @@ function renderBalanceSheet() {
     return;
   }
   
-  const periodValue = document.getElementById("bsPeriodSelect").value;
-  const compare = document.querySelector('input[name="bsCompareRadio"]:checked')?.value || "none";
+  const viewMode = document.getElementById("bsViewMode")?.value || "single";
   const detailLevel = document.querySelector('input[name="bsDetailLevel"]:checked')?.value || "summary";
   const groups = bsAccountGroups.balance_sheet.groups;
   const thead = document.getElementById("bsTableHead");
   const tbody = document.getElementById("bsTableBody");
-  
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const excludeCurrentMonth = document.getElementById("bsExcludeCurrentMonth")?.checked || false;
+  
+  if (viewMode === "matrix") {
+    renderBalanceSheetMatrix();
+    return;
+  }
+  
+  const periodValue = document.getElementById("bsPeriodSelect").value;
+  if (!periodValue) return;
+  
+  const compare = document.querySelector('input[name="bsCompareRadio"]:checked')?.value || "none";
+  
   const [y, mo] = periodValue.split("-");
   const currentLabel = `${monthNames[parseInt(mo) - 1]} ${y}`;
   
@@ -4645,14 +4748,22 @@ function renderBalanceSheet() {
   
   let comparisonRows = null;
   let compPeriodLabel = "";
+  const availableMonths = getBSAvailableMonths();
   
   if (compare === "prior_year") {
     const priorYear = parseInt(y) - 1;
     const priorPeriod = `${priorYear}-${mo}`;
-    const availableMonths = getBSAvailableMonths();
     
     if (availableMonths.includes(priorPeriod)) {
       compPeriodLabel = `${monthNames[parseInt(mo) - 1]} ${priorYear}`;
+      comparisonRows = buildBalanceSheetRows(priorPeriod, groups);
+    }
+  } else if (compare === "prior_month") {
+    const periodIdx = availableMonths.indexOf(periodValue);
+    if (periodIdx > 0) {
+      const priorPeriod = availableMonths[periodIdx - 1];
+      const [py, pm] = priorPeriod.split("-");
+      compPeriodLabel = `${monthNames[parseInt(pm) - 1]} ${py}`;
       comparisonRows = buildBalanceSheetRows(priorPeriod, groups);
     }
   }
@@ -4858,6 +4969,142 @@ function attachBSToggleListeners() {
       renderBalanceSheet();
     };
   });
+}
+
+function renderBalanceSheetMatrix() {
+  const periodType = document.getElementById("bsPeriodType").value;
+  const detailLevel = document.querySelector('input[name="bsDetailLevel"]:checked')?.value || "summary";
+  const groups = bsAccountGroups.balance_sheet.groups;
+  const thead = document.getElementById("bsTableHead");
+  const tbody = document.getElementById("bsTableBody");
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const excludeCurrentMonth = document.getElementById("bsExcludeCurrentMonth")?.checked || false;
+  
+  let periods = [];
+  let periodLabels = [];
+  const availableMonths = getBSAvailableMonths();
+  const currentMonth = availableMonths[availableMonths.length - 1];
+  
+  if (periodType === "month") {
+    const selectedYear = document.getElementById("bsMatrixYear").value;
+    for (let m = 1; m <= 12; m++) {
+      const period = `${selectedYear}-${String(m).padStart(2, '0')}`;
+      if (availableMonths.includes(period)) {
+        if (excludeCurrentMonth && period === currentMonth) continue;
+        periods.push(period);
+        periodLabels.push(monthNames[m - 1]);
+      }
+    }
+    document.getElementById("bsDataAsOf").textContent = `${selectedYear} Monthly`;
+  } else if (periodType === "quarter") {
+    const selectedYear = document.getElementById("bsMatrixYear").value;
+    const quarterEnds = [`${selectedYear}-03`, `${selectedYear}-06`, `${selectedYear}-09`, `${selectedYear}-12`];
+    const quarterLabels = ["Q1", "Q2", "Q3", "Q4"];
+    quarterEnds.forEach((period, idx) => {
+      if (availableMonths.includes(period)) {
+        if (excludeCurrentMonth && period === currentMonth) return;
+        periods.push(period);
+        periodLabels.push(`${quarterLabels[idx]} ${selectedYear}`);
+      }
+    });
+    document.getElementById("bsDataAsOf").textContent = `${selectedYear} Quarterly`;
+  } else if (periodType === "annual") {
+    const startYear = parseInt(document.getElementById("bsMatrixYearStart").value);
+    const endYear = parseInt(document.getElementById("bsMatrixYearEnd").value);
+    for (let y = startYear; y <= endYear; y++) {
+      const period = `${y}-12`;
+      if (availableMonths.includes(period)) {
+        if (excludeCurrentMonth && period === currentMonth) continue;
+        periods.push(period);
+        periodLabels.push(String(y));
+      }
+    }
+    document.getElementById("bsDataAsOf").textContent = `${startYear} - ${endYear} Annual`;
+  }
+  
+  if (periods.length === 0) {
+    thead.innerHTML = "<tr><th>No data available for selected period</th></tr>";
+    tbody.innerHTML = "";
+    return;
+  }
+  
+  const allRowsData = periods.map(period => buildBalanceSheetRows(period, groups));
+  const baseRows = allRowsData[0];
+  
+  let headerHtml = "<tr><th>Account</th>";
+  periodLabels.forEach(label => {
+    headerHtml += `<th>${label}</th>`;
+  });
+  headerHtml += "</tr>";
+  thead.innerHTML = headerHtml;
+  
+  let bodyHtml = "";
+  const colCount = periods.length + 1;
+  
+  baseRows.forEach((row, rowIdx) => {
+    if (row.type === "spacer") {
+      bodyHtml += `<tr class="is-spacer-row"><td colspan="${colCount}"></td></tr>`;
+      return;
+    }
+    
+    const isSummaryRow = row.type === "subtotal" && (row.label.startsWith("Total") || row.label.startsWith("TOTAL"));
+    const isHeaderRow = row.type === "header";
+    const isDetailRow = row.type === "detail";
+    
+    if (detailLevel === "summary" && isDetailRow) {
+      return;
+    }
+    
+    if (detailLevel !== "detail" && !isHeaderRow && !isSummaryRow && isDetailRow) {
+      const allZero = allRowsData.every(rows => {
+        const val = rows[rowIdx]?.value;
+        return val === 0 || val === null;
+      });
+      if (allZero) return;
+    }
+    
+    let isVisible;
+    if (detailLevel === "detail") {
+      isVisible = true;
+    } else {
+      isVisible = isBSRowVisibleByParent(row, baseRows);
+    }
+    
+    const hiddenClass = isVisible ? "" : "is-row-hidden";
+    const typeClass = `is-row-${row.type}`;
+    const indentClass = `is-indent-${row.level}`;
+    const highlightClass = row.highlight === "total" ? "is-major-total" : "";
+    
+    let expandedSubtotalClass = "";
+    if (row.expandable && bsRowStates[row.id] === true) {
+      expandedSubtotalClass = "is-expanded-subtotal";
+    }
+    
+    let toggleHtml = "";
+    if (row.expandable) {
+      const expanded = bsRowStates[row.id] === true;
+      toggleHtml = `<span class="bs-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
+    } else if (row.parent && detailLevel !== "detail") {
+      toggleHtml = `<span class="bs-toggle-placeholder"></span>`;
+    }
+    
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${highlightClass} ${expandedSubtotalClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
+    
+    allRowsData.forEach(rows => {
+      const periodRow = rows[rowIdx];
+      if (row.type === "header") {
+        bodyHtml += `<td></td>`;
+      } else {
+        bodyHtml += `<td>${formatBSNumber(periodRow?.value)}</td>`;
+      }
+    });
+    
+    bodyHtml += "</tr>";
+  });
+  
+  tbody.innerHTML = bodyHtml;
+  attachBSToggleListeners();
 }
 
 /* ------------------------------------------------------------

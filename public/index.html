@@ -617,7 +617,7 @@
                 </label>
                 <label class="is-checkbox-label small">
                   <input type="checkbox" id="isExcludeCurrent">
-                  Exclude Current Period
+                  Exclude Month in Progress
                 </label>
               </div>
             </div>
@@ -651,16 +651,48 @@
             <div class="is-controls">
               <div class="is-period-stack">
                 <div class="is-period-row">
+                  <label>View:</label>
+                  <select id="bsViewMode">
+                    <option value="single">Single Period</option>
+                    <option value="matrix">Matrix</option>
+                  </select>
+                </div>
+                <div class="is-period-row" id="bsPeriodTypeRow" style="display: none;">
+                  <label>Period Type:</label>
+                  <select id="bsPeriodType">
+                    <option value="month">Month</option>
+                    <option value="quarter">Quarter</option>
+                    <option value="annual">Annual</option>
+                  </select>
+                </div>
+                <div class="is-period-row" id="bsSinglePeriodRow">
                   <label>As of Date:</label>
                   <select id="bsPeriodSelect"></select>
+                </div>
+                <div class="is-period-row" id="bsMatrixYearRow" style="display: none;">
+                  <label>Year:</label>
+                  <select id="bsMatrixYear"></select>
+                </div>
+              </div>
+
+              <div id="bsMatrixRangeControls" class="range-wrapper" style="display: none;">
+                <label>Select Range:</label>
+                <div class="range-container">
+                  <input type="range" id="bsMatrixYearStart" min="2015" max="2025" value="2020" step="1">
+                  <input type="range" id="bsMatrixYearEnd" min="2015" max="2025" value="2025" step="1">
+                </div>
+                <div class="range-labels">
+                  <span id="bsMatrixYearStartLabel">2020</span>
+                  <span id="bsMatrixYearEndLabel">2025</span>
                 </div>
               </div>
 
               <div class="is-compare-detail-wrapper">
-                <div class="is-options-stack is-compare-box">
+                <div class="is-options-stack is-compare-box" id="bsSingleCompareBox">
                   <label>Compare:</label>
                   <div class="radio-group-stacked">
                     <label class="radio-label"><input type="radio" name="bsCompareRadio" value="none" checked> None</label>
+                    <label class="radio-label"><input type="radio" name="bsCompareRadio" value="prior_month"> Prior Month</label>
                     <label class="radio-label"><input type="radio" name="bsCompareRadio" value="prior_year"> Prior Year</label>
                   </div>
                 </div>
@@ -679,6 +711,10 @@
                   <input type="checkbox" id="bsShowThousands">
                   Show in Thousands
                 </label>
+                <label class="is-checkbox-label small">
+                  <input type="checkbox" id="bsExcludeCurrentMonth">
+                  Exclude Month in Progress
+                </label>
               </div>
             </div>
           </div>
@@ -689,6 +725,9 @@
             <thead id="bsTableHead"></thead>
             <tbody id="bsTableBody"></tbody>
           </table>
+          <div id="bsPartialFootnote" class="partial-footnote hidden">
+            <span class="is-partial-indicator">*</span> Partial period (month in progress)
+          </div>
         </div>
       </section>
 
