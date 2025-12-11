@@ -1994,31 +1994,32 @@ button, .nav-item, .config-header, .dropdown-item {
 
 .chart-fullscreen-stats .stat-box {
   text-align: center;
-  background: #fff;
+  background: #fff !important;
   padding: 12px 20px;
   border-radius: 8px;
   min-width: 100px;
 }
 
 .chart-fullscreen-stats .stat-label {
-  color: #666;
+  color: #374151 !important;
   font-size: 12px;
+  font-weight: 600;
   text-transform: uppercase;
   margin-bottom: 4px;
 }
 
 .chart-fullscreen-stats .stat-value {
-  color: #1a1a2e;
+  color: #111827 !important;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .chart-fullscreen-stats .stat-value.negative {
-  color: #dc2626;
+  color: #dc2626 !important;
 }
 
 .chart-fullscreen-stats .stat-period {
-  color: #888;
+  color: #6b7280 !important;
   font-size: 11px;
   margin-top: 2px;
 }
