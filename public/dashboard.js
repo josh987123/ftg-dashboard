@@ -1673,19 +1673,26 @@ function updateOverviewStats(metrics, labels) {
   const growthLabel = viewType === "annual" ? "CAGR" : "YoY";
   
   statConfigs.forEach(cfg => {
-    document.getElementById(cfg.growthLabelId).textContent = growthLabel;
+    const growthLabelEl = document.getElementById(cfg.growthLabelId);
+    if (growthLabelEl) growthLabelEl.textContent = growthLabel;
     
-    const allValues = metrics[cfg.key].values;
-    const priorValues = metrics[cfg.key].priorValues || [];
+    const allValues = metrics[cfg.key]?.values || [];
+    const priorValues = metrics[cfg.key]?.priorValues || [];
     const values = allValues.filter(v => v !== 0);
     
     if (values.length === 0) {
-      document.getElementById(cfg.avgId).textContent = "-";
-      document.getElementById(cfg.highId).textContent = "-";
-      document.getElementById(cfg.lowId).textContent = "-";
-      document.getElementById(cfg.cagrId).textContent = "-";
-      document.getElementById(cfg.highPeriodId).textContent = "";
-      document.getElementById(cfg.lowPeriodId).textContent = "";
+      const avgEl = document.getElementById(cfg.avgId);
+      const highEl = document.getElementById(cfg.highId);
+      const lowEl = document.getElementById(cfg.lowId);
+      const cagrEl = document.getElementById(cfg.cagrId);
+      const highPeriodEl = document.getElementById(cfg.highPeriodId);
+      const lowPeriodEl = document.getElementById(cfg.lowPeriodId);
+      if (avgEl) avgEl.textContent = "-";
+      if (highEl) highEl.textContent = "-";
+      if (lowEl) lowEl.textContent = "-";
+      if (cagrEl) cagrEl.textContent = "-";
+      if (highPeriodEl) highPeriodEl.textContent = "";
+      if (lowPeriodEl) lowPeriodEl.textContent = "";
       return;
     }
     
@@ -1757,23 +1764,33 @@ function updateOverviewStats(metrics, labels) {
     };
     
     const avgEl = document.getElementById(cfg.avgId);
-    avgEl.textContent = formatValue(avg, cfg.isPercent);
-    avgEl.className = avg < 0 ? "stat-value negative" : "stat-value";
+    if (avgEl) {
+      avgEl.textContent = formatValue(avg, cfg.isPercent);
+      avgEl.className = avg < 0 ? "stat-value negative" : "stat-value";
+    }
     
     const highEl = document.getElementById(cfg.highId);
-    highEl.textContent = formatValue(high, cfg.isPercent);
-    highEl.className = high < 0 ? "stat-value negative" : "stat-value";
+    if (highEl) {
+      highEl.textContent = formatValue(high, cfg.isPercent);
+      highEl.className = high < 0 ? "stat-value negative" : "stat-value";
+    }
     
     const lowEl = document.getElementById(cfg.lowId);
-    lowEl.textContent = formatValue(low, cfg.isPercent);
-    lowEl.className = low < 0 ? "stat-value negative" : "stat-value";
+    if (lowEl) {
+      lowEl.textContent = formatValue(low, cfg.isPercent);
+      lowEl.className = low < 0 ? "stat-value negative" : "stat-value";
+    }
     
-    document.getElementById(cfg.highPeriodId).textContent = highPeriod;
-    document.getElementById(cfg.lowPeriodId).textContent = lowPeriod;
+    const highPeriodEl = document.getElementById(cfg.highPeriodId);
+    if (highPeriodEl) highPeriodEl.textContent = highPeriod;
+    const lowPeriodEl = document.getElementById(cfg.lowPeriodId);
+    if (lowPeriodEl) lowPeriodEl.textContent = lowPeriod;
     
     const cagrEl = document.getElementById(cfg.cagrId);
-    cagrEl.textContent = formatGrowth(growthRate);
-    cagrEl.className = growthRate < 0 ? "stat-value negative" : "stat-value";
+    if (cagrEl) {
+      cagrEl.textContent = formatGrowth(growthRate);
+      cagrEl.className = growthRate < 0 ? "stat-value negative" : "stat-value";
+    }
   });
   } catch (err) {
     console.error("Error updating overview stats:", err);
@@ -6892,7 +6909,7 @@ function buildCashFlowRows(periodMonths, groups) {
         group.accounts.forEach(acctNum => {
           total += getCFPeriodActivity(acctNum, periodMonths);
         });
-        row.value = total;
+        row.value = Math.abs(total);
       } else if (group.negate) {
         let total = 0;
         group.accounts.forEach(acctNum => {
@@ -7155,13 +7172,18 @@ function attachCFToggleListeners() {
 function renderCashFlowMatrix() {
   const periodType = document.getElementById("cfPeriodType").value;
   const periodSelect = document.getElementById("cfPeriodSelect");
-  const yearStart = document.getElementById("cfMatrixYearStart").value;
-  const yearEnd = document.getElementById("cfMatrixYearEnd").value;
+  const yearStart = document.getElementById("cfMatrixYearStart")?.value;
+  const yearEnd = document.getElementById("cfMatrixYearEnd")?.value;
   const showThousands = document.getElementById("cfShowThousands")?.checked || false;
-  const groups = cfAccountGroups.cash_flow.groups;
+  const groups = cfAccountGroups?.cash_flow?.groups;
   const thead = document.getElementById("cfTableHead");
   const tbody = document.getElementById("cfTableBody");
   const detailLevel = document.querySelector('input[name="cfDetailLevel"]:checked')?.value || "summary";
+  
+  if (!thead || !tbody || !groups) {
+    console.error("Cash flow matrix: Missing required elements or groups");
+    return;
+  }
   
   applyCFDetailLevel(detailLevel);
   
