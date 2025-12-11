@@ -700,7 +700,6 @@
         "level": 2,
         "type": "detail",
         "accounts": [8000],
-        "negate": true,
         "isIncome": true,
         "parent": "Other Income/(Expense)"
       },
@@ -709,7 +708,6 @@
         "level": 2,
         "type": "detail",
         "accounts": [8005],
-        "negate": true,
         "isIncome": true,
         "parent": "Other Income/(Expense)"
       },
@@ -718,7 +716,6 @@
         "level": 2,
         "type": "detail",
         "accounts": [8007],
-        "negate": true,
         "isIncome": true,
         "parent": "Other Income/(Expense)"
       },
@@ -727,7 +724,6 @@
         "level": 2,
         "type": "detail",
         "accounts": [8008],
-        "negate": true,
         "isIncome": true,
         "parent": "Other Income/(Expense)"
       },
