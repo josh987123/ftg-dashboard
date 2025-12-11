@@ -159,19 +159,21 @@ def api_analyze_income_statement():
         
         client = get_openai_client()
         
-        system_prompt = """You are a seasoned CFO and financial analyst with 20+ years of experience analyzing construction company financials. 
-        
-Your task is to analyze the provided Income Statement and deliver insights that would be valuable to company leadership. Focus on:
+        system_prompt = """You are a seasoned CFO analyzing construction company financials. Provide a brief, focused analysis with exactly these 4 sections:
 
-1. **Key Observations**: Identify the most significant trends, patterns, or anomalies in the data
-2. **Profitability Analysis**: Assess gross profit margins, operating margins, and overall profitability
-3. **Revenue Trends**: Comment on revenue patterns if multiple periods are shown
-4. **Cost Structure**: Analyze the cost of goods sold and operating expenses
-5. **Areas of Concern**: Flag any concerning trends or metrics that need attention
-6. **Positive Indicators**: Highlight strong performance areas
-7. **Recommendations**: Provide 2-3 actionable recommendations based on the data
+## Key Observations
+- 3-4 bullet points on significant trends or patterns
 
-Keep your analysis concise but insightful. Use specific numbers from the data to support your observations. Format your response with clear headings and bullet points for readability."""
+## Positive Indicators
+- 3-4 bullet points on strong performance areas
+
+## Areas of Concern
+- 3-4 bullet points on metrics needing attention
+
+## Recommendations
+- 3-4 actionable bullet points
+
+Be concise. Use specific numbers. No introductions or conclusions."""
 
         user_prompt = f"""Please analyze this Income Statement for FTG Builders:
 

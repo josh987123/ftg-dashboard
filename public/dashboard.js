@@ -4340,14 +4340,23 @@ function initAiAnalysis() {
   const analyzeBtn = document.getElementById("isAiAnalyzeBtn");
   const closeBtn = document.getElementById("isAiCloseBtn");
   const resultContainer = document.getElementById("isAiAnalysisResult");
+  const header = document.getElementById("isAiAnalysisHeader");
   
   if (analyzeBtn) {
     analyzeBtn.addEventListener("click", performAiAnalysis);
   }
   
   if (closeBtn) {
-    closeBtn.addEventListener("click", () => {
+    closeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
       resultContainer.classList.add("hidden");
+    });
+  }
+  
+  if (header) {
+    header.addEventListener("click", (e) => {
+      if (e.target === closeBtn || closeBtn.contains(e.target)) return;
+      resultContainer.classList.toggle("collapsed");
     });
   }
 }
@@ -4361,6 +4370,7 @@ async function performAiAnalysis() {
   analyzeBtn.disabled = true;
   analyzeBtn.innerHTML = '<span class="ai-spinner"></span> Analyzing...';
   resultContainer.classList.remove("hidden");
+  resultContainer.classList.remove("collapsed");
   contentContainer.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing your financial data...</div>';
   
   try {
