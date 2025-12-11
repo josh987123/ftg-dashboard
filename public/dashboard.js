@@ -218,6 +218,8 @@ function setupOverviewUI() {
   document.getElementById("overviewRangeStartLabel").textContent = rangeStart.value;
   document.getElementById("overviewRangeEndLabel").textContent = rangeEnd.value;
   
+  const trendCheck = document.getElementById("overviewTrend");
+  
   viewType.onchange = () => {
     const v = viewType.value;
     if (v === "annual") {
@@ -232,6 +234,7 @@ function setupOverviewUI() {
   
   yearSelect.onchange = () => updateOverviewCharts();
   compareCheck.onchange = () => updateOverviewCharts();
+  trendCheck.onchange = () => updateOverviewCharts();
   
   rangeStart.oninput = () => {
     if (+rangeStart.value > +rangeEnd.value) rangeStart.value = rangeEnd.value;
@@ -346,6 +349,8 @@ function updateOverviewCharts() {
     }
   });
   
+  const showTrend = document.getElementById("overviewTrend").checked;
+  
   const chartConfigs = [
     { id: "overviewRevenueChart", data: metrics.revenue },
     { id: "overviewGrossProfitChart", data: metrics.grossProfit },
@@ -356,11 +361,11 @@ function updateOverviewCharts() {
   ];
   
   chartConfigs.forEach(cfg => {
-    renderOverviewChart(cfg.id, labels, cfg.data, compare);
+    renderOverviewChart(cfg.id, labels, cfg.data, compare, showTrend);
   });
 }
 
-function renderOverviewChart(canvasId, labels, metricData, showPrior) {
+function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   
@@ -390,6 +395,21 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior) {
     categoryPercentage: 0.85
   });
   
+  if (showTrend && metricData.values.length > 1) {
+    const trendData = calculateTrendline(metricData.values);
+    datasets.push({
+      label: "Trendline",
+      data: trendData,
+      type: "line",
+      borderColor: "#10b981",
+      borderWidth: 2,
+      borderDash: [5, 5],
+      fill: false,
+      pointRadius: 0,
+      tension: 0
+    });
+  }
+  
   overviewChartInstances[canvasId] = new Chart(canvas, {
     type: "bar",
     data: { labels, datasets },
@@ -397,7 +417,7 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: showPrior, position: "bottom", labels: { boxWidth: 12, font: { size: 10 } } }
+        legend: { display: showPrior || showTrend, position: "bottom", labels: { boxWidth: 12, font: { size: 10 } } }
       },
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 9 } } },
