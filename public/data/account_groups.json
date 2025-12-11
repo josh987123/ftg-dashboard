@@ -380,7 +380,7 @@
 
       {
         "label": "Total Cost of Sales",
-        "level": 0,
+        "level": 1,
         "type": "subtotal",
         "formula": "Total Direct Expenses + Total Indirect Expenses",
         "expandable": true,
@@ -663,7 +663,7 @@
 
       {
         "label": "Operating Expenses",
-        "level": 0,
+        "level": 1,
         "type": "subtotal",
         "formula": "Salaries & Benefits + Advertising and Marketing + Facility + Travel & Entertainment + Insurance + Professional Services + Amortization Expense + Administrative & Other",
         "expandable": true
@@ -737,7 +737,7 @@
       },
       {
         "label": "Other Income/(Expense)",
-        "level": 0,
+        "level": 1,
         "type": "subtotal",
         "formula": "Interest Income + Dividend Income + Gain on Sale + Other Income + Interest Expense",
         "expandable": true,
@@ -793,7 +793,7 @@
       },
       {
         "label": "Taxes",
-        "level": 0,
+        "level": 1,
         "type": "subtotal",
         "formula": "Federal Taxes + State Taxes + Local Taxes",
         "expandable": true
