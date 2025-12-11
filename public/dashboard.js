@@ -2106,7 +2106,7 @@ function renderRevenueTable(labels, datasets) {
     const values = datasets.map(ds => ds.data[i] || 0);
     
     datasets.forEach(ds => {
-      const v = ds.data[i] || 0;
+      const v = Math.round(ds.data[i] || 0);
       row += `<td>$${v.toLocaleString()}</td>`;
     });
     
@@ -2606,7 +2606,7 @@ function renderAccountTable(labels, datasets) {
     const values = datasets.map(ds => ds.data[i] || 0);
     
     datasets.forEach(ds => {
-      const v = ds.data[i] || 0;
+      const v = Math.round(ds.data[i] || 0);
       const formatted = v < 0 
         ? `<span class="growth-negative">($${Math.abs(v).toLocaleString()})</span>`
         : `$${v.toLocaleString()}`;
