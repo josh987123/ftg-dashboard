@@ -916,7 +916,6 @@ button, .nav-item, .config-header, .dropdown-item {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-left: 12px;
   padding: 6px 8px;
   background: var(--surface-2);
   border-radius: 4px;
