@@ -48,6 +48,11 @@ button, .nav-item, .config-header, .dropdown-item {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Prevent tap highlight flash on iOS */
+button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* CONFIG PANEL - Collapsible Configuration Options */
 .config-panel {
   background: #fff;
@@ -2939,6 +2944,99 @@ button, .nav-item, .config-header, .dropdown-item {
   .btn-primary:active,
   .btn-secondary:active {
     transform: scale(0.97);
+  }
+  
+  /* Saved views controls - larger touch targets */
+  .saved-views-select {
+    min-height: 44px;
+    font-size: 16px;
+    max-width: none;
+  }
+  
+  .save-view-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  .delete-view-btn {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+  
+  .saved-views-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  /* AI analysis panel touch improvements */
+  .ai-analysis-header {
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+  
+  .ai-run-btn {
+    min-height: 36px;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+  
+  /* Login box touch improvements */
+  .login-box input {
+    min-height: 48px;
+    font-size: 16px;
+  }
+  
+  .login-box button {
+    min-height: 48px;
+    font-size: 16px;
+  }
+  
+  /* Config panel header touch target */
+  .config-header {
+    min-height: 48px;
+  }
+  
+  /* Table row touch targets for expandable rows */
+  .is-expandable td:first-child,
+  .bs-expandable td:first-child {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  
+  /* Export dropdown touch target */
+  .export-dropdown-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Range slider thumbs - larger for touch */
+  .range-container input[type="range"]::-webkit-slider-thumb {
+    height: 32px;
+    width: 32px;
+    margin-top: -12.5px;
+  }
+  
+  .range-container input[type="range"]::-moz-range-thumb {
+    height: 32px;
+    width: 32px;
+  }
+  
+  /* Modal close button */
+  .modal-close {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 24px;
+  }
+  
+  /* Matrix tabs touch targets */
+  .is-matrix-tab,
+  .bs-matrix-tab {
+    min-height: 44px;
+    padding: 10px 16px;
   }
 }
 
