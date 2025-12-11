@@ -4287,7 +4287,11 @@ function initIncomeStatementControls() {
   showThousands.onchange = () => { renderIncomeStatement(); saveIncomeStatementConfig(); };
   
   const excludeCurrent = document.getElementById("isExcludeCurrent");
-  excludeCurrent.onchange = () => { renderIncomeStatement(); saveIncomeStatementConfig(); };
+  excludeCurrent.onchange = () => { 
+    populatePeriodOptions();
+    renderIncomeStatement(); 
+    saveIncomeStatementConfig(); 
+  };
   
   const detailRadios = document.querySelectorAll('input[name="isDetailLevel"]');
   detailRadios.forEach(radio => {
@@ -4611,7 +4615,8 @@ function populatePeriodOptions() {
   const periodType = document.getElementById("isPeriodType").value;
   const periodSelect = document.getElementById("isPeriodSelect");
   
-  const months = getAvailableMonths();
+  // Get months with exclude filter applied for dropdowns
+  const months = getAvailableMonths(true);
   if (months.length === 0) return;
   
   const now = new Date();
@@ -4668,14 +4673,24 @@ function populatePeriodOptions() {
   ).join("");
 }
 
-function getAvailableMonths() {
+function getAvailableMonths(respectExclude = false) {
   const allMonths = new Set();
   Object.values(isGLLookup).forEach(acctData => {
     Object.keys(acctData).forEach(k => {
       if (/^\d{4}-\d{2}$/.test(k)) allMonths.add(k);
     });
   });
-  return Array.from(allMonths).sort();
+  let months = Array.from(allMonths).sort();
+  
+  // Filter out current month if exclude is checked
+  if (respectExclude) {
+    const excludeCurrent = document.getElementById("isExcludeCurrent")?.checked;
+    if (excludeCurrent) {
+      const currentMonthKey = getCurrentMonthKey();
+      months = months.filter(m => m !== currentMonthKey);
+    }
+  }
+  return months;
 }
 
 function getCurrentMonthKey() {
@@ -5681,9 +5696,12 @@ function populateBSPeriodOptions() {
   
   if (months.length === 0) return;
   
+  // Filter out current month if exclude is checked
   const excludeCurrentMonth = document.getElementById("bsExcludeCurrentMonth")?.checked || false;
-  if (excludeCurrentMonth && months.length > 0) {
-    months = months.slice(0, -1);
+  if (excludeCurrentMonth) {
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    months = months.filter(m => m !== currentMonthKey);
   }
   
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
