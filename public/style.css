@@ -94,7 +94,7 @@ button, .nav-item, .config-header, .dropdown-item {
   padding: 12px 14px;
   transition: max-height 0.3s ease, padding 0.3s ease;
   overflow: hidden;
-  background: #f3f4f6;
+  background: #e5e7eb;
 }
 
 .config-body.collapsed {
@@ -149,7 +149,7 @@ button, .nav-item, .config-header, .dropdown-item {
 
 .saved-views-select:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
@@ -158,7 +158,7 @@ button, .nav-item, .config-header, .dropdown-item {
   font-size: 11px;
   font-weight: 500;
   color: #fff;
-  background: var(--accent);
+  background: #2563eb;
   border: none;
   border-radius: 4px;
   cursor: pointer;
