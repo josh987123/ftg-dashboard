@@ -267,6 +267,8 @@ function updateOverviewCharts() {
   const currentMonth = now.getMonth() + 1;
   const currentMonthKey = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
   
+  const needPriorForYoY = viewType === "monthly" || viewType === "quarterly";
+  
   let labels = [];
   let periods = [];
   let priorPeriods = [];
@@ -277,7 +279,7 @@ function updateOverviewCharts() {
       const key = `${year}-${String(m).padStart(2, "0")}`;
       labels.push(monthNames[m - 1]);
       periods.push([key]);
-      if (compare) {
+      if (compare || needPriorForYoY) {
         priorPeriods.push([`${year - 1}-${String(m).padStart(2, "0")}`]);
       }
     }
@@ -288,10 +290,10 @@ function updateOverviewCharts() {
       const priorQMonths = [];
       for (let m = (q - 1) * 3 + 1; m <= q * 3; m++) {
         qMonths.push(`${year}-${String(m).padStart(2, "0")}`);
-        if (compare) priorQMonths.push(`${year - 1}-${String(m).padStart(2, "0")}`);
+        if (compare || needPriorForYoY) priorQMonths.push(`${year - 1}-${String(m).padStart(2, "0")}`);
       }
       periods.push(qMonths);
-      if (compare) priorPeriods.push(priorQMonths);
+      if (compare || needPriorForYoY) priorPeriods.push(priorQMonths);
     }
   } else {
     for (let y = rangeStart; y <= rangeEnd; y++) {
@@ -341,7 +343,7 @@ function updateOverviewCharts() {
     metrics.opProfit.values.push(opInc);
     metrics.opMargin.values.push(rev ? (opInc / rev) * 100 : 0);
     
-    if (compare && priorPeriods[idx]) {
+    if ((compare || needPriorForYoY) && priorPeriods[idx]) {
       const priorRows = buildIncomeStatementRows(priorPeriods[idx], groups);
       const pRevRow = priorRows.find(r => r.label === "Revenue");
       const pGpRow = priorRows.find(r => r.label === "Gross Profit");
@@ -382,19 +384,24 @@ function updateOverviewCharts() {
 
 function updateOverviewStats(metrics, labels) {
   const statConfigs = [
-    { key: "revenue", avgId: "revenueAvg", highId: "revenueHigh", lowId: "revenueLow", cagrId: "revenueCagr", highPeriodId: "revenueHighPeriod", lowPeriodId: "revenueLowPeriod", isPercent: false },
-    { key: "grossProfit", avgId: "grossProfitAvg", highId: "grossProfitHigh", lowId: "grossProfitLow", cagrId: "grossProfitCagr", highPeriodId: "grossProfitHighPeriod", lowPeriodId: "grossProfitLowPeriod", isPercent: false },
-    { key: "grossMargin", avgId: "grossMarginAvg", highId: "grossMarginHigh", lowId: "grossMarginLow", cagrId: "grossMarginCagr", highPeriodId: "grossMarginHighPeriod", lowPeriodId: "grossMarginLowPeriod", isPercent: true },
-    { key: "opex", avgId: "opexAvg", highId: "opexHigh", lowId: "opexLow", cagrId: "opexCagr", highPeriodId: "opexHighPeriod", lowPeriodId: "opexLowPeriod", isPercent: false },
-    { key: "opProfit", avgId: "opProfitAvg", highId: "opProfitHigh", lowId: "opProfitLow", cagrId: "opProfitCagr", highPeriodId: "opProfitHighPeriod", lowPeriodId: "opProfitLowPeriod", isPercent: false },
-    { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", highPeriodId: "opMarginHighPeriod", lowPeriodId: "opMarginLowPeriod", isPercent: true }
+    { key: "revenue", avgId: "revenueAvg", highId: "revenueHigh", lowId: "revenueLow", cagrId: "revenueCagr", highPeriodId: "revenueHighPeriod", lowPeriodId: "revenueLowPeriod", growthLabelId: "revenueGrowthLabel", isPercent: false },
+    { key: "grossProfit", avgId: "grossProfitAvg", highId: "grossProfitHigh", lowId: "grossProfitLow", cagrId: "grossProfitCagr", highPeriodId: "grossProfitHighPeriod", lowPeriodId: "grossProfitLowPeriod", growthLabelId: "grossProfitGrowthLabel", isPercent: false },
+    { key: "grossMargin", avgId: "grossMarginAvg", highId: "grossMarginHigh", lowId: "grossMarginLow", cagrId: "grossMarginCagr", highPeriodId: "grossMarginHighPeriod", lowPeriodId: "grossMarginLowPeriod", growthLabelId: "grossMarginGrowthLabel", isPercent: true },
+    { key: "opex", avgId: "opexAvg", highId: "opexHigh", lowId: "opexLow", cagrId: "opexCagr", highPeriodId: "opexHighPeriod", lowPeriodId: "opexLowPeriod", growthLabelId: "opexGrowthLabel", isPercent: false },
+    { key: "opProfit", avgId: "opProfitAvg", highId: "opProfitHigh", lowId: "opProfitLow", cagrId: "opProfitCagr", highPeriodId: "opProfitHighPeriod", lowPeriodId: "opProfitLowPeriod", growthLabelId: "opProfitGrowthLabel", isPercent: false },
+    { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", highPeriodId: "opMarginHighPeriod", lowPeriodId: "opMarginLowPeriod", growthLabelId: "opMarginGrowthLabel", isPercent: true }
   ];
   
   const viewType = document.getElementById("overviewViewType").value;
   const year = parseInt(document.getElementById("overviewYear").value);
   
+  const growthLabel = viewType === "annual" ? "CAGR" : "YoY";
+  
   statConfigs.forEach(cfg => {
+    document.getElementById(cfg.growthLabelId).textContent = growthLabel;
+    
     const allValues = metrics[cfg.key].values;
+    const priorValues = metrics[cfg.key].priorValues || [];
     const values = allValues.filter(v => v !== 0);
     
     if (values.length === 0) {
@@ -425,16 +432,37 @@ function updateOverviewStats(metrics, labels) {
       lowPeriod = lowPeriod + " " + year;
     }
     
-    let cagr = 0;
-    const firstNonZeroIdx = allValues.findIndex(v => v !== 0);
-    const lastNonZeroIdx = allValues.length - 1 - [...allValues].reverse().findIndex(v => v !== 0);
+    let growthRate = 0;
     
-    if (firstNonZeroIdx !== -1 && lastNonZeroIdx !== -1 && firstNonZeroIdx !== lastNonZeroIdx) {
-      const startVal = allValues[firstNonZeroIdx];
-      const endVal = allValues[lastNonZeroIdx];
-      const periods = lastNonZeroIdx - firstNonZeroIdx;
-      if (startVal > 0 && endVal > 0 && periods > 0) {
-        cagr = (Math.pow(endVal / startVal, 1 / periods) - 1) * 100;
+    if (viewType === "annual") {
+      const firstNonZeroIdx = allValues.findIndex(v => v !== 0);
+      const lastNonZeroIdx = allValues.length - 1 - [...allValues].reverse().findIndex(v => v !== 0);
+      
+      if (firstNonZeroIdx !== -1 && lastNonZeroIdx !== -1 && firstNonZeroIdx !== lastNonZeroIdx) {
+        const startVal = allValues[firstNonZeroIdx];
+        const endVal = allValues[lastNonZeroIdx];
+        const periods = lastNonZeroIdx - firstNonZeroIdx;
+        if (startVal > 0 && endVal > 0 && periods > 0) {
+          growthRate = (Math.pow(endVal / startVal, 1 / periods) - 1) * 100;
+        }
+      }
+    } else {
+      let totalCurrent = 0;
+      let totalPrior = 0;
+      let validPairs = 0;
+      
+      for (let i = 0; i < allValues.length; i++) {
+        const currVal = allValues[i];
+        const priorVal = priorValues[i] || 0;
+        if (currVal !== 0 && priorVal !== 0) {
+          totalCurrent += currVal;
+          totalPrior += priorVal;
+          validPairs++;
+        }
+      }
+      
+      if (totalPrior > 0 && validPairs > 0) {
+        growthRate = ((totalCurrent - totalPrior) / totalPrior) * 100;
       }
     }
     
@@ -452,8 +480,8 @@ function updateOverviewStats(metrics, labels) {
     document.getElementById(cfg.lowPeriodId).textContent = lowPeriod;
     
     const cagrEl = document.getElementById(cfg.cagrId);
-    cagrEl.textContent = cagr.toFixed(1) + "%";
-    cagrEl.className = cagr < 0 ? "stat-value negative" : "stat-value";
+    cagrEl.textContent = growthRate.toFixed(1) + "%";
+    cagrEl.className = growthRate < 0 ? "stat-value negative" : "stat-value";
   });
 }
 
