@@ -164,6 +164,7 @@ document.addEventListener("DOMContentLoaded", function() {
   setupExportButtons();
   setupChartExpandButtons();
   updateDataAsOfDates();
+  initAllSavedViewsHandlers();
 });
 
 function updateDataAsOfDates() {
@@ -385,6 +386,503 @@ const SavedViewManager = {
 
 function generateViewId() {
   return "view_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+}
+
+/* ------------------------------------------------------------
+   SAVED VIEWS - Page-specific collect/apply functions
+------------------------------------------------------------ */
+const PageViewConfigs = {
+  overview: {
+    collect() {
+      const metrics = {};
+      document.querySelectorAll("[data-metric]").forEach(cb => {
+        metrics[cb.dataset.metric] = cb.checked;
+      });
+      return {
+        viewType: document.getElementById("overviewViewType")?.value,
+        year: document.getElementById("overviewYear")?.value,
+        compare: document.getElementById("overviewCompare")?.checked,
+        trendline: document.getElementById("overviewTrend")?.checked,
+        dataLabels: document.getElementById("overviewDataLabels")?.checked,
+        excludeCurrent: document.getElementById("overviewExclude")?.checked,
+        rangeStart: document.getElementById("overviewRangeStart")?.value,
+        rangeEnd: document.getElementById("overviewRangeEnd")?.value,
+        metrics
+      };
+    },
+    apply(cfg) {
+      if (!cfg) return;
+      if (cfg.viewType) {
+        const el = document.getElementById("overviewViewType");
+        if (el) el.value = cfg.viewType;
+      }
+      if (cfg.year) {
+        const el = document.getElementById("overviewYear");
+        if (el && el.querySelector(`option[value="${cfg.year}"]`)) el.value = cfg.year;
+      }
+      if (cfg.compare !== undefined) {
+        const el = document.getElementById("overviewCompare");
+        if (el) el.checked = cfg.compare;
+      }
+      if (cfg.trendline !== undefined) {
+        const el = document.getElementById("overviewTrend");
+        if (el) el.checked = cfg.trendline;
+      }
+      if (cfg.dataLabels !== undefined) {
+        const el = document.getElementById("overviewDataLabels");
+        if (el) el.checked = cfg.dataLabels;
+      }
+      if (cfg.excludeCurrent !== undefined) {
+        const el = document.getElementById("overviewExclude");
+        if (el) el.checked = cfg.excludeCurrent;
+      }
+      if (cfg.rangeStart) {
+        const el = document.getElementById("overviewRangeStart");
+        if (el) {
+          el.value = cfg.rangeStart;
+          const label = document.getElementById("overviewRangeStartLabel");
+          if (label) label.textContent = cfg.rangeStart;
+        }
+      }
+      if (cfg.rangeEnd) {
+        const el = document.getElementById("overviewRangeEnd");
+        if (el) {
+          el.value = cfg.rangeEnd;
+          const label = document.getElementById("overviewRangeEndLabel");
+          if (label) label.textContent = cfg.rangeEnd;
+        }
+      }
+      if (cfg.metrics) {
+        Object.keys(cfg.metrics).forEach(metric => {
+          const cb = document.querySelector(`[data-metric="${metric}"]`);
+          if (cb) cb.checked = cfg.metrics[metric];
+        });
+      }
+      const viewType = document.getElementById("overviewViewType")?.value;
+      const yearWrapper = document.getElementById("overviewYearWrapper");
+      const rangeWrapper = document.getElementById("overviewRangeWrapper");
+      if (viewType === "annual") {
+        if (yearWrapper) yearWrapper.classList.add("hidden");
+        if (rangeWrapper) rangeWrapper.classList.remove("hidden");
+      } else {
+        if (yearWrapper) yearWrapper.classList.remove("hidden");
+        if (rangeWrapper) rangeWrapper.classList.add("hidden");
+      }
+    },
+    refresh() {
+      applyMetricVisibility();
+      if (typeof updateOverviewCharts === "function") updateOverviewCharts();
+    }
+  },
+  
+  revenue: {
+    collect() {
+      return {
+        viewType: document.getElementById("revViewType")?.value,
+        year: document.getElementById("revYear")?.value,
+        compare: document.getElementById("revCompare")?.checked,
+        trendline: document.getElementById("revTrendline")?.checked,
+        dataLabels: document.getElementById("revDataLabels")?.checked,
+        excludeCurrent: document.getElementById("revExcludeCurrent")?.checked,
+        rangeStart: document.getElementById("revRangeStart")?.value,
+        rangeEnd: document.getElementById("revRangeEnd")?.value
+      };
+    },
+    apply(cfg) {
+      if (!cfg) return;
+      if (cfg.viewType) {
+        const el = document.getElementById("revViewType");
+        if (el) el.value = cfg.viewType;
+      }
+      if (cfg.year) {
+        const el = document.getElementById("revYear");
+        if (el && el.querySelector(`option[value="${cfg.year}"]`)) el.value = cfg.year;
+      }
+      if (cfg.compare !== undefined) {
+        const el = document.getElementById("revCompare");
+        if (el) el.checked = cfg.compare;
+      }
+      if (cfg.trendline !== undefined) {
+        const el = document.getElementById("revTrendline");
+        if (el) el.checked = cfg.trendline;
+      }
+      if (cfg.dataLabels !== undefined) {
+        const el = document.getElementById("revDataLabels");
+        if (el) el.checked = cfg.dataLabels;
+      }
+      if (cfg.excludeCurrent !== undefined) {
+        const el = document.getElementById("revExcludeCurrent");
+        if (el) el.checked = cfg.excludeCurrent;
+      }
+      if (cfg.rangeStart) {
+        const el = document.getElementById("revRangeStart");
+        if (el) {
+          el.value = cfg.rangeStart;
+          const label = document.getElementById("revRangeStartLabel");
+          if (label) label.textContent = cfg.rangeStart;
+        }
+      }
+      if (cfg.rangeEnd) {
+        const el = document.getElementById("revRangeEnd");
+        if (el) {
+          el.value = cfg.rangeEnd;
+          const label = document.getElementById("revRangeEndLabel");
+          if (label) label.textContent = cfg.rangeEnd;
+        }
+      }
+      const view = cfg.viewType || "monthly";
+      const yearWrap = document.getElementById("revYearWrapper");
+      const rangeWrap = document.getElementById("revRangeWrapper");
+      const compareLabel = document.getElementById("revCompare")?.closest("label");
+      if (view === "annual") {
+        if (yearWrap) yearWrap.style.display = "none";
+        if (rangeWrap) rangeWrap.classList.remove("hidden");
+        if (compareLabel) compareLabel.style.display = "none";
+      } else {
+        if (yearWrap) yearWrap.style.display = "flex";
+        if (rangeWrap) rangeWrap.classList.add("hidden");
+        if (compareLabel) compareLabel.style.display = "";
+      }
+    },
+    refresh() {
+      if (revenueDataCache && typeof updateRevenueView === "function") updateRevenueView(revenueDataCache);
+    }
+  },
+  
+  accounts: {
+    collect() {
+      return {
+        account: document.getElementById("acctSelect")?.value,
+        viewType: document.getElementById("acctViewType")?.value,
+        year: document.getElementById("acctYear")?.value,
+        trendline: document.getElementById("acctTrendline")?.checked,
+        dataLabels: document.getElementById("acctDataLabels")?.checked,
+        excludeCurrent: document.getElementById("acctExcludeCurrent")?.checked,
+        rangeStart: document.getElementById("acctRangeStart")?.value,
+        rangeEnd: document.getElementById("acctRangeEnd")?.value
+      };
+    },
+    apply(cfg) {
+      if (!cfg) return;
+      if (cfg.account) {
+        const el = document.getElementById("acctSelect");
+        if (el && el.querySelector(`option[value="${cfg.account}"]`)) el.value = cfg.account;
+      }
+      if (cfg.viewType) {
+        const el = document.getElementById("acctViewType");
+        if (el) el.value = cfg.viewType;
+      }
+      if (cfg.year) {
+        const el = document.getElementById("acctYear");
+        if (el && el.querySelector(`option[value="${cfg.year}"]`)) el.value = cfg.year;
+      }
+      if (cfg.trendline !== undefined) {
+        const el = document.getElementById("acctTrendline");
+        if (el) el.checked = cfg.trendline;
+      }
+      if (cfg.dataLabels !== undefined) {
+        const el = document.getElementById("acctDataLabels");
+        if (el) el.checked = cfg.dataLabels;
+      }
+      if (cfg.excludeCurrent !== undefined) {
+        const el = document.getElementById("acctExcludeCurrent");
+        if (el) el.checked = cfg.excludeCurrent;
+      }
+      if (cfg.rangeStart) {
+        const el = document.getElementById("acctRangeStart");
+        if (el) {
+          el.value = cfg.rangeStart;
+          const label = document.getElementById("acctRangeStartLabel");
+          if (label) label.textContent = cfg.rangeStart;
+        }
+      }
+      if (cfg.rangeEnd) {
+        const el = document.getElementById("acctRangeEnd");
+        if (el) {
+          el.value = cfg.rangeEnd;
+          const label = document.getElementById("acctRangeEndLabel");
+          if (label) label.textContent = cfg.rangeEnd;
+        }
+      }
+      const view = cfg.viewType || "monthly";
+      const yearWrap = document.getElementById("acctYearWrapper");
+      const rangeWrap = document.getElementById("acctRangeWrapper");
+      const compareLabel = document.getElementById("acctCompare")?.closest("label");
+      if (view === "annual") {
+        if (yearWrap) yearWrap.style.display = "none";
+        if (rangeWrap) rangeWrap.classList.remove("hidden");
+        if (compareLabel) compareLabel.style.display = "none";
+      } else {
+        if (yearWrap) yearWrap.style.display = "flex";
+        if (rangeWrap) rangeWrap.classList.add("hidden");
+        if (compareLabel) compareLabel.style.display = "";
+      }
+    },
+    refresh() {
+      if (acctDataCache && typeof updateAccountView === "function") updateAccountView(acctDataCache);
+    }
+  },
+  
+  incomeStatement: {
+    collect() {
+      return {
+        viewMode: document.getElementById("isViewMode")?.value,
+        periodType: document.getElementById("isPeriodType")?.value,
+        periodSelect: document.getElementById("isPeriodSelect")?.value,
+        compare: document.querySelector('input[name="isCompareRadio"]:checked')?.value,
+        detailLevel: document.querySelector('input[name="isDetailLevel"]:checked')?.value,
+        showThousands: document.getElementById("isShowThousands")?.checked,
+        excludeCurrent: document.getElementById("isExcludeCurrent")?.checked,
+        matrixMonths: document.getElementById("isMatrixMonths")?.value,
+        matrixYearStart: document.getElementById("isMatrixYearStart")?.value,
+        matrixYearEnd: document.getElementById("isMatrixYearEnd")?.value
+      };
+    },
+    apply(cfg) {
+      if (!cfg) return;
+      if (cfg.viewMode) {
+        const el = document.getElementById("isViewMode");
+        if (el) el.value = cfg.viewMode;
+      }
+      if (cfg.periodType) {
+        const el = document.getElementById("isPeriodType");
+        if (el) el.value = cfg.periodType;
+      }
+      if (cfg.periodSelect) {
+        const el = document.getElementById("isPeriodSelect");
+        if (el && el.querySelector(`option[value="${cfg.periodSelect}"]`)) el.value = cfg.periodSelect;
+      }
+      if (cfg.compare) {
+        const radio = document.querySelector(`input[name="isCompareRadio"][value="${cfg.compare}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (cfg.detailLevel) {
+        const radio = document.querySelector(`input[name="isDetailLevel"][value="${cfg.detailLevel}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (cfg.showThousands !== undefined) {
+        const el = document.getElementById("isShowThousands");
+        if (el) el.checked = cfg.showThousands;
+      }
+      if (cfg.excludeCurrent !== undefined) {
+        const el = document.getElementById("isExcludeCurrent");
+        if (el) el.checked = cfg.excludeCurrent;
+      }
+      if (cfg.matrixMonths) {
+        const el = document.getElementById("isMatrixMonths");
+        if (el) el.value = cfg.matrixMonths;
+      }
+      if (cfg.matrixYearStart) {
+        const el = document.getElementById("isMatrixYearStart");
+        if (el) {
+          el.value = cfg.matrixYearStart;
+          const label = document.getElementById("isMatrixYearStartLabel");
+          if (label) label.textContent = cfg.matrixYearStart;
+        }
+      }
+      if (cfg.matrixYearEnd) {
+        const el = document.getElementById("isMatrixYearEnd");
+        if (el) {
+          el.value = cfg.matrixYearEnd;
+          const label = document.getElementById("isMatrixYearEndLabel");
+          if (label) label.textContent = cfg.matrixYearEnd;
+        }
+      }
+      if (typeof updateMatrixControlsVisibility === "function") updateMatrixControlsVisibility();
+    },
+    refresh() {
+      if (typeof renderIncomeStatement === "function") renderIncomeStatement();
+    }
+  },
+  
+  balanceSheet: {
+    collect() {
+      return {
+        viewMode: document.getElementById("bsViewMode")?.value,
+        periodType: document.getElementById("bsPeriodType")?.value,
+        periodSelect: document.getElementById("bsPeriodSelect")?.value,
+        compare: document.querySelector('input[name="bsCompareRadio"]:checked')?.value,
+        detailLevel: document.querySelector('input[name="bsDetailLevel"]:checked')?.value,
+        showThousands: document.getElementById("bsShowThousands")?.checked,
+        excludeCurrentMonth: document.getElementById("bsExcludeCurrentMonth")?.checked,
+        matrixYear: document.getElementById("bsMatrixYear")?.value,
+        matrixYearStart: document.getElementById("bsMatrixYearStart")?.value,
+        matrixYearEnd: document.getElementById("bsMatrixYearEnd")?.value
+      };
+    },
+    apply(cfg) {
+      if (!cfg) return;
+      if (cfg.viewMode) {
+        const el = document.getElementById("bsViewMode");
+        if (el) el.value = cfg.viewMode;
+      }
+      if (cfg.periodType) {
+        const el = document.getElementById("bsPeriodType");
+        if (el) el.value = cfg.periodType;
+      }
+      if (cfg.periodSelect) {
+        const el = document.getElementById("bsPeriodSelect");
+        if (el && el.querySelector(`option[value="${cfg.periodSelect}"]`)) el.value = cfg.periodSelect;
+      }
+      if (cfg.compare) {
+        const radio = document.querySelector(`input[name="bsCompareRadio"][value="${cfg.compare}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (cfg.detailLevel) {
+        const radio = document.querySelector(`input[name="bsDetailLevel"][value="${cfg.detailLevel}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (cfg.showThousands !== undefined) {
+        const el = document.getElementById("bsShowThousands");
+        if (el) el.checked = cfg.showThousands;
+      }
+      if (cfg.excludeCurrentMonth !== undefined) {
+        const el = document.getElementById("bsExcludeCurrentMonth");
+        if (el) el.checked = cfg.excludeCurrentMonth;
+      }
+      if (cfg.matrixYear) {
+        const el = document.getElementById("bsMatrixYear");
+        if (el && el.querySelector(`option[value="${cfg.matrixYear}"]`)) el.value = cfg.matrixYear;
+      }
+      if (cfg.matrixYearStart) {
+        const el = document.getElementById("bsMatrixYearStart");
+        if (el) {
+          el.value = cfg.matrixYearStart;
+          const label = document.getElementById("bsMatrixYearStartLabel");
+          if (label) label.textContent = cfg.matrixYearStart;
+        }
+      }
+      if (cfg.matrixYearEnd) {
+        const el = document.getElementById("bsMatrixYearEnd");
+        if (el) {
+          el.value = cfg.matrixYearEnd;
+          const label = document.getElementById("bsMatrixYearEndLabel");
+          if (label) label.textContent = cfg.matrixYearEnd;
+        }
+      }
+      if (typeof updateBSControlVisibility === "function") updateBSControlVisibility();
+    },
+    refresh() {
+      if (typeof renderBalanceSheet === "function") renderBalanceSheet();
+    }
+  }
+};
+
+/* ------------------------------------------------------------
+   SAVED VIEWS - UI Helper Functions
+------------------------------------------------------------ */
+function populateSavedViewsDropdown(page, selectId) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  
+  const pageData = SavedViewManager.getPageViews(page);
+  const views = pageData.views || {};
+  const selectedId = pageData.selectedId;
+  
+  select.innerHTML = '<option value="">-- Current Settings --</option>';
+  
+  Object.keys(views).forEach(id => {
+    const view = views[id];
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = view.name;
+    select.appendChild(option);
+  });
+  
+  if (selectedId && views[selectedId]) {
+    select.value = selectedId;
+  }
+  
+  updateDeleteButtonState(page);
+}
+
+function updateDeleteButtonState(page) {
+  const mapping = {
+    overview: "overviewDeleteViewBtn",
+    revenue: "revDeleteViewBtn",
+    accounts: "acctDeleteViewBtn",
+    incomeStatement: "isDeleteViewBtn",
+    balanceSheet: "bsDeleteViewBtn"
+  };
+  const selectMapping = {
+    overview: "overviewSavedViews",
+    revenue: "revSavedViews",
+    accounts: "acctSavedViews",
+    incomeStatement: "isSavedViews",
+    balanceSheet: "bsSavedViews"
+  };
+  
+  const deleteBtn = document.getElementById(mapping[page]);
+  const select = document.getElementById(selectMapping[page]);
+  
+  if (deleteBtn && select) {
+    deleteBtn.disabled = !select.value;
+  }
+}
+
+function setupSavedViewsHandlers(page, selectId, saveBtnId, deleteBtnId) {
+  const select = document.getElementById(selectId);
+  const saveBtn = document.getElementById(saveBtnId);
+  const deleteBtn = document.getElementById(deleteBtnId);
+  
+  if (!select || !saveBtn || !deleteBtn) return;
+  
+  select.onchange = () => {
+    const viewId = select.value;
+    SavedViewManager.selectView(page, viewId || null);
+    
+    if (viewId) {
+      const view = SavedViewManager.getSelectedView(page);
+      if (view && view.config && PageViewConfigs[page]) {
+        PageViewConfigs[page].apply(view.config);
+        PageViewConfigs[page].refresh();
+      }
+    }
+    updateDeleteButtonState(page);
+  };
+  
+  saveBtn.onclick = () => {
+    const name = prompt("Enter a name for this view:");
+    if (!name || !name.trim()) return;
+    
+    const config = PageViewConfigs[page]?.collect();
+    if (config) {
+      const id = SavedViewManager.saveView(page, name.trim(), config);
+      populateSavedViewsDropdown(page, selectId);
+      select.value = id;
+      updateDeleteButtonState(page);
+    }
+  };
+  
+  deleteBtn.onclick = () => {
+    const viewId = select.value;
+    if (!viewId) return;
+    
+    const view = SavedViewManager.getPageViews(page).views[viewId];
+    if (!view) return;
+    
+    if (confirm(`Delete view "${view.name}"?`)) {
+      SavedViewManager.deleteView(page, viewId);
+      populateSavedViewsDropdown(page, selectId);
+      updateDeleteButtonState(page);
+    }
+  };
+  
+  updateDeleteButtonState(page);
+}
+
+function initAllSavedViewsHandlers() {
+  setupSavedViewsHandlers("overview", "overviewSavedViews", "overviewSaveViewBtn", "overviewDeleteViewBtn");
+  setupSavedViewsHandlers("revenue", "revSavedViews", "revSaveViewBtn", "revDeleteViewBtn");
+  setupSavedViewsHandlers("accounts", "acctSavedViews", "acctSaveViewBtn", "acctDeleteViewBtn");
+  setupSavedViewsHandlers("incomeStatement", "isSavedViews", "isSaveViewBtn", "isDeleteViewBtn");
+  setupSavedViewsHandlers("balanceSheet", "bsSavedViews", "bsSaveViewBtn", "bsDeleteViewBtn");
+  
+  populateSavedViewsDropdown("overview", "overviewSavedViews");
+  populateSavedViewsDropdown("revenue", "revSavedViews");
+  populateSavedViewsDropdown("accounts", "acctSavedViews");
+  populateSavedViewsDropdown("incomeStatement", "isSavedViews");
+  populateSavedViewsDropdown("balanceSheet", "bsSavedViews");
 }
 
 let isLoadingPreferences = false;
