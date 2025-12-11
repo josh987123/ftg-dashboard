@@ -153,21 +153,28 @@ button, .nav-item, .config-header, .dropdown-item {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
-.save-view-btn {
+.save-view-btn,
+.rev-controls .save-view-btn,
+.is-controls .save-view-btn,
+.config-panel .save-view-btn {
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 500;
-  color: #fff;
-  background: #2563eb;
-  border: none;
+  color: #fff !important;
+  background: #2563eb !important;
+  border: none !important;
   border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.2s;
+  box-shadow: none !important;
 }
 
-.save-view-btn:hover {
-  background: #1d4ed8;
+.save-view-btn:hover,
+.rev-controls .save-view-btn:hover,
+.is-controls .save-view-btn:hover,
+.config-panel .save-view-btn:hover {
+  background: #1d4ed8 !important;
 }
 
 .delete-view-btn {
