@@ -97,7 +97,29 @@ Preferred communication style: Simple, everyday language.
     - Current Year Net Income (Jan 1 through selected date)
   - Multi-level expand/collapse with recursive parent visibility checking
   - Mobile-responsive styling at 768px and 500px breakpoints
-- **Statement of Cash Flows**: Under construction - will display cash flow statements
+- **Statement of Cash Flows**: Full cash flow statement using the indirect method:
+  - Period types: Month, Quarter, Year, YTD, TTM
+  - Comparison modes: None, Prior Period, Prior Year (with $ and % variance)
+  - View modes: Single Period or Matrix (12 months, 4 quarters, multi-year range)
+  - Detail level selector: Summary/Medium/Account
+  - Expand/collapse hierarchy with disclosure icons
+  - **Operating Activities** (expandable, green highlight):
+    - Net Income (from Income Statement)
+    - Adjustments for Non-Cash Items: Depreciation (6060), Amortization (7220), Gain/Loss on Asset Disposal (8020)
+    - Changes in Working Capital: AR (1100, 1105), Underbillings (1050), Employee Advances, AP (2000, 2005, 2010), Overbillings (2120), Accrued Expenses
+  - **Investing Activities** (expandable, blue highlight):
+    - Capital Expenditures: Equipment (1310), Vehicles (1400), Furniture (1320), Leasehold (1300)
+    - Changes in Intangible Assets (1750, 1800)
+    - Changes in Other Long-Term Assets
+  - **Financing Activities** (expandable, yellow highlight):
+    - Changes in Debt: Credit Cards, Bridge Bank Loan, Vehicle Notes, Other Notes
+    - Capital Contributions (3030-3034)
+    - Distributions to Owners (3025, 3035, 3036)
+    - Treasury Stock (3010)
+  - **NET CHANGE IN CASH**: Operating + Investing + Financing
+  - **Beginning/Ending Cash Balance**: Reconciliation to Balance Sheet
+  - AI Analysis: Claude Sonnet 4 CFO-level insights with 4 sections
+  - Saved views support per user
 - **Over/Under Bill**: Under construction - will track billing variances
 - **Receivables/Payables**: Under construction - will manage AR/AP tracking
 - **Job Analytics**: Under construction - will provide job-level performance metrics

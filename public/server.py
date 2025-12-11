@@ -223,6 +223,85 @@ Period: {period_info}
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/analyze-cash-flow', methods=['POST', 'OPTIONS'])
+def api_analyze_cash_flow():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        statement_data = data.get('statementData')
+        period_info = data.get('periodInfo', '')
+        
+        if not statement_data:
+            return jsonify({'error': 'Missing statement data'}), 400
+        
+        client = get_anthropic_client()
+        
+        system_prompt = """You are a CFO analyzing a construction company's Statement of Cash Flows.
+
+You must respond with ONLY a valid JSON object containing exactly these 4 arrays:
+{
+  "key_observations": ["observation 1", "observation 2", "observation 3"],
+  "positive_indicators": ["indicator 1", "indicator 2", "indicator 3"],
+  "areas_of_concern": ["concern 1", "concern 2", "concern 3"],
+  "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"]
+}
+
+STRICT RULES:
+- Return ONLY the JSON object, no other text before or after
+- Each array must have exactly 3-4 items
+- Each item is one concise sentence with specific dollar amounts
+- Round all dollar amounts to whole numbers - use $3.8M not $3.84M, use $150K not $150,234
+- Focus on cash flow dynamics: operating cash generation, investment decisions, financing activities
+- DO NOT add any other fields or sections"""
+
+        user_prompt = f"""Analyze this Statement of Cash Flows for FTG Builders:
+
+Period: {period_info}
+
+{statement_data}"""
+
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=2048,
+            system=system_prompt,
+            messages=[
+                {"role": "user", "content": user_prompt}
+            ]
+        )
+        
+        import json
+        
+        content_block = response.content[0]
+        raw_content = getattr(content_block, 'text', '') or ""
+        
+        result = json.loads(raw_content)
+        
+        analysis = "## Key Observations\n"
+        for item in result.get("key_observations", [])[:4]:
+            analysis += f"- {item}\n"
+        analysis += "\n## Positive Indicators\n"
+        for item in result.get("positive_indicators", [])[:4]:
+            analysis += f"- {item}\n"
+        analysis += "\n## Areas of Concern\n"
+        for item in result.get("areas_of_concern", [])[:4]:
+            analysis += f"- {item}\n"
+        analysis += "\n## Recommendations\n"
+        for item in result.get("recommendations", [])[:4]:
+            analysis += f"- {item}\n"
+        
+        return jsonify({'success': True, 'analysis': analysis})
+        
+    except Exception as e:
+        import traceback
+        print(f"Cash Flow AI Analysis error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/')
 def serve_index():
     response = send_from_directory('.', 'index.html')

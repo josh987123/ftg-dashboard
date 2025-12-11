@@ -1306,5 +1306,300 @@
         "highlight": "total"
       }
     ]
+  },
+  "cash_flow": {
+    "groups": [
+      {
+        "label": "OPERATING ACTIVITIES",
+        "level": 0,
+        "type": "header"
+      },
+      {
+        "label": "Net Income",
+        "level": 1,
+        "type": "detail",
+        "specialCalc": "net_income",
+        "parent": "Cash from Operating Activities"
+      },
+      {
+        "label": "Depreciation",
+        "level": 2,
+        "type": "detail",
+        "accounts": [6060],
+        "addBack": true,
+        "parent": "Adjustments for Non-Cash Items"
+      },
+      {
+        "label": "Amortization",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7220],
+        "addBack": true,
+        "parent": "Adjustments for Non-Cash Items"
+      },
+      {
+        "label": "Gain/Loss on Asset Disposal",
+        "level": 2,
+        "type": "detail",
+        "accounts": [8020],
+        "negate": true,
+        "parent": "Adjustments for Non-Cash Items"
+      },
+      {
+        "label": "Adjustments for Non-Cash Items",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Depreciation + Amortization + Gain/Loss on Asset Disposal",
+        "expandable": true,
+        "parent": "Cash from Operating Activities"
+      },
+      {
+        "label": "(Increase)/Decrease in Accounts Receivable",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1100, 1105],
+        "changeCalc": "decrease_is_positive",
+        "parent": "Changes in Working Capital"
+      },
+      {
+        "label": "(Increase)/Decrease in Underbillings",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1050],
+        "changeCalc": "decrease_is_positive",
+        "parent": "Changes in Working Capital"
+      },
+      {
+        "label": "(Increase)/Decrease in Employee Advances",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1030, 1110, 1120, 1130],
+        "changeCalc": "decrease_is_positive",
+        "parent": "Changes in Working Capital"
+      },
+      {
+        "label": "Increase/(Decrease) in Accounts Payable",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2000, 2005, 2010],
+        "changeCalc": "increase_is_positive",
+        "parent": "Changes in Working Capital"
+      },
+      {
+        "label": "Increase/(Decrease) in Overbillings",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2120],
+        "changeCalc": "increase_is_positive",
+        "parent": "Changes in Working Capital"
+      },
+      {
+        "label": "Increase/(Decrease) in Accrued Expenses",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2021, 2023, 2025, 2028, 2030, 2070, 2100, 2110],
+        "changeCalc": "increase_is_positive",
+        "parent": "Changes in Working Capital"
+      },
+      {
+        "label": "Changes in Working Capital",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "(Increase)/Decrease in Accounts Receivable + (Increase)/Decrease in Underbillings + (Increase)/Decrease in Employee Advances + Increase/(Decrease) in Accounts Payable + Increase/(Decrease) in Overbillings + Increase/(Decrease) in Accrued Expenses",
+        "expandable": true,
+        "parent": "Cash from Operating Activities"
+      },
+      {
+        "label": "Cash from Operating Activities",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Net Income + Adjustments for Non-Cash Items + Changes in Working Capital",
+        "expandable": true,
+        "highlight": "operating"
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "INVESTING ACTIVITIES",
+        "level": 0,
+        "type": "header"
+      },
+      {
+        "label": "Capital Expenditures - Equipment",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1310],
+        "changeCalc": "increase_is_negative",
+        "parent": "Capital Expenditures"
+      },
+      {
+        "label": "Capital Expenditures - Vehicles",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1400],
+        "changeCalc": "increase_is_negative",
+        "parent": "Capital Expenditures"
+      },
+      {
+        "label": "Capital Expenditures - Furniture",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1320],
+        "changeCalc": "increase_is_negative",
+        "parent": "Capital Expenditures"
+      },
+      {
+        "label": "Capital Expenditures - Leasehold",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1300],
+        "changeCalc": "increase_is_negative",
+        "parent": "Capital Expenditures"
+      },
+      {
+        "label": "Capital Expenditures",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Capital Expenditures - Equipment + Capital Expenditures - Vehicles + Capital Expenditures - Furniture + Capital Expenditures - Leasehold",
+        "expandable": true,
+        "parent": "Cash from Investing Activities"
+      },
+      {
+        "label": "Changes in Intangible Assets",
+        "level": 1,
+        "type": "detail",
+        "accounts": [1750, 1800],
+        "changeCalc": "increase_is_negative",
+        "parent": "Cash from Investing Activities"
+      },
+      {
+        "label": "Changes in Other Long-Term Assets",
+        "level": 1,
+        "type": "detail",
+        "accounts": [1500, 1600, 1610, 1700, 1900],
+        "changeCalc": "increase_is_negative",
+        "parent": "Cash from Investing Activities"
+      },
+      {
+        "label": "Cash from Investing Activities",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Capital Expenditures + Changes in Intangible Assets + Changes in Other Long-Term Assets",
+        "expandable": true,
+        "highlight": "investing"
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "FINANCING ACTIVITIES",
+        "level": 0,
+        "type": "header"
+      },
+      {
+        "label": "Changes in Credit Card Debt",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2015, 2016, 2017, 2018],
+        "changeCalc": "increase_is_positive",
+        "parent": "Changes in Debt"
+      },
+      {
+        "label": "Changes in Bridge Bank Loan",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2500],
+        "changeCalc": "increase_is_positive",
+        "parent": "Changes in Debt"
+      },
+      {
+        "label": "Changes in Vehicle Notes",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2510],
+        "changeCalc": "increase_is_positive",
+        "parent": "Changes in Debt"
+      },
+      {
+        "label": "Changes in Other Notes",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2515, 2130, 2140, 2200, 2250],
+        "changeCalc": "increase_is_positive",
+        "parent": "Changes in Debt"
+      },
+      {
+        "label": "Changes in Debt",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Changes in Credit Card Debt + Changes in Bridge Bank Loan + Changes in Vehicle Notes + Changes in Other Notes",
+        "expandable": true,
+        "parent": "Cash from Financing Activities"
+      },
+      {
+        "label": "Capital Contributions",
+        "level": 1,
+        "type": "detail",
+        "accounts": [3030, 3031, 3032, 3033, 3034],
+        "changeCalc": "increase_is_positive",
+        "parent": "Cash from Financing Activities"
+      },
+      {
+        "label": "Distributions to Owners",
+        "level": 1,
+        "type": "detail",
+        "accounts": [3025, 3035, 3036],
+        "changeCalc": "increase_is_negative",
+        "parent": "Cash from Financing Activities"
+      },
+      {
+        "label": "Treasury Stock",
+        "level": 1,
+        "type": "detail",
+        "accounts": [3010],
+        "changeCalc": "increase_is_negative",
+        "parent": "Cash from Financing Activities"
+      },
+      {
+        "label": "Cash from Financing Activities",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Changes in Debt + Capital Contributions + Distributions to Owners + Treasury Stock",
+        "expandable": true,
+        "highlight": "financing"
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "NET CHANGE IN CASH",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Cash from Operating Activities + Cash from Investing Activities + Cash from Financing Activities",
+        "highlight": "netChange"
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "Beginning Cash Balance",
+        "level": 0,
+        "type": "detail",
+        "accounts": [1001, 1003, 1004, 1005, 1006, 1007, 1040, 1090],
+        "specialCalc": "beginning_balance"
+      },
+      {
+        "label": "ENDING CASH BALANCE",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Beginning Cash Balance + NET CHANGE IN CASH",
+        "highlight": "total"
+      }
+    ]
   }
 }

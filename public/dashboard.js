@@ -249,6 +249,7 @@ function initNavigation() {
       if (id === "accounts") initAccountModule();
       if (id === "incomeStatement") loadIncomeStatement();
       if (id === "balanceSheet") initBalanceSheet();
+      if (id === "cashFlows") loadCashFlowStatement();
     });
   });
 }
@@ -765,6 +766,73 @@ const PageViewConfigs = {
     refresh() {
       if (typeof renderBalanceSheet === "function") renderBalanceSheet();
     }
+  },
+  
+  cashFlows: {
+    collect() {
+      return {
+        viewMode: document.getElementById("cfViewMode")?.value,
+        periodType: document.getElementById("cfPeriodType")?.value,
+        periodSelect: document.getElementById("cfPeriodSelect")?.value,
+        compare: document.querySelector('input[name="cfCompareRadio"]:checked')?.value,
+        detailLevel: document.querySelector('input[name="cfDetailLevel"]:checked')?.value,
+        showThousands: document.getElementById("cfShowThousands")?.checked,
+        excludeCurrent: document.getElementById("cfExcludeCurrent")?.checked,
+        matrixYearStart: document.getElementById("cfMatrixYearStart")?.value,
+        matrixYearEnd: document.getElementById("cfMatrixYearEnd")?.value
+      };
+    },
+    apply(cfg) {
+      if (!cfg) return;
+      if (cfg.viewMode) {
+        const el = document.getElementById("cfViewMode");
+        if (el) el.value = cfg.viewMode;
+      }
+      if (cfg.periodType) {
+        const el = document.getElementById("cfPeriodType");
+        if (el) el.value = cfg.periodType;
+      }
+      if (cfg.periodSelect) {
+        const el = document.getElementById("cfPeriodSelect");
+        if (el && el.querySelector(`option[value="${cfg.periodSelect}"]`)) el.value = cfg.periodSelect;
+      }
+      if (cfg.compare) {
+        const radio = document.querySelector(`input[name="cfCompareRadio"][value="${cfg.compare}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (cfg.detailLevel) {
+        const radio = document.querySelector(`input[name="cfDetailLevel"][value="${cfg.detailLevel}"]`);
+        if (radio) radio.checked = true;
+      }
+      if (cfg.showThousands !== undefined) {
+        const el = document.getElementById("cfShowThousands");
+        if (el) el.checked = cfg.showThousands;
+      }
+      if (cfg.excludeCurrent !== undefined) {
+        const el = document.getElementById("cfExcludeCurrent");
+        if (el) el.checked = cfg.excludeCurrent;
+      }
+      if (cfg.matrixYearStart) {
+        const el = document.getElementById("cfMatrixYearStart");
+        if (el) {
+          el.value = cfg.matrixYearStart;
+          const label = document.getElementById("cfMatrixYearStartLabel");
+          if (label) label.textContent = cfg.matrixYearStart;
+        }
+      }
+      if (cfg.matrixYearEnd) {
+        const el = document.getElementById("cfMatrixYearEnd");
+        if (el) {
+          el.value = cfg.matrixYearEnd;
+          const label = document.getElementById("cfMatrixYearEndLabel");
+          if (label) label.textContent = cfg.matrixYearEnd;
+        }
+      }
+      if (typeof updateCFMatrixControlsVisibility === "function") updateCFMatrixControlsVisibility();
+    },
+    refresh() {
+      if (typeof renderCashFlowStatement === "function") renderCashFlowStatement();
+    }
   }
 };
 
@@ -801,11 +869,13 @@ function updateDeleteButtonState(page) {
     revenue: "revDeleteViewBtn",
     accounts: "acctDeleteViewBtn",
     incomeStatement: "isDeleteViewBtn",
-    balanceSheet: "bsDeleteViewBtn"
+    balanceSheet: "bsDeleteViewBtn",
+    cashFlows: "cfDeleteViewBtn"
   };
   const selectMapping = {
     overview: "overviewSavedViews",
     revenue: "revSavedViews",
+    cashFlows: "cfSavedViews",
     accounts: "acctSavedViews",
     incomeStatement: "isSavedViews",
     balanceSheet: "bsSavedViews"
@@ -876,12 +946,14 @@ function initAllSavedViewsHandlers() {
   setupSavedViewsHandlers("accounts", "acctSavedViews", "acctSaveViewBtn", "acctDeleteViewBtn");
   setupSavedViewsHandlers("incomeStatement", "isSavedViews", "isSaveViewBtn", "isDeleteViewBtn");
   setupSavedViewsHandlers("balanceSheet", "bsSavedViews", "bsSaveViewBtn", "bsDeleteViewBtn");
+  setupSavedViewsHandlers("cashFlows", "cfSavedViews", "cfSaveViewBtn", "cfDeleteViewBtn");
   
   populateSavedViewsDropdown("overview", "overviewSavedViews");
   populateSavedViewsDropdown("revenue", "revSavedViews");
   populateSavedViewsDropdown("accounts", "acctSavedViews");
   populateSavedViewsDropdown("incomeStatement", "isSavedViews");
   populateSavedViewsDropdown("balanceSheet", "bsSavedViews");
+  populateSavedViewsDropdown("cashFlows", "cfSavedViews");
 }
 
 let isLoadingPreferences = false;
@@ -6304,6 +6376,977 @@ function renderBalanceSheetMatrix() {
   
   tbody.innerHTML = bodyHtml;
   attachBSToggleListeners();
+}
+
+/* ============================================================
+   STATEMENT OF CASH FLOWS
+============================================================ */
+let cfData = null;
+let cfAccountGroups = null;
+let cfGLLookup = {};
+let cfRowStates = {};
+let cfControlsInitialized = false;
+let cfInceptionDate = "2015-01";
+
+async function loadCashFlowStatement() {
+  if (!cfData || !cfAccountGroups) {
+    try {
+      const [financialsRes, groupsRes] = await Promise.all([
+        fetch("/data/financials.json"),
+        fetch("/data/account_groups.json")
+      ]);
+      cfData = await financialsRes.json();
+      cfAccountGroups = await groupsRes.json();
+      buildCFGLLookup();
+    } catch (err) {
+      console.error("Failed to load Cash Flow data:", err);
+      return;
+    }
+  }
+  
+  if (!cfControlsInitialized) {
+    initCashFlowControls();
+    cfControlsInitialized = true;
+  }
+  
+  renderCashFlowStatement();
+}
+
+function buildCFGLLookup() {
+  cfGLLookup = {};
+  const glHistory = cfData.gl_history_all || [];
+  
+  glHistory.forEach(row => {
+    const acctNum = parseInt(row.Account_Num || row.Account, 10);
+    if (isNaN(acctNum)) return;
+    
+    if (!cfGLLookup[acctNum]) {
+      cfGLLookup[acctNum] = {};
+    }
+    
+    Object.keys(row).forEach(key => {
+      if (/^\d{4}-\d{2}$/.test(key)) {
+        const val = parseFloat(row[key]) || 0;
+        cfGLLookup[acctNum][key] = val;
+      }
+    });
+  });
+}
+
+function getCFAvailableMonths() {
+  const months = new Set();
+  Object.values(cfGLLookup).forEach(acctData => {
+    Object.keys(acctData).forEach(key => {
+      if (/^\d{4}-\d{2}$/.test(key)) months.add(key);
+    });
+  });
+  return Array.from(months).sort();
+}
+
+function initCashFlowControls() {
+  const viewMode = document.getElementById("cfViewMode");
+  const periodType = document.getElementById("cfPeriodType");
+  const periodSelect = document.getElementById("cfPeriodSelect");
+  const showThousands = document.getElementById("cfShowThousands");
+  const excludeCurrent = document.getElementById("cfExcludeCurrent");
+  const matrixYearStart = document.getElementById("cfMatrixYearStart");
+  const matrixYearEnd = document.getElementById("cfMatrixYearEnd");
+  
+  populateCFPeriodOptions();
+  
+  viewMode.onchange = () => {
+    updateCFMatrixControlsVisibility();
+    renderCashFlowStatement();
+    saveCashFlowConfig();
+  };
+  
+  periodType.onchange = () => {
+    populateCFPeriodOptions();
+    updateCFMatrixControlsVisibility();
+    renderCashFlowStatement();
+    saveCashFlowConfig();
+  };
+  
+  periodSelect.onchange = () => { renderCashFlowStatement(); saveCashFlowConfig(); };
+  
+  const compareRadios = document.querySelectorAll('input[name="cfCompareRadio"]');
+  compareRadios.forEach(radio => {
+    radio.onchange = () => { renderCashFlowStatement(); saveCashFlowConfig(); };
+  });
+  
+  const detailRadios = document.querySelectorAll('input[name="cfDetailLevel"]');
+  detailRadios.forEach(radio => {
+    radio.onchange = () => {
+      applyCFDetailLevel(radio.value);
+      renderCashFlowStatement();
+      saveCashFlowConfig();
+    };
+  });
+  
+  if (showThousands) {
+    showThousands.onchange = () => { renderCashFlowStatement(); saveCashFlowConfig(); };
+  }
+  
+  if (excludeCurrent) {
+    excludeCurrent.onchange = () => { 
+      populateCFPeriodOptions();
+      renderCashFlowStatement(); 
+      saveCashFlowConfig(); 
+    };
+  }
+  
+  if (matrixYearStart) {
+    matrixYearStart.oninput = () => {
+      document.getElementById("cfMatrixYearStartLabel").textContent = matrixYearStart.value;
+      if (parseInt(matrixYearStart.value) > parseInt(matrixYearEnd.value)) {
+        matrixYearEnd.value = matrixYearStart.value;
+        document.getElementById("cfMatrixYearEndLabel").textContent = matrixYearEnd.value;
+      }
+      renderCashFlowStatement();
+      saveCashFlowConfig();
+    };
+  }
+  
+  if (matrixYearEnd) {
+    matrixYearEnd.oninput = () => {
+      document.getElementById("cfMatrixYearEndLabel").textContent = matrixYearEnd.value;
+      if (parseInt(matrixYearEnd.value) < parseInt(matrixYearStart.value)) {
+        matrixYearStart.value = matrixYearEnd.value;
+        document.getElementById("cfMatrixYearStartLabel").textContent = matrixYearStart.value;
+      }
+      renderCashFlowStatement();
+      saveCashFlowConfig();
+    };
+  }
+  
+  const initialDetail = document.querySelector('input[name="cfDetailLevel"]:checked');
+  applyCFDetailLevel(initialDetail ? initialDetail.value : 'summary');
+  
+  updateCFMatrixControlsVisibility();
+  initCFAiAnalysis();
+}
+
+function updateCFMatrixControlsVisibility() {
+  const viewMode = document.getElementById("cfViewMode").value;
+  const periodType = document.getElementById("cfPeriodType").value;
+  const singleControls = document.getElementById("cfSingleControls");
+  const matrixControls = document.getElementById("cfMatrixControls");
+  const yearControls = document.getElementById("cfMatrixYearControls");
+  const periodSelect = document.getElementById("cfPeriodSelect");
+  const periodSelectLabel = document.getElementById("cfPeriodSelectLabel");
+  const showSubtotalWrapper = document.getElementById("cfShowSubtotalWrapper");
+  const periodTypeSelect = document.getElementById("cfPeriodType");
+  const ytdOption = periodTypeSelect.querySelector('option[value="ytd"]');
+  const ttmOption = periodTypeSelect.querySelector('option[value="ttm"]');
+  
+  if (viewMode === "matrix") {
+    singleControls.classList.add("hidden");
+    matrixControls.classList.remove("hidden");
+    if (showSubtotalWrapper) showSubtotalWrapper.classList.remove("hidden");
+    
+    if (ytdOption) ytdOption.disabled = true;
+    if (ttmOption) ttmOption.disabled = true;
+    
+    if (periodType === "ytd" || periodType === "ttm") {
+      periodTypeSelect.value = "month";
+      populateCFPeriodOptions();
+    }
+    
+    if (periodType === "year") {
+      yearControls.classList.remove("hidden");
+      periodSelect.classList.add("hidden");
+      if (periodSelectLabel) periodSelectLabel.classList.add("hidden");
+    } else {
+      yearControls.classList.add("hidden");
+      periodSelect.classList.remove("hidden");
+      if (periodSelectLabel) periodSelectLabel.classList.remove("hidden");
+    }
+  } else {
+    singleControls.classList.remove("hidden");
+    matrixControls.classList.add("hidden");
+    periodSelect.classList.remove("hidden");
+    if (periodSelectLabel) periodSelectLabel.classList.remove("hidden");
+    if (showSubtotalWrapper) showSubtotalWrapper.classList.add("hidden");
+    
+    if (ytdOption) ytdOption.disabled = false;
+    if (ttmOption) ttmOption.disabled = false;
+  }
+}
+
+function populateCFPeriodOptions() {
+  const periodType = document.getElementById("cfPeriodType").value;
+  const periodSelect = document.getElementById("cfPeriodSelect");
+  const months = getCFAvailableMonths();
+  const options = [];
+  
+  const excludeCurrent = document.getElementById("cfExcludeCurrent")?.checked || false;
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const filteredMonths = excludeCurrent ? months.filter(m => m !== currentMonthKey) : months;
+  
+  if (periodType === "month") {
+    filteredMonths.slice(-24).reverse().forEach(m => {
+      const [y, mo] = m.split("-");
+      const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
+      options.push({ value: m, label: `${monthName} ${y}` });
+    });
+  } else if (periodType === "quarter") {
+    const quarters = new Set();
+    filteredMonths.forEach(m => {
+      const [y, mo] = m.split("-");
+      const q = Math.ceil(mo / 3);
+      quarters.add(`${y}-Q${q}`);
+    });
+    Array.from(quarters).sort().reverse().forEach(q => {
+      options.push({ value: q, label: q });
+    });
+  } else if (periodType === "year") {
+    const years = new Set();
+    filteredMonths.forEach(m => years.add(m.split("-")[0]));
+    Array.from(years).sort().reverse().forEach(y => {
+      options.push({ value: y, label: y });
+    });
+  } else if (periodType === "ytd") {
+    const years = new Set();
+    filteredMonths.forEach(m => years.add(m.split("-")[0]));
+    Array.from(years).sort().reverse().forEach(y => {
+      for (let mo = 12; mo >= 1; mo--) {
+        const key = `${y}-${String(mo).padStart(2, "0")}`;
+        if (filteredMonths.includes(key)) {
+          const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
+          options.push({ value: `${y}-YTD-${mo}`, label: `YTD ${monthName} ${y}` });
+          break;
+        }
+      }
+    });
+  } else if (periodType === "ttm") {
+    filteredMonths.slice(-24).reverse().forEach(m => {
+      const [y, mo] = m.split("-");
+      const monthName = new Date(y, mo - 1).toLocaleString("default", { month: "short" });
+      options.push({ value: `TTM-${m}`, label: `TTM ending ${monthName} ${y}` });
+    });
+  }
+  
+  periodSelect.innerHTML = options.map(o => 
+    `<option value="${o.value}">${o.label}</option>`
+  ).join("");
+}
+
+function applyCFDetailLevel(level) {
+  const mediumExpandRows = [
+    "cf-row-Cash_from_Operating_Activities",
+    "cf-row-Cash_from_Investing_Activities",
+    "cf-row-Cash_from_Financing_Activities"
+  ];
+  
+  const allExpandableRows = [
+    "cf-row-Cash_from_Operating_Activities",
+    "cf-row-Adjustments_for_Non-Cash_Items",
+    "cf-row-Changes_in_Working_Capital",
+    "cf-row-Cash_from_Investing_Activities",
+    "cf-row-Capital_Expenditures",
+    "cf-row-Cash_from_Financing_Activities",
+    "cf-row-Changes_in_Debt"
+  ];
+  
+  if (level === "summary") {
+    allExpandableRows.forEach(rowId => {
+      cfRowStates[rowId] = false;
+    });
+  } else if (level === "medium") {
+    allExpandableRows.forEach(rowId => {
+      cfRowStates[rowId] = false;
+    });
+    mediumExpandRows.forEach(rowId => {
+      cfRowStates[rowId] = true;
+    });
+  } else if (level === "account") {
+    allExpandableRows.forEach(rowId => {
+      cfRowStates[rowId] = true;
+    });
+  }
+}
+
+function getCFPeriodMonths(periodType, periodValue) {
+  const months = getCFAvailableMonths();
+  const excludeCurrent = document.getElementById("cfExcludeCurrent")?.checked || false;
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  
+  if (periodType === "month") {
+    if (excludeCurrent && periodValue === currentMonthKey) return [];
+    return [periodValue];
+  } else if (periodType === "quarter") {
+    const [y, qStr] = periodValue.split("-Q");
+    const q = parseInt(qStr);
+    const startMonth = (q - 1) * 3 + 1;
+    let result = [];
+    for (let m = startMonth; m < startMonth + 3; m++) {
+      const key = `${y}-${String(m).padStart(2, "0")}`;
+      if (months.includes(key)) {
+        if (excludeCurrent && key === currentMonthKey) continue;
+        result.push(key);
+      }
+    }
+    return result;
+  } else if (periodType === "year") {
+    let result = months.filter(m => m.startsWith(periodValue + "-"));
+    if (excludeCurrent) {
+      result = result.filter(m => m !== currentMonthKey);
+    }
+    return result;
+  } else if (periodType === "ytd") {
+    const match = periodValue.match(/(\d{4})-YTD-(\d+)/);
+    if (!match) return [];
+    const year = match[1];
+    const endMonth = parseInt(match[2]);
+    let result = [];
+    for (let m = 1; m <= endMonth; m++) {
+      const key = `${year}-${String(m).padStart(2, "0")}`;
+      if (months.includes(key)) {
+        if (excludeCurrent && key === currentMonthKey) continue;
+        result.push(key);
+      }
+    }
+    return result;
+  } else if (periodType === "ttm") {
+    const match = periodValue.match(/TTM-(\d{4}-\d{2})/);
+    if (!match) return [];
+    const endKey = match[1];
+    const endIdx = months.indexOf(endKey);
+    if (endIdx < 0) return [];
+    const startIdx = Math.max(0, endIdx - 11);
+    let result = months.slice(startIdx, endIdx + 1);
+    if (excludeCurrent) {
+      result = result.filter(m => m !== currentMonthKey);
+    }
+    return result;
+  }
+  return [];
+}
+
+function getCFAccountBalance(acctNum, period) {
+  if (!cfGLLookup[acctNum]) return 0;
+  return cfGLLookup[acctNum][period] || 0;
+}
+
+function getCFCumulativeBalance(acctNum, endPeriod) {
+  if (!cfGLLookup[acctNum]) return 0;
+  const months = getCFAvailableMonths().filter(m => m <= endPeriod);
+  return months.reduce((sum, m) => sum + (cfGLLookup[acctNum][m] || 0), 0);
+}
+
+function getCFPeriodActivity(acctNum, periodMonths) {
+  if (!cfGLLookup[acctNum]) return 0;
+  return periodMonths.reduce((sum, m) => sum + (cfGLLookup[acctNum][m] || 0), 0);
+}
+
+function getCFBalanceChange(accounts, periodMonths, changeType) {
+  if (!accounts || accounts.length === 0 || periodMonths.length === 0) return 0;
+  
+  const allMonths = getCFAvailableMonths();
+  const firstPeriodMonth = periodMonths[0];
+  const lastPeriodMonth = periodMonths[periodMonths.length - 1];
+  
+  const firstMonthIdx = allMonths.indexOf(firstPeriodMonth);
+  const priorMonth = firstMonthIdx > 0 ? allMonths[firstMonthIdx - 1] : null;
+  
+  let beginningBalance = 0;
+  let endingBalance = 0;
+  
+  accounts.forEach(acctNum => {
+    if (priorMonth) {
+      beginningBalance += getCFCumulativeBalance(acctNum, priorMonth);
+    }
+    endingBalance += getCFCumulativeBalance(acctNum, lastPeriodMonth);
+  });
+  
+  const change = endingBalance - beginningBalance;
+  
+  if (changeType === "decrease_is_positive") {
+    return -change;
+  } else if (changeType === "increase_is_positive") {
+    return change;
+  } else if (changeType === "increase_is_negative") {
+    return -change;
+  }
+  
+  return change;
+}
+
+function buildCashFlowRows(periodMonths, groups) {
+  const calculatedValues = {};
+  const rows = [];
+  
+  const allMonths = getCFAvailableMonths();
+  const firstPeriodMonth = periodMonths[0];
+  const firstMonthIdx = allMonths.indexOf(firstPeriodMonth);
+  const priorMonth = firstMonthIdx > 0 ? allMonths[firstMonthIdx - 1] : null;
+  
+  groups.forEach((group, idx) => {
+    const row = {
+      label: group.label,
+      level: group.level || 0,
+      type: group.type,
+      expandable: group.expandable || false,
+      parent: group.parent || null,
+      highlight: group.highlight || null,
+      id: `cf-row-${group.label.replace(/[^a-zA-Z0-9]/g, "_")}`,
+      value: 0
+    };
+    
+    if (group.type === "spacer" || group.type === "header") {
+      rows.push(row);
+      return;
+    }
+    
+    if (group.specialCalc === "net_income") {
+      let netIncome = 0;
+      const incomeAccounts = Object.keys(cfGLLookup).map(Number).filter(n => 
+        (n >= 4000 && n < 8000) || (n >= 8000 && n < 9000)
+      );
+      incomeAccounts.forEach(acctNum => {
+        const activity = getCFPeriodActivity(acctNum, periodMonths);
+        if ((acctNum >= 4000 && acctNum < 5000) || (acctNum >= 8000 && acctNum < 9000)) {
+          netIncome += activity;
+        } else {
+          netIncome -= activity;
+        }
+      });
+      row.value = netIncome;
+      calculatedValues[group.label] = netIncome;
+    } else if (group.specialCalc === "beginning_balance") {
+      let balance = 0;
+      if (priorMonth && group.accounts) {
+        group.accounts.forEach(acctNum => {
+          balance += getCFCumulativeBalance(acctNum, priorMonth);
+        });
+      }
+      row.value = balance;
+      calculatedValues[group.label] = balance;
+    } else if (group.accounts) {
+      if (group.changeCalc) {
+        row.value = getCFBalanceChange(group.accounts, periodMonths, group.changeCalc);
+      } else if (group.addBack) {
+        let total = 0;
+        group.accounts.forEach(acctNum => {
+          total += getCFPeriodActivity(acctNum, periodMonths);
+        });
+        row.value = total;
+      } else if (group.negate) {
+        let total = 0;
+        group.accounts.forEach(acctNum => {
+          total += getCFPeriodActivity(acctNum, periodMonths);
+        });
+        row.value = -total;
+      } else {
+        let total = 0;
+        group.accounts.forEach(acctNum => {
+          total += getCFPeriodActivity(acctNum, periodMonths);
+        });
+        row.value = total;
+      }
+      calculatedValues[group.label] = row.value;
+    } else if (group.formula) {
+      const formula = group.formula;
+      let value = 0;
+      const parts = formula.split(/\s*([+-])\s*/);
+      let op = "+";
+      parts.forEach(part => {
+        part = part.trim();
+        if (part === "+" || part === "-") {
+          op = part;
+        } else if (part && calculatedValues.hasOwnProperty(part)) {
+          if (op === "+") {
+            value += calculatedValues[part];
+          } else {
+            value -= calculatedValues[part];
+          }
+        }
+      });
+      row.value = value;
+      calculatedValues[group.label] = value;
+    }
+    
+    rows.push(row);
+  });
+  
+  return rows;
+}
+
+function isCFRowVisible(groups, idx) {
+  const row = groups[idx];
+  if (!row.parent) return true;
+  
+  for (let i = idx - 1; i >= 0; i--) {
+    if (groups[i].label === row.parent) {
+      if (!groups[i].expandable) return isCFRowVisible(groups, i);
+      const parentId = `cf-row-${groups[i].label.replace(/[^a-zA-Z0-9]/g, "_")}`;
+      if (cfRowStates[parentId] === true) {
+        return isCFRowVisible(groups, i);
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
+function formatCFNumber(value, inThousands = false) {
+  if (value === 0 || value === null || value === undefined) return "-";
+  
+  let displayValue = inThousands ? value / 1000 : value;
+  const isNegative = displayValue < 0;
+  displayValue = Math.abs(Math.round(displayValue));
+  
+  const formatted = displayValue.toLocaleString();
+  return isNegative ? `(${formatted})` : formatted;
+}
+
+function renderCashFlowStatement() {
+  if (!cfAccountGroups || !cfAccountGroups.cash_flow) {
+    console.log("Cash flow groups not loaded yet");
+    return;
+  }
+  
+  const viewMode = document.getElementById("cfViewMode").value;
+  const periodType = document.getElementById("cfPeriodType").value;
+  const periodValue = document.getElementById("cfPeriodSelect").value;
+  const groups = cfAccountGroups.cash_flow.groups;
+  const thead = document.getElementById("cfTableHead");
+  const tbody = document.getElementById("cfTableBody");
+  const footnote = document.getElementById("cfPartialFootnote");
+  const showThousands = document.getElementById("cfShowThousands")?.checked || false;
+  const detailLevel = document.querySelector('input[name="cfDetailLevel"]:checked')?.value || "summary";
+  
+  applyCFDetailLevel(detailLevel);
+  
+  if (viewMode === "matrix") {
+    renderCashFlowMatrix();
+    return;
+  }
+  
+  if (!periodValue) return;
+  
+  const periodMonths = getCFPeriodMonths(periodType, periodValue);
+  if (periodMonths.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="2">No data available for this period</td></tr>';
+    return;
+  }
+  
+  const compare = document.querySelector('input[name="cfCompareRadio"]:checked')?.value || "none";
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  let currentLabel = "";
+  if (periodType === "month") {
+    const [y, mo] = periodValue.split("-");
+    currentLabel = `${monthNames[parseInt(mo) - 1]} ${y}`;
+  } else if (periodType === "quarter") {
+    currentLabel = periodValue;
+  } else if (periodType === "year") {
+    currentLabel = periodValue;
+  } else if (periodType === "ytd") {
+    const match = periodValue.match(/(\d{4})-YTD-(\d+)/);
+    if (match) {
+      currentLabel = `YTD ${monthNames[parseInt(match[2]) - 1]} ${match[1]}`;
+    }
+  } else if (periodType === "ttm") {
+    const match = periodValue.match(/TTM-(\d{4})-(\d{2})/);
+    if (match) {
+      currentLabel = `TTM ending ${monthNames[parseInt(match[2]) - 1]} ${match[1]}`;
+    }
+  }
+  
+  document.getElementById("cfDataAsOf").textContent = currentLabel;
+  
+  const rows = buildCashFlowRows(periodMonths, groups);
+  
+  let comparisonRows = null;
+  let compPeriodLabel = "";
+  
+  if (compare !== "none") {
+    let compPeriodMonths = [];
+    if (compare === "prior_year") {
+      if (periodType === "month") {
+        const [y, mo] = periodValue.split("-");
+        const priorYear = parseInt(y) - 1;
+        compPeriodMonths = getCFPeriodMonths("month", `${priorYear}-${mo}`);
+        compPeriodLabel = `${monthNames[parseInt(mo) - 1]} ${priorYear}`;
+      } else if (periodType === "year") {
+        const priorYear = parseInt(periodValue) - 1;
+        compPeriodMonths = getCFPeriodMonths("year", String(priorYear));
+        compPeriodLabel = String(priorYear);
+      }
+    } else if (compare === "prior_period") {
+      const allMonths = getCFAvailableMonths();
+      if (periodType === "month" && periodMonths.length > 0) {
+        const idx = allMonths.indexOf(periodMonths[0]);
+        if (idx > 0) {
+          compPeriodMonths = [allMonths[idx - 1]];
+          const [y, mo] = allMonths[idx - 1].split("-");
+          compPeriodLabel = `${monthNames[parseInt(mo) - 1]} ${y}`;
+        }
+      }
+    }
+    
+    if (compPeriodMonths.length > 0) {
+      comparisonRows = buildCashFlowRows(compPeriodMonths, groups);
+    }
+  }
+  
+  let headerHtml = "<tr><th>Account</th>";
+  if (comparisonRows) {
+    headerHtml += `<th>${compPeriodLabel}</th><th>${currentLabel}</th><th class="var-col-left">$ Var</th><th>% Var</th>`;
+  } else {
+    headerHtml += `<th>${currentLabel}</th>`;
+  }
+  headerHtml += "</tr>";
+  thead.innerHTML = headerHtml;
+  
+  let bodyHtml = "";
+  
+  rows.forEach((row, rowIdx) => {
+    if (row.type === "spacer") {
+      const colCount = comparisonRows ? 5 : 2;
+      bodyHtml += `<tr class="is-spacer-row"><td colspan="${colCount}"></td></tr>`;
+      return;
+    }
+    
+    const visible = isCFRowVisible(groups, rowIdx);
+    const hiddenClass = visible ? "" : "is-row-hidden";
+    
+    const typeClass = row.type === "header" ? "is-header" : 
+                      row.type === "subtotal" ? "is-subtotal" : "is-detail";
+    
+    const indentClass = row.level > 0 ? `is-indent-${Math.min(row.level, 3)}` : "";
+    
+    let highlightClass = "";
+    if (row.highlight === "operating") highlightClass = "cf-operating";
+    else if (row.highlight === "investing") highlightClass = "cf-investing";
+    else if (row.highlight === "financing") highlightClass = "cf-financing";
+    else if (row.highlight === "netChange") highlightClass = "is-major-total";
+    else if (row.highlight === "total") highlightClass = "is-major-total";
+    
+    let expandedClass = "";
+    if (row.expandable && cfRowStates[row.id] === true) {
+      expandedClass = "is-expanded-subtotal";
+    }
+    
+    let toggleHtml = "";
+    if (row.expandable) {
+      const expanded = cfRowStates[row.id] === true;
+      toggleHtml = `<span class="cf-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
+    } else if (row.parent && detailLevel !== "account") {
+      toggleHtml = `<span class="cf-toggle-placeholder"></span>`;
+    }
+    
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${highlightClass} ${expandedClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
+    
+    if (row.type === "header") {
+      if (comparisonRows) {
+        bodyHtml += `<td></td><td></td><td></td><td></td>`;
+      } else {
+        bodyHtml += `<td></td>`;
+      }
+    } else if (comparisonRows) {
+      const compRow = comparisonRows[rowIdx];
+      const currentVal = row.value;
+      const compVal = compRow ? compRow.value : 0;
+      const dollarVar = currentVal - compVal;
+      const pctVar = compVal !== 0 ? ((currentVal - compVal) / Math.abs(compVal)) * 100 : 0;
+      
+      bodyHtml += `<td>${formatCFNumber(compVal, showThousands)}</td>`;
+      bodyHtml += `<td>${formatCFNumber(currentVal, showThousands)}</td>`;
+      bodyHtml += `<td class="var-col-left ${dollarVar < 0 ? 'is-negative' : ''}">${formatCFNumber(dollarVar, showThousands)}</td>`;
+      bodyHtml += `<td class="${pctVar < 0 ? 'is-negative' : ''}">${compVal !== 0 ? pctVar.toFixed(1) + '%' : '-'}</td>`;
+    } else {
+      bodyHtml += `<td>${formatCFNumber(row.value, showThousands)}</td>`;
+    }
+    
+    bodyHtml += "</tr>";
+  });
+  
+  tbody.innerHTML = bodyHtml;
+  attachCFToggleListeners();
+  
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const hasPartial = periodMonths.includes(currentMonthKey);
+  
+  if (footnote) {
+    if (hasPartial) {
+      footnote.classList.remove("hidden");
+    } else {
+      footnote.classList.add("hidden");
+    }
+  }
+}
+
+function attachCFToggleListeners() {
+  document.querySelectorAll(".cf-toggle").forEach(toggle => {
+    toggle.onclick = () => {
+      const rowId = toggle.dataset.row;
+      cfRowStates[rowId] = !cfRowStates[rowId];
+      renderCashFlowStatement();
+    };
+  });
+}
+
+function renderCashFlowMatrix() {
+  const periodType = document.getElementById("cfPeriodType").value;
+  const periodSelect = document.getElementById("cfPeriodSelect");
+  const yearStart = document.getElementById("cfMatrixYearStart").value;
+  const yearEnd = document.getElementById("cfMatrixYearEnd").value;
+  const showThousands = document.getElementById("cfShowThousands")?.checked || false;
+  const groups = cfAccountGroups.cash_flow.groups;
+  const thead = document.getElementById("cfTableHead");
+  const tbody = document.getElementById("cfTableBody");
+  const detailLevel = document.querySelector('input[name="cfDetailLevel"]:checked')?.value || "summary";
+  
+  applyCFDetailLevel(detailLevel);
+  
+  const periods = [];
+  const allMonths = getCFAvailableMonths();
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const excludeCurrent = document.getElementById("cfExcludeCurrent")?.checked || false;
+  
+  if (periodType === "year") {
+    const startYr = parseInt(yearStart);
+    const endYr = parseInt(yearEnd);
+    for (let y = startYr; y <= endYr; y++) {
+      let yearMonths = allMonths.filter(m => m.startsWith(y + "-"));
+      if (excludeCurrent) {
+        yearMonths = yearMonths.filter(m => m !== currentMonthKey);
+      }
+      if (yearMonths.length > 0) {
+        periods.push({ label: String(y), months: yearMonths });
+      }
+    }
+  } else if (periodType === "quarter") {
+    const selYear = periodSelect.value || String(now.getFullYear());
+    for (let q = 1; q <= 4; q++) {
+      const startMonth = (q - 1) * 3 + 1;
+      let quarterMonths = [];
+      for (let m = startMonth; m < startMonth + 3; m++) {
+        const key = `${selYear}-${String(m).padStart(2, "0")}`;
+        if (allMonths.includes(key)) {
+          if (excludeCurrent && key === currentMonthKey) continue;
+          quarterMonths.push(key);
+        }
+      }
+      if (quarterMonths.length > 0) {
+        periods.push({ label: `Q${q}`, months: quarterMonths });
+      }
+    }
+  } else if (periodType === "month") {
+    const selYear = periodSelect.value || String(now.getFullYear());
+    for (let m = 1; m <= 12; m++) {
+      const key = `${selYear}-${String(m).padStart(2, "0")}`;
+      if (excludeCurrent && key === currentMonthKey) continue;
+      if (allMonths.includes(key)) {
+        periods.push({ label: monthNames[m - 1], months: [key] });
+      }
+    }
+  }
+  
+  if (periods.length === 0) {
+    tbody.innerHTML = '<tr><td>No data available</td></tr>';
+    return;
+  }
+  
+  const allRowsData = periods.map(p => buildCashFlowRows(p.months, groups));
+  
+  let headerHtml = "<tr><th>Account</th>";
+  periods.forEach(p => {
+    headerHtml += `<th>${p.label}</th>`;
+  });
+  headerHtml += "</tr>";
+  thead.innerHTML = headerHtml;
+  
+  let bodyHtml = "";
+  const rows = allRowsData[0];
+  
+  rows.forEach((row, rowIdx) => {
+    if (row.type === "spacer") {
+      bodyHtml += `<tr class="is-spacer-row"><td colspan="${periods.length + 1}"></td></tr>`;
+      return;
+    }
+    
+    const visible = isCFRowVisible(groups, rowIdx);
+    const hiddenClass = visible ? "" : "is-row-hidden";
+    
+    const typeClass = row.type === "header" ? "is-header" : 
+                      row.type === "subtotal" ? "is-subtotal" : "is-detail";
+    
+    const indentClass = row.level > 0 ? `is-indent-${Math.min(row.level, 3)}` : "";
+    
+    let highlightClass = "";
+    if (row.highlight === "operating") highlightClass = "cf-operating";
+    else if (row.highlight === "investing") highlightClass = "cf-investing";
+    else if (row.highlight === "financing") highlightClass = "cf-financing";
+    else if (row.highlight === "netChange") highlightClass = "is-major-total";
+    else if (row.highlight === "total") highlightClass = "is-major-total";
+    
+    let expandedClass = "";
+    if (row.expandable && cfRowStates[row.id] === true) {
+      expandedClass = "is-expanded-subtotal";
+    }
+    
+    let toggleHtml = "";
+    if (row.expandable) {
+      const expanded = cfRowStates[row.id] === true;
+      toggleHtml = `<span class="cf-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
+    } else if (row.parent && detailLevel !== "account") {
+      toggleHtml = `<span class="cf-toggle-placeholder"></span>`;
+    }
+    
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${highlightClass} ${expandedClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
+    
+    allRowsData.forEach(periodRows => {
+      const periodRow = periodRows[rowIdx];
+      if (row.type === "header") {
+        bodyHtml += `<td></td>`;
+      } else {
+        bodyHtml += `<td>${formatCFNumber(periodRow?.value, showThousands)}</td>`;
+      }
+    });
+    
+    bodyHtml += "</tr>";
+  });
+  
+  tbody.innerHTML = bodyHtml;
+  attachCFToggleListeners();
+}
+
+function saveCashFlowConfig() {
+  const config = {
+    viewMode: document.getElementById("cfViewMode")?.value,
+    periodType: document.getElementById("cfPeriodType")?.value,
+    periodValue: document.getElementById("cfPeriodSelect")?.value,
+    compare: document.querySelector('input[name="cfCompareRadio"]:checked')?.value,
+    detailLevel: document.querySelector('input[name="cfDetailLevel"]:checked')?.value,
+    showThousands: document.getElementById("cfShowThousands")?.checked,
+    excludeCurrent: document.getElementById("cfExcludeCurrent")?.checked,
+    matrixYearStart: document.getElementById("cfMatrixYearStart")?.value,
+    matrixYearEnd: document.getElementById("cfMatrixYearEnd")?.value
+  };
+  saveUserPreferences({ cashFlow: config });
+}
+
+function initCFAiAnalysis() {
+  const analyzeBtn = document.getElementById("cfAiAnalyzeBtn");
+  const panel = document.getElementById("cfAiAnalysisPanel");
+  const header = document.getElementById("cfAiAnalysisHeader");
+  
+  if (analyzeBtn) {
+    analyzeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      performCFAiAnalysis();
+    });
+  }
+  
+  if (header) {
+    header.addEventListener("click", (e) => {
+      if (e.target === analyzeBtn || analyzeBtn.contains(e.target)) return;
+      panel.classList.toggle("collapsed");
+    });
+  }
+}
+
+async function performCFAiAnalysis() {
+  const analyzeBtn = document.getElementById("cfAiAnalyzeBtn");
+  const panel = document.getElementById("cfAiAnalysisPanel");
+  const contentContainer = document.getElementById("cfAiAnalysisContent");
+  
+  analyzeBtn.disabled = true;
+  analyzeBtn.textContent = 'Analyzing...';
+  panel.classList.remove("collapsed");
+  contentContainer.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing your cash flow data...</div>';
+  
+  try {
+    const statementData = extractCashFlowData();
+    const periodInfo = getCashFlowPeriodInfo();
+    
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit 
+      ? "/api/analyze-cash-flow"
+      : "/.netlify/functions/analyze-cash-flow";
+    
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ statementData, periodInfo })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success && result.analysis) {
+      contentContainer.innerHTML = formatMarkdown(result.analysis);
+    } else {
+      contentContainer.innerHTML = `<div style="color: #dc2626;">Error: ${result.error || "Failed to get analysis"}</div>`;
+    }
+  } catch (error) {
+    console.error("AI Analysis error:", error);
+    contentContainer.innerHTML = `<div style="color: #dc2626;">Error: ${error.message || "Failed to connect to AI service"}</div>`;
+  } finally {
+    analyzeBtn.disabled = false;
+    analyzeBtn.textContent = 'Run Analysis';
+  }
+}
+
+function extractCashFlowData() {
+  const table = document.getElementById("cashFlowTable");
+  if (!table) return "";
+  
+  let text = "";
+  const rows = table.querySelectorAll("tr");
+  
+  rows.forEach(row => {
+    if (row.classList.contains("is-spacer-row")) return;
+    if (row.classList.contains("is-row-hidden")) return;
+    
+    const cells = row.querySelectorAll("th, td");
+    const rowData = [];
+    cells.forEach(cell => {
+      let cellText = cell.textContent.trim();
+      rowData.push(cellText);
+    });
+    text += rowData.join("\t") + "\n";
+  });
+  
+  return text;
+}
+
+function getCashFlowPeriodInfo() {
+  const viewMode = document.getElementById("cfViewMode").value;
+  const periodType = document.getElementById("cfPeriodType").value;
+  const periodSelect = document.getElementById("cfPeriodSelect");
+  const compare = document.querySelector('input[name="cfCompareRadio"]:checked');
+  
+  let info = "";
+  
+  if (viewMode === "single") {
+    info = `${periodType.toUpperCase()}: ${periodSelect.options[periodSelect.selectedIndex]?.text || ""}`;
+  } else {
+    if (periodType === "year") {
+      const startYear = document.getElementById("cfMatrixYearStart").value;
+      const endYear = document.getElementById("cfMatrixYearEnd").value;
+      info = `Annual Matrix: ${startYear} - ${endYear}`;
+    } else {
+      info = `${periodType.toUpperCase()} Matrix: ${periodSelect.options[periodSelect.selectedIndex]?.text || ""}`;
+    }
+  }
+  
+  if (compare && compare.value !== "none") {
+    info += ` (compared to ${compare.value.replace("_", " ")})`;
+  }
+  
+  return info;
 }
 
 /* ------------------------------------------------------------
