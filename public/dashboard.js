@@ -713,6 +713,29 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend)
       },
       plugins: {
         legend: { display: showPrior || showTrend, position: "bottom", labels: { boxWidth: 12, font: { size: 10 } } },
+        tooltip: {
+          backgroundColor: "rgba(31, 41, 55, 0.95)",
+          titleFont: { size: 13 },
+          bodyFont: { size: 12 },
+          padding: 10,
+          callbacks: {
+            title: function(tooltipItems) {
+              return tooltipItems[0].label;
+            },
+            label: function(context) {
+              if (context.dataset.type === "line") return null;
+              const value = context.parsed.y;
+              const datasetLabel = context.dataset.label === "Current" ? "" : context.dataset.label + ": ";
+              if (metricData.isPercent) {
+                return datasetLabel + value.toFixed(1) + "%";
+              }
+              if (Math.abs(value) >= 1000000) {
+                return datasetLabel + "$" + (value / 1000000).toFixed(2) + "M";
+              }
+              return datasetLabel + "$" + value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            }
+          }
+        },
         datalabels: {
           display: (context) => {
             if (!showDataLabels) return false;
@@ -1971,9 +1994,14 @@ function renderRevenueChart(labels, datasets) {
             bodyFont: { size: 13 },
             padding: 12,
             callbacks: {
+              title: function(tooltipItems) {
+                return tooltipItems[0].label;
+              },
               label: function(context) {
+                if (context.dataset.type === "line") return null;
                 const value = context.parsed.y;
-                return context.dataset.label + ": $" + value.toLocaleString();
+                const prefix = context.dataset.label === selectedYear.toString() ? "" : context.dataset.label + ": ";
+                return prefix + "$" + value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
               }
             }
           },
@@ -2493,10 +2521,18 @@ function renderAccountChart(labels, datasets) {
         legend: { position: "bottom" },
         tooltip: {
           backgroundColor: "rgba(31, 41, 55, 0.95)",
+          titleFont: { size: 13 },
+          bodyFont: { size: 12 },
+          padding: 10,
           callbacks: {
+            title: function(tooltipItems) {
+              return tooltipItems[0].label;
+            },
             label: function(context) {
+              if (context.dataset.type === "line") return null;
               const value = context.parsed.y;
-              return context.dataset.label + ": $" + value.toLocaleString();
+              const prefix = context.dataset.label === acctSelectedYear.toString() ? "" : context.dataset.label + ": ";
+              return prefix + "$" + value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             }
           }
         },
