@@ -1593,37 +1593,29 @@ async function sendReportEmail() {
     
     statusEl.textContent = "Sending...";
     
-    // Use EmailJS REST API with attachments if we have a chart image
+    // Use EmailJS with variable attachment for chart image
     if (chartImage) {
-      const payload = {
-        service_id: EMAILJS_CONFIG.serviceId,
-        template_id: EMAILJS_CONFIG.templateId,
-        user_id: EMAILJS_CONFIG.publicKey,
-        template_params: {
-          to_email: toEmail,
-          subject: subject,
-          message_html: messageHtml,
-          report_title: data.title
-        },
-        attachments: [{
-          name: "executive-overview.png",
-          data: chartImage
-        }]
+      // Include chart as variable attachment (configured in EmailJS template)
+      const templateParams = {
+        to_email: toEmail,
+        subject: subject,
+        message_html: messageHtml,
+        report_title: data.title,
+        chart_attachment: "data:image/png;base64," + chartImage
       };
       
-      const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const response = await emailjs.send(
+        EMAILJS_CONFIG.serviceId,
+        EMAILJS_CONFIG.templateId,
+        templateParams
+      );
       
-      if (response.ok) {
+      if (response.status === 200) {
         statusEl.textContent = "Email sent with chart!";
         statusEl.className = "email-status success";
         setTimeout(closeEmailModal, 2000);
       } else {
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to send email");
+        throw new Error("Failed to send email");
       }
     } else {
       // Fallback to regular emailjs.send for table format
