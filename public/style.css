@@ -1331,6 +1331,64 @@ body {
   .config-body {
     padding: 12px;
   }
+  
+  .config-body .rev-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .config-body .rev-controls > label {
+    margin-bottom: -4px;
+  }
+  
+  .config-body .rev-controls select {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+    -webkit-appearance: none;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") no-repeat right 8px center;
+    background-size: 20px;
+    padding-right: 32px;
+  }
+  
+  .config-body #overviewYearWrapper,
+  .config-body #revYearWrapper,
+  .config-body #acctYearWrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .config-body #overviewYearWrapper select,
+  .config-body #revYearWrapper select,
+  .config-body #acctYearWrapper select {
+    flex: 1;
+  }
+  
+  .config-body .checkbox-stack {
+    margin-top: 4px;
+  }
+  
+  .config-body .checkbox-label {
+    padding: 8px 0;
+    font-size: 14px;
+  }
+  
+  .config-body .checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+  }
+  
+  .config-body .range-wrapper {
+    padding: 8px 0;
+  }
+  
+  .overview-metric-tile {
+    min-height: 280px;
+  }
 }
 
 @media (max-width: 500px) {

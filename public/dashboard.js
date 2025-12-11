@@ -323,19 +323,33 @@ async function initOverviewModule() {
 }
 
 function setupOverviewUI() {
-  const viewType = document.getElementById("overviewViewType");
-  const yearSelect = document.getElementById("overviewYear");
-  const yearWrapper = document.getElementById("overviewYearWrapper");
-  const rangeWrapper = document.getElementById("overviewRangeWrapper");
-  const compareCheck = document.getElementById("overviewCompare");
-  const rangeStart = document.getElementById("overviewRangeStart");
-  const rangeEnd = document.getElementById("overviewRangeEnd");
-  
-  if (!overviewDataCache || !overviewDataCache.revenue) return;
-  
-  const years = Object.keys(overviewDataCache.revenue).map(Number).sort((a, b) => a - b);
-  yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
-  yearSelect.value = Math.max(...years);
+  try {
+    const viewType = document.getElementById("overviewViewType");
+    const yearSelect = document.getElementById("overviewYear");
+    const yearWrapper = document.getElementById("overviewYearWrapper");
+    const rangeWrapper = document.getElementById("overviewRangeWrapper");
+    const compareCheck = document.getElementById("overviewCompare");
+    const rangeStart = document.getElementById("overviewRangeStart");
+    const rangeEnd = document.getElementById("overviewRangeEnd");
+    
+    if (!viewType || !yearSelect || !rangeStart || !rangeEnd) {
+      console.error("Overview UI elements not found");
+      return;
+    }
+    
+    if (!overviewDataCache || !overviewDataCache.revenue) {
+      console.error("Overview data not loaded");
+      return;
+    }
+    
+    const years = Object.keys(overviewDataCache.revenue).map(Number).sort((a, b) => a - b);
+    if (years.length === 0) {
+      console.error("No years found in revenue data");
+      return;
+    }
+    
+    yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
+    yearSelect.value = Math.max(...years);
   
   rangeStart.min = rangeEnd.min = years[0];
   rangeStart.max = rangeEnd.max = years[years.length - 1];
@@ -378,9 +392,13 @@ function setupOverviewUI() {
     document.getElementById("overviewRangeEndLabel").textContent = rangeEnd.value;
     updateOverviewCharts();
   };
+  } catch (err) {
+    console.error("Error setting up overview UI:", err);
+  }
 }
 
 function updateOverviewCharts() {
+  try {
   if (!overviewDataCache || !isAccountGroups) return;
   
   const viewType = document.getElementById("overviewViewType").value;
@@ -508,9 +526,13 @@ function updateOverviewCharts() {
   });
   
   updateOverviewStats(metrics, labels);
+  } catch (err) {
+    console.error("Error updating overview charts:", err);
+  }
 }
 
 function updateOverviewStats(metrics, labels) {
+  try {
   const statConfigs = [
     { key: "revenue", avgId: "revenueAvg", highId: "revenueHigh", lowId: "revenueLow", cagrId: "revenueCagr", highPeriodId: "revenueHighPeriod", lowPeriodId: "revenueLowPeriod", growthLabelId: "revenueGrowthLabel", isPercent: false },
     { key: "grossProfit", avgId: "grossProfitAvg", highId: "grossProfitHigh", lowId: "grossProfitLow", cagrId: "grossProfitCagr", highPeriodId: "grossProfitHighPeriod", lowPeriodId: "grossProfitLowPeriod", growthLabelId: "grossProfitGrowthLabel", isPercent: false },
@@ -628,6 +650,9 @@ function updateOverviewStats(metrics, labels) {
     cagrEl.textContent = formatGrowth(growthRate);
     cagrEl.className = growthRate < 0 ? "stat-value negative" : "stat-value";
   });
+  } catch (err) {
+    console.error("Error updating overview stats:", err);
+  }
 }
 
 function createBarGradient(ctx, chartArea, colorStart, colorEnd) {
@@ -645,15 +670,24 @@ const gradientColors = {
 };
 
 function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  
-  if (overviewChartInstances[canvasId]) {
-    overviewChartInstances[canvasId].destroy();
-  }
-  
-  const ctx = canvas.getContext("2d");
-  const datasets = [];
+  try {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+      console.error("Canvas not found:", canvasId);
+      return;
+    }
+    
+    if (overviewChartInstances[canvasId]) {
+      overviewChartInstances[canvasId].destroy();
+    }
+    
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      console.error("Could not get 2D context for:", canvasId);
+      return;
+    }
+    
+    const datasets = [];
   
   if (showPrior && metricData.priorValues.length > 0) {
     datasets.push({
@@ -767,6 +801,9 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend)
       }
     }
   });
+  } catch (err) {
+    console.error("Error rendering chart " + canvasId + ":", err);
+  }
 }
 
 initOverviewModule();
