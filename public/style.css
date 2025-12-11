@@ -94,6 +94,7 @@ button, .nav-item, .config-header, .dropdown-item {
   padding: 12px 14px;
   transition: max-height 0.3s ease, padding 0.3s ease;
   overflow: hidden;
+  background: #f3f4f6;
 }
 
 .config-body.collapsed {
