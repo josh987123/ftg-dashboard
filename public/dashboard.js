@@ -2617,19 +2617,17 @@ function buildIncomeStatementRows(periodMonths, groups, computedValues = {}) {
     
     if (group.accounts) {
       value = sumAccountsForPeriod(group.accounts, periodMonths, false);
-      if (isIncomeAccountGroup(group)) {
-        value = Math.abs(value);
-      }
       if (group.negate) {
         value = -value;
+      } else if (isIncomeAccountGroup(group)) {
+        value = Math.abs(value);
       }
     } else if (group.accounts_range) {
       value = sumAccountsForPeriod(group.accounts_range, periodMonths, true);
-      if (isIncomeAccountGroup(group)) {
-        value = Math.abs(value);
-      }
       if (group.negate) {
         value = -value;
+      } else if (isIncomeAccountGroup(group)) {
+        value = Math.abs(value);
       }
     } else if (group.formula) {
       value = evaluateFormula(group.formula, computedValues);
