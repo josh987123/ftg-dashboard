@@ -804,25 +804,25 @@ button, .nav-item, .config-header, .dropdown-item {
 .rev-controls {
   display:flex;
   flex-wrap:wrap;
-  gap:18px;
-  margin-bottom:20px;
-  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+  align-items:flex-start;
 }
 
 .rev-controls > label {
   font-weight:500;
   white-space:nowrap;
-  font-size: 14px;
+  font-size: 11px;
   color: #374151;
 }
 
 .rev-controls select,
 .rev-controls button {
-  padding:10px 14px;
-  min-height:44px;
-  border-radius:8px;
+  padding:5px 8px;
+  min-height:28px;
+  border-radius:4px;
   border:1px solid #d1d5db;
-  font-size: 14px;
+  font-size: 11px;
   background: #fff;
   cursor: pointer;
 }
@@ -869,17 +869,17 @@ button, .nav-item, .config-header, .dropdown-item {
 .checkbox-label { 
   display:flex; 
   align-items:center; 
-  gap:6px;
+  gap:4px;
   cursor: pointer;
-  padding: 4px 0;
-  font-size: 13px;
+  padding: 1px 0;
+  font-size: 11px;
   color: #374151;
   line-height: 1.2;
 }
 
 .checkbox-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 13px;
+  height: 13px;
   cursor: pointer;
   accent-color: #3b82f6;
   flex-shrink: 0;
@@ -892,60 +892,61 @@ button, .nav-item, .config-header, .dropdown-item {
 .dropdown-stack {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
 }
 
 .dropdown-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .dropdown-row label {
-  min-width: 40px;
+  min-width: 32px;
+  font-size: 11px;
 }
 
 .checkbox-stack {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
 }
 
 .metric-visibility-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-left: 20px;
-  padding: 10px;
+  gap: 2px;
+  margin-left: 12px;
+  padding: 6px 8px;
   background: var(--surface-2);
-  border-radius: 6px;
+  border-radius: 4px;
   border: 1px solid var(--border);
 }
 
 .metric-visibility-section .section-label {
   display: block;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 11px;
   color: var(--text-secondary);
   margin-bottom: 0;
 }
 
 .metric-visibility-section .show-all-label {
   display: flex;
-  font-size: 13px;
-  margin-bottom: 4px;
+  font-size: 11px;
+  margin-bottom: 2px;
 }
 
 .metric-checkboxes {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
-  gap: 2px 16px;
-  max-height: calc(3 * 1.6em + 4px);
+  gap: 0 12px;
+  max-height: calc(3 * 1.4em + 2px);
 }
 
 .metric-checkboxes .checkbox-label {
-  font-size: 13px;
+  font-size: 11px;
   white-space: nowrap;
 }
 
