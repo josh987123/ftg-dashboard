@@ -19,11 +19,15 @@ Preferred communication style: Simple, everyday language.
   - `dashboard.js` - All application logic including authentication and navigation
 
 ### Authentication
-- **User-specific logins**: Four authorized users (Sergio, Josh, Rodney, Greg) with shared password (`Ftgb2025$`)
-- **Login flow**: Modal requires first name + password, validates against authorized user list
-- **Session persistence**: Uses `localStorage` to remember authentication state and current user (`ftg_current_user`)
-- **User display**: Current user's name shown in header after login
-- **User preferences**: Each user's settings saved to `localStorage` keyed by username (`ftg_prefs_${username}`)
+- **User-specific logins**: Four authorized email addresses with shared password (`Ftgb2025$`):
+  - rodney@ftgbuilders.com (displays as "Rodney")
+  - sergio@ftghbuilders.com (displays as "Sergio")
+  - joshl@ftgbuilders.com (displays as "Josh")
+  - greg@ftgbuilders.com (displays as "Greg")
+- **Login flow**: Modal requires email + password, validates against authorized email list
+- **Session persistence**: Uses `localStorage` to remember authentication state and current user email (`ftg_current_user`)
+- **User display**: Current user's first name shown in header after login
+- **User preferences**: Each user's settings saved to `localStorage` keyed by email (`ftg_prefs_${email}`)
 
 ### Data Management
 - **Static JSON files**: Financial data is stored in `/public/data/financials.json` and account hierarchy in `/public/data/account_groups.json`

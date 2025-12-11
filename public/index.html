@@ -40,9 +40,9 @@
     <div class="login-box">
       <img src="logo.png" alt="FTG Logo" class="login-logo">
       <h2>FTG Dashboard</h2>
-      <p>Please enter your name and password</p>
+      <p>Please enter your email and password</p>
       <form id="loginForm" onsubmit="return doLogin(event)">
-        <input type="text" id="loginUsername" placeholder="First name (Sergio, Josh, Rodney, Greg)" autocomplete="username">
+        <input type="email" id="loginUsername" placeholder="Email address" autocomplete="username">
         <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
         <button type="submit" id="loginBtn">Login</button>
       </form>
@@ -50,22 +50,27 @@
     </div>
   </div>
   <script>
-    var validUsers = ['sergio', 'josh', 'rodney', 'greg'];
+    var validUsers = {
+      'rodney@ftgbuilders.com': 'Rodney',
+      'sergio@ftghbuilders.com': 'Sergio',
+      'joshl@ftgbuilders.com': 'Josh',
+      'greg@ftgbuilders.com': 'Greg'
+    };
     function doLogin(event) {
       if (event) event.preventDefault();
-      var username = document.getElementById('loginUsername').value.toLowerCase().trim();
+      var email = document.getElementById('loginUsername').value.toLowerCase().trim();
       var pwd = document.getElementById('loginPassword').value;
       var err = document.getElementById('loginError');
-      if (!validUsers.includes(username)) {
-        err.textContent = 'Please enter a valid first name (Sergio, Josh, Rodney, or Greg).';
+      if (!validUsers[email]) {
+        err.textContent = 'Please enter a valid email address.';
         return false;
       }
       if (pwd === 'Ftgb2025$') {
         localStorage.setItem('ftg_authenticated', 'true');
-        localStorage.setItem('ftg_current_user', username);
+        localStorage.setItem('ftg_current_user', email);
         document.getElementById('loginScreen').classList.add('hidden');
         err.textContent = '';
-        var displayName = username.charAt(0).toUpperCase() + username.slice(1);
+        var displayName = validUsers[email];
         var userLabel = document.getElementById('currentUser');
         if (userLabel) userLabel.textContent = displayName;
         if (typeof loadUserPreferences === 'function') {
