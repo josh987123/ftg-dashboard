@@ -1328,7 +1328,9 @@ body {
   .logout-btn,
   .export-dropdown,
   .rev-controls,
-  .export-bar {
+  .export-bar,
+  .config-panel,
+  .is-toggle {
     display: none !important;
   }
   
