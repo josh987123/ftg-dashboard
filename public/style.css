@@ -1642,6 +1642,10 @@ button, .nav-item, .config-header, .dropdown-item {
   color: #dc2626;
 }
 
+.var-col-left {
+  border-left: 1px solid #000;
+}
+
 #isPeriodWrapper,
 #isMatrixWrapper,
 #isSingleControls,

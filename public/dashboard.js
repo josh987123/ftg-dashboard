@@ -4914,7 +4914,7 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
   
   let headerHtml = "<tr><th>Account</th>";
   if (comparisonRows) {
-    headerHtml += `<th>${compPeriodLabel}</th><th>${currentLabel}</th><th>$ Var</th><th>% Var</th>`;
+    headerHtml += `<th>${compPeriodLabel}</th><th>${currentLabel}</th><th class="var-col-left">$ Var</th><th>% Var</th>`;
   } else {
     headerHtml += `<th>${currentLabel}</th>`;
   }
@@ -5011,7 +5011,7 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
       let compValueHtml = "";
       
       if (row.type === "header") {
-        bodyHtml += `<td></td><td></td><td></td><td></td>`;
+        bodyHtml += `<td></td><td></td><td class="var-col-left"></td><td></td>`;
       } else if (row.type === "ratio") {
         compValueHtml = formatPercent(compRow.value);
         const diffPct = (row.value - compRow.value) * 100;
@@ -5019,14 +5019,14 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
         const pctClass = isPositiveVar ? "is-variance-positive" : "is-variance-negative";
         bodyHtml += `<td>${compValueHtml}</td>`;
         bodyHtml += `<td>${valueHtml}</td>`;
-        bodyHtml += `<td>-</td>`;
+        bodyHtml += `<td class="var-col-left">-</td>`;
         bodyHtml += `<td class="${pctClass}">${diffPct.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}%</td>`;
       } else {
         compValueHtml = formatAccountingNumber(compRow.value);
         const variance = formatVariance(row.value, compRow.value, isIncome);
         bodyHtml += `<td>${compValueHtml}</td>`;
         bodyHtml += `<td>${valueHtml}</td>`;
-        bodyHtml += `<td>${variance.diff}</td>`;
+        bodyHtml += `<td class="var-col-left">${variance.diff}</td>`;
         bodyHtml += `<td>${variance.pct}</td>`;
       }
     } else {
@@ -5698,7 +5698,7 @@ function renderBalanceSheet() {
   
   let headerHtml = "<tr><th>Account</th>";
   if (comparisonRows) {
-    headerHtml += `<th>${compPeriodLabel}</th><th>${currentLabel}</th><th>$ Var</th><th>% Var</th>`;
+    headerHtml += `<th>${compPeriodLabel}</th><th>${currentLabel}</th><th class="var-col-left">$ Var</th><th>% Var</th>`;
   } else {
     headerHtml += `<th>${currentLabel}</th>`;
   }
@@ -5765,13 +5765,13 @@ function renderBalanceSheet() {
       const compRow = comparisonRows[i];
       
       if (row.type === "header") {
-        bodyHtml += `<td></td><td></td><td></td><td></td>`;
+        bodyHtml += `<td></td><td></td><td class="var-col-left"></td><td></td>`;
       } else {
         const compValueHtml = formatBSNumber(compRow.value);
         const variance = formatBSVariance(row.value, compRow.value);
         bodyHtml += `<td>${compValueHtml}</td>`;
         bodyHtml += `<td>${valueHtml}</td>`;
-        bodyHtml += `<td>${variance.diff}</td>`;
+        bodyHtml += `<td class="var-col-left">${variance.diff}</td>`;
         bodyHtml += `<td>${variance.pct}</td>`;
       }
     } else {
