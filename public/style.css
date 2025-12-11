@@ -805,7 +805,7 @@ button, .nav-item, .config-header, .dropdown-item {
   display:flex;
   flex-wrap:wrap;
   gap:12px;
-  margin-bottom:12px;
+  margin-bottom:0;
   align-items:flex-start;
 }
 
@@ -1201,8 +1201,8 @@ button, .nav-item, .config-header, .dropdown-item {
 .is-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 0;
   align-items: flex-start;
   row-gap: 14px;
 }
