@@ -165,6 +165,7 @@ STRICT OUTPUT RULES:
 - Return EXACTLY 4 arrays: key_observations, positive_indicators, areas_of_concern, recommendations
 - Each array must have EXACTLY 3-4 items
 - Each item is one concise sentence with specific dollar amounts
+- Round all dollar amounts to whole numbers (no decimals) - use $3.8M not $3.84M
 - DO NOT add any other fields or sections
 - DO NOT include profitability analysis, revenue trends, cost structure, or any other categories"""
 
