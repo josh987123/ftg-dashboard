@@ -1507,7 +1507,6 @@ async function captureOverviewAsImage() {
   }
   
   try {
-    // Good quality capture (Personal plan has 500KB limit)
     const canvas = await html2canvas(tilesGrid, {
       scale: 1.5,
       useCORS: true,
@@ -1516,22 +1515,30 @@ async function captureOverviewAsImage() {
       allowTaint: true
     });
     
-    // Start with good quality and reduce if needed
-    let quality = 0.8;
-    let dataUrl = canvas.toDataURL("image/jpeg", quality);
-    let sizeKB = Math.round(dataUrl.length / 1024);
+    // Get base64 data (remove the data:image/jpeg;base64, prefix for upload)
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    const base64Data = dataUrl.split(",")[1];
     
-    // Keep reducing quality until under 450KB (leaving room for other params)
-    while (sizeKB > 450 && quality > 0.3) {
-      quality -= 0.1;
-      dataUrl = canvas.toDataURL("image/jpeg", quality);
-      sizeKB = Math.round(dataUrl.length / 1024);
+    // Upload to ImgBB (free image hosting)
+    const formData = new FormData();
+    formData.append("image", base64Data);
+    
+    const response = await fetch("https://api.imgbb.com/1/upload?key=00c9ee224d9a82ba7d2efb6024d2d823", {
+      method: "POST",
+      body: formData
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log("Image uploaded:", result.data.url);
+      return result.data.url; // Return URL instead of base64
+    } else {
+      console.error("ImgBB upload failed:", result);
+      return null;
     }
-    
-    console.log(`Chart captured: ${sizeKB}KB at quality ${quality.toFixed(1)}`);
-    return dataUrl;
   } catch (err) {
-    console.error("html2canvas error:", err);
+    console.error("Chart capture/upload error:", err);
     return null;
   }
 }
@@ -1574,12 +1581,11 @@ async function sendReportEmail() {
     let chartImage = "";
     
     if (view === "overview") {
-      statusEl.textContent = "Capturing charts (this may take a moment)...";
+      statusEl.textContent = "Capturing charts...";
       try {
         chartImage = await captureOverviewAsImage();
         if (chartImage) {
-          const sizeKB = Math.round(chartImage.length / 1024);
-          statusEl.textContent = `Chart captured (${sizeKB}KB), sending...`;
+          statusEl.textContent = "Chart uploaded, sending email...";
         } else {
           statusEl.textContent = "Chart capture failed, using table format...";
         }
