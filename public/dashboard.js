@@ -4862,15 +4862,6 @@ function renderBalanceSheet() {
     const isDetailRow = row.type === "detail";
     const isSubtotal = row.type === "subtotal";
     
-    if (detailLevel !== "detail" && isDetailRow) {
-      const currentZero = row.value === 0 || row.value === null;
-      const compRow = comparisonRows ? comparisonRows[i] : null;
-      const compZero = !compRow || compRow.value === 0 || compRow.value === null;
-      if (currentZero && compZero) {
-        return;
-      }
-    }
-    
     let isVisible;
     if (detailLevel === "detail") {
       isVisible = true;
@@ -5115,21 +5106,8 @@ function renderBalanceSheetMatrix() {
       return;
     }
     
-    const isSummaryRow = row.type === "subtotal" && (row.label.startsWith("Total") || row.label.startsWith("TOTAL"));
     const isHeaderRow = row.type === "header";
     const isDetailRow = row.type === "detail";
-    
-    if (detailLevel === "summary" && isDetailRow) {
-      return;
-    }
-    
-    if (detailLevel !== "detail" && !isHeaderRow && !isSummaryRow && isDetailRow) {
-      const allZero = allRowsData.every(rows => {
-        const val = rows[rowIdx]?.value;
-        return val === 0 || val === null;
-      });
-      if (allZero) return;
-    }
     
     let isVisible;
     if (detailLevel === "detail") {
