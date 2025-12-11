@@ -182,12 +182,12 @@ Period: {period_info}
 Provide a comprehensive but concise CFO-level analysis."""
 
         response = client.chat.completions.create(
-            model="gpt-5",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_completion_tokens=2048
+            max_tokens=2048
         )
         
         analysis = response.choices[0].message.content
@@ -207,16 +207,23 @@ def serve_index():
 
 @app.route('/<path:path>')
 def serve_static(path):
+    # Don't serve static files for API routes
     if path.startswith('api/') or path == 'send-email.json' or path.startswith('__api__'):
+        return jsonify({'error': 'API endpoint not found'}), 404
+    # Don't try to serve .py files
+    if path.endswith('.py'):
         return jsonify({'error': 'Not found'}), 404
     try:
         response = send_from_directory('.', path)
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         return response
-    except:
-        response = send_from_directory('.', 'index.html')
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        return response
+    except Exception as e:
+        # Only fallback to index.html for non-API, non-data paths
+        if not path.startswith('data/') and not path.endswith('.json'):
+            response = send_from_directory('.', 'index.html')
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            return response
+        return jsonify({'error': 'File not found'}), 404
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
