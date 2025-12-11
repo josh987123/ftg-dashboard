@@ -553,14 +553,39 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend)
     });
   }
   
+  const totalBars = labels.length * (showPrior ? 2 : 1);
+  const showDataLabels = totalBars <= 12;
+  
   overviewChartInstances[canvasId] = new Chart(canvas, {
     type: "bar",
     data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: { top: showDataLabels ? 20 : 0 }
+      },
       plugins: {
-        legend: { display: showPrior || showTrend, position: "bottom", labels: { boxWidth: 12, font: { size: 10 } } }
+        legend: { display: showPrior || showTrend, position: "bottom", labels: { boxWidth: 12, font: { size: 10 } } },
+        datalabels: {
+          display: (context) => {
+            if (!showDataLabels) return false;
+            if (context.dataset.type === "line") return false;
+            return true;
+          },
+          anchor: "end",
+          align: "top",
+          offset: 2,
+          font: { size: 8, weight: "500" },
+          color: "#374151",
+          formatter: (value) => {
+            if (value === 0 || value === null) return "";
+            if (metricData.isPercent) return value.toFixed(1) + "%";
+            if (Math.abs(value) >= 1000000) return "$" + (value / 1000000).toFixed(1) + "M";
+            if (Math.abs(value) >= 1000) return "$" + (value / 1000).toFixed(0) + "K";
+            return "$" + value.toFixed(0);
+          }
+        }
       },
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 9 } } },
