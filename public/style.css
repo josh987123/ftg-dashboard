@@ -2138,40 +2138,42 @@ button, .nav-item, .config-header, .dropdown-item {
     margin-bottom: 16px;
   }
   
-  /* Config panel mobile improvements */
+  /* Config panel mobile improvements - compact */
   .config-panel {
-    margin-bottom: 14px;
+    margin-bottom: 10px;
   }
   
   .config-header {
-    padding: 12px 16px;
-    min-height: 48px;
+    padding: 10px 14px;
+    min-height: 40px;
   }
   
   .config-title {
-    font-size: 13px;
+    font-size: 12px;
   }
   
   .config-body {
-    padding: 14px 16px;
+    padding: 8px 12px;
   }
   
-  /* Rev controls mobile layout */
+  /* Rev controls mobile layout - compact */
   .rev-controls {
-    gap: 12px;
+    gap: 4px;
   }
   
   .rev-controls select {
     width: 100%;
     min-width: unset;
-    font-size: 16px;
-    padding: 12px 14px;
+    font-size: 15px;
+    padding: 8px 12px;
+    min-height: 36px;
   }
   
   .rev-controls > label {
     width: 100%;
-    font-size: 13px;
-    margin-top: 4px;
+    font-size: 12px;
+    margin-top: 2px;
+    margin-bottom: -2px;
   }
   
   /* Wrapper controls stack on mobile */
