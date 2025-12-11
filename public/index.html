@@ -330,16 +330,19 @@
           </div>
           <div class="config-body" id="revConfigBody">
             <div class="rev-controls">
-              <label>View:</label>
-              <select id="revViewType">
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="annual">Annual</option>
-              </select>
-
-              <div id="revYearWrapper">
-                <label>Year:</label>
-                <select id="revYear"></select>
+              <div class="dropdown-stack">
+                <div class="dropdown-row">
+                  <label>View:</label>
+                  <select id="revViewType">
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="annual">Annual</option>
+                  </select>
+                </div>
+                <div class="dropdown-row" id="revYearWrapper">
+                  <label>Year:</label>
+                  <select id="revYear"></select>
+                </div>
               </div>
 
               <div class="checkbox-stack">

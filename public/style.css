@@ -904,6 +904,8 @@ button, .nav-item, .config-header, .dropdown-item {
 .dropdown-row label {
   min-width: 32px;
   font-size: 11px;
+  display: flex;
+  align-items: center;
 }
 
 .checkbox-stack {
