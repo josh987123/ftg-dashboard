@@ -2395,11 +2395,22 @@ button, .nav-item, .config-header, .dropdown-item {
   /* Ensure touch targets are large enough */
   button, 
   select, 
-  input[type="checkbox"],
   .nav-item,
-  .dropdown-item,
-  .checkbox-label {
+  .dropdown-item {
     min-height: 44px;
+  }
+  
+  /* Checkboxes can be smaller - the label wraps them */
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 18px;
+  }
+  
+  .checkbox-label,
+  .radio-label,
+  .is-checkbox-label {
+    min-height: 28px;
+    padding: 2px 0;
   }
   
   /* Better touch feedback */
