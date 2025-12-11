@@ -124,6 +124,79 @@ button, .nav-item, .config-header, .dropdown-item {
   font-size: 12px;
 }
 
+/* SAVED VIEWS ROW */
+.saved-views-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.saved-views-select {
+  flex: 1;
+  max-width: 200px;
+  height: 28px;
+  font-size: 11px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.saved-views-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.save-view-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.save-view-btn:hover {
+  background: #1d4ed8;
+}
+
+.delete-view-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: #9ca3af;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.delete-view-btn:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.delete-view-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* Utility class for hiding elements */
 .hidden {
   display: none !important;

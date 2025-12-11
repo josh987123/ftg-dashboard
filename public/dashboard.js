@@ -306,6 +306,87 @@ function saveUserPreferences(prefs) {
   }
 }
 
+/* ------------------------------------------------------------
+   SAVED VIEWS MANAGER - Named view configurations per page
+------------------------------------------------------------ */
+const SavedViewManager = {
+  getStorageKey() {
+    const user = getCurrentUser();
+    return user ? `ftg_views_${user}` : null;
+  },
+  
+  getAllViews() {
+    try {
+      const key = this.getStorageKey();
+      if (!key) return {};
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : {};
+    } catch (e) {
+      console.warn("Error reading saved views:", e);
+      return {};
+    }
+  },
+  
+  saveAllViews(data) {
+    try {
+      const key = this.getStorageKey();
+      if (!key) return false;
+      localStorage.setItem(key, JSON.stringify(data));
+      return true;
+    } catch (e) {
+      console.warn("Error saving views:", e);
+      return false;
+    }
+  },
+  
+  getPageViews(page) {
+    const all = this.getAllViews();
+    return all[page] || { selectedId: null, views: {} };
+  },
+  
+  saveView(page, name, config) {
+    const all = this.getAllViews();
+    if (!all[page]) all[page] = { selectedId: null, views: {} };
+    const id = "view_" + Date.now();
+    all[page].views[id] = { name, config, createdAt: new Date().toISOString() };
+    all[page].selectedId = id;
+    this.saveAllViews(all);
+    return id;
+  },
+  
+  deleteView(page, viewId) {
+    const all = this.getAllViews();
+    if (all[page] && all[page].views[viewId]) {
+      delete all[page].views[viewId];
+      if (all[page].selectedId === viewId) {
+        all[page].selectedId = null;
+      }
+      this.saveAllViews(all);
+      return true;
+    }
+    return false;
+  },
+  
+  selectView(page, viewId) {
+    const all = this.getAllViews();
+    if (!all[page]) all[page] = { selectedId: null, views: {} };
+    all[page].selectedId = viewId;
+    this.saveAllViews(all);
+  },
+  
+  getSelectedView(page) {
+    const pageData = this.getPageViews(page);
+    if (pageData.selectedId && pageData.views[pageData.selectedId]) {
+      return { id: pageData.selectedId, ...pageData.views[pageData.selectedId] };
+    }
+    return null;
+  }
+};
+
+function generateViewId() {
+  return "view_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+}
+
 let isLoadingPreferences = false;
 
 function loadUserPreferences() {
@@ -420,6 +501,266 @@ function saveOverviewConfig() {
     excludeCurrent: document.getElementById("overviewExclude")?.checked
   };
   saveUserPreferences({ overviewConfig: cfg });
+}
+
+function saveRevenueConfig() {
+  const cfg = {
+    viewType: document.getElementById("revViewType")?.value,
+    year: document.getElementById("revYear")?.value,
+    compare: document.getElementById("revCompare")?.checked,
+    trendline: document.getElementById("revTrendline")?.checked,
+    dataLabels: document.getElementById("revDataLabels")?.checked,
+    excludeCurrent: document.getElementById("revExcludeCurrent")?.checked,
+    rangeStart: document.getElementById("revRangeStart")?.value,
+    rangeEnd: document.getElementById("revRangeEnd")?.value
+  };
+  saveUserPreferences({ revenueConfig: cfg });
+}
+
+function saveAccountConfig() {
+  const cfg = {
+    account: document.getElementById("acctSelect")?.value,
+    viewType: document.getElementById("acctViewType")?.value,
+    year: document.getElementById("acctYear")?.value,
+    trendline: document.getElementById("acctTrendline")?.checked,
+    dataLabels: document.getElementById("acctDataLabels")?.checked,
+    excludeCurrent: document.getElementById("acctExcludeCurrent")?.checked,
+    rangeStart: document.getElementById("acctRangeStart")?.value,
+    rangeEnd: document.getElementById("acctRangeEnd")?.value
+  };
+  saveUserPreferences({ accountConfig: cfg });
+}
+
+function saveIncomeStatementConfig() {
+  const cfg = {
+    viewMode: document.getElementById("isViewMode")?.value,
+    periodType: document.getElementById("isPeriodType")?.value,
+    periodSelect: document.getElementById("isPeriodSelect")?.value,
+    compare: document.querySelector('input[name="isCompareRadio"]:checked')?.value,
+    detailLevel: document.querySelector('input[name="isDetailLevel"]:checked')?.value,
+    showThousands: document.getElementById("isShowThousands")?.checked,
+    excludeCurrent: document.getElementById("isExcludeCurrent")?.checked,
+    matrixMonths: document.getElementById("isMatrixMonths")?.value,
+    matrixYearStart: document.getElementById("isMatrixYearStart")?.value,
+    matrixYearEnd: document.getElementById("isMatrixYearEnd")?.value
+  };
+  saveUserPreferences({ incomeStatementConfig: cfg });
+}
+
+function saveBalanceSheetConfig() {
+  const cfg = {
+    viewMode: document.getElementById("bsViewMode")?.value,
+    periodType: document.getElementById("bsPeriodType")?.value,
+    periodSelect: document.getElementById("bsPeriodSelect")?.value,
+    compare: document.querySelector('input[name="bsCompareRadio"]:checked')?.value,
+    detailLevel: document.querySelector('input[name="bsDetailLevel"]:checked')?.value,
+    showThousands: document.getElementById("bsShowThousands")?.checked,
+    excludeCurrentMonth: document.getElementById("bsExcludeCurrentMonth")?.checked,
+    matrixYear: document.getElementById("bsMatrixYear")?.value,
+    matrixYearStart: document.getElementById("bsMatrixYearStart")?.value,
+    matrixYearEnd: document.getElementById("bsMatrixYearEnd")?.value
+  };
+  saveUserPreferences({ balanceSheetConfig: cfg });
+}
+
+function loadRevenueConfig() {
+  const prefs = getUserPreferences();
+  const cfg = prefs.revenueConfig;
+  if (!cfg) return;
+  
+  if (cfg.viewType) {
+    const el = document.getElementById("revViewType");
+    if (el) el.value = cfg.viewType;
+  }
+  if (cfg.year) {
+    const el = document.getElementById("revYear");
+    if (el && el.querySelector(`option[value="${cfg.year}"]`)) el.value = cfg.year;
+  }
+  if (cfg.compare !== undefined) {
+    const el = document.getElementById("revCompare");
+    if (el) el.checked = cfg.compare;
+  }
+  if (cfg.trendline !== undefined) {
+    const el = document.getElementById("revTrendline");
+    if (el) el.checked = cfg.trendline;
+  }
+  if (cfg.dataLabels !== undefined) {
+    const el = document.getElementById("revDataLabels");
+    if (el) el.checked = cfg.dataLabels;
+  }
+  if (cfg.excludeCurrent !== undefined) {
+    const el = document.getElementById("revExcludeCurrent");
+    if (el) el.checked = cfg.excludeCurrent;
+  }
+  if (cfg.rangeStart) {
+    const el = document.getElementById("revRangeStart");
+    if (el) {
+      el.value = cfg.rangeStart;
+      document.getElementById("revRangeStartLabel").textContent = cfg.rangeStart;
+    }
+  }
+  if (cfg.rangeEnd) {
+    const el = document.getElementById("revRangeEnd");
+    if (el) {
+      el.value = cfg.rangeEnd;
+      document.getElementById("revRangeEndLabel").textContent = cfg.rangeEnd;
+    }
+  }
+}
+
+function loadAccountConfig() {
+  const prefs = getUserPreferences();
+  const cfg = prefs.accountConfig;
+  if (!cfg) return;
+  
+  if (cfg.account) {
+    const el = document.getElementById("acctSelect");
+    if (el && el.querySelector(`option[value="${cfg.account}"]`)) el.value = cfg.account;
+  }
+  if (cfg.viewType) {
+    const el = document.getElementById("acctViewType");
+    if (el) el.value = cfg.viewType;
+  }
+  if (cfg.year) {
+    const el = document.getElementById("acctYear");
+    if (el && el.querySelector(`option[value="${cfg.year}"]`)) el.value = cfg.year;
+  }
+  if (cfg.trendline !== undefined) {
+    const el = document.getElementById("acctTrendline");
+    if (el) el.checked = cfg.trendline;
+  }
+  if (cfg.dataLabels !== undefined) {
+    const el = document.getElementById("acctDataLabels");
+    if (el) el.checked = cfg.dataLabels;
+  }
+  if (cfg.excludeCurrent !== undefined) {
+    const el = document.getElementById("acctExcludeCurrent");
+    if (el) el.checked = cfg.excludeCurrent;
+  }
+  if (cfg.rangeStart) {
+    const el = document.getElementById("acctRangeStart");
+    if (el) {
+      el.value = cfg.rangeStart;
+      document.getElementById("acctRangeStartLabel").textContent = cfg.rangeStart;
+    }
+  }
+  if (cfg.rangeEnd) {
+    const el = document.getElementById("acctRangeEnd");
+    if (el) {
+      el.value = cfg.rangeEnd;
+      document.getElementById("acctRangeEndLabel").textContent = cfg.rangeEnd;
+    }
+  }
+}
+
+function loadIncomeStatementConfig() {
+  const prefs = getUserPreferences();
+  const cfg = prefs.incomeStatementConfig;
+  if (!cfg) return;
+  
+  if (cfg.viewMode) {
+    const el = document.getElementById("isViewMode");
+    if (el) el.value = cfg.viewMode;
+  }
+  if (cfg.periodType) {
+    const el = document.getElementById("isPeriodType");
+    if (el) el.value = cfg.periodType;
+  }
+  if (cfg.periodSelect) {
+    const el = document.getElementById("isPeriodSelect");
+    if (el && el.querySelector(`option[value="${cfg.periodSelect}"]`)) el.value = cfg.periodSelect;
+  }
+  if (cfg.compare) {
+    const radio = document.querySelector(`input[name="isCompareRadio"][value="${cfg.compare}"]`);
+    if (radio) radio.checked = true;
+  }
+  if (cfg.detailLevel) {
+    const radio = document.querySelector(`input[name="isDetailLevel"][value="${cfg.detailLevel}"]`);
+    if (radio) radio.checked = true;
+  }
+  if (cfg.showThousands !== undefined) {
+    const el = document.getElementById("isShowThousands");
+    if (el) el.checked = cfg.showThousands;
+  }
+  if (cfg.excludeCurrent !== undefined) {
+    const el = document.getElementById("isExcludeCurrent");
+    if (el) el.checked = cfg.excludeCurrent;
+  }
+  if (cfg.matrixMonths) {
+    const el = document.getElementById("isMatrixMonths");
+    if (el) el.value = cfg.matrixMonths;
+  }
+  if (cfg.matrixYearStart) {
+    const el = document.getElementById("isMatrixYearStart");
+    if (el) {
+      el.value = cfg.matrixYearStart;
+      const label = document.getElementById("isMatrixYearStartLabel");
+      if (label) label.textContent = cfg.matrixYearStart;
+    }
+  }
+  if (cfg.matrixYearEnd) {
+    const el = document.getElementById("isMatrixYearEnd");
+    if (el) {
+      el.value = cfg.matrixYearEnd;
+      const label = document.getElementById("isMatrixYearEndLabel");
+      if (label) label.textContent = cfg.matrixYearEnd;
+    }
+  }
+}
+
+function loadBalanceSheetConfig() {
+  const prefs = getUserPreferences();
+  const cfg = prefs.balanceSheetConfig;
+  if (!cfg) return;
+  
+  if (cfg.viewMode) {
+    const el = document.getElementById("bsViewMode");
+    if (el) el.value = cfg.viewMode;
+  }
+  if (cfg.periodType) {
+    const el = document.getElementById("bsPeriodType");
+    if (el) el.value = cfg.periodType;
+  }
+  if (cfg.periodSelect) {
+    const el = document.getElementById("bsPeriodSelect");
+    if (el && el.querySelector(`option[value="${cfg.periodSelect}"]`)) el.value = cfg.periodSelect;
+  }
+  if (cfg.compare) {
+    const radio = document.querySelector(`input[name="bsCompareRadio"][value="${cfg.compare}"]`);
+    if (radio) radio.checked = true;
+  }
+  if (cfg.detailLevel) {
+    const radio = document.querySelector(`input[name="bsDetailLevel"][value="${cfg.detailLevel}"]`);
+    if (radio) radio.checked = true;
+  }
+  if (cfg.showThousands !== undefined) {
+    const el = document.getElementById("bsShowThousands");
+    if (el) el.checked = cfg.showThousands;
+  }
+  if (cfg.excludeCurrentMonth !== undefined) {
+    const el = document.getElementById("bsExcludeCurrentMonth");
+    if (el) el.checked = cfg.excludeCurrentMonth;
+  }
+  if (cfg.matrixYear) {
+    const el = document.getElementById("bsMatrixYear");
+    if (el && el.querySelector(`option[value="${cfg.matrixYear}"]`)) el.value = cfg.matrixYear;
+  }
+  if (cfg.matrixYearStart) {
+    const el = document.getElementById("bsMatrixYearStart");
+    if (el) {
+      el.value = cfg.matrixYearStart;
+      const label = document.getElementById("bsMatrixYearStartLabel");
+      if (label) label.textContent = cfg.matrixYearStart;
+    }
+  }
+  if (cfg.matrixYearEnd) {
+    const el = document.getElementById("bsMatrixYearEnd");
+    if (el) {
+      el.value = cfg.matrixYearEnd;
+      const label = document.getElementById("bsMatrixYearEndLabel");
+      if (label) label.textContent = cfg.matrixYearEnd;
+    }
+  }
 }
 
 window.loadUserPreferences = loadUserPreferences;
@@ -2199,29 +2540,31 @@ function setupRevenueUI(data) {
       if (excludeLabel) excludeLabel.textContent = "Exclude Current Month";
     }
     
-    // Auto-update chart when view changes
     updateRevenueView(data);
+    saveRevenueConfig();
   };
   
-  // Also update when year changes
   document.getElementById("revYear").onchange = () => {
     updateRevenueView(data);
+    saveRevenueConfig();
   };
   
-  // Update when compare checkbox changes
   document.getElementById("revCompare").onchange = () => {
     updateRevenueView(data);
+    saveRevenueConfig();
   };
   
-  // Update when trendline checkbox changes  
   document.getElementById("revTrendline").onchange = () => {
     updateRevenueView(data);
+    saveRevenueConfig();
   };
   document.getElementById("revDataLabels").onchange = () => {
     updateRevenueView(data);
+    saveRevenueConfig();
   };
   document.getElementById("revExcludeCurrent").onchange = () => {
     updateRevenueView(data);
+    saveRevenueConfig();
   };
   
   document.getElementById("revRangeStart").oninput = () => {
@@ -2231,6 +2574,7 @@ function setupRevenueUI(data) {
     document.getElementById("revRangeStartLabel").textContent = start;
     document.getElementById("revRangeEndLabel").textContent = document.getElementById("revRangeEnd").value;
     updateRevenueView(data);
+    saveRevenueConfig();
   };
   
   document.getElementById("revRangeEnd").oninput = () => {
@@ -2240,6 +2584,7 @@ function setupRevenueUI(data) {
     document.getElementById("revRangeStartLabel").textContent = document.getElementById("revRangeStart").value;
     document.getElementById("revRangeEndLabel").textContent = end;
     updateRevenueView(data);
+    saveRevenueConfig();
   };
   } catch (err) {
     console.error("Error setting up revenue UI:", err);
@@ -2859,11 +3204,13 @@ function setupAccountUI(data) {
     if (+s.value > +e.value) s.value = e.value;
     document.getElementById("acctRangeStartLabel").innerText = s.value;
     updateAccountView(data);
+    saveAccountConfig();
   };
   e.oninput = () => {
     if (+e.value < +s.value) e.value = s.value;
     document.getElementById("acctRangeEndLabel").innerText = e.value;
     updateAccountView(data);
+    saveAccountConfig();
   };
   
   document.getElementById("acctViewType").onchange = () => {
@@ -2891,14 +3238,15 @@ function setupAccountUI(data) {
       if (excludeLabel) excludeLabel.textContent = "Exclude Current Month";
     }
     updateAccountView(data);
+    saveAccountConfig();
   };
   
-  acctSelect.onchange = () => updateAccountView(data);
-  yearSelect.onchange = () => updateAccountView(data);
-  document.getElementById("acctCompare").onchange = () => updateAccountView(data);
-  document.getElementById("acctTrendline").onchange = () => updateAccountView(data);
-  document.getElementById("acctDataLabels").onchange = () => updateAccountView(data);
-  document.getElementById("acctExcludeCurrent").onchange = () => updateAccountView(data);
+  acctSelect.onchange = () => { updateAccountView(data); saveAccountConfig(); };
+  yearSelect.onchange = () => { updateAccountView(data); saveAccountConfig(); };
+  document.getElementById("acctCompare").onchange = () => { updateAccountView(data); saveAccountConfig(); };
+  document.getElementById("acctTrendline").onchange = () => { updateAccountView(data); saveAccountConfig(); };
+  document.getElementById("acctDataLabels").onchange = () => { updateAccountView(data); saveAccountConfig(); };
+  document.getElementById("acctExcludeCurrent").onchange = () => { updateAccountView(data); saveAccountConfig(); };
   } catch (err) {
     console.error("Error setting up account UI:", err);
   }
@@ -3405,34 +3753,37 @@ function initIncomeStatementControls() {
   viewMode.onchange = () => {
     updateMatrixControlsVisibility();
     renderIncomeStatement();
+    saveIncomeStatementConfig();
   };
   
   periodType.onchange = () => {
     populatePeriodOptions();
     updateMatrixControlsVisibility();
     renderIncomeStatement();
+    saveIncomeStatementConfig();
   };
   
-  periodSelect.onchange = () => renderIncomeStatement();
+  periodSelect.onchange = () => { renderIncomeStatement(); saveIncomeStatementConfig(); };
   
   const compareRadios = document.querySelectorAll('input[name="isCompareRadio"]');
   compareRadios.forEach(radio => {
-    radio.onchange = () => renderIncomeStatement();
+    radio.onchange = () => { renderIncomeStatement(); saveIncomeStatementConfig(); };
   });
   
-  showSubtotal.onchange = () => renderIncomeStatement();
+  showSubtotal.onchange = () => { renderIncomeStatement(); saveIncomeStatementConfig(); };
   
   const showThousands = document.getElementById("isShowThousands");
-  showThousands.onchange = () => renderIncomeStatement();
+  showThousands.onchange = () => { renderIncomeStatement(); saveIncomeStatementConfig(); };
   
   const excludeCurrent = document.getElementById("isExcludeCurrent");
-  excludeCurrent.onchange = () => renderIncomeStatement();
+  excludeCurrent.onchange = () => { renderIncomeStatement(); saveIncomeStatementConfig(); };
   
   const detailRadios = document.querySelectorAll('input[name="isDetailLevel"]');
   detailRadios.forEach(radio => {
     radio.onchange = () => {
       applyDetailLevel(radio.value);
       renderIncomeStatement();
+      saveIncomeStatementConfig();
     };
   });
   
@@ -4503,15 +4854,17 @@ function initBalanceSheetControls() {
   viewMode.onchange = () => {
     updateBSControlVisibility();
     renderBalanceSheet();
+    saveBalanceSheetConfig();
   };
   
   periodType.onchange = () => {
     updateBSControlVisibility();
     renderBalanceSheet();
+    saveBalanceSheetConfig();
   };
   
-  periodSelect.onchange = () => renderBalanceSheet();
-  matrixYear.onchange = () => renderBalanceSheet();
+  periodSelect.onchange = () => { renderBalanceSheet(); saveBalanceSheetConfig(); };
+  matrixYear.onchange = () => { renderBalanceSheet(); saveBalanceSheetConfig(); };
   
   matrixYearStart.oninput = () => {
     const startVal = parseInt(matrixYearStart.value);
@@ -4522,6 +4875,7 @@ function initBalanceSheetControls() {
     document.getElementById("bsMatrixYearStartLabel").textContent = matrixYearStart.value;
     document.getElementById("bsMatrixYearEndLabel").textContent = matrixYearEnd.value;
     renderBalanceSheet();
+    saveBalanceSheetConfig();
   };
   
   matrixYearEnd.oninput = () => {
@@ -4533,21 +4887,22 @@ function initBalanceSheetControls() {
     document.getElementById("bsMatrixYearStartLabel").textContent = matrixYearStart.value;
     document.getElementById("bsMatrixYearEndLabel").textContent = matrixYearEnd.value;
     renderBalanceSheet();
+    saveBalanceSheetConfig();
   };
   
   const compareRadios = document.querySelectorAll('input[name="bsCompareRadio"]');
   compareRadios.forEach(radio => {
-    radio.onchange = () => renderBalanceSheet();
+    radio.onchange = () => { renderBalanceSheet(); saveBalanceSheetConfig(); };
   });
   
   const detailRadios = document.querySelectorAll('input[name="bsDetailLevel"]');
   detailRadios.forEach(radio => {
-    radio.onchange = () => renderBalanceSheet();
+    radio.onchange = () => { renderBalanceSheet(); saveBalanceSheetConfig(); };
   });
   
   const showThousands = document.getElementById("bsShowThousands");
   if (showThousands) {
-    showThousands.onchange = () => renderBalanceSheet();
+    showThousands.onchange = () => { renderBalanceSheet(); saveBalanceSheetConfig(); };
   }
   
   const excludeCurrentMonth = document.getElementById("bsExcludeCurrentMonth");
@@ -4555,6 +4910,7 @@ function initBalanceSheetControls() {
     excludeCurrentMonth.onchange = () => {
       populateBSPeriodOptions();
       renderBalanceSheet();
+      saveBalanceSheetConfig();
     };
   }
   
