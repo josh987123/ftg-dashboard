@@ -1501,7 +1501,7 @@ const EMAILJS_CONFIG = {
 
 async function captureOverviewAsImage() {
   try {
-    // Get all overview chart instances
+    // Get canvas elements directly from DOM
     const chartIds = [
       "overviewRevenueChart",
       "overviewGrossProfitChart", 
@@ -1511,54 +1511,53 @@ async function captureOverviewAsImage() {
       "overviewOpMarginChart"
     ];
     
-    // Collect chart images using Chart.js built-in method
-    const chartImages = [];
-    for (const id of chartIds) {
-      if (overviewChartInstances[id]) {
-        const imgData = overviewChartInstances[id].toBase64Image("image/png", 1);
-        if (imgData) {
-          chartImages.push(imgData);
-        }
-      }
-    }
+    // Get canvas elements
+    const canvases = chartIds.map(id => document.getElementById(id)).filter(c => c);
+    console.log("Found", canvases.length, "canvas elements");
     
-    if (chartImages.length === 0) {
-      console.log("No chart images captured");
+    if (canvases.length === 0) {
+      console.log("No canvas elements found");
       return null;
     }
     
     // Create composite canvas (2x3 grid)
-    const chartWidth = 400;
-    const chartHeight = 250;
+    const chartWidth = 350;
+    const chartHeight = 200;
     const cols = 3;
     const rows = 2;
-    const padding = 10;
+    const padding = 15;
+    const titleHeight = 25;
     
     const compositeCanvas = document.createElement("canvas");
     compositeCanvas.width = cols * chartWidth + (cols + 1) * padding;
-    compositeCanvas.height = rows * chartHeight + (rows + 1) * padding;
+    compositeCanvas.height = rows * (chartHeight + titleHeight) + (rows + 1) * padding;
     const ctx = compositeCanvas.getContext("2d");
     
     // Fill background
-    ctx.fillStyle = "#f8fafc";
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
     
-    // Draw each chart
-    const loadImage = (src) => new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
-      img.src = src;
-    });
+    // Chart titles
+    const titles = ["Revenue", "Gross Profit", "Gross Margin %", "Operating Expenses", "Operating Profit", "Operating Margin %"];
     
-    for (let i = 0; i < chartImages.length && i < 6; i++) {
-      const img = await loadImage(chartImages[i]);
-      if (img) {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        const x = padding + col * (chartWidth + padding);
-        const y = padding + row * (chartHeight + padding);
-        ctx.drawImage(img, x, y, chartWidth, chartHeight);
+    // Draw each canvas directly
+    for (let i = 0; i < canvases.length && i < 6; i++) {
+      const sourceCanvas = canvases[i];
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = padding + col * (chartWidth + padding);
+      const y = padding + row * (chartHeight + titleHeight + padding);
+      
+      // Draw title
+      ctx.fillStyle = "#374151";
+      ctx.font = "bold 14px Arial";
+      ctx.fillText(titles[i], x, y + 15);
+      
+      // Draw the chart canvas
+      try {
+        ctx.drawImage(sourceCanvas, x, y + titleHeight, chartWidth, chartHeight);
+      } catch (e) {
+        console.log("Error drawing canvas", i, e.message);
       }
     }
     
