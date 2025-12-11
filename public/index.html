@@ -220,6 +220,18 @@
                     <input type="checkbox" id="showOpMargin" checked data-metric="opMargin">
                     Operating Profit %
                   </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="showCash" checked data-metric="cash">
+                    Cash
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="showReceivables" checked data-metric="receivables">
+                    Receivables
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="showPayables" checked data-metric="payables">
+                    Payables
+                  </label>
                 </div>
               </div>
 
@@ -315,6 +327,45 @@
               <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="opMarginHigh">-</div><div class="stat-period" id="opMarginHighPeriod"></div></div>
               <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="opMarginLow">-</div><div class="stat-period" id="opMarginLowPeriod"></div></div>
               <div class="stat-box"><div class="stat-label" id="opMarginGrowthLabel">CAGR</div><div class="stat-value" id="opMarginCagr">-</div></div>
+            </div>
+          </div>
+          <div class="overview-metric-tile">
+            <div class="metric-tile-header">
+              <div class="metric-tile-title">Cash</div>
+              <button class="chart-expand-btn" data-chart="overviewCashChart" data-title="Cash" title="Expand chart">⛶</button>
+            </div>
+            <canvas id="overviewCashChart"></canvas>
+            <div class="metric-stats" id="overviewCashStats">
+              <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="cashAvg">-</div></div>
+              <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="cashHigh">-</div><div class="stat-period" id="cashHighPeriod"></div></div>
+              <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="cashLow">-</div><div class="stat-period" id="cashLowPeriod"></div></div>
+              <div class="stat-box"><div class="stat-label" id="cashGrowthLabel">CAGR</div><div class="stat-value" id="cashCagr">-</div></div>
+            </div>
+          </div>
+          <div class="overview-metric-tile">
+            <div class="metric-tile-header">
+              <div class="metric-tile-title">Receivables</div>
+              <button class="chart-expand-btn" data-chart="overviewReceivablesChart" data-title="Receivables" title="Expand chart">⛶</button>
+            </div>
+            <canvas id="overviewReceivablesChart"></canvas>
+            <div class="metric-stats" id="overviewReceivablesStats">
+              <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="receivablesAvg">-</div></div>
+              <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="receivablesHigh">-</div><div class="stat-period" id="receivablesHighPeriod"></div></div>
+              <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="receivablesLow">-</div><div class="stat-period" id="receivablesLowPeriod"></div></div>
+              <div class="stat-box"><div class="stat-label" id="receivablesGrowthLabel">CAGR</div><div class="stat-value" id="receivablesCagr">-</div></div>
+            </div>
+          </div>
+          <div class="overview-metric-tile">
+            <div class="metric-tile-header">
+              <div class="metric-tile-title">Accounts Payable</div>
+              <button class="chart-expand-btn" data-chart="overviewPayablesChart" data-title="Accounts Payable" title="Expand chart">⛶</button>
+            </div>
+            <canvas id="overviewPayablesChart"></canvas>
+            <div class="metric-stats" id="overviewPayablesStats">
+              <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="payablesAvg">-</div></div>
+              <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="payablesHigh">-</div><div class="stat-period" id="payablesHighPeriod"></div></div>
+              <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="payablesLow">-</div><div class="stat-period" id="payablesLowPeriod"></div></div>
+              <div class="stat-box"><div class="stat-label" id="payablesGrowthLabel">CAGR</div><div class="stat-value" id="payablesCagr">-</div></div>
             </div>
           </div>
         </div>

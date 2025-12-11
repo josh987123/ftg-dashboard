@@ -271,7 +271,10 @@ const metricTileMapping = {
   grossMargin: "overviewGrossMarginChart",
   opExpenses: "overviewOpexChart",
   opProfit: "overviewOpProfitChart",
-  opMargin: "overviewOpMarginChart"
+  opMargin: "overviewOpMarginChart",
+  cash: "overviewCashChart",
+  receivables: "overviewReceivablesChart",
+  payables: "overviewPayablesChart"
 };
 
 function getCurrentUser() {
@@ -1466,6 +1469,19 @@ function updateOverviewCharts() {
   try {
   if (!overviewDataCache || !isAccountGroups) return;
   
+  if (Object.keys(bsGLLookup).length === 0 && overviewDataCache.gl_history_all) {
+    overviewDataCache.gl_history_all.forEach(row => {
+      const acctNum = parseInt(row.Account_Num || row.Account, 10);
+      if (isNaN(acctNum)) return;
+      if (!bsGLLookup[acctNum]) bsGLLookup[acctNum] = {};
+      Object.keys(row).forEach(key => {
+        if (/^\d{4}-\d{2}$/.test(key)) {
+          bsGLLookup[acctNum][key] = parseFloat(row[key]) || 0;
+        }
+      });
+    });
+  }
+  
   const viewType = document.getElementById("overviewViewType").value;
   const year = parseInt(document.getElementById("overviewYear").value);
   const compare = document.getElementById("overviewCompare").checked;
@@ -1528,8 +1544,15 @@ function updateOverviewCharts() {
     grossMargin: { label: "Gross Profit Margin %", values: [], priorValues: [], isPercent: true },
     opex: { label: "Operating Expenses", values: [], priorValues: [] },
     opProfit: { label: "Operating Profit", values: [], priorValues: [] },
-    opMargin: { label: "Operating Profit %", values: [], priorValues: [], isPercent: true }
+    opMargin: { label: "Operating Profit %", values: [], priorValues: [], isPercent: true },
+    cash: { label: "Cash", values: [], priorValues: [], isBalance: true },
+    receivables: { label: "Receivables", values: [], priorValues: [], isBalance: true },
+    payables: { label: "Accounts Payable", values: [], priorValues: [], isBalance: true }
   };
+  
+  const cashAccounts = [1001, 1003, 1004, 1005, 1006, 1007, 1040, 1090];
+  const receivablesAccounts = [1100, 1105, 1110, 1120, 1130, 1050];
+  const payablesAccounts = [2000, 2005, 2010, 2015, 2016, 2017, 2018];
   
   periods.forEach((periodMonths, idx) => {
     let filteredPeriodMonths = periodMonths;
@@ -1554,6 +1577,23 @@ function updateOverviewCharts() {
     metrics.opProfit.values.push(opInc);
     metrics.opMargin.values.push(rev ? (opInc / rev) * 100 : 0);
     
+    const endOfPeriod = filteredPeriodMonths.length > 0 
+      ? filteredPeriodMonths[filteredPeriodMonths.length - 1] 
+      : periodMonths[periodMonths.length - 1];
+    
+    if (typeof getCumulativeBalance === 'function' && typeof bsGLLookup !== 'undefined') {
+      const cashBal = getCumulativeBalance(cashAccounts, endOfPeriod, true);
+      const recBal = getCumulativeBalance(receivablesAccounts, endOfPeriod, true);
+      const payBal = getCumulativeBalance(payablesAccounts, endOfPeriod, false);
+      metrics.cash.values.push(cashBal);
+      metrics.receivables.values.push(recBal);
+      metrics.payables.values.push(payBal);
+    } else {
+      metrics.cash.values.push(0);
+      metrics.receivables.values.push(0);
+      metrics.payables.values.push(0);
+    }
+    
     if ((compare || needPriorForYoY) && priorPeriods[idx]) {
       const priorRows = buildIncomeStatementRows(priorPeriods[idx], groups);
       const pRevRow = priorRows.find(r => r.label === "Revenue");
@@ -1572,6 +1612,20 @@ function updateOverviewCharts() {
       metrics.opex.priorValues.push(pOpex);
       metrics.opProfit.priorValues.push(pOpInc);
       metrics.opMargin.priorValues.push(pRev ? (pOpInc / pRev) * 100 : 0);
+      
+      const priorEndOfPeriod = priorPeriods[idx][priorPeriods[idx].length - 1];
+      if (typeof getCumulativeBalance === 'function' && typeof bsGLLookup !== 'undefined') {
+        const pCashBal = getCumulativeBalance(cashAccounts, priorEndOfPeriod, true);
+        const pRecBal = getCumulativeBalance(receivablesAccounts, priorEndOfPeriod, true);
+        const pPayBal = getCumulativeBalance(payablesAccounts, priorEndOfPeriod, false);
+        metrics.cash.priorValues.push(pCashBal);
+        metrics.receivables.priorValues.push(pRecBal);
+        metrics.payables.priorValues.push(pPayBal);
+      } else {
+        metrics.cash.priorValues.push(0);
+        metrics.receivables.priorValues.push(0);
+        metrics.payables.priorValues.push(0);
+      }
     }
   });
   
@@ -1583,7 +1637,10 @@ function updateOverviewCharts() {
     { id: "overviewGrossMarginChart", data: metrics.grossMargin },
     { id: "overviewOpexChart", data: metrics.opex },
     { id: "overviewOpProfitChart", data: metrics.opProfit },
-    { id: "overviewOpMarginChart", data: metrics.opMargin }
+    { id: "overviewOpMarginChart", data: metrics.opMargin },
+    { id: "overviewCashChart", data: metrics.cash },
+    { id: "overviewReceivablesChart", data: metrics.receivables },
+    { id: "overviewPayablesChart", data: metrics.payables }
   ];
   
   chartConfigs.forEach(cfg => {
@@ -1604,7 +1661,10 @@ function updateOverviewStats(metrics, labels) {
     { key: "grossMargin", avgId: "grossMarginAvg", highId: "grossMarginHigh", lowId: "grossMarginLow", cagrId: "grossMarginCagr", highPeriodId: "grossMarginHighPeriod", lowPeriodId: "grossMarginLowPeriod", growthLabelId: "grossMarginGrowthLabel", isPercent: true },
     { key: "opex", avgId: "opexAvg", highId: "opexHigh", lowId: "opexLow", cagrId: "opexCagr", highPeriodId: "opexHighPeriod", lowPeriodId: "opexLowPeriod", growthLabelId: "opexGrowthLabel", isPercent: false },
     { key: "opProfit", avgId: "opProfitAvg", highId: "opProfitHigh", lowId: "opProfitLow", cagrId: "opProfitCagr", highPeriodId: "opProfitHighPeriod", lowPeriodId: "opProfitLowPeriod", growthLabelId: "opProfitGrowthLabel", isPercent: false },
-    { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", highPeriodId: "opMarginHighPeriod", lowPeriodId: "opMarginLowPeriod", growthLabelId: "opMarginGrowthLabel", isPercent: true }
+    { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", highPeriodId: "opMarginHighPeriod", lowPeriodId: "opMarginLowPeriod", growthLabelId: "opMarginGrowthLabel", isPercent: true },
+    { key: "cash", avgId: "cashAvg", highId: "cashHigh", lowId: "cashLow", cagrId: "cashCagr", highPeriodId: "cashHighPeriod", lowPeriodId: "cashLowPeriod", growthLabelId: "cashGrowthLabel", isPercent: false },
+    { key: "receivables", avgId: "receivablesAvg", highId: "receivablesHigh", lowId: "receivablesLow", cagrId: "receivablesCagr", highPeriodId: "receivablesHighPeriod", lowPeriodId: "receivablesLowPeriod", growthLabelId: "receivablesGrowthLabel", isPercent: false },
+    { key: "payables", avgId: "payablesAvg", highId: "payablesHigh", lowId: "payablesLow", cagrId: "payablesCagr", highPeriodId: "payablesHighPeriod", lowPeriodId: "payablesLowPeriod", growthLabelId: "payablesGrowthLabel", isPercent: false }
   ];
   
   const viewType = document.getElementById("overviewViewType").value;
