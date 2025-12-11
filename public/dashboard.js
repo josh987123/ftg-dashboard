@@ -4368,12 +4368,12 @@ async function performAiAnalysis() {
     const statementData = extractIncomeStatementData();
     const periodInfo = getIncomeStatementPeriodInfo();
     
-    // Detect environment: use Netlify Functions if on Netlify, otherwise use local Flask API
+    // Detect environment: use Netlify Functions if on Netlify or custom domain (not Replit), otherwise use local Flask API
     const hostname = window.location.hostname;
-    const isNetlify = hostname.includes('netlify.app') || hostname.includes('netlify.com');
-    const apiUrl = isNetlify 
-      ? "/.netlify/functions/analyze-income-statement"
-      : "/api/analyze-income-statement";
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit 
+      ? "/api/analyze-income-statement"
+      : "/.netlify/functions/analyze-income-statement";
     
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -6255,14 +6255,14 @@ function renderBalanceSheetMatrix() {
 /* ------------------------------------------------------------
    PLACEHOLDER CONTENT
 ------------------------------------------------------------ */
-document.getElementById("projectsContent").innerText =
-  "Project data loads here.";
+const projectsEl = document.getElementById("projectsContent");
+if (projectsEl) projectsEl.innerText = "Project data loads here.";
 
-document.getElementById("operationsContent").innerText =
-  "Operations metrics load here.";
+const operationsEl = document.getElementById("operationsContent");
+if (operationsEl) operationsEl.innerText = "Operations metrics load here.";
 
-document.getElementById("reportsContent").innerText =
-  "Reports will appear here.";
+const reportsEl = document.getElementById("reportsContent");
+if (reportsEl) reportsEl.innerText = "Reports will appear here.";
 
 
 
