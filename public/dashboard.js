@@ -1572,10 +1572,19 @@ async function sendReportEmail() {
     let chartImage = "";
     
     if (view === "overview") {
-      statusEl.textContent = "Capturing charts...";
-      console.log("Attempting to capture overview...");
-      chartImage = await captureOverviewAsImage();
-      console.log("Chart image result:", chartImage ? "success" : "failed");
+      statusEl.textContent = "Capturing charts (this may take a moment)...";
+      try {
+        chartImage = await captureOverviewAsImage();
+        if (chartImage) {
+          const sizeKB = Math.round(chartImage.length / 1024);
+          statusEl.textContent = `Chart captured (${sizeKB}KB), sending...`;
+        } else {
+          statusEl.textContent = "Chart capture failed, using table format...";
+        }
+      } catch (captureErr) {
+        statusEl.textContent = "Chart capture error: " + captureErr.message;
+        chartImage = null;
+      }
       
       if (chartImage) {
         messageHtml = `
