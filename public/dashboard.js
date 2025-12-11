@@ -4368,7 +4368,14 @@ async function performAiAnalysis() {
     const statementData = extractIncomeStatementData();
     const periodInfo = getIncomeStatementPeriodInfo();
     
-    const response = await fetch("/api/analyze-income-statement", {
+    // Detect environment: use Netlify Functions if on Netlify, otherwise use local Flask API
+    const hostname = window.location.hostname;
+    const isNetlify = hostname.includes('netlify.app') || hostname.includes('netlify.com');
+    const apiUrl = isNetlify 
+      ? "/.netlify/functions/analyze-income-statement"
+      : "/api/analyze-income-statement";
+    
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ statementData, periodInfo })
