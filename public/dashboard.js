@@ -789,9 +789,8 @@ function populateSavedViewsDropdown(page, selectId) {
     select.appendChild(option);
   });
   
-  if (selectedId && views[selectedId]) {
-    select.value = selectedId;
-  }
+  // Always start at "Current Settings" on page load
+  select.value = "";
   
   updateDeleteButtonState(page);
 }
