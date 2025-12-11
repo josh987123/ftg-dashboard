@@ -1426,6 +1426,37 @@ button, .nav-item, .config-header, .dropdown-item {
   border: 1px solid #e5e7eb;
 }
 
+/* Wrapper for Compare/Detail on desktop - just a container */
+.is-compare-detail-wrapper {
+  display: contents;
+}
+
+/* Mobile: combine Compare and Detail into one box */
+@media (max-width: 768px) {
+  .is-compare-detail-wrapper {
+    display: flex;
+    flex-direction: row;
+    background: #f3f4f6;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    padding: 6px 8px;
+    gap: 16px;
+  }
+  
+  .is-compare-detail-wrapper .is-options-stack {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    flex: 1;
+  }
+  
+  .is-compare-detail-wrapper .is-compare-box {
+    border-right: 1px solid #e5e7eb;
+    padding-right: 12px;
+  }
+}
+
 .is-detail-radio {
   display: flex;
   align-items: center;
