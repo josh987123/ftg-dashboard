@@ -4441,6 +4441,9 @@ function getIncomeStatementPeriodInfo() {
 }
 
 function formatMarkdown(text) {
+  // Format dollar amounts to use K and M notation
+  text = formatDollarAmounts(text);
+  
   // Simple markdown to HTML conversion
   let html = text
     // Headers
@@ -4472,6 +4475,25 @@ function formatMarkdown(text) {
   html = html.replace(/<\/ul>\s*<ul>/g, '');
   
   return '<p>' + html + '</p>';
+}
+
+function formatDollarAmounts(text) {
+  // Match dollar amounts like $1,234,567 or $1234567 or $1,234 etc.
+  return text.replace(/\$\s*([\d,]+(?:\.\d+)?)/g, (match, numStr) => {
+    // Remove commas and parse
+    const num = parseFloat(numStr.replace(/,/g, ''));
+    if (isNaN(num)) return match;
+    
+    const absNum = Math.abs(num);
+    const sign = num < 0 ? '-' : '';
+    
+    if (absNum >= 1000000) {
+      return sign + '$' + (absNum / 1000000).toFixed(1) + 'M';
+    } else if (absNum >= 1000) {
+      return sign + '$' + (absNum / 1000).toFixed(1) + 'K';
+    }
+    return match;
+  });
 }
 
 function updateMatrixControlsVisibility() {
