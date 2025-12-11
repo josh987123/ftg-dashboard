@@ -4358,6 +4358,58 @@ function getCumulativeBalance(accounts, asOfMonth, isDebit) {
   }
 }
 
+function getIncomeExpenseAccounts() {
+  const accounts = [];
+  for (let acct = 4000; acct <= 8999; acct++) {
+    if (bsGLLookup[acct]) {
+      accounts.push(acct);
+    }
+  }
+  return accounts;
+}
+
+function calculateRetainedEarnings(asOfMonth) {
+  const [asOfYear] = asOfMonth.split("-").map(Number);
+  const priorYearEnd = `${asOfYear - 1}-12`;
+  
+  const incomeExpenseAccounts = getIncomeExpenseAccounts();
+  const allMonths = getBSAvailableMonths();
+  const monthsUpToPriorYearEnd = allMonths.filter(m => m <= priorYearEnd);
+  
+  let total = 0;
+  incomeExpenseAccounts.forEach(acct => {
+    const acctData = bsGLLookup[acct];
+    if (acctData) {
+      monthsUpToPriorYearEnd.forEach(m => {
+        total += acctData[m] || 0;
+      });
+    }
+  });
+  
+  return -total;
+}
+
+function calculateCurrentYearNetIncome(asOfMonth) {
+  const [asOfYear, asOfMo] = asOfMonth.split("-").map(Number);
+  const currentYearStart = `${asOfYear}-01`;
+  
+  const incomeExpenseAccounts = getIncomeExpenseAccounts();
+  const allMonths = getBSAvailableMonths();
+  const monthsInCurrentYear = allMonths.filter(m => m >= currentYearStart && m <= asOfMonth);
+  
+  let total = 0;
+  incomeExpenseAccounts.forEach(acct => {
+    const acctData = bsGLLookup[acct];
+    if (acctData) {
+      monthsInCurrentYear.forEach(m => {
+        total += acctData[m] || 0;
+      });
+    }
+  });
+  
+  return -total;
+}
+
 function buildBalanceSheetRows(asOfMonth, groups, computedValues = {}) {
   const rows = [];
   
@@ -4365,7 +4417,11 @@ function buildBalanceSheetRows(asOfMonth, groups, computedValues = {}) {
     const rowId = `bs-row-${group.label.replace(/\s+/g, '_')}`;
     let value = null;
     
-    if (group.accounts) {
+    if (group.specialCalc === "retained_earnings") {
+      value = calculateRetainedEarnings(asOfMonth);
+    } else if (group.specialCalc === "current_year_net_income") {
+      value = calculateCurrentYearNetIncome(asOfMonth);
+    } else if (group.accounts) {
       value = getCumulativeBalance(group.accounts, asOfMonth, group.isDebit);
     } else if (group.formula) {
       value = evaluateBSFormula(group.formula, computedValues);

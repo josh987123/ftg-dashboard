@@ -1671,6 +1671,17 @@ button, .nav-item, .config-header, .dropdown-item {
     padding: 6px 8px;
   }
   
+  #balanceSheetTable {
+    width: 100%;
+    max-width: none;
+    font-size: 11px;
+  }
+  
+  #balanceSheetTable th,
+  #balanceSheetTable td {
+    padding: 6px 8px;
+  }
+  
   .is-indent-1 td:first-child { padding-left: 16px !important; }
   .is-indent-2 td:first-child { padding-left: 24px !important; }
   .is-indent-3 td:first-child { padding-left: 32px !important; }
@@ -1820,6 +1831,15 @@ button, .nav-item, .config-header, .dropdown-item {
   
   #incomeStatementTable th,
   #incomeStatementTable td {
+    padding: 5px 6px;
+  }
+  
+  #balanceSheetTable {
+    font-size: 10px;
+  }
+  
+  #balanceSheetTable th,
+  #balanceSheetTable td {
     padding: 5px 6px;
   }
   

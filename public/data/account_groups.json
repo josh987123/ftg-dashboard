@@ -1246,13 +1246,26 @@
         "isDebit": false
       },
       {
+        "label": "Retained Earnings",
+        "level": 2,
+        "type": "detail",
+        "specialCalc": "retained_earnings",
+        "isDebit": false
+      },
+      {
+        "label": "Current Year Net Income",
+        "level": 2,
+        "type": "detail",
+        "specialCalc": "current_year_net_income",
+        "isDebit": false
+      },
+      {
         "label": "Total Stockholders' Equity",
         "level": 1,
         "type": "subtotal",
-        "formula": "Common Stock + Treasury Stock + Capital Accounts + Distributions + Deferred Compensation",
+        "formula": "Common Stock + Treasury Stock + Capital Accounts + Distributions + Deferred Compensation + Retained Earnings + Current Year Net Income",
         "isDebit": false,
-        "expandable": true,
-        "note": "Excludes Retained Earnings"
+        "expandable": true
       },
       {
         "label": "spacer",
@@ -1264,8 +1277,7 @@
         "type": "subtotal",
         "formula": "TOTAL LIABILITIES + Total Stockholders' Equity",
         "isDebit": false,
-        "highlight": "total",
-        "note": "Excludes Retained Earnings and Current Period Net Income"
+        "highlight": "total"
       }
     ]
   }
