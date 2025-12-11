@@ -4953,7 +4953,7 @@ function formatBSNumber(value) {
   });
   
   if (value < 0) {
-    return `($${formatted}${suffix})`;
+    return `<span class="bs-negative">($${formatted}${suffix})</span>`;
   }
   return `$${formatted}${suffix}`;
 }

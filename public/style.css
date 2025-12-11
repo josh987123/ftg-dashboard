@@ -1285,6 +1285,10 @@ button, .nav-item, .config-header, .dropdown-item {
   box-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 
+.bs-negative {
+  color: #dc2626;
+}
+
 .is-table-box {
   background: #fff;
   border-radius: 12px;
