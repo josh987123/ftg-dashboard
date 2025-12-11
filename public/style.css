@@ -929,12 +929,6 @@ button, .nav-item, .config-header, .dropdown-item {
   font-weight: 600;
   font-size: 11px;
   color: var(--text-secondary);
-  margin-bottom: 0;
-}
-
-.metric-visibility-section .show-all-label {
-  display: flex;
-  font-size: 11px;
   margin-bottom: 2px;
 }
 
