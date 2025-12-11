@@ -347,13 +347,6 @@
                 <select id="acctYear"></select>
               </div>
 
-              <div id="acctCompareWrapper">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="acctCompare">
-                  Compare to Prior Year
-                </label>
-              </div>
-
               <div id="acctRangeWrapper" class="range-wrapper hidden">
                 <label>Select Range:</label>
                 <div class="range-container">
@@ -366,13 +359,15 @@
                 </div>
               </div>
 
-              <div id="acctTrendWrapper">
+              <div class="checkbox-stack">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="acctCompare">
+                  Compare to Prior Year
+                </label>
                 <label class="checkbox-label">
                   <input type="checkbox" id="acctTrendline">
                   Show Trendline
                 </label>
-              </div>
-              <div id="acctExcludeWrapper">
                 <label class="checkbox-label">
                   <input type="checkbox" id="acctExcludeCurrent">
                   <span id="acctExcludeLabel">Exclude Current Month</span>
