@@ -95,9 +95,76 @@
 
       <!-- OVERVIEW SECTION -->
       <section id="overview" class="dashboard-section visible">
-        <div class="under-construction">UNDER CONSTRUCTION</div>
         <h2>Executive Overview</h2>
-        <div id="overviewCards" class="card-container"></div>
+        <div class="data-as-of">Data as of: <span id="overviewDataAsOf"></span></div>
+
+        <div class="config-panel">
+          <div class="config-header" data-target="overviewConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
+          </div>
+          <div class="config-body" id="overviewConfigBody">
+            <div class="rev-controls">
+              <label>View:</label>
+              <select id="overviewViewType">
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="annual">Annual</option>
+              </select>
+
+              <div id="overviewYearWrapper">
+                <label>Year:</label>
+                <select id="overviewYear"></select>
+              </div>
+
+              <div id="overviewCompareWrapper">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="overviewCompare">
+                  Compare to Prior Year
+                </label>
+              </div>
+
+              <div id="overviewRangeWrapper" class="range-wrapper hidden">
+                <label>Select Range:</label>
+                <div class="range-container">
+                  <input type="range" id="overviewRangeStart" min="2015" max="2025" value="2018" step="1">
+                  <input type="range" id="overviewRangeEnd" min="2015" max="2025" value="2025" step="1">
+                </div>
+                <div class="range-labels">
+                  <span id="overviewRangeStartLabel">2018</span>
+                  <span id="overviewRangeEndLabel">2025</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overview-tiles-grid">
+          <div class="overview-metric-tile">
+            <div class="metric-tile-title">Revenue</div>
+            <canvas id="overviewRevenueChart"></canvas>
+          </div>
+          <div class="overview-metric-tile">
+            <div class="metric-tile-title">Gross Profit</div>
+            <canvas id="overviewGrossProfitChart"></canvas>
+          </div>
+          <div class="overview-metric-tile">
+            <div class="metric-tile-title">Gross Profit Margin %</div>
+            <canvas id="overviewGrossMarginChart"></canvas>
+          </div>
+          <div class="overview-metric-tile">
+            <div class="metric-tile-title">Operating Expenses</div>
+            <canvas id="overviewOpexChart"></canvas>
+          </div>
+          <div class="overview-metric-tile">
+            <div class="metric-tile-title">Operating Profit</div>
+            <canvas id="overviewOpProfitChart"></canvas>
+          </div>
+          <div class="overview-metric-tile">
+            <div class="metric-tile-title">Operating Profit %</div>
+            <canvas id="overviewOpMarginChart"></canvas>
+          </div>
+        </div>
       </section>
 
       <!-- ============================================================

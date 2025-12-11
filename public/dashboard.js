@@ -74,10 +74,12 @@ function updateDataAsOfDates() {
   const revEl = document.getElementById("revDataAsOf");
   const acctEl = document.getElementById("acctDataAsOf");
   const isEl = document.getElementById("isDataAsOf");
+  const overviewEl = document.getElementById("overviewDataAsOf");
   
   if (revEl) revEl.textContent = dateStr;
   if (acctEl) acctEl.textContent = dateStr;
   if (isEl) isEl.textContent = dateStr;
+  if (overviewEl) overviewEl.textContent = dateStr;
 }
 
 function initConfigPanels() {
@@ -147,33 +149,266 @@ function initNavigation() {
 }
 
 /* ------------------------------------------------------------
-   EXECUTIVE OVERVIEW (STATIC KPI CARDS)
+   EXECUTIVE OVERVIEW MODULE
 ------------------------------------------------------------ */
 document.getElementById("currentUser").innerText = "";
 
-function loadOverviewKPIs() {
-  const container = document.getElementById("overviewCards");
-  if (!container) return;
+let overviewDataCache = null;
+let overviewChartInstances = {};
 
-  const KPIs = [
-    { title: "Total Revenue (YTD)", value: "$45.2M" },
-    { title: "Open Projects", value: "18" },
-    { title: "AP Outstanding", value: "$1.9M" },
-    { title: "AR Outstanding", value: "$2.3M" },
-    { title: "Retention Held", value: "$780k" }
-  ];
-
-  container.innerHTML = KPIs
-    .map(k => `
-      <div class="card">
-        <div class="card-title">${k.title}</div>
-        <div class="card-value">${k.value}</div>
-      </div>
-    `)
-    .join("");
+async function initOverviewModule() {
+  try {
+    const fetchPromises = [];
+    
+    if (!overviewDataCache) {
+      fetchPromises.push(
+        fetch("/data/financials.json").then(r => r.json()).then(data => { overviewDataCache = data; })
+      );
+    }
+    
+    if (!isAccountGroups) {
+      fetchPromises.push(
+        fetch("/data/account_groups.json").then(r => r.json()).then(data => { isAccountGroups = data; })
+      );
+    }
+    
+    if (!isData) {
+      fetchPromises.push(
+        fetch("/data/financials.json").then(r => r.json()).then(data => { 
+          isData = data;
+          buildGLLookup();
+        })
+      );
+    }
+    
+    if (fetchPromises.length > 0) {
+      await Promise.all(fetchPromises);
+    }
+    
+    setupOverviewUI();
+    updateOverviewCharts();
+  } catch (err) {
+    console.error("Overview data load error:", err);
+  }
 }
 
-loadOverviewKPIs();
+function setupOverviewUI() {
+  const viewType = document.getElementById("overviewViewType");
+  const yearSelect = document.getElementById("overviewYear");
+  const yearWrapper = document.getElementById("overviewYearWrapper");
+  const rangeWrapper = document.getElementById("overviewRangeWrapper");
+  const compareCheck = document.getElementById("overviewCompare");
+  const rangeStart = document.getElementById("overviewRangeStart");
+  const rangeEnd = document.getElementById("overviewRangeEnd");
+  
+  if (!overviewDataCache || !overviewDataCache.revenue) return;
+  
+  const years = Object.keys(overviewDataCache.revenue).map(Number).sort((a, b) => a - b);
+  yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
+  yearSelect.value = Math.max(...years);
+  
+  rangeStart.min = rangeEnd.min = years[0];
+  rangeStart.max = rangeEnd.max = years[years.length - 1];
+  rangeStart.value = years[0];
+  rangeEnd.value = years[years.length - 1];
+  document.getElementById("overviewRangeStartLabel").textContent = rangeStart.value;
+  document.getElementById("overviewRangeEndLabel").textContent = rangeEnd.value;
+  
+  viewType.onchange = () => {
+    const v = viewType.value;
+    if (v === "annual") {
+      yearWrapper.classList.add("hidden");
+      rangeWrapper.classList.remove("hidden");
+    } else {
+      yearWrapper.classList.remove("hidden");
+      rangeWrapper.classList.add("hidden");
+    }
+    updateOverviewCharts();
+  };
+  
+  yearSelect.onchange = () => updateOverviewCharts();
+  compareCheck.onchange = () => updateOverviewCharts();
+  
+  rangeStart.oninput = () => {
+    if (+rangeStart.value > +rangeEnd.value) rangeStart.value = rangeEnd.value;
+    document.getElementById("overviewRangeStartLabel").textContent = rangeStart.value;
+    updateOverviewCharts();
+  };
+  
+  rangeEnd.oninput = () => {
+    if (+rangeEnd.value < +rangeStart.value) rangeEnd.value = rangeStart.value;
+    document.getElementById("overviewRangeEndLabel").textContent = rangeEnd.value;
+    updateOverviewCharts();
+  };
+}
+
+function updateOverviewCharts() {
+  if (!overviewDataCache || !isAccountGroups) return;
+  
+  const viewType = document.getElementById("overviewViewType").value;
+  const year = parseInt(document.getElementById("overviewYear").value);
+  const compare = document.getElementById("overviewCompare").checked;
+  const rangeStart = parseInt(document.getElementById("overviewRangeStart").value);
+  const rangeEnd = parseInt(document.getElementById("overviewRangeEnd").value);
+  
+  let labels = [];
+  let periods = [];
+  let priorPeriods = [];
+  
+  if (viewType === "monthly") {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    for (let m = 1; m <= 12; m++) {
+      const key = `${year}-${String(m).padStart(2, "0")}`;
+      labels.push(monthNames[m - 1]);
+      periods.push([key]);
+      if (compare) {
+        priorPeriods.push([`${year - 1}-${String(m).padStart(2, "0")}`]);
+      }
+    }
+  } else if (viewType === "quarterly") {
+    for (let q = 1; q <= 4; q++) {
+      labels.push(`Q${q}`);
+      const qMonths = [];
+      const priorQMonths = [];
+      for (let m = (q - 1) * 3 + 1; m <= q * 3; m++) {
+        qMonths.push(`${year}-${String(m).padStart(2, "0")}`);
+        if (compare) priorQMonths.push(`${year - 1}-${String(m).padStart(2, "0")}`);
+      }
+      periods.push(qMonths);
+      if (compare) priorPeriods.push(priorQMonths);
+    }
+  } else {
+    for (let y = rangeStart; y <= rangeEnd; y++) {
+      labels.push(String(y));
+      const yearMonths = [];
+      const priorYearMonths = [];
+      for (let m = 1; m <= 12; m++) {
+        yearMonths.push(`${y}-${String(m).padStart(2, "0")}`);
+        if (compare) priorYearMonths.push(`${y - 1}-${String(m).padStart(2, "0")}`);
+      }
+      periods.push(yearMonths);
+      if (compare) priorPeriods.push(priorYearMonths);
+    }
+  }
+  
+  const groups = isAccountGroups.income_statement.groups;
+  
+  const metrics = {
+    revenue: { label: "Revenue", values: [], priorValues: [] },
+    grossProfit: { label: "Gross Profit", values: [], priorValues: [] },
+    grossMargin: { label: "Gross Profit Margin %", values: [], priorValues: [], isPercent: true },
+    opex: { label: "Operating Expenses", values: [], priorValues: [] },
+    opProfit: { label: "Operating Profit", values: [], priorValues: [] },
+    opMargin: { label: "Operating Profit %", values: [], priorValues: [], isPercent: true }
+  };
+  
+  periods.forEach((periodMonths, idx) => {
+    const rows = buildIncomeStatementRows(periodMonths, groups);
+    const revenueRow = rows.find(r => r.label === "Revenue");
+    const grossProfitRow = rows.find(r => r.label === "Gross Profit");
+    const opexRow = rows.find(r => r.label === "Operating Expenses");
+    const opIncomeRow = rows.find(r => r.label === "Operating Income");
+    
+    const rev = revenueRow ? revenueRow.value : 0;
+    const gp = grossProfitRow ? grossProfitRow.value : 0;
+    const opex = opexRow ? opexRow.value : 0;
+    const opInc = opIncomeRow ? opIncomeRow.value : 0;
+    
+    metrics.revenue.values.push(rev);
+    metrics.grossProfit.values.push(gp);
+    metrics.grossMargin.values.push(rev ? (gp / rev) * 100 : 0);
+    metrics.opex.values.push(opex);
+    metrics.opProfit.values.push(opInc);
+    metrics.opMargin.values.push(rev ? (opInc / rev) * 100 : 0);
+    
+    if (compare && priorPeriods[idx]) {
+      const priorRows = buildIncomeStatementRows(priorPeriods[idx], groups);
+      const pRevRow = priorRows.find(r => r.label === "Revenue");
+      const pGpRow = priorRows.find(r => r.label === "Gross Profit");
+      const pOpexRow = priorRows.find(r => r.label === "Operating Expenses");
+      const pOpIncRow = priorRows.find(r => r.label === "Operating Income");
+      
+      const pRev = pRevRow ? pRevRow.value : 0;
+      const pGp = pGpRow ? pGpRow.value : 0;
+      const pOpex = pOpexRow ? pOpexRow.value : 0;
+      const pOpInc = pOpIncRow ? pOpIncRow.value : 0;
+      
+      metrics.revenue.priorValues.push(pRev);
+      metrics.grossProfit.priorValues.push(pGp);
+      metrics.grossMargin.priorValues.push(pRev ? (pGp / pRev) * 100 : 0);
+      metrics.opex.priorValues.push(pOpex);
+      metrics.opProfit.priorValues.push(pOpInc);
+      metrics.opMargin.priorValues.push(pRev ? (pOpInc / pRev) * 100 : 0);
+    }
+  });
+  
+  const chartConfigs = [
+    { id: "overviewRevenueChart", data: metrics.revenue },
+    { id: "overviewGrossProfitChart", data: metrics.grossProfit },
+    { id: "overviewGrossMarginChart", data: metrics.grossMargin },
+    { id: "overviewOpexChart", data: metrics.opex },
+    { id: "overviewOpProfitChart", data: metrics.opProfit },
+    { id: "overviewOpMarginChart", data: metrics.opMargin }
+  ];
+  
+  chartConfigs.forEach(cfg => {
+    renderOverviewChart(cfg.id, labels, cfg.data, compare);
+  });
+}
+
+function renderOverviewChart(canvasId, labels, metricData, showPrior) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  
+  if (overviewChartInstances[canvasId]) {
+    overviewChartInstances[canvasId].destroy();
+  }
+  
+  const datasets = [];
+  
+  if (showPrior && metricData.priorValues.length > 0) {
+    datasets.push({
+      label: "Prior Year",
+      data: metricData.priorValues,
+      backgroundColor: "#ef4444",
+      borderRadius: 4,
+      barPercentage: 0.7,
+      categoryPercentage: 0.8
+    });
+  }
+  
+  datasets.push({
+    label: "Current",
+    data: metricData.values,
+    backgroundColor: "#3b82f6",
+    borderRadius: 4,
+    barPercentage: 0.7,
+    categoryPercentage: 0.8
+  });
+  
+  overviewChartInstances[canvasId] = new Chart(canvas, {
+    type: "bar",
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: showPrior, position: "bottom", labels: { boxWidth: 12, font: { size: 10 } } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+        y: {
+          ticks: {
+            font: { size: 9 },
+            callback: v => metricData.isPercent ? v.toFixed(0) + "%" : (Math.abs(v) >= 1000000 ? "$" + (v / 1000000).toFixed(1) + "M" : "$" + (v / 1000).toFixed(0) + "K")
+          }
+        }
+      }
+    }
+  });
+}
+
+initOverviewModule();
 
 /* ============================================================
    FINANCIALS SECTION (STATIC CHARTS)
