@@ -1341,6 +1341,16 @@ button, .nav-item, .config-header, .dropdown-item {
   background: #dbeafe !important;
 }
 
+.is-profit-row td {
+  font-weight: 700;
+  background: #e0e7ef !important;
+}
+
+.is-expense-section-expanded td {
+  font-weight: 700;
+  background: #fef9c3 !important;
+}
+
 .is-spacer-row td {
   height: 12px;
   background: #fff !important;

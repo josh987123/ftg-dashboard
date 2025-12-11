@@ -4059,7 +4059,10 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
     
     const majorTotalLabels = ["Revenue", "Total Cost of Sales", "Gross Profit", "Operating Expenses", "Operating Income", "Net Profit Before Taxes", "Net Profit After Taxes"];
     const isMajorTotal = majorTotalLabels.includes(row.label);
-    const isBlueSubtotal = row.label === "Total Cost of Sales" || row.label === "Operating Expenses";
+    const profitRowLabels = ["Revenue", "Gross Profit", "Operating Income", "Net Profit Before Taxes", "Net Profit After Taxes"];
+    const expenseSectionLabels = ["Total Cost of Sales", "Operating Expenses", "Taxes", "Other Income/Expense"];
+    const isProfitRow = profitRowLabels.includes(row.label);
+    const isExpenseSection = expenseSectionLabels.includes(row.label);
     
     if (!isMajorTotal && row.type !== "ratio" && row.type !== "header") {
       const currentZero = row.value === 0 || row.value === null;
@@ -4074,14 +4077,17 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
     const typeClass = `is-row-${row.type}`;
     const indentClass = `is-indent-${row.level}`;
     const isIncome = row.isIncome || false;
-    const majorTotalClass = isMajorTotal && !isBlueSubtotal ? "is-major-total" : "";
-    const blueSubtotalClass = isBlueSubtotal ? "is-blue-subtotal" : "";
+    const profitRowClass = isProfitRow ? "is-profit-row" : "";
     
     let expandedSubtotalClass = "";
     let childRowClass = "";
+    let expenseSectionClass = "";
     
     if (row.expandable && isRowStates[row.id] === true) {
       expandedSubtotalClass = "is-expanded-subtotal";
+      if (isExpenseSection) {
+        expenseSectionClass = "is-expense-section-expanded";
+      }
     }
     
     if (row.parent) {
@@ -4106,7 +4112,7 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
       valueHtml = formatAccountingNumber(row.value);
     }
     
-    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${majorTotalClass} ${blueSubtotalClass} ${expandedSubtotalClass} ${childRowClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${profitRowClass} ${expenseSectionClass} ${expandedSubtotalClass} ${childRowClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
     
     if (comparisonRows) {
@@ -4187,7 +4193,10 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
     
     const majorTotalLabels = ["Revenue", "Total Cost of Sales", "Gross Profit", "Operating Expenses", "Operating Income", "Net Profit Before Taxes", "Net Profit After Taxes"];
     const isMajorTotal = majorTotalLabels.includes(row.label);
-    const isBlueSubtotal = row.label === "Total Cost of Sales" || row.label === "Operating Expenses";
+    const profitRowLabels = ["Revenue", "Gross Profit", "Operating Income", "Net Profit Before Taxes", "Net Profit After Taxes"];
+    const expenseSectionLabels = ["Total Cost of Sales", "Operating Expenses", "Taxes", "Other Income/Expense"];
+    const isProfitRow = profitRowLabels.includes(row.label);
+    const isExpenseSection = expenseSectionLabels.includes(row.label);
     
     if (!isMajorTotal && row.type !== "ratio" && row.type !== "header") {
       const allZero = allPeriodRows.every(periodRows => {
@@ -4203,14 +4212,17 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
     const hiddenClass = isVisible ? "" : "is-row-hidden";
     const typeClass = `is-row-${row.type}`;
     const indentClass = `is-indent-${row.level}`;
-    const majorTotalClass = isMajorTotal && !isBlueSubtotal ? "is-major-total" : "";
-    const blueSubtotalClass = isBlueSubtotal ? "is-blue-subtotal" : "";
+    const profitRowClass = isProfitRow ? "is-profit-row" : "";
     
     let expandedSubtotalClass = "";
     let childRowClass = "";
+    let expenseSectionClass = "";
     
     if (row.expandable && isRowStates[row.id] === true) {
       expandedSubtotalClass = "is-expanded-subtotal";
+      if (isExpenseSection) {
+        expenseSectionClass = "is-expense-section-expanded";
+      }
     }
     
     if (row.parent) {
@@ -4226,7 +4238,7 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
       toggleHtml = `<span class="is-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
     }
     
-    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${majorTotalClass} ${blueSubtotalClass} ${expandedSubtotalClass} ${childRowClass}" data-row-id="${row.id}">`;
+    bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${profitRowClass} ${expenseSectionClass} ${expandedSubtotalClass} ${childRowClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
     
     let rowSubtotal = 0;
