@@ -20,13 +20,16 @@
       <img src="logo.png" alt="FTG Logo" class="login-logo">
       <h2>FTG Dashboard</h2>
       <p>Please enter the password to continue</p>
-      <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="off" onkeypress="if(event.key==='Enter')doLogin()">
-      <button id="loginBtn" onclick="doLogin()">Login</button>
+      <form id="loginForm" onsubmit="return doLogin(event)">
+        <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password">
+        <button type="submit" id="loginBtn">Login</button>
+      </form>
       <p id="loginError" class="login-error"></p>
     </div>
   </div>
   <script>
-    function doLogin() {
+    function doLogin(event) {
+      if (event) event.preventDefault();
       var pwd = document.getElementById('loginPassword').value;
       var err = document.getElementById('loginError');
       if (pwd === 'Ftgb2025$') {
@@ -36,6 +39,7 @@
       } else {
         err.textContent = 'Incorrect password. Please try again.';
       }
+      return false;
     }
     if (localStorage.getItem('ftg_authenticated') === 'true') {
       document.getElementById('loginScreen').classList.add('hidden');
