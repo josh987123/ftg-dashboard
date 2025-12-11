@@ -1285,7 +1285,9 @@ function updateSummaryTiles(prefix, values, labels) {
   document.getElementById(prefix + "MaxPeriod").innerText = validLabels[maxIdx] || "-";
   document.getElementById(prefix + "MinValue").innerText = formatTileValue(minVal);
   document.getElementById(prefix + "MinPeriod").innerText = validLabels[minIdx] || "-";
-  document.getElementById(prefix + "CagrValue").innerText = (cagr >= 0 ? "+" : "") + cagr.toFixed(1) + "%";
+  const cagrEl = document.getElementById(prefix + "CagrValue");
+  cagrEl.innerText = (cagr >= 0 ? "+" : "") + cagr.toFixed(1) + "%";
+  cagrEl.style.color = cagr < 0 ? "#dc2626" : "";
 }
 
 function updateRevenueView(data) {
