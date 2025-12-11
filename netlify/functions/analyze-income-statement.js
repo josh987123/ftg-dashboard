@@ -131,24 +131,81 @@ ${statementData}`;
       };
     }
 
-    const result = JSON.parse(response.body.choices[0].message.content);
+    const rawContent = response.body.choices[0].message.content;
+    let analysis;
     
-    // Convert JSON to markdown format
-    let analysis = "## Key Observations\n";
-    for (const item of (result.key_observations || [])) {
-      analysis += `- ${item}\n`;
-    }
-    analysis += "\n## Positive Indicators\n";
-    for (const item of (result.positive_indicators || [])) {
-      analysis += `- ${item}\n`;
-    }
-    analysis += "\n## Areas of Concern\n";
-    for (const item of (result.areas_of_concern || [])) {
-      analysis += `- ${item}\n`;
-    }
-    analysis += "\n## Recommendations\n";
-    for (const item of (result.recommendations || [])) {
-      analysis += `- ${item}\n`;
+    // Try to parse as JSON first
+    try {
+      const result = JSON.parse(rawContent);
+      // Convert JSON to markdown format
+      analysis = "## Key Observations\n";
+      for (const item of (result.key_observations || []).slice(0, 4)) {
+        analysis += `- ${item}\n`;
+      }
+      analysis += "\n## Positive Indicators\n";
+      for (const item of (result.positive_indicators || []).slice(0, 4)) {
+        analysis += `- ${item}\n`;
+      }
+      analysis += "\n## Areas of Concern\n";
+      for (const item of (result.areas_of_concern || []).slice(0, 4)) {
+        analysis += `- ${item}\n`;
+      }
+      analysis += "\n## Recommendations\n";
+      for (const item of (result.recommendations || []).slice(0, 4)) {
+        analysis += `- ${item}\n`;
+      }
+    } catch (e) {
+      // Fallback: extract only the 4 sections from text response
+      const sections = {
+        key_observations: [],
+        positive_indicators: [],
+        areas_of_concern: [],
+        recommendations: []
+      };
+      
+      const headerMap = {
+        'key observations': 'key_observations',
+        'positive indicators': 'positive_indicators',
+        'areas of concern': 'areas_of_concern',
+        'recommendations': 'recommendations'
+      };
+      
+      let currentSection = null;
+      for (const line of rawContent.split('\n')) {
+        const trimmed = line.trim();
+        const lowerLine = trimmed.toLowerCase().replace(/#/g, '').trim();
+        
+        for (const [header, key] of Object.entries(headerMap)) {
+          if (lowerLine.includes(header)) {
+            currentSection = key;
+            break;
+          }
+        }
+        
+        if (currentSection && trimmed.startsWith('-')) {
+          const bullet = trimmed.slice(1).trim();
+          if (bullet && sections[currentSection].length < 4) {
+            sections[currentSection].push(bullet);
+          }
+        }
+      }
+      
+      analysis = "## Key Observations\n";
+      for (const item of sections.key_observations) {
+        analysis += `- ${item}\n`;
+      }
+      analysis += "\n## Positive Indicators\n";
+      for (const item of sections.positive_indicators) {
+        analysis += `- ${item}\n`;
+      }
+      analysis += "\n## Areas of Concern\n";
+      for (const item of sections.areas_of_concern) {
+        analysis += `- ${item}\n`;
+      }
+      analysis += "\n## Recommendations\n";
+      for (const item of sections.recommendations) {
+        analysis += `- ${item}\n`;
+      }
     }
 
     return {

@@ -211,21 +211,70 @@ Period: {period_info}
         )
         
         import json
-        result = json.loads(response.choices[0].message.content)
+        import re
         
-        # Convert JSON to markdown format
-        analysis = "## Key Observations\n"
-        for item in result.get("key_observations", []):
-            analysis += f"- {item}\n"
-        analysis += "\n## Positive Indicators\n"
-        for item in result.get("positive_indicators", []):
-            analysis += f"- {item}\n"
-        analysis += "\n## Areas of Concern\n"
-        for item in result.get("areas_of_concern", []):
-            analysis += f"- {item}\n"
-        analysis += "\n## Recommendations\n"
-        for item in result.get("recommendations", []):
-            analysis += f"- {item}\n"
+        raw_content = response.choices[0].message.content
+        
+        # Try to parse as JSON first
+        try:
+            result = json.loads(raw_content)
+            # Convert JSON to markdown format
+            analysis = "## Key Observations\n"
+            for item in result.get("key_observations", [])[:4]:
+                analysis += f"- {item}\n"
+            analysis += "\n## Positive Indicators\n"
+            for item in result.get("positive_indicators", [])[:4]:
+                analysis += f"- {item}\n"
+            analysis += "\n## Areas of Concern\n"
+            for item in result.get("areas_of_concern", [])[:4]:
+                analysis += f"- {item}\n"
+            analysis += "\n## Recommendations\n"
+            for item in result.get("recommendations", [])[:4]:
+                analysis += f"- {item}\n"
+        except (json.JSONDecodeError, TypeError):
+            # Fallback: extract only the 4 sections from text response
+            sections = {
+                'key_observations': [],
+                'positive_indicators': [],
+                'areas_of_concern': [],
+                'recommendations': []
+            }
+            
+            # Map section headers to keys
+            header_map = {
+                'key observations': 'key_observations',
+                'positive indicators': 'positive_indicators',
+                'areas of concern': 'areas_of_concern',
+                'recommendations': 'recommendations'
+            }
+            
+            current_section = None
+            for line in raw_content.split('\n'):
+                line = line.strip()
+                # Check for section headers
+                lower_line = line.lower().replace('#', '').strip()
+                for header, key in header_map.items():
+                    if header in lower_line:
+                        current_section = key
+                        break
+                # Collect bullet points for current valid section
+                if current_section and line.startswith('-'):
+                    bullet = line[1:].strip()
+                    if bullet and len(sections[current_section]) < 4:
+                        sections[current_section].append(bullet)
+            
+            analysis = "## Key Observations\n"
+            for item in sections['key_observations']:
+                analysis += f"- {item}\n"
+            analysis += "\n## Positive Indicators\n"
+            for item in sections['positive_indicators']:
+                analysis += f"- {item}\n"
+            analysis += "\n## Areas of Concern\n"
+            for item in sections['areas_of_concern']:
+                analysis += f"- {item}\n"
+            analysis += "\n## Recommendations\n"
+            for item in sections['recommendations']:
+                analysis += f"- {item}\n"
         
         return jsonify({'success': True, 'analysis': analysis})
         
