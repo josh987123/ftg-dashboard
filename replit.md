@@ -32,15 +32,21 @@ Preferred communication style: Simple, everyday language.
 - **Historical range**: Covers 2015-2025 with monthly granularity
 
 ### Dashboard Views
-- **Revenue View**: Monthly/quarterly/annual revenue charts with year comparison, trendlines, summary KPI tiles (Average, Largest, Smallest, CAGR), and export options (Print/PDF/CSV). Partial periods shown in orange with "Exclude Current Period" option.
-- **Account View**: GL account drilldown with dropdown selector (accounts 4000+), monthly/quarterly/annual views, trendlines, and data tables. Income accounts (4000-4999, 8000-8999) display as positive values.
+- **Executive Overview**: Six metric tiles with bar charts showing key financial metrics:
+  - Metrics: Revenue, Gross Profit, Gross Profit %, Operating Expenses, Operating Profit, Operating Profit %
+  - Configuration options: View type (monthly/quarterly/annual), year selector, year range slider for annual view
+  - Compare to prior year option adds red bars for prior year comparison
+  - Responsive grid layout (3 columns desktop, 2 tablet, 1 mobile)
+- **Revenue**: Monthly/quarterly/annual revenue charts with year comparison, trendlines, summary KPI tiles (Average, Largest, Smallest, CAGR), and export options (Print/PDF/CSV). Partial periods shown in orange with "Exclude Current Period" option.
+- **Account Detail**: GL account drilldown with dropdown selector (accounts 4000+), monthly/quarterly/annual views, trendlines, and data tables. Income accounts (4000-4999, 8000-8999) display as positive values.
 - **Income Statement**: Full P&L statement with hierarchical account groups from account_groups.json:
   - Period types: Month, Quarter, Year, YTD, TTM
   - Comparison modes: None, Prior Period, Prior Year (with $ and % variance)
   - View modes: Single Period or Matrix (3/6/9/12 months, 4 quarters, 5 years)
+  - Detail level selector: Summary/Medium/Account (stacked radio buttons right of Compare dropdown)
   - Expand/collapse hierarchy with disclosure icons
   - Accounting format: Whole dollars with parentheses for negatives, percentages for ratios
-- **Other sections**: Overview, Financials, Projects, Operations, Reports show "UNDER CONSTRUCTION" banners
+- **Other sections**: Financials, Projects, Operations, Reports show "UNDER CONSTRUCTION" banners
 
 ### Responsive Design
 - **Mobile-first approach**: Sidebar navigation with hamburger menu toggle for mobile devices
