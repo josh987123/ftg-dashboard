@@ -1822,10 +1822,16 @@ function buildIncomeStatementRows(periodMonths, groups, computedValues = {}) {
       if (isIncomeAccountGroup(group)) {
         value = Math.abs(value);
       }
+      if (group.negate) {
+        value = -value;
+      }
     } else if (group.accounts_range) {
       value = sumAccountsForPeriod(group.accounts_range, periodMonths, true);
       if (isIncomeAccountGroup(group)) {
         value = Math.abs(value);
+      }
+      if (group.negate) {
+        value = -value;
       }
     } else if (group.formula) {
       value = evaluateFormula(group.formula, computedValues);
@@ -1839,21 +1845,9 @@ function buildIncomeStatementRows(periodMonths, groups, computedValues = {}) {
       }
     }
     
-    rows.push({
-      id: rowId,
-      label: group.label,
-      level: group.level,
-      type: group.type,
-      value: value,
-      expandable: group.expandable || false,
-      parent: group.parent || null,
-      highlight: group.highlight || null,
-      isIncome: group.isIncome || false
-    });
-    
-    if (group.label === "Revenue" || group.label === "Total Cost of Sales") {
+    if (group.type === "spacer") {
       rows.push({
-        id: `spacer-after-${group.label.replace(/\s+/g, '_')}`,
+        id: `spacer-${idx}`,
         label: "",
         level: 0,
         type: "spacer",
@@ -1863,6 +1857,32 @@ function buildIncomeStatementRows(periodMonths, groups, computedValues = {}) {
         highlight: null,
         isIncome: false
       });
+    } else {
+      rows.push({
+        id: rowId,
+        label: group.label,
+        level: group.level || 0,
+        type: group.type,
+        value: value,
+        expandable: group.expandable || false,
+        parent: group.parent || null,
+        highlight: group.highlight || null,
+        isIncome: group.isIncome || false
+      });
+      
+      if (group.label === "Revenue" || group.label === "Total Cost of Sales") {
+        rows.push({
+          id: `spacer-after-${group.label.replace(/\s+/g, '_')}`,
+          label: "",
+          level: 0,
+          type: "spacer",
+          value: null,
+          expandable: false,
+          parent: null,
+          highlight: null,
+          isIncome: false
+        });
+      }
     }
   });
   

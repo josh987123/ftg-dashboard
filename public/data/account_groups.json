@@ -139,6 +139,426 @@
         "type": "ratio",
         "formula": "Gross Profit / Revenue",
         "isIncome": true
+      },
+
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+
+      {
+        "label": "Salaries",
+        "level": 2,
+        "type": "detail",
+        "accounts_range": [7010, 7020],
+        "parent": "Salaries & Benefits"
+      },
+      {
+        "label": "Benefits",
+        "level": 2,
+        "type": "detail",
+        "accounts_range": [7021, 7035],
+        "parent": "Salaries & Benefits"
+      },
+      {
+        "label": "Payroll Taxes",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7200],
+        "parent": "Salaries & Benefits"
+      },
+      {
+        "label": "Salaries & Benefits",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Salaries + Benefits + Payroll Taxes",
+        "expandable": true,
+        "parent": "Operating Expenses"
+      },
+
+      {
+        "label": "Advertising and Marketing",
+        "level": 1,
+        "type": "detail",
+        "accounts": [7040],
+        "parent": "Operating Expenses"
+      },
+
+      {
+        "label": "Rent",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7085],
+        "parent": "Facility"
+      },
+      {
+        "label": "Utilities",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7090],
+        "parent": "Facility"
+      },
+      {
+        "label": "Telephone",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7092],
+        "parent": "Facility"
+      },
+      {
+        "label": "Office Expense",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7095],
+        "parent": "Facility"
+      },
+      {
+        "label": "Repairs & Maintenance",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7170],
+        "parent": "Facility"
+      },
+      {
+        "label": "Security",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7180],
+        "parent": "Facility"
+      },
+      {
+        "label": "Facility",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Rent + Utilities + Telephone + Office Expense + Repairs & Maintenance + Security",
+        "expandable": true,
+        "parent": "Operating Expenses"
+      },
+
+      {
+        "label": "Travel",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7080],
+        "parent": "Travel & Entertainment"
+      },
+      {
+        "label": "Meals",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7082],
+        "parent": "Travel & Entertainment"
+      },
+      {
+        "label": "Entertainment",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7190],
+        "parent": "Travel & Entertainment"
+      },
+      {
+        "label": "Travel & Entertainment",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Travel + Meals + Entertainment",
+        "expandable": true,
+        "parent": "Operating Expenses"
+      },
+
+      {
+        "label": "General Insurance",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7140],
+        "parent": "Insurance"
+      },
+      {
+        "label": "Workers Comp",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7145],
+        "parent": "Insurance"
+      },
+      {
+        "label": "Insurance",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "General Insurance + Workers Comp",
+        "expandable": true,
+        "parent": "Operating Expenses"
+      },
+
+      {
+        "label": "Accounting",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7100],
+        "parent": "Professional Services"
+      },
+      {
+        "label": "Legal",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7120],
+        "parent": "Professional Services"
+      },
+      {
+        "label": "Consulting",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7150],
+        "parent": "Professional Services"
+      },
+      {
+        "label": "Computer Services",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7045],
+        "parent": "Professional Services"
+      },
+      {
+        "label": "Professional Services",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Accounting + Legal + Consulting + Computer Services",
+        "expandable": true,
+        "parent": "Operating Expenses"
+      },
+
+      {
+        "label": "Amortization Expense",
+        "level": 1,
+        "type": "detail",
+        "accounts": [7220],
+        "parent": "Operating Expenses"
+      },
+
+      {
+        "label": "Licenses & Permits",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7050],
+        "parent": "Administrative & Other"
+      },
+      {
+        "label": "Dues & Subscriptions",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7060],
+        "parent": "Administrative & Other"
+      },
+      {
+        "label": "Training",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7070],
+        "parent": "Administrative & Other"
+      },
+      {
+        "label": "Bank Charges",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7110],
+        "parent": "Administrative & Other"
+      },
+      {
+        "label": "Bad Debt",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7130],
+        "parent": "Administrative & Other"
+      },
+      {
+        "label": "Contributions",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7160],
+        "parent": "Administrative & Other"
+      },
+      {
+        "label": "Penalties",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7210],
+        "parent": "Administrative & Other"
+      },
+      {
+        "label": "Miscellaneous",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7230],
+        "parent": "Administrative & Other"
+      },
+      {
+        "label": "Administrative & Other",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Licenses & Permits + Dues & Subscriptions + Training + Bank Charges + Bad Debt + Contributions + Penalties + Miscellaneous",
+        "expandable": true,
+        "parent": "Operating Expenses"
+      },
+
+      {
+        "label": "Operating Expenses",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Salaries & Benefits + Advertising and Marketing + Facility + Travel & Entertainment + Insurance + Professional Services + Amortization Expense + Administrative & Other",
+        "expandable": true
+      },
+
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+
+      {
+        "label": "Operating Income",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Gross Profit - Operating Expenses",
+        "isIncome": true
+      },
+
+      {
+        "label": "Operating Margin %",
+        "level": 0,
+        "type": "ratio",
+        "formula": "Operating Income / Revenue",
+        "isIncome": true
+      },
+
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+
+      {
+        "label": "Interest Income",
+        "level": 2,
+        "type": "detail",
+        "accounts": [8000],
+        "negate": true,
+        "isIncome": true,
+        "parent": "Other Income/(Expense)"
+      },
+      {
+        "label": "Dividend Income",
+        "level": 2,
+        "type": "detail",
+        "accounts": [8005],
+        "negate": true,
+        "isIncome": true,
+        "parent": "Other Income/(Expense)"
+      },
+      {
+        "label": "Gain on Sale",
+        "level": 2,
+        "type": "detail",
+        "accounts": [8007],
+        "negate": true,
+        "isIncome": true,
+        "parent": "Other Income/(Expense)"
+      },
+      {
+        "label": "Other Income",
+        "level": 2,
+        "type": "detail",
+        "accounts": [8008],
+        "negate": true,
+        "isIncome": true,
+        "parent": "Other Income/(Expense)"
+      },
+      {
+        "label": "Interest Expense",
+        "level": 2,
+        "type": "detail",
+        "accounts": [8020],
+        "negate": true,
+        "parent": "Other Income/(Expense)"
+      },
+      {
+        "label": "Other Income/(Expense)",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Interest Income + Dividend Income + Gain on Sale + Other Income + Interest Expense",
+        "expandable": true,
+        "isIncome": true
+      },
+
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+
+      {
+        "label": "Net Profit Before Taxes",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Operating Income + Other Income/(Expense)",
+        "isIncome": true
+      },
+
+      {
+        "label": "Net Profit Margin Before Taxes %",
+        "level": 0,
+        "type": "ratio",
+        "formula": "Net Profit Before Taxes / Revenue",
+        "isIncome": true
+      },
+
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+
+      {
+        "label": "Federal Taxes",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7900],
+        "parent": "Taxes"
+      },
+      {
+        "label": "State Taxes",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7910],
+        "parent": "Taxes"
+      },
+      {
+        "label": "Local Taxes",
+        "level": 2,
+        "type": "detail",
+        "accounts": [7920],
+        "parent": "Taxes"
+      },
+      {
+        "label": "Taxes",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Federal Taxes + State Taxes + Local Taxes",
+        "expandable": true
+      },
+
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+
+      {
+        "label": "Net Profit After Taxes",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Net Profit Before Taxes - Taxes",
+        "isIncome": true
+      },
+
+      {
+        "label": "Net Profit Margin After Taxes %",
+        "level": 0,
+        "type": "ratio",
+        "formula": "Net Profit After Taxes / Revenue",
+        "isIncome": true
       }
     ]
   }
