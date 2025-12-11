@@ -2034,6 +2034,8 @@ function applyDetailLevel(level) {
   });
 }
 
+let isControlsInitialized = false;
+
 async function loadIncomeStatement() {
   if (!isData || !isAccountGroups) {
     try {
@@ -2044,12 +2046,17 @@ async function loadIncomeStatement() {
       isData = await financialsRes.json();
       isAccountGroups = await groupsRes.json();
       buildGLLookup();
-      initIncomeStatementControls();
     } catch (err) {
       console.error("Failed to load Income Statement data:", err);
       return;
     }
   }
+  
+  if (!isControlsInitialized) {
+    initIncomeStatementControls();
+    isControlsInitialized = true;
+  }
+  
   renderIncomeStatement();
 }
 
@@ -2121,6 +2128,8 @@ function initIncomeStatementControls() {
   const initialDetail = document.querySelector('input[name="isDetailLevel"]:checked');
   applyDetailLevel(initialDetail ? initialDetail.value : 'summary');
   
+  updateMatrixControlsVisibility();
+  
   matrixYearStart.oninput = () => {
     document.getElementById("isMatrixYearStartLabel").textContent = matrixYearStart.value;
     if (parseInt(matrixYearStart.value) > parseInt(matrixYearEnd.value)) {
@@ -2149,6 +2158,7 @@ function updateMatrixControlsVisibility() {
   const matrixControls = document.getElementById("isMatrixControls");
   const periodSelectLabel = document.getElementById("isPeriodSelectLabel");
   const periodSelect = document.getElementById("isPeriodSelect");
+  const showSubtotalWrapper = document.getElementById("isShowSubtotalWrapper");
   
   const ytdOption = periodTypeSelect.querySelector('option[value="ytd"]');
   const ttmOption = periodTypeSelect.querySelector('option[value="ttm"]');
@@ -2156,6 +2166,7 @@ function updateMatrixControlsVisibility() {
   if (viewMode === "matrix") {
     singleControls.classList.add("hidden");
     matrixControls.classList.remove("hidden");
+    if (showSubtotalWrapper) showSubtotalWrapper.classList.remove("hidden");
     
     if (ytdOption) ytdOption.disabled = true;
     if (ttmOption) ttmOption.disabled = true;
@@ -2183,6 +2194,7 @@ function updateMatrixControlsVisibility() {
     matrixControls.classList.add("hidden");
     periodSelect.classList.remove("hidden");
     if (periodSelectLabel) periodSelectLabel.classList.remove("hidden");
+    if (showSubtotalWrapper) showSubtotalWrapper.classList.add("hidden");
     
     if (ytdOption) ytdOption.disabled = false;
     if (ttmOption) ttmOption.disabled = false;
