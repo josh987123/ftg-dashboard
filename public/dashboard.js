@@ -1499,6 +1499,24 @@ const EMAILJS_CONFIG = {
   templateId: "template_44g2s84"
 };
 
+async function captureOverviewAsImage() {
+  const tilesGrid = document.querySelector(".overview-tiles-grid");
+  if (!tilesGrid) return null;
+  
+  try {
+    const canvas = await html2canvas(tilesGrid, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false
+    });
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } catch (err) {
+    console.error("html2canvas error:", err);
+    return null;
+  }
+}
+
 async function sendReportEmail() {
   const toEmail = document.getElementById("emailTo").value.trim();
   const subject = document.getElementById("emailSubject").value.trim();
@@ -1511,7 +1529,6 @@ async function sendReportEmail() {
     return;
   }
   
-  // Check if EmailJS is configured
   if (!EMAILJS_CONFIG.publicKey || !EMAILJS_CONFIG.serviceId || !EMAILJS_CONFIG.templateId) {
     statusEl.textContent = "Email service not configured. Please set up EmailJS.";
     statusEl.className = "email-status error";
@@ -1525,21 +1542,43 @@ async function sendReportEmail() {
     return;
   }
   
-  const html = generateReportHtml(data, true);
-  
-  statusEl.textContent = "Sending...";
+  statusEl.textContent = "Preparing report...";
   statusEl.className = "email-status";
   sendBtn.disabled = true;
   
   try {
-    // Initialize EmailJS
     emailjs.init(EMAILJS_CONFIG.publicKey);
     
-    // Send email via EmailJS
+    const view = getCurrentView();
+    let messageHtml = "";
+    let chartImage = "";
+    
+    if (view === "overview") {
+      statusEl.textContent = "Capturing charts...";
+      chartImage = await captureOverviewAsImage();
+      
+      if (chartImage) {
+        messageHtml = `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h1 style="color: #1f2937; margin: 0 0 5px 0;">FTG Builders - ${data.title}</h1>
+            <p style="color: #6b7280; margin: 0 0 20px 0;">${data.subtitle}</p>
+            <img src="${chartImage}" alt="Executive Overview Charts" style="max-width: 100%; height: auto; border: 1px solid #e5e7eb; border-radius: 8px;" />
+            <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()} | FTG Dashboard</p>
+          </div>
+        `;
+      } else {
+        messageHtml = generateReportHtml(data, true);
+      }
+    } else {
+      messageHtml = generateReportHtml(data, true);
+    }
+    
+    statusEl.textContent = "Sending...";
+    
     const templateParams = {
       to_email: toEmail,
       subject: subject,
-      message_html: html,
+      message_html: messageHtml,
       report_title: data.title
     };
     
