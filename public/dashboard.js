@@ -463,10 +463,22 @@ function updateOverviewStats(metrics, labels) {
     }
     
     const formatValue = (val, isPercent) => {
-      if (isPercent) return val.toFixed(1) + "%";
-      if (Math.abs(val) >= 1000000) return "$" + (val / 1000000).toFixed(1) + "M";
-      if (Math.abs(val) >= 1000) return "$" + (val / 1000).toFixed(0) + "K";
-      return "$" + val.toFixed(0);
+      if (isPercent) {
+        const formatted = Math.abs(val) >= 1000 
+          ? val.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+          : val.toFixed(1);
+        return formatted + "%";
+      }
+      if (Math.abs(val) >= 1000000) return "$" + (val / 1000000).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "M";
+      if (Math.abs(val) >= 1000) return "$" + Math.round(val / 1000).toLocaleString("en-US") + "K";
+      return "$" + Math.round(val).toLocaleString("en-US");
+    };
+    
+    const formatGrowth = (val) => {
+      const formatted = Math.abs(val) >= 1000 
+        ? val.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+        : val.toFixed(1);
+      return formatted + "%";
     };
     
     const avgEl = document.getElementById(cfg.avgId);
@@ -485,7 +497,7 @@ function updateOverviewStats(metrics, labels) {
     document.getElementById(cfg.lowPeriodId).textContent = lowPeriod;
     
     const cagrEl = document.getElementById(cfg.cagrId);
-    cagrEl.textContent = growthRate.toFixed(1) + "%";
+    cagrEl.textContent = formatGrowth(growthRate);
     cagrEl.className = growthRate < 0 ? "stat-value negative" : "stat-value";
   });
 }
