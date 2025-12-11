@@ -1374,17 +1374,17 @@ button, .nav-item, .config-header, .dropdown-item {
 }
 
 #incomeStatementTable {
-  width: 80%;
-  max-width: 900px;
+  width: auto;
   border-collapse: collapse;
   font-size: 13px;
 }
 
 #incomeStatementTable th,
 #incomeStatementTable td {
-  padding: 5px 14px;
+  padding: 5px 10px;
   text-align: right;
   border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
 }
 
 #incomeStatementTable th {
@@ -1544,17 +1544,17 @@ button, .nav-item, .config-header, .dropdown-item {
 }
 
 #balanceSheetTable {
-  width: 80%;
-  max-width: 900px;
+  width: auto;
   border-collapse: collapse;
   font-size: 13px;
 }
 
 #balanceSheetTable th,
 #balanceSheetTable td {
-  padding: 5px 14px;
+  padding: 5px 10px;
   text-align: right;
   border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
 }
 
 #balanceSheetTable th:first-child,
