@@ -4422,7 +4422,9 @@ function isRowVisibleByParent(row, rows) {
   if (!parentRow) return true;
   
   const parentExpanded = isRowStates[parentRow.id] === true;
-  return parentExpanded;
+  if (!parentExpanded) return false;
+  
+  return isRowVisibleByParent(parentRow, rows);
 }
 
 function attachToggleListeners() {
