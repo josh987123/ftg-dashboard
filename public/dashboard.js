@@ -1501,49 +1501,53 @@ const EMAILJS_CONFIG = {
 
 async function captureOverviewAsImage() {
   try {
-    // Get canvas elements and stats
+    // Chart configurations with their chart instance keys
     const chartConfigs = [
-      { canvasId: "overviewRevenueChart", title: "Revenue", statsId: "overviewRevenueStats" },
-      { canvasId: "overviewGrossProfitChart", title: "Gross Profit", statsId: "overviewGrossProfitStats" },
-      { canvasId: "overviewGrossMarginChart", title: "Gross Margin %", statsId: "overviewGrossMarginStats" },
-      { canvasId: "overviewOpexChart", title: "Operating Expenses", statsId: "overviewOpexStats" },
-      { canvasId: "overviewOpProfitChart", title: "Operating Profit", statsId: "overviewOpProfitStats" },
-      { canvasId: "overviewOpMarginChart", title: "Operating Margin %", statsId: "overviewOpMarginStats" }
+      { id: "overviewRevenueChart", title: "Revenue" },
+      { id: "overviewGrossProfitChart", title: "Gross Profit" },
+      { id: "overviewGrossMarginChart", title: "Gross Margin %" },
+      { id: "overviewOpexChart", title: "Operating Expenses" },
+      { id: "overviewOpProfitChart", title: "Operating Profit" },
+      { id: "overviewOpMarginChart", title: "Operating Margin %" }
     ];
     
-    // Collect chart data
-    const chartData = [];
+    // Load chart images using Chart.js toBase64Image
+    const loadImage = (src) => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+    
+    const chartImages = [];
     for (const cfg of chartConfigs) {
-      const canvas = document.getElementById(cfg.canvasId);
-      const statsEl = document.getElementById(cfg.statsId);
-      if (canvas) {
-        const stats = [];
-        if (statsEl) {
-          const statBoxes = statsEl.querySelectorAll(".stat-box");
-          statBoxes.forEach(box => {
-            const label = box.querySelector(".stat-label")?.textContent || "";
-            const value = box.querySelector(".stat-value")?.textContent || "-";
-            stats.push({ label, value });
-          });
+      const chartInstance = overviewChartInstances[cfg.id];
+      if (chartInstance) {
+        try {
+          const base64 = chartInstance.toBase64Image("image/png", 1);
+          const img = await loadImage(base64);
+          chartImages.push({ img, title: cfg.title });
+        } catch (e) {
+          console.log("Error getting chart image:", cfg.id, e);
         }
-        chartData.push({ canvas, title: cfg.title, stats });
       }
     }
     
-    if (chartData.length === 0) {
-      console.log("No charts found");
+    console.log("Captured", chartImages.length, "chart images");
+    
+    if (chartImages.length === 0) {
+      console.log("No chart images captured");
       return null;
     }
     
     // Create composite canvas (2x3 grid)
-    const chartWidth = 380;
+    const chartWidth = 350;
     const chartHeight = 200;
-    const titleHeight = 30;
-    const statsHeight = 50;
-    const tileHeight = titleHeight + chartHeight + statsHeight;
+    const titleHeight = 25;
     const cols = 3;
     const rows = 2;
-    const padding = 15;
+    const padding = 12;
+    const tileHeight = titleHeight + chartHeight;
     
     const compositeCanvas = document.createElement("canvas");
     compositeCanvas.width = cols * chartWidth + (cols + 1) * padding;
@@ -1551,55 +1555,31 @@ async function captureOverviewAsImage() {
     const ctx = compositeCanvas.getContext("2d");
     
     // Fill background
-    ctx.fillStyle = "#f8fafc";
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
     
-    // Draw each chart with title and stats
-    for (let i = 0; i < chartData.length && i < 6; i++) {
-      const { canvas, title, stats } = chartData[i];
+    // Draw each chart with title
+    for (let i = 0; i < chartImages.length && i < 6; i++) {
+      const { img, title } = chartImages[i];
       const col = i % cols;
       const row = Math.floor(i / cols);
       const x = padding + col * (chartWidth + padding);
       const y = padding + row * (tileHeight + padding);
       
-      // Draw tile background
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(x, y, chartWidth, tileHeight);
-      ctx.strokeStyle = "#e5e7eb";
-      ctx.strokeRect(x, y, chartWidth, tileHeight);
-      
       // Draw title
       ctx.fillStyle = "#374151";
-      ctx.font = "bold 14px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(title, x + chartWidth / 2, y + 20);
+      ctx.font = "bold 13px Arial";
+      ctx.textAlign = "left";
+      ctx.fillText(title, x, y + 16);
       
-      // Draw chart
-      try {
-        ctx.drawImage(canvas, x + 5, y + titleHeight, chartWidth - 10, chartHeight);
-      } catch (e) {
-        console.log("Error drawing chart", i);
-      }
-      
-      // Draw stats
-      const statsY = y + titleHeight + chartHeight + 10;
-      const statWidth = (chartWidth - 20) / 4;
-      ctx.font = "bold 9px Arial";
-      ctx.textAlign = "center";
-      
-      for (let j = 0; j < stats.length && j < 4; j++) {
-        const statX = x + 10 + j * statWidth + statWidth / 2;
-        ctx.fillStyle = "#6b7280";
-        ctx.fillText(stats[j].label.toUpperCase(), statX, statsY + 12);
-        ctx.fillStyle = "#1f2937";
-        ctx.font = "bold 11px Arial";
-        ctx.fillText(stats[j].value, statX, statsY + 28);
-        ctx.font = "bold 9px Arial";
+      // Draw chart image
+      if (img) {
+        ctx.drawImage(img, x, y + titleHeight, chartWidth, chartHeight);
       }
     }
     
     // Convert to JPEG
-    const dataUrl = compositeCanvas.toDataURL("image/jpeg", 0.9);
+    const dataUrl = compositeCanvas.toDataURL("image/jpeg", 0.85);
     const base64Data = dataUrl.split(",")[1];
     const sizeKB = Math.round(base64Data.length / 1024);
     console.log("Composite chart image size:", sizeKB, "KB");
