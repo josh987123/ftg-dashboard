@@ -5537,6 +5537,7 @@ function calculateRetainedEarnings(asOfMonth) {
   const incomeExpenseAccounts = getIncomeExpenseAccounts();
   const allMonths = getBSAvailableMonths();
   const monthsUpToPriorYearEnd = allMonths.filter(m => m <= priorYearEnd);
+  const monthsUpToSelected = allMonths.filter(m => m <= asOfMonth);
   
   let total = 0;
   incomeExpenseAccounts.forEach(acct => {
@@ -5548,7 +5549,15 @@ function calculateRetainedEarnings(asOfMonth) {
     }
   });
   
-  return -total;
+  let acct3020Total = 0;
+  const acct3020Data = bsGLLookup[3020];
+  if (acct3020Data) {
+    monthsUpToSelected.forEach(m => {
+      acct3020Total += acct3020Data[m] || 0;
+    });
+  }
+  
+  return -total - acct3020Total;
 }
 
 function calculateCurrentYearNetIncome(asOfMonth) {
