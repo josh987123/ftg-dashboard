@@ -1124,6 +1124,7 @@ function getIncomeStatementTableHtml() {
   const clone = table.cloneNode(true);
   clone.querySelectorAll(".is-row-hidden").forEach(r => r.remove());
   clone.querySelectorAll(".is-spacer-row").forEach(r => r.remove());
+  clone.querySelectorAll(".is-toggle").forEach(t => t.remove());
   
   return clone.outerHTML;
 }
