@@ -1446,28 +1446,37 @@ async function sendReportEmail() {
       "Accept": "application/json"
     };
     
-    let response = await fetch("/send-email.json", {
-      method: "POST",
-      headers: headers,
-      body: payload
-    });
+    const endpoints = ["/api/send-email", "/send-email.json", "/__api__/send-email"];
+    let lastError = null;
     
-    let contentType = response.headers.get("content-type");
-    
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new Error("Email service temporarily unavailable. Please try again.");
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: headers,
+          body: payload
+        });
+        
+        const contentType = response.headers.get("content-type");
+        
+        if (contentType && contentType.includes("application/json")) {
+          const result = await response.json();
+          
+          if (result.success) {
+            statusEl.textContent = "Email sent successfully!";
+            statusEl.className = "email-status success";
+            setTimeout(closeEmailModal, 2000);
+            return;
+          } else if (result.error) {
+            lastError = result.error;
+          }
+        }
+      } catch (e) {
+        lastError = e.message;
+      }
     }
     
-    const result = await response.json();
-    
-    if (result.success) {
-      statusEl.textContent = "Email sent successfully!";
-      statusEl.className = "email-status success";
-      setTimeout(closeEmailModal, 2000);
-    } else {
-      statusEl.textContent = result.error || "Failed to send email.";
-      statusEl.className = "email-status error";
-    }
+    throw new Error(lastError || "Email service unavailable. Please try again later.");
   } catch (err) {
     statusEl.textContent = "Error sending email: " + err.message;
     statusEl.className = "email-status error";

@@ -14,15 +14,17 @@ def get_gmail_access_token():
     repl_identity = os.environ.get('REPL_IDENTITY')
     web_repl_renewal = os.environ.get('WEB_REPL_RENEWAL')
     
+    print(f"Checking Gmail connection - hostname: {hostname is not None}, repl_identity: {repl_identity is not None}, web_repl_renewal: {web_repl_renewal is not None}")
+    
     if repl_identity:
         x_replit_token = f'repl {repl_identity}'
     elif web_repl_renewal:
         x_replit_token = f'depl {web_repl_renewal}'
     else:
-        raise Exception('X_REPLIT_TOKEN not found')
+        raise Exception('Gmail authentication token not available. Please ensure the Gmail connection is set up.')
     
     if not hostname:
-        raise Exception('REPLIT_CONNECTORS_HOSTNAME not found')
+        raise Exception('Replit connectors not available. Please try again.')
     
     response = requests.get(
         f'https://{hostname}/api/v2/connection?include_secrets=true&connector_names=google-mail',
@@ -32,8 +34,18 @@ def get_gmail_access_token():
         }
     )
     
+    print(f"Connector response status: {response.status_code}")
+    
+    if response.status_code != 200:
+        raise Exception(f'Failed to get Gmail credentials: {response.status_code}')
+    
     data = response.json()
-    connection_settings = data.get('items', [{}])[0]
+    items = data.get('items', [])
+    
+    if not items:
+        raise Exception('Gmail not connected. Please connect your Gmail account in the Connections panel.')
+    
+    connection_settings = items[0]
     
     access_token = (
         connection_settings.get('settings', {}).get('access_token') or
@@ -41,7 +53,7 @@ def get_gmail_access_token():
     )
     
     if not access_token:
-        raise Exception('Gmail not connected')
+        raise Exception('Gmail access token not found. Please reconnect your Gmail account.')
     
     return access_token
 
