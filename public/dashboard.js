@@ -128,52 +128,29 @@ function closeChartFullscreen() {
 }
 
 /* ------------------------------------------------------------
-   PASSWORD PROTECTION
+   USER SESSION MANAGEMENT
 ------------------------------------------------------------ */
-const SITE_PASSWORD = "Ftgb2025$";
-
 function initAuth() {
   const loginScreen = document.getElementById("loginScreen");
-  const loginBtn = document.getElementById("loginBtn");
-  const loginPassword = document.getElementById("loginPassword");
-  const loginError = document.getElementById("loginError");
   const logoutBtn = document.getElementById("logoutBtn");
-  
-  if (!loginScreen || !loginBtn || !loginPassword) {
-    console.error("Login elements not found");
-    return;
-  }
+  const currentUserEl = document.getElementById("currentUser");
   
   const isAuthenticated = localStorage.getItem("ftg_authenticated");
+  const currentUser = localStorage.getItem("ftg_current_user");
   
-  if (isAuthenticated === "true") {
+  if (isAuthenticated === "true" && currentUser) {
     loginScreen.classList.add("hidden");
-  }
-  
-  function attemptLogin() {
-    const password = loginPassword.value;
-    console.log("Login attempt with password length:", password.length);
-    
-    if (password === SITE_PASSWORD) {
-      localStorage.setItem("ftg_authenticated", "true");
-      loginScreen.classList.add("hidden");
-      if (loginError) loginError.textContent = "";
-      console.log("Login successful");
-    } else {
-      if (loginError) loginError.textContent = "Incorrect password. Please try again.";
-      console.log("Login failed - password mismatch");
+    if (currentUserEl) {
+      const displayName = currentUser.charAt(0).toUpperCase() + currentUser.slice(1);
+      currentUserEl.textContent = displayName;
     }
   }
-  
-  loginBtn.onclick = attemptLogin;
-  
-  loginPassword.onkeypress = function(e) {
-    if (e.key === "Enter") attemptLogin();
-  };
   
   if (logoutBtn) {
     logoutBtn.onclick = function() {
       localStorage.removeItem("ftg_authenticated");
+      localStorage.removeItem("ftg_current_user");
+      if (currentUserEl) currentUserEl.textContent = "";
       loginScreen.classList.remove("hidden");
     };
   }
@@ -282,6 +259,117 @@ document.getElementById("currentUser").innerText = "";
 
 let overviewDataCache = null;
 let overviewChartInstances = {};
+
+/* ------------------------------------------------------------
+   USER PREFERENCES SYSTEM
+------------------------------------------------------------ */
+const metricTileMapping = {
+  revenue: "overviewRevenueChart",
+  grossProfit: "overviewGrossProfitChart",
+  grossMargin: "overviewGrossMarginChart",
+  opExpenses: "overviewOpexChart",
+  opProfit: "overviewOpProfitChart",
+  opMargin: "overviewOpMarginChart"
+};
+
+function getCurrentUser() {
+  return localStorage.getItem("ftg_current_user") || null;
+}
+
+function getUserPreferences() {
+  const user = getCurrentUser();
+  if (!user) return {};
+  const stored = localStorage.getItem(`ftg_prefs_${user}`);
+  return stored ? JSON.parse(stored) : {};
+}
+
+function saveUserPreferences(prefs) {
+  const user = getCurrentUser();
+  if (!user) return;
+  const existing = getUserPreferences();
+  const merged = { ...existing, ...prefs };
+  localStorage.setItem(`ftg_prefs_${user}`, JSON.stringify(merged));
+}
+
+function loadUserPreferences() {
+  const user = getCurrentUser();
+  if (!user) return;
+  
+  const prefs = getUserPreferences();
+  
+  if (prefs.overviewMetrics) {
+    Object.keys(metricTileMapping).forEach(metric => {
+      const checkbox = document.querySelector(`[data-metric="${metric}"]`);
+      if (checkbox) {
+        checkbox.checked = prefs.overviewMetrics[metric] !== false;
+      }
+    });
+    updateMetricVisibility();
+  }
+  
+  if (prefs.overviewConfig) {
+    const cfg = prefs.overviewConfig;
+    if (cfg.viewType) {
+      const viewEl = document.getElementById("overviewViewType");
+      if (viewEl) viewEl.value = cfg.viewType;
+    }
+    if (cfg.year) {
+      const yearEl = document.getElementById("overviewYear");
+      if (yearEl) yearEl.value = cfg.year;
+    }
+    if (typeof cfg.compare === "boolean") {
+      const compareEl = document.getElementById("overviewCompare");
+      if (compareEl) compareEl.checked = cfg.compare;
+    }
+    if (typeof cfg.trendline === "boolean") {
+      const trendEl = document.getElementById("overviewTrend");
+      if (trendEl) trendEl.checked = cfg.trendline;
+    }
+    if (typeof cfg.dataLabels === "boolean") {
+      const dataLabelsEl = document.getElementById("overviewDataLabels");
+      if (dataLabelsEl) dataLabelsEl.checked = cfg.dataLabels;
+    }
+    if (typeof cfg.excludeCurrent === "boolean") {
+      const excludeEl = document.getElementById("overviewExclude");
+      if (excludeEl) excludeEl.checked = cfg.excludeCurrent;
+    }
+  }
+}
+
+function updateMetricVisibility() {
+  const metricCheckboxes = document.querySelectorAll("[data-metric]");
+  metricCheckboxes.forEach(cb => {
+    const metric = cb.dataset.metric;
+    const chartId = metricTileMapping[metric];
+    const canvas = document.getElementById(chartId);
+    if (canvas) {
+      const tile = canvas.closest(".overview-metric-tile");
+      if (tile) {
+        tile.style.display = cb.checked ? "" : "none";
+      }
+    }
+  });
+  
+  const visiblePrefs = {};
+  metricCheckboxes.forEach(cb => {
+    visiblePrefs[cb.dataset.metric] = cb.checked;
+  });
+  saveUserPreferences({ overviewMetrics: visiblePrefs });
+}
+
+function saveOverviewConfig() {
+  const cfg = {
+    viewType: document.getElementById("overviewViewType")?.value,
+    year: document.getElementById("overviewYear")?.value,
+    compare: document.getElementById("overviewCompare")?.checked,
+    trendline: document.getElementById("overviewTrend")?.checked,
+    dataLabels: document.getElementById("overviewDataLabels")?.checked,
+    excludeCurrent: document.getElementById("overviewExclude")?.checked
+  };
+  saveUserPreferences({ overviewConfig: cfg });
+}
+
+window.loadUserPreferences = loadUserPreferences;
 let isData = null;
 let isAccountGroups = null;
 let isGLLookup = {};
@@ -371,28 +459,39 @@ function setupOverviewUI() {
       rangeWrapper.classList.add("hidden");
     }
     updateOverviewCharts();
+    saveOverviewConfig();
   };
   
   const excludeCheck = document.getElementById("overviewExclude");
   const dataLabelsCheck = document.getElementById("overviewDataLabels");
   
-  yearSelect.onchange = () => updateOverviewCharts();
-  compareCheck.onchange = () => updateOverviewCharts();
-  trendCheck.onchange = () => updateOverviewCharts();
-  excludeCheck.onchange = () => updateOverviewCharts();
-  dataLabelsCheck.onchange = () => updateOverviewCharts();
+  yearSelect.onchange = () => { updateOverviewCharts(); saveOverviewConfig(); };
+  compareCheck.onchange = () => { updateOverviewCharts(); saveOverviewConfig(); };
+  trendCheck.onchange = () => { updateOverviewCharts(); saveOverviewConfig(); };
+  excludeCheck.onchange = () => { updateOverviewCharts(); saveOverviewConfig(); };
+  dataLabelsCheck.onchange = () => { updateOverviewCharts(); saveOverviewConfig(); };
   
   rangeStart.oninput = () => {
     if (+rangeStart.value > +rangeEnd.value) rangeStart.value = rangeEnd.value;
     document.getElementById("overviewRangeStartLabel").textContent = rangeStart.value;
     updateOverviewCharts();
+    saveOverviewConfig();
   };
   
   rangeEnd.oninput = () => {
     if (+rangeEnd.value < +rangeStart.value) rangeEnd.value = rangeStart.value;
     document.getElementById("overviewRangeEndLabel").textContent = rangeEnd.value;
     updateOverviewCharts();
+    saveOverviewConfig();
   };
+  
+  document.querySelectorAll("[data-metric]").forEach(cb => {
+    cb.onchange = () => updateMetricVisibility();
+  });
+  
+  loadUserPreferences();
+  updateMetricVisibility();
+  
   } catch (err) {
     console.error("Error setting up overview UI:", err);
   }

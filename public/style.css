@@ -273,6 +273,19 @@ button, .nav-item, .config-header, .dropdown-item {
   gap: 16px;
 }
 
+.user-label {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 14px;
+  padding: 6px 12px;
+  background: #e5e7eb;
+  border-radius: 4px;
+}
+
+.user-label:empty {
+  display: none;
+}
+
 /* EXPORT DROPDOWN */
 .export-dropdown {
   position: relative;
@@ -882,6 +895,34 @@ button, .nav-item, .config-header, .dropdown-item {
   gap: 2px;
 }
 
+.metric-visibility-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: 20px;
+  padding: 10px;
+  background: var(--surface-2);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.metric-visibility-section .section-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.metric-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metric-checkboxes .checkbox-label {
+  font-size: 13px;
+}
+
 @media (max-width: 768px) {
   .checkbox-label {
     padding: 2px 0 !important;
@@ -892,6 +933,11 @@ button, .nav-item, .config-header, .dropdown-item {
   
   .checkbox-stack {
     gap: 0 !important;
+  }
+  
+  .metric-visibility-section {
+    margin-left: 0;
+    margin-top: 10px;
   }
 }
 

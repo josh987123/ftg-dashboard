@@ -19,9 +19,11 @@ Preferred communication style: Simple, everyday language.
   - `dashboard.js` - All application logic including authentication and navigation
 
 ### Authentication
-- **Client-side password protection**: Simple password check against a hardcoded value (`Ftgb2025$`)
-- **Session persistence**: Uses `localStorage` to remember authentication state
-- **Login flow**: Modal overlay blocks access until correct password is entered
+- **User-specific logins**: Four authorized users (Sergio, Josh, Rodney, Greg) with shared password (`Ftgb2025$`)
+- **Login flow**: Modal requires first name + password, validates against authorized user list
+- **Session persistence**: Uses `localStorage` to remember authentication state and current user (`ftg_current_user`)
+- **User display**: Current user's name shown in header after login
+- **User preferences**: Each user's settings saved to `localStorage` keyed by username (`ftg_prefs_${username}`)
 
 ### Data Management
 - **Static JSON files**: Financial data is stored in `/public/data/financials.json` and account hierarchy in `/public/data/account_groups.json`

@@ -40,29 +40,41 @@
     <div class="login-box">
       <img src="logo.png" alt="FTG Logo" class="login-logo">
       <h2>FTG Dashboard</h2>
-      <p>Please enter the password to continue</p>
+      <p>Please enter your name and password</p>
       <form id="loginForm" onsubmit="return doLogin(event)">
-        <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password">
+        <input type="text" id="loginUsername" placeholder="First name (Sergio, Josh, Rodney, Greg)" autocomplete="username">
+        <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
         <button type="submit" id="loginBtn">Login</button>
       </form>
       <p id="loginError" class="login-error"></p>
     </div>
   </div>
   <script>
+    var validUsers = ['sergio', 'josh', 'rodney', 'greg'];
     function doLogin(event) {
       if (event) event.preventDefault();
+      var username = document.getElementById('loginUsername').value.toLowerCase().trim();
       var pwd = document.getElementById('loginPassword').value;
       var err = document.getElementById('loginError');
+      if (!validUsers.includes(username)) {
+        err.textContent = 'Please enter a valid first name (Sergio, Josh, Rodney, or Greg).';
+        return false;
+      }
       if (pwd === 'Ftgb2025$') {
         localStorage.setItem('ftg_authenticated', 'true');
+        localStorage.setItem('ftg_current_user', username);
         document.getElementById('loginScreen').classList.add('hidden');
         err.textContent = '';
+        var displayName = username.charAt(0).toUpperCase() + username.slice(1);
+        var userLabel = document.getElementById('currentUser');
+        if (userLabel) userLabel.textContent = displayName;
+        if (typeof loadUserPreferences === 'function') loadUserPreferences();
       } else {
         err.textContent = 'Incorrect password. Please try again.';
       }
       return false;
     }
-    if (localStorage.getItem('ftg_authenticated') === 'true') {
+    if (localStorage.getItem('ftg_authenticated') === 'true' && localStorage.getItem('ftg_current_user')) {
       document.getElementById('loginScreen').classList.add('hidden');
     }
   </script>
@@ -161,6 +173,36 @@
                   <input type="checkbox" id="overviewExclude">
                   Exclude Month in Progress
                 </label>
+              </div>
+
+              <div class="metric-visibility-section">
+                <label class="section-label">Show Metrics:</label>
+                <div class="metric-checkboxes">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="showRevenue" checked data-metric="revenue">
+                    Revenue
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="showGrossProfit" checked data-metric="grossProfit">
+                    Gross Profit
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="showGrossMargin" checked data-metric="grossMargin">
+                    Gross Profit %
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="showOpExpenses" checked data-metric="opExpenses">
+                    Operating Expenses
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="showOpProfit" checked data-metric="opProfit">
+                    Operating Profit
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="showOpMargin" checked data-metric="opMargin">
+                    Operating Profit %
+                  </label>
+                </div>
               </div>
 
               <div id="overviewRangeWrapper" class="range-wrapper hidden">
