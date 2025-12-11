@@ -155,6 +155,10 @@ document.getElementById("currentUser").innerText = "";
 
 let overviewDataCache = null;
 let overviewChartInstances = {};
+let isData = null;
+let isAccountGroups = null;
+let isGLLookup = {};
+let isRowStates = {};
 
 async function initOverviewModule() {
   try {
@@ -1964,11 +1968,6 @@ function renderAccountTable(labels, datasets) {
 /* ============================================================
    INCOME STATEMENT MODULE
 ============================================================ */
-
-let isData = null;
-let isAccountGroups = null;
-let isGLLookup = {};
-let isRowStates = {};
 
 function applyDetailLevel(level) {
   const summaryExpanded = [];
