@@ -1356,6 +1356,16 @@ button, .nav-item, .config-header, .dropdown-item {
   background: #e5e7eb !important;
 }
 
+.is-tan-section-expanded td {
+  font-weight: 600;
+  background: #f5e6d3 !important;
+}
+
+.is-opexp-gray-expanded td {
+  font-weight: 600;
+  background: #e5e7eb !important;
+}
+
 .is-spacer-row td {
   height: 12px;
   background: #fff !important;
