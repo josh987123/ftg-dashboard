@@ -28,7 +28,7 @@ Preferred communication style: Simple, everyday language.
 - **Data structure**: Organized by metric type (revenue, accounts_receivable, accounts_payable) with yearly arrays containing monthly values
 - **GL History**: `gl_history_all` array contains individual GL account data with monthly columns in "YYYY-MM" format
 - **Accounts**: `accounts` array contains account metadata (account_no, description, debit_credit)
-- **Account Groups**: `income_statement.groups` array defines hierarchical P&L structure with accounts, accounts_range, formulas, levels, and row types (header, detail, subtotal, ratio)
+- **Account Groups**: `income_statement.groups` and `balance_sheet.groups` arrays define hierarchical financial statement structures with accounts, accounts_range, formulas, levels, and row types (header, detail, subtotal, ratio)
 - **Historical range**: Covers 2015-2025 with monthly granularity
 
 ### Dashboard Views
@@ -46,7 +46,14 @@ Preferred communication style: Simple, everyday language.
   - Detail level selector: Summary/Medium/Account (stacked radio buttons right of Compare dropdown)
   - Expand/collapse hierarchy with disclosure icons
   - Accounting format: Whole dollars with parentheses for negatives, percentages for ratios
-- **Balance Sheet**: Under construction - will display balance sheet reports
+- **Balance Sheet**: Full balance sheet with cumulative balances from inception (2015) to selected date:
+  - As of date selector (monthly periods from 2015-2025)
+  - Comparison mode: None or Prior Year (with $ and % variance)
+  - Detail level: Summary (totals only) or Detail (all line items)
+  - Show in Thousands option
+  - Account groups: Assets (1000s), Liabilities (2000s), Equity (3000s)
+  - Hierarchical structure with expand/collapse for subtotals
+  - Excludes Retained Earnings and current period Net Income (per user preference)
 - **Statement of Cash Flows**: Under construction - will display cash flow statements
 - **Over/Under Bill**: Under construction - will track billing variances
 - **Receivables/Payables**: Under construction - will manage AR/AP tracking
