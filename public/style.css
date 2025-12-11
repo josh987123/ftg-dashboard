@@ -320,6 +320,9 @@ body {
   background:#374151;
   border-left-color:#3b82f6;
 }
+.nav-item.placeholder {
+  color: #f59e0b;
+}
 
 /* MOBILE SIDEBAR */
 @media (max-width:768px){
