@@ -1247,11 +1247,11 @@ button, .nav-item, .config-header, .dropdown-item {
 
 .is-controls select,
 .is-controls button {
-  padding: 10px 12px;
-  min-height: 44px;
-  border-radius: 8px;
+  padding: 5px 8px;
+  min-height: 28px;
+  border-radius: 4px;
   border: 1px solid #d1d5db;
-  font-size: 14px;
+  font-size: 11px;
   background: #fff;
   cursor: pointer;
 }
@@ -1795,8 +1795,8 @@ button, .nav-item, .config-header, .dropdown-item {
   .is-controls select,
   .is-controls button {
     width: 100%;
-    min-height: 44px;
-    font-size: 14px;
+    min-height: 28px;
+    font-size: 11px;
   }
   
   #isPeriodWrapper,
@@ -2529,9 +2529,9 @@ button, .nav-item, .config-header, .dropdown-item {
   }
   
   .is-controls select {
-    font-size: 15px !important;
-    padding: 8px 10px !important;
-    min-height: 36px;
+    font-size: 11px !important;
+    padding: 5px 8px !important;
+    min-height: 28px;
   }
   
   .is-options-stack {
