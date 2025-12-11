@@ -33,24 +33,31 @@ exports.handler = async function(event, context) {
       };
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return {
         statusCode: 500,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'OpenAI API key not configured' })
+        body: JSON.stringify({ error: 'Anthropic API key not configured' })
       };
     }
 
     const systemPrompt = `You are a CFO analyzing a construction company's Income Statement.
 
-STRICT OUTPUT RULES:
-- Return EXACTLY 4 arrays: key_observations, positive_indicators, areas_of_concern, recommendations
-- Each array must have EXACTLY 3-4 items
+You must respond with ONLY a valid JSON object containing exactly these 4 arrays:
+{
+  "key_observations": ["observation 1", "observation 2", "observation 3"],
+  "positive_indicators": ["indicator 1", "indicator 2", "indicator 3"],
+  "areas_of_concern": ["concern 1", "concern 2", "concern 3"],
+  "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"]
+}
+
+STRICT RULES:
+- Return ONLY the JSON object, no other text before or after
+- Each array must have exactly 3-4 items
 - Each item is one concise sentence with specific dollar amounts
 - Round all dollar amounts to whole numbers (no decimals) - use $3.8M not $3.84M
-- DO NOT add any other fields or sections
-- DO NOT include profitability analysis, revenue trends, cost structure, or any other categories`;
+- DO NOT add any other fields or sections`;
 
     const userPrompt = `Analyze this Income Statement for FTG Builders:
 
@@ -58,57 +65,25 @@ Period: ${periodInfo}
 
 ${statementData}`;
 
+    // Using Claude Sonnet 4 - the latest model
     const requestBody = JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "income_statement_analysis",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              key_observations: {
-                type: "array",
-                items: { type: "string" },
-                description: "3-4 key observations about the financial data"
-              },
-              positive_indicators: {
-                type: "array",
-                items: { type: "string" },
-                description: "3-4 positive financial indicators"
-              },
-              areas_of_concern: {
-                type: "array",
-                items: { type: "string" },
-                description: "3-4 areas requiring attention"
-              },
-              recommendations: {
-                type: "array",
-                items: { type: "string" },
-                description: "3-4 actionable recommendations"
-              }
-            },
-            required: ["key_observations", "positive_indicators", "areas_of_concern", "recommendations"],
-            additionalProperties: false
-          }
-        }
-      }
+      system: systemPrompt,
+      messages: [
+        { role: 'user', content: userPrompt }
+      ]
     });
 
     const response = await new Promise((resolve, reject) => {
       const req = https.request({
-        hostname: 'api.openai.com',
-        path: '/v1/chat/completions',
+        hostname: 'api.anthropic.com',
+        path: '/v1/messages',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
           'Content-Length': Buffer.byteLength(requestBody)
         }
       }, (res) => {
@@ -118,7 +93,7 @@ ${statementData}`;
           try {
             resolve({ statusCode: res.statusCode, body: JSON.parse(data) });
           } catch (e) {
-            reject(new Error('Failed to parse OpenAI response'));
+            reject(new Error('Failed to parse Anthropic response'));
           }
         });
       });
@@ -135,14 +110,14 @@ ${statementData}`;
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         },
-        body: JSON.stringify({ error: response.body.error?.message || 'OpenAI API error' })
+        body: JSON.stringify({ error: response.body.error?.message || 'Anthropic API error' })
       };
     }
 
-    const rawContent = response.body.choices[0].message.content;
+    const rawContent = response.body.content[0].text;
     let analysis;
     
-    // Try to parse as JSON first
+    // Parse the JSON response
     try {
       const result = JSON.parse(rawContent);
       // Convert JSON to markdown format
@@ -163,72 +138,15 @@ ${statementData}`;
         analysis += `- ${item}\n`;
       }
     } catch (e) {
-      // Fallback: extract only the 4 sections from text response
-      const sections = {
-        key_observations: [],
-        positive_indicators: [],
-        areas_of_concern: [],
-        recommendations: []
+      // If JSON parsing fails, return error
+      return {
+        statusCode: 500,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({ error: 'Failed to parse AI response' })
       };
-      
-      const validHeaders = ['key observations', 'positive indicators', 'areas of concern', 'recommendations'];
-      const skipHeaders = ['profitability', 'revenue trends', 'cost structure', 'analysis'];
-      
-      let currentSection = null;
-      for (const line of rawContent.split('\n')) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-        
-        const lowerLine = trimmed.toLowerCase().replace(/#/g, '').trim();
-        
-        // Check if this is a header to skip
-        const isSkipHeader = skipHeaders.some(skip => lowerLine.includes(skip));
-        if (isSkipHeader && !validHeaders.some(valid => lowerLine.includes(valid))) {
-          currentSection = null;
-          continue;
-        }
-        
-        // Check for valid section headers
-        if (lowerLine.includes('key observations')) {
-          currentSection = 'key_observations';
-          continue;
-        } else if (lowerLine.includes('positive indicators')) {
-          currentSection = 'positive_indicators';
-          continue;
-        } else if (lowerLine.includes('areas of concern')) {
-          currentSection = 'areas_of_concern';
-          continue;
-        } else if (lowerLine.includes('recommendations')) {
-          currentSection = 'recommendations';
-          continue;
-        }
-        
-        // Collect content for current valid section
-        if (currentSection && sections[currentSection].length < 4) {
-          const bullet = trimmed.replace(/^[-*]/, '').trim();
-          // Skip if it looks like a sub-header or is too short
-          if (bullet && bullet.length > 10 && bullet.includes(':')) {
-            sections[currentSection].push(bullet);
-          }
-        }
-      }
-      
-      analysis = "## Key Observations\n";
-      for (const item of sections.key_observations) {
-        analysis += `- ${item}\n`;
-      }
-      analysis += "\n## Positive Indicators\n";
-      for (const item of sections.positive_indicators) {
-        analysis += `- ${item}\n`;
-      }
-      analysis += "\n## Areas of Concern\n";
-      for (const item of sections.areas_of_concern) {
-        analysis += `- ${item}\n`;
-      }
-      analysis += "\n## Recommendations\n";
-      for (const item of sections.recommendations) {
-        analysis += `- ${item}\n`;
-      }
     }
 
     return {

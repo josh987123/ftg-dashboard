@@ -6,18 +6,18 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, send_from_directory, request, jsonify, Response
 import requests
-from openai import OpenAI
+from anthropic import Anthropic
 
 app = Flask(__name__, static_folder=None)
 
-# the newest OpenAI model is "gpt-5" which was released August 7, 2025.
-# do not change this unless explicitly requested by the user
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+# Using Anthropic Claude for AI analysis
+# The newest Anthropic model is "claude-sonnet-4-20250514"
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
-def get_openai_client():
-    if not OPENAI_API_KEY:
-        raise Exception("OpenAI API key not configured. Please add OPENAI_API_KEY to your secrets.")
-    return OpenAI(api_key=OPENAI_API_KEY)
+def get_anthropic_client():
+    if not ANTHROPIC_API_KEY:
+        raise Exception("Anthropic API key not configured. Please add ANTHROPIC_API_KEY to your secrets.")
+    return Anthropic(api_key=ANTHROPIC_API_KEY)
 
 def get_gmail_access_token():
     hostname = os.environ.get('REPLIT_CONNECTORS_HOSTNAME')
@@ -157,17 +157,24 @@ def api_analyze_income_statement():
         if not statement_data:
             return jsonify({'error': 'Missing statement data'}), 400
         
-        client = get_openai_client()
+        client = get_anthropic_client()
         
         system_prompt = """You are a CFO analyzing a construction company's Income Statement.
 
-STRICT OUTPUT RULES:
-- Return EXACTLY 4 arrays: key_observations, positive_indicators, areas_of_concern, recommendations
-- Each array must have EXACTLY 3-4 items
+You must respond with ONLY a valid JSON object containing exactly these 4 arrays:
+{
+  "key_observations": ["observation 1", "observation 2", "observation 3"],
+  "positive_indicators": ["indicator 1", "indicator 2", "indicator 3"],
+  "areas_of_concern": ["concern 1", "concern 2", "concern 3"],
+  "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"]
+}
+
+STRICT RULES:
+- Return ONLY the JSON object, no other text before or after
+- Each array must have exactly 3-4 items
 - Each item is one concise sentence with specific dollar amounts
 - Round all dollar amounts to whole numbers (no decimals) - use $3.8M not $3.84M
-- DO NOT add any other fields or sections
-- DO NOT include profitability analysis, revenue trends, cost structure, or any other categories"""
+- DO NOT add any other fields or sections"""
 
         user_prompt = f"""Analyze this Income Statement for FTG Builders:
 
@@ -175,52 +182,21 @@ Period: {period_info}
 
 {statement_data}"""
 
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
+        # Using Claude Sonnet 4 - the latest model
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
             max_tokens=2048,
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "income_statement_analysis",
-                    "strict": True,
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "key_observations": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "3-4 key observations about the financial data"
-                            },
-                            "positive_indicators": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "3-4 positive financial indicators"
-                            },
-                            "areas_of_concern": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "3-4 areas requiring attention"
-                            },
-                            "recommendations": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "3-4 actionable recommendations"
-                            }
-                        },
-                        "required": ["key_observations", "positive_indicators", "areas_of_concern", "recommendations"],
-                        "additionalProperties": False
-                    }
-                }
-            }
+            system=system_prompt,
+            messages=[
+                {"role": "user", "content": user_prompt}
+            ]
         )
         
         import json
         
-        raw_content = response.choices[0].message.content or ""
+        # Extract text from the response content block
+        content_block = response.content[0]
+        raw_content = getattr(content_block, 'text', '') or ""
         
         # Parse the JSON response
         result = json.loads(raw_content)
