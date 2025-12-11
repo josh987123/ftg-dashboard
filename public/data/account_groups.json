@@ -829,78 +829,109 @@
         "type": "header"
       },
       {
-        "label": "Current Assets",
-        "level": 1,
-        "type": "header"
+        "label": "Checking",
+        "level": 3,
+        "type": "detail",
+        "accounts": [1001, 1005, 1040],
+        "isDebit": true,
+        "parent": "Cash & Cash Equivalents"
+      },
+      {
+        "label": "Savings & Investments",
+        "level": 3,
+        "type": "detail",
+        "accounts": [1003, 1004, 1006, 1007],
+        "isDebit": true,
+        "parent": "Cash & Cash Equivalents"
+      },
+      {
+        "label": "Undeposited Funds",
+        "level": 3,
+        "type": "detail",
+        "accounts": [1090],
+        "isDebit": true,
+        "parent": "Cash & Cash Equivalents"
       },
       {
         "label": "Cash & Cash Equivalents",
         "level": 2,
-        "type": "detail",
-        "accounts": [1001, 1003, 1004, 1005, 1006, 1007, 1010, 1020, 1090],
-        "isDebit": true
+        "type": "subtotal",
+        "formula": "Checking + Savings & Investments + Undeposited Funds",
+        "isDebit": true,
+        "expandable": true,
+        "parent": "Current Assets"
       },
       {
         "label": "Contracts Receivable",
-        "level": 2,
+        "level": 3,
         "type": "detail",
         "accounts": [1100],
-        "isDebit": true
+        "isDebit": true,
+        "parent": "Receivables"
       },
       {
         "label": "Retention Receivables",
-        "level": 2,
+        "level": 3,
         "type": "detail",
         "accounts": [1105],
-        "isDebit": true
+        "isDebit": true,
+        "parent": "Receivables"
       },
       {
-        "label": "Employee Advances",
-        "level": 2,
+        "label": "Emp Dependent Coverage",
+        "level": 3,
         "type": "detail",
-        "accounts": [1030, 1110],
-        "isDebit": true
+        "accounts": [1110],
+        "isDebit": true,
+        "parent": "Receivables"
+      },
+      {
+        "label": "Loans Receivable",
+        "level": 3,
+        "type": "detail",
+        "accounts": [1120, 1122, 1124, 1126, 1130],
+        "isDebit": true,
+        "parent": "Receivables"
       },
       {
         "label": "Underbillings",
-        "level": 2,
+        "level": 3,
         "type": "detail",
         "accounts": [1050],
-        "isDebit": true
+        "isDebit": true,
+        "parent": "Receivables"
       },
       {
-        "label": "Related Party Loans",
+        "label": "Receivables",
         "level": 2,
-        "type": "detail",
-        "accounts": [1120, 1122, 1124, 1126, 1130, 1140],
-        "isDebit": true
+        "type": "subtotal",
+        "formula": "Contracts Receivable + Retention Receivables + Emp Dependent Coverage + Loans Receivable + Underbillings",
+        "isDebit": true,
+        "expandable": true,
+        "parent": "Current Assets"
       },
       {
-        "label": "Inventory",
-        "level": 2,
+        "label": "Employee Advances",
+        "level": 3,
         "type": "detail",
-        "accounts": [1200],
-        "isDebit": true
-      },
-      {
-        "label": "Prepaid Expenses",
-        "level": 2,
-        "type": "detail",
-        "accounts": [1500, 1501, 1502, 1503, 1504, 1505, 1507, 1510, 1515, 1530, 1540, 1545, 1550, 1600, 1610],
-        "isDebit": true
+        "accounts": [1030],
+        "isDebit": true,
+        "parent": "Other Current Assets"
       },
       {
         "label": "Other Current Assets",
         "level": 2,
-        "type": "detail",
-        "accounts": [1040],
-        "isDebit": true
+        "type": "subtotal",
+        "formula": "Employee Advances",
+        "isDebit": true,
+        "expandable": true,
+        "parent": "Current Assets"
       },
       {
-        "label": "Total Current Assets",
+        "label": "Current Assets",
         "level": 1,
         "type": "subtotal",
-        "formula": "Cash & Cash Equivalents + Contracts Receivable + Retention Receivables + Employee Advances + Underbillings + Related Party Loans + Inventory + Prepaid Expenses + Other Current Assets",
+        "formula": "Cash & Cash Equivalents + Receivables + Other Current Assets",
         "isDebit": true,
         "expandable": true
       },
@@ -909,123 +940,92 @@
         "type": "spacer"
       },
       {
-        "label": "Fixed Assets",
-        "level": 1,
-        "type": "header"
-      },
-      {
-        "label": "Building Improvements",
-        "level": 2,
+        "label": "Leasehold Improvements",
+        "level": 3,
         "type": "detail",
-        "accounts": [1300],
-        "isDebit": true
-      },
-      {
-        "label": "Accum Depr - Building Improvements",
-        "level": 2,
-        "type": "detail",
-        "accounts": [1305],
-        "isDebit": false
+        "accounts": [1300, 1305],
+        "isDebit": true,
+        "parent": "Fixed Assets"
       },
       {
         "label": "Equipment & Machinery",
-        "level": 2,
+        "level": 3,
         "type": "detail",
-        "accounts": [1310],
-        "isDebit": true
+        "accounts": [1310, 1315],
+        "isDebit": true,
+        "parent": "Fixed Assets"
       },
       {
-        "label": "Accum Depr - Equipment & Machinery",
-        "level": 2,
+        "label": "Office Furniture",
+        "level": 3,
         "type": "detail",
-        "accounts": [1315],
-        "isDebit": false
-      },
-      {
-        "label": "Furniture & Equipment",
-        "level": 2,
-        "type": "detail",
-        "accounts": [1320],
-        "isDebit": true
-      },
-      {
-        "label": "Accum Depr - Furniture & Equipment",
-        "level": 2,
-        "type": "detail",
-        "accounts": [1325],
-        "isDebit": false
+        "accounts": [1320, 1325],
+        "isDebit": true,
+        "parent": "Fixed Assets"
       },
       {
         "label": "Vehicles",
-        "level": 2,
+        "level": 3,
         "type": "detail",
-        "accounts": [1400],
-        "isDebit": true
-      },
-      {
-        "label": "Accum Depr - Vehicles",
-        "level": 2,
-        "type": "detail",
-        "accounts": [1405],
-        "isDebit": false
-      },
-      {
-        "label": "Total Fixed Assets",
-        "level": 1,
-        "type": "subtotal",
-        "formula": "Building Improvements + Accum Depr - Building Improvements + Equipment & Machinery + Accum Depr - Equipment & Machinery + Furniture & Equipment + Accum Depr - Furniture & Equipment + Vehicles + Accum Depr - Vehicles",
+        "accounts": [1400, 1405],
         "isDebit": true,
-        "expandable": true
+        "parent": "Fixed Assets"
       },
       {
-        "label": "spacer",
-        "type": "spacer"
-      },
-      {
-        "label": "Other Assets",
-        "level": 1,
-        "type": "header"
-      },
-      {
-        "label": "Security Deposits",
+        "label": "Fixed Assets",
         "level": 2,
-        "type": "detail",
-        "accounts": [1700],
-        "isDebit": true
+        "type": "subtotal",
+        "formula": "Leasehold Improvements + Equipment & Machinery + Office Furniture + Vehicles",
+        "isDebit": true,
+        "expandable": true,
+        "parent": "Long-Term Assets"
       },
       {
         "label": "Organization Costs",
-        "level": 2,
+        "level": 3,
         "type": "detail",
         "accounts": [1750],
-        "isDebit": true
+        "isDebit": true,
+        "parent": "Intangible Assets"
       },
       {
         "label": "Client Knowledge",
-        "level": 2,
+        "level": 3,
         "type": "detail",
-        "accounts": [1800],
-        "isDebit": true
+        "accounts": [1800, 1805],
+        "isDebit": true,
+        "parent": "Intangible Assets"
       },
       {
-        "label": "Accum Amort - Client Knowledge",
+        "label": "Intangible Assets",
         "level": 2,
-        "type": "detail",
-        "accounts": [1805],
-        "isDebit": false
+        "type": "subtotal",
+        "formula": "Organization Costs + Client Knowledge",
+        "isDebit": true,
+        "expandable": true,
+        "parent": "Long-Term Assets"
       },
       {
-        "label": "Deferred Tax Asset",
+        "label": "Prepaid Assets",
         "level": 2,
         "type": "detail",
-        "accounts": [1900],
-        "isDebit": true
+        "accounts": [1500, 1501, 1502, 1503, 1504, 1505, 1507, 1510, 1515, 1530, 1540, 1545, 1550, 1600],
+        "isDebit": true,
+        "parent": "Long-Term Assets"
       },
       {
-        "label": "Total Other Assets",
+        "label": "Other Long-Term Assets",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1610, 1700, 1900],
+        "isDebit": true,
+        "parent": "Long-Term Assets"
+      },
+      {
+        "label": "Long-Term Assets",
         "level": 1,
         "type": "subtotal",
-        "formula": "Security Deposits + Organization Costs + Client Knowledge + Accum Amort - Client Knowledge + Deferred Tax Asset",
+        "formula": "Fixed Assets + Intangible Assets + Prepaid Assets + Other Long-Term Assets",
         "isDebit": true,
         "expandable": true
       },
@@ -1037,7 +1037,7 @@
         "label": "TOTAL ASSETS",
         "level": 0,
         "type": "subtotal",
-        "formula": "Total Current Assets + Total Fixed Assets + Total Other Assets",
+        "formula": "Current Assets + Long-Term Assets",
         "isDebit": true,
         "highlight": "total"
       },

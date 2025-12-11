@@ -4679,7 +4679,9 @@ function isBSRowVisibleByParent(row, rows) {
   if (!parentRow) return true;
   
   const parentExpanded = bsRowStates[parentRow.id] === true;
-  return parentExpanded;
+  if (!parentExpanded) return false;
+  
+  return isBSRowVisibleByParent(parentRow, rows);
 }
 
 function attachBSToggleListeners() {
