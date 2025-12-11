@@ -603,7 +603,7 @@ function setupExportButtons() {
 }
 
 function getCurrentView() {
-  const sections = ["revenue", "accounts", "incomeStatement"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -614,7 +614,15 @@ function getCurrentView() {
 function getReportData() {
   const view = getCurrentView();
   
-  if (view === "revenue") {
+  if (view === "overview") {
+    return {
+      title: "Executive Overview",
+      subtitle: getOverviewSubtitle(),
+      tableHtml: getOverviewTableHtml(),
+      csvData: getOverviewCsvData(),
+      isWide: true
+    };
+  } else if (view === "revenue") {
     return {
       title: "Revenue Report",
       subtitle: getRevenueSubtitle(),
@@ -640,6 +648,193 @@ function getReportData() {
     };
   }
   return null;
+}
+
+function getOverviewSubtitle() {
+  const viewType = document.getElementById("overviewViewType")?.value || "monthly";
+  const year = document.getElementById("overviewYear")?.value || new Date().getFullYear();
+  const compare = document.getElementById("overviewCompare")?.checked;
+  let subtitle = `${viewType.charAt(0).toUpperCase() + viewType.slice(1)} View`;
+  if (viewType !== "annual") subtitle += ` - ${year}`;
+  if (compare) subtitle += " (vs Prior Year)";
+  return subtitle;
+}
+
+function getOverviewTableHtml() {
+  const viewType = document.getElementById("overviewViewType")?.value || "monthly";
+  const year = parseInt(document.getElementById("overviewYear")?.value) || new Date().getFullYear();
+  const compare = document.getElementById("overviewCompare")?.checked;
+  
+  if (!isAccountGroups) return "<p>No data available</p>";
+  
+  const groups = isAccountGroups.income_statement.groups;
+  let labels = [];
+  let periods = [];
+  
+  if (viewType === "monthly") {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    for (let m = 1; m <= 12; m++) {
+      labels.push(monthNames[m - 1]);
+      periods.push([`${year}-${String(m).padStart(2, "0")}`]);
+    }
+  } else if (viewType === "quarterly") {
+    for (let q = 1; q <= 4; q++) {
+      labels.push(`Q${q}`);
+      const qMonths = [];
+      for (let m = (q - 1) * 3 + 1; m <= q * 3; m++) {
+        qMonths.push(`${year}-${String(m).padStart(2, "0")}`);
+      }
+      periods.push(qMonths);
+    }
+  } else {
+    const start = parseInt(document.getElementById("overviewRangeStart")?.value) || 2018;
+    const end = parseInt(document.getElementById("overviewRangeEnd")?.value) || 2025;
+    for (let y = start; y <= end; y++) {
+      labels.push(String(y));
+      const yearMonths = [];
+      for (let m = 1; m <= 12; m++) {
+        yearMonths.push(`${y}-${String(m).padStart(2, "0")}`);
+      }
+      periods.push(yearMonths);
+    }
+  }
+  
+  const metrics = ["Revenue", "Gross Profit", "GP %", "Operating Expenses", "Operating Profit", "OP %"];
+  
+  let html = `<table><tr><th>Metric</th>${labels.map(l => `<th>${l}</th>`).join("")}</tr>`;
+  
+  metrics.forEach(metric => {
+    html += `<tr><td><strong>${metric}</strong></td>`;
+    periods.forEach(periodMonths => {
+      const rows = buildIncomeStatementRows(periodMonths, groups);
+      let value = 0;
+      
+      if (metric === "Revenue") {
+        const row = rows.find(r => r.label === "Revenue");
+        value = row ? row.value : 0;
+      } else if (metric === "Gross Profit") {
+        const row = rows.find(r => r.label === "Gross Profit");
+        value = row ? row.value : 0;
+      } else if (metric === "GP %") {
+        const revRow = rows.find(r => r.label === "Revenue");
+        const gpRow = rows.find(r => r.label === "Gross Profit");
+        const rev = revRow ? revRow.value : 0;
+        const gp = gpRow ? gpRow.value : 0;
+        value = rev ? (gp / rev) * 100 : 0;
+        html += `<td>${value.toFixed(1)}%</td>`;
+        return;
+      } else if (metric === "Operating Expenses") {
+        const row = rows.find(r => r.label === "Operating Expenses");
+        value = row ? row.value : 0;
+      } else if (metric === "Operating Profit") {
+        const row = rows.find(r => r.label === "Operating Income");
+        value = row ? row.value : 0;
+      } else if (metric === "OP %") {
+        const revRow = rows.find(r => r.label === "Revenue");
+        const opRow = rows.find(r => r.label === "Operating Income");
+        const rev = revRow ? revRow.value : 0;
+        const op = opRow ? opRow.value : 0;
+        value = rev ? (op / rev) * 100 : 0;
+        html += `<td>${value.toFixed(1)}%</td>`;
+        return;
+      }
+      
+      const formatted = Math.abs(value) >= 1000000 
+        ? "$" + (value / 1000000).toFixed(1) + "M"
+        : "$" + Math.round(value).toLocaleString();
+      html += `<td>${formatted}</td>`;
+    });
+    html += "</tr>";
+  });
+  
+  html += "</table>";
+  return html;
+}
+
+function getOverviewCsvData() {
+  const viewType = document.getElementById("overviewViewType")?.value || "monthly";
+  const year = parseInt(document.getElementById("overviewYear")?.value) || new Date().getFullYear();
+  
+  if (!isAccountGroups) return "";
+  
+  const groups = isAccountGroups.income_statement.groups;
+  let labels = [];
+  let periods = [];
+  
+  if (viewType === "monthly") {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    for (let m = 1; m <= 12; m++) {
+      labels.push(monthNames[m - 1]);
+      periods.push([`${year}-${String(m).padStart(2, "0")}`]);
+    }
+  } else if (viewType === "quarterly") {
+    for (let q = 1; q <= 4; q++) {
+      labels.push(`Q${q}`);
+      const qMonths = [];
+      for (let m = (q - 1) * 3 + 1; m <= q * 3; m++) {
+        qMonths.push(`${year}-${String(m).padStart(2, "0")}`);
+      }
+      periods.push(qMonths);
+    }
+  } else {
+    const start = parseInt(document.getElementById("overviewRangeStart")?.value) || 2018;
+    const end = parseInt(document.getElementById("overviewRangeEnd")?.value) || 2025;
+    for (let y = start; y <= end; y++) {
+      labels.push(String(y));
+      const yearMonths = [];
+      for (let m = 1; m <= 12; m++) {
+        yearMonths.push(`${y}-${String(m).padStart(2, "0")}`);
+      }
+      periods.push(yearMonths);
+    }
+  }
+  
+  const metrics = ["Revenue", "Gross Profit", "GP %", "Operating Expenses", "Operating Profit", "OP %"];
+  
+  let csv = "Metric," + labels.join(",") + "\n";
+  
+  metrics.forEach(metric => {
+    let row = metric;
+    periods.forEach(periodMonths => {
+      const rows = buildIncomeStatementRows(periodMonths, groups);
+      let value = 0;
+      
+      if (metric === "Revenue") {
+        const r = rows.find(r => r.label === "Revenue");
+        value = r ? r.value : 0;
+      } else if (metric === "Gross Profit") {
+        const r = rows.find(r => r.label === "Gross Profit");
+        value = r ? r.value : 0;
+      } else if (metric === "GP %") {
+        const revRow = rows.find(r => r.label === "Revenue");
+        const gpRow = rows.find(r => r.label === "Gross Profit");
+        const rev = revRow ? revRow.value : 0;
+        const gp = gpRow ? gpRow.value : 0;
+        value = rev ? (gp / rev) * 100 : 0;
+        row += "," + value.toFixed(1) + "%";
+        return;
+      } else if (metric === "Operating Expenses") {
+        const r = rows.find(r => r.label === "Operating Expenses");
+        value = r ? r.value : 0;
+      } else if (metric === "Operating Profit") {
+        const r = rows.find(r => r.label === "Operating Income");
+        value = r ? r.value : 0;
+      } else if (metric === "OP %") {
+        const revRow = rows.find(r => r.label === "Revenue");
+        const opRow = rows.find(r => r.label === "Operating Income");
+        const rev = revRow ? revRow.value : 0;
+        const op = opRow ? opRow.value : 0;
+        value = rev ? (op / rev) * 100 : 0;
+        row += "," + value.toFixed(1) + "%";
+        return;
+      }
+      
+      row += "," + value;
+    });
+    csv += row + "\n";
+  });
+  
+  return csv;
 }
 
 function getRevenueSubtitle() {
