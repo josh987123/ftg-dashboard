@@ -55,8 +55,14 @@ Preferred communication style: Simple, everyday language.
   - Expand/collapse hierarchy with disclosure icons
   - Accounting format: Whole dollars with parentheses for negatives, percentages for ratios
 - **Balance Sheet**: Full balance sheet with cumulative balances from inception (2015) to selected date:
-  - As of date selector (monthly periods from 2015-2025)
-  - Comparison mode: None or Prior Year (with $ and % variance)
+  - View modes: Single Period or Matrix
+  - **Single Period mode**: As of date selector (monthly periods from 2015-2025)
+    - Comparison modes: None, Prior Year, or Prior Month (with $ and % variance)
+  - **Matrix mode**: Multiple periods displayed in columns
+    - Period types: Month (12 columns), Quarter (4 columns), Annual (year range slider)
+    - Year selector for monthly/quarterly views
+    - Year range slider for annual view
+  - Exclude Month in Progress checkbox
   - Detail level: Summary (totals only) or Detail (all line items)
   - Show in Thousands option
   - **Current Assets** (expandable subtotal):
