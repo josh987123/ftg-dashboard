@@ -1335,6 +1335,33 @@ button, .nav-item, .config-header, .dropdown-item {
   border-top: 1px solid #e5e7eb;
 }
 
+.bs-footnote {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 12px;
+  padding: 8px 0;
+}
+
+.bs-toggle {
+  cursor: pointer;
+  user-select: none;
+  margin-right: 6px;
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.bs-toggle:hover {
+  color: #1f2937;
+}
+
+#balanceSheetTable tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+#balanceSheetTable tbody tr.is-spacer-row {
+  background: #fff !important;
+}
+
 .is-subtotal-col {
   border-left: 1px solid #000 !important;
 }
