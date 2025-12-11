@@ -2594,7 +2594,7 @@ function formatVariance(current, prior, isIncome) {
       : `<span class="${colorClass}">$${Math.round(diff).toLocaleString()}</span>`;
   }
   
-  const pctFormatted = `<span class="${colorClass}">${pct.toFixed(1)}%</span>`;
+  const pctFormatted = `<span class="${colorClass}">${pct.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}%</span>`;
   
   return { diff: diffFormatted, pct: pctFormatted };
 }
@@ -2798,7 +2798,7 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
         bodyHtml += `<td>${compValueHtml}</td>`;
         bodyHtml += `<td>${valueHtml}</td>`;
         bodyHtml += `<td>-</td>`;
-        bodyHtml += `<td class="${pctClass}">${diffPct.toFixed(1)}%</td>`;
+        bodyHtml += `<td class="${pctClass}">${diffPct.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}%</td>`;
       } else {
         compValueHtml = formatAccountingNumber(compRow.value);
         const variance = formatVariance(row.value, compRow.value, isIncome);
