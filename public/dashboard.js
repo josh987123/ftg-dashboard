@@ -60,7 +60,25 @@ document.addEventListener("DOMContentLoaded", function() {
   initNavigation();
   initConfigPanels();
   setupExportButtons();
+  updateDataAsOfDates();
 });
+
+function updateDataAsOfDates() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  
+  const revEl = document.getElementById("revDataAsOf");
+  const acctEl = document.getElementById("acctDataAsOf");
+  const isEl = document.getElementById("isDataAsOf");
+  
+  if (revEl) revEl.textContent = dateStr;
+  if (acctEl) acctEl.textContent = dateStr;
+  if (isEl) isEl.textContent = dateStr;
+}
 
 function initConfigPanels() {
   document.querySelectorAll(".config-header").forEach(header => {
@@ -2411,6 +2429,9 @@ function renderIncomeStatement() {
   const groups = isAccountGroups.income_statement.groups;
   const thead = document.getElementById("isTableHead");
   const tbody = document.getElementById("isTableBody");
+  const footnote = document.getElementById("isPartialFootnote");
+  
+  let hasPartialPeriod = false;
   
   if (viewMode === "matrix") {
     const showSubtotal = document.getElementById("isShowSubtotal").checked;
@@ -2419,10 +2440,18 @@ function renderIncomeStatement() {
     
     let selectedYear = periodValue;
     
-    renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, showSubtotal, thead, tbody);
+    hasPartialPeriod = renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, showSubtotal, thead, tbody);
   } else {
     const compare = document.getElementById("isCompare").value;
-    renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody);
+    hasPartialPeriod = renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody);
+  }
+  
+  if (footnote) {
+    if (hasPartialPeriod) {
+      footnote.classList.remove("hidden");
+    } else {
+      footnote.classList.add("hidden");
+    }
   }
 }
 
@@ -2549,13 +2578,15 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
   
   tbody.innerHTML = bodyHtml;
   attachToggleListeners();
+  
+  return isPartialPeriod(periodValue, periodType);
 }
 
 function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, showSubtotal, thead, tbody) {
   if (periodType === "ytd" || periodType === "ttm") {
     thead.innerHTML = "<tr><th colspan='2'>Matrix view is not available for YTD or TTM period types</th></tr>";
     tbody.innerHTML = "";
-    return;
+    return false;
   }
   
   const periods = getMatrixPeriodsNew(periodType, selectedYear, yearStart, yearEnd);
@@ -2563,7 +2594,7 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
   if (periods.length === 0) {
     thead.innerHTML = "<tr><th>No data available for selected period</th></tr>";
     tbody.innerHTML = "";
-    return;
+    return false;
   }
   
   let headerHtml = "<tr><th>Account</th>";
@@ -2661,6 +2692,8 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
   
   tbody.innerHTML = bodyHtml;
   attachToggleListeners();
+  
+  return periods.some(p => p.isPartial);
 }
 
 function getMatrixPeriodsNew(periodType, selectedYear, yearStart, yearEnd) {

@@ -105,6 +105,7 @@
       ============================================================= -->
       <section id="revenue" class="dashboard-section">
         <h2>Revenue View</h2>
+        <div class="data-as-of">Data as of: <span id="revDataAsOf"></span></div>
 
         <div class="config-panel">
           <div class="config-header" data-target="revConfigBody">
@@ -216,6 +217,7 @@
       ============================================================= -->
       <section id="accounts" class="dashboard-section">
         <h2>Account View</h2>
+        <div class="data-as-of">Data as of: <span id="acctDataAsOf"></span></div>
 
         <div class="config-panel">
           <div class="config-header" data-target="acctConfigBody">
@@ -330,6 +332,7 @@
       ============================================================= -->
       <section id="incomeStatement" class="dashboard-section">
         <h2>Income Statement</h2>
+        <div class="data-as-of">Data as of: <span id="isDataAsOf"></span></div>
 
         <div class="config-panel">
           <div class="config-header" data-target="isConfigBody">
@@ -407,6 +410,9 @@
             <thead id="isTableHead"></thead>
             <tbody id="isTableBody"></tbody>
           </table>
+          <div id="isPartialFootnote" class="partial-footnote hidden">
+            <span class="is-partial-indicator">*</span> Partial period
+          </div>
         </div>
       </section>
 
