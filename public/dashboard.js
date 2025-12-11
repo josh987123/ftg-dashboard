@@ -273,70 +273,106 @@ const metricTileMapping = {
 };
 
 function getCurrentUser() {
-  return localStorage.getItem("ftg_current_user") || null;
+  try {
+    return localStorage.getItem("ftg_current_user") || null;
+  } catch (e) {
+    console.warn("Unable to access localStorage:", e);
+    return null;
+  }
 }
 
 function getUserPreferences() {
-  const user = getCurrentUser();
-  if (!user) return {};
-  const stored = localStorage.getItem(`ftg_prefs_${user}`);
-  return stored ? JSON.parse(stored) : {};
+  try {
+    const user = getCurrentUser();
+    if (!user) return {};
+    const stored = localStorage.getItem(`ftg_prefs_${user}`);
+    if (!stored) return {};
+    return JSON.parse(stored);
+  } catch (e) {
+    console.warn("Error reading preferences:", e);
+    return {};
+  }
 }
 
 function saveUserPreferences(prefs) {
-  const user = getCurrentUser();
-  if (!user) return;
-  const existing = getUserPreferences();
-  const merged = { ...existing, ...prefs };
-  localStorage.setItem(`ftg_prefs_${user}`, JSON.stringify(merged));
+  try {
+    const user = getCurrentUser();
+    if (!user) return;
+    const existing = getUserPreferences();
+    const merged = { ...existing, ...prefs };
+    localStorage.setItem(`ftg_prefs_${user}`, JSON.stringify(merged));
+  } catch (e) {
+    console.warn("Error saving preferences:", e);
+  }
 }
+
+let isLoadingPreferences = false;
 
 function loadUserPreferences() {
   const user = getCurrentUser();
   if (!user) return;
   
-  const prefs = getUserPreferences();
+  isLoadingPreferences = true;
   
-  if (prefs.overviewMetrics) {
-    Object.keys(metricTileMapping).forEach(metric => {
-      const checkbox = document.querySelector(`[data-metric="${metric}"]`);
-      if (checkbox) {
-        checkbox.checked = prefs.overviewMetrics[metric] !== false;
+  try {
+    const prefs = getUserPreferences();
+    
+    if (prefs.overviewMetrics) {
+      Object.keys(metricTileMapping).forEach(metric => {
+        const checkbox = document.querySelector(`[data-metric="${metric}"]`);
+        if (checkbox) {
+          checkbox.checked = prefs.overviewMetrics[metric] !== false;
+        }
+      });
+    }
+    
+    const viewEl = document.getElementById("overviewViewType");
+    const yearWrapper = document.getElementById("overviewYearWrapper");
+    const rangeWrapper = document.getElementById("overviewRangeWrapper");
+    
+    if (yearWrapper) yearWrapper.classList.remove("hidden");
+    if (rangeWrapper) rangeWrapper.classList.add("hidden");
+    if (viewEl) viewEl.value = "monthly";
+    
+    if (prefs.overviewConfig) {
+      const cfg = prefs.overviewConfig;
+      
+      if (cfg.viewType && viewEl) {
+        viewEl.value = cfg.viewType;
+        if (cfg.viewType === "annual") {
+          if (yearWrapper) yearWrapper.classList.add("hidden");
+          if (rangeWrapper) rangeWrapper.classList.remove("hidden");
+        }
       }
-    });
-    updateMetricVisibility();
-  }
-  
-  if (prefs.overviewConfig) {
-    const cfg = prefs.overviewConfig;
-    if (cfg.viewType) {
-      const viewEl = document.getElementById("overviewViewType");
-      if (viewEl) viewEl.value = cfg.viewType;
+      if (cfg.year) {
+        const yearEl = document.getElementById("overviewYear");
+        if (yearEl) yearEl.value = cfg.year;
+      }
+      if (typeof cfg.compare === "boolean") {
+        const compareEl = document.getElementById("overviewCompare");
+        if (compareEl) compareEl.checked = cfg.compare;
+      }
+      if (typeof cfg.trendline === "boolean") {
+        const trendEl = document.getElementById("overviewTrend");
+        if (trendEl) trendEl.checked = cfg.trendline;
+      }
+      if (typeof cfg.dataLabels === "boolean") {
+        const dataLabelsEl = document.getElementById("overviewDataLabels");
+        if (dataLabelsEl) dataLabelsEl.checked = cfg.dataLabels;
+      }
+      if (typeof cfg.excludeCurrent === "boolean") {
+        const excludeEl = document.getElementById("overviewExclude");
+        if (excludeEl) excludeEl.checked = cfg.excludeCurrent;
+      }
     }
-    if (cfg.year) {
-      const yearEl = document.getElementById("overviewYear");
-      if (yearEl) yearEl.value = cfg.year;
-    }
-    if (typeof cfg.compare === "boolean") {
-      const compareEl = document.getElementById("overviewCompare");
-      if (compareEl) compareEl.checked = cfg.compare;
-    }
-    if (typeof cfg.trendline === "boolean") {
-      const trendEl = document.getElementById("overviewTrend");
-      if (trendEl) trendEl.checked = cfg.trendline;
-    }
-    if (typeof cfg.dataLabels === "boolean") {
-      const dataLabelsEl = document.getElementById("overviewDataLabels");
-      if (dataLabelsEl) dataLabelsEl.checked = cfg.dataLabels;
-    }
-    if (typeof cfg.excludeCurrent === "boolean") {
-      const excludeEl = document.getElementById("overviewExclude");
-      if (excludeEl) excludeEl.checked = cfg.excludeCurrent;
-    }
+    
+    applyMetricVisibility();
+  } finally {
+    isLoadingPreferences = false;
   }
 }
 
-function updateMetricVisibility() {
+function applyMetricVisibility() {
   const metricCheckboxes = document.querySelectorAll("[data-metric]");
   metricCheckboxes.forEach(cb => {
     const metric = cb.dataset.metric;
@@ -349,12 +385,19 @@ function updateMetricVisibility() {
       }
     }
   });
+}
+
+function updateMetricVisibility() {
+  applyMetricVisibility();
   
-  const visiblePrefs = {};
-  metricCheckboxes.forEach(cb => {
-    visiblePrefs[cb.dataset.metric] = cb.checked;
-  });
-  saveUserPreferences({ overviewMetrics: visiblePrefs });
+  if (!isLoadingPreferences) {
+    const metricCheckboxes = document.querySelectorAll("[data-metric]");
+    const visiblePrefs = {};
+    metricCheckboxes.forEach(cb => {
+      visiblePrefs[cb.dataset.metric] = cb.checked;
+    });
+    saveUserPreferences({ overviewMetrics: visiblePrefs });
+  }
 }
 
 function saveOverviewConfig() {
@@ -490,7 +533,6 @@ function setupOverviewUI() {
   });
   
   loadUserPreferences();
-  updateMetricVisibility();
   
   } catch (err) {
     console.error("Error setting up overview UI:", err);
@@ -4772,6 +4814,10 @@ function formatBSVariance(current, prior) {
         maximumFractionDigits: 1
       }) + "%";
     }
+  } else if (current !== 0) {
+    pctStr = "N/A";
+  } else {
+    pctStr = "0.0%";
   }
   
   const isPositive = diff >= 0;

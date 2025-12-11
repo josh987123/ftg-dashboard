@@ -68,7 +68,9 @@
         var displayName = username.charAt(0).toUpperCase() + username.slice(1);
         var userLabel = document.getElementById('currentUser');
         if (userLabel) userLabel.textContent = displayName;
-        if (typeof loadUserPreferences === 'function') loadUserPreferences();
+        if (typeof loadUserPreferences === 'function') {
+          setTimeout(function() { loadUserPreferences(); }, 100);
+        }
       } else {
         err.textContent = 'Incorrect password. Please try again.';
       }
