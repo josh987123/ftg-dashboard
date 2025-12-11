@@ -4444,45 +4444,66 @@ function formatMarkdown(text) {
   // Format dollar amounts to use K and M notation
   text = formatDollarAmounts(text);
   
-  // Simple markdown to HTML conversion
-  let html = text
+  const lines = text.split('\n');
+  let html = '';
+  let inList = false;
+  
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+    if (!line) continue;
+    
+    // Apply inline formatting
+    line = line
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
     // Headers
-    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    // Bold
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    // Italic
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    // Bullet points
-    .replace(/^\s*[-*]\s+(.*)$/gim, '<li>$1</li>')
-    // Numbered lists
-    .replace(/^\s*\d+\.\s+(.*)$/gim, '<li>$1</li>')
-    // Line breaks
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>');
-  
-  // Wrap list items in ul tags
-  html = html.replace(/(<li>.*?<\/li>)(?=\s*<li>)/g, '$1');
-  html = html.replace(/(<li>.*<\/li>)/gs, (match) => {
-    if (match.includes('<li>')) {
-      return '<ul>' + match + '</ul>';
+    if (line.startsWith('### ')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<h3>' + line.slice(4) + '</h3>';
+    } else if (line.startsWith('## ')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<h2>' + line.slice(3) + '</h2>';
+    } else if (line.startsWith('# ')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<h1>' + line.slice(2) + '</h1>';
     }
-    return match;
-  });
+    // Bullet points
+    else if (/^[-*]\s+/.test(line)) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += '<li>' + line.replace(/^[-*]\s+/, '') + '</li>';
+    }
+    // Numbered lists
+    else if (/^\d+\.\s+/.test(line)) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += '<li>' + line.replace(/^\d+\.\s+/, '') + '</li>';
+    }
+    // Regular text - skip if empty or just whitespace
+    else {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<p>' + line + '</p>';
+    }
+  }
   
-  // Clean up nested ul tags
-  html = html.replace(/<\/ul>\s*<ul>/g, '');
+  if (inList) html += '</ul>';
   
-  return '<p>' + html + '</p>';
+  return html;
 }
 
 function formatDollarAmounts(text) {
-  // Match dollar amounts like $1,234,567 or $1234567 or $1,234 etc.
-  return text.replace(/\$\s*([\d,]+(?:\.\d+)?)/g, (match, numStr) => {
+  // Match dollar amounts with optional K/M/B suffix like $3,844K or $50,310K or $1,234,567 or $1234
+  return text.replace(/\$\s*([\d,]+(?:\.\d+)?)\s*([KMB])?/gi, (match, numStr, suffix) => {
     // Remove commas and parse
-    const num = parseFloat(numStr.replace(/,/g, ''));
+    let num = parseFloat(numStr.replace(/,/g, ''));
     if (isNaN(num)) return match;
+    
+    // Convert to actual value based on existing suffix
+    if (suffix) {
+      const s = suffix.toUpperCase();
+      if (s === 'K') num *= 1000;
+      else if (s === 'M') num *= 1000000;
+      else if (s === 'B') num *= 1000000000;
+    }
     
     const absNum = Math.abs(num);
     const sign = num < 0 ? '-' : '';
@@ -4492,7 +4513,7 @@ function formatDollarAmounts(text) {
     } else if (absNum >= 1000) {
       return sign + '$' + (absNum / 1000).toFixed(1) + 'K';
     }
-    return match;
+    return sign + '$' + Math.round(absNum);
   });
 }
 
