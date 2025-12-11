@@ -6,8 +6,18 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, send_from_directory, request, jsonify, Response
 import requests
+from openai import OpenAI
 
 app = Flask(__name__, static_folder=None)
+
+# the newest OpenAI model is "gpt-5" which was released August 7, 2025.
+# do not change this unless explicitly requested by the user
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+
+def get_openai_client():
+    if not OPENAI_API_KEY:
+        raise Exception("OpenAI API key not configured. Please add OPENAI_API_KEY to your secrets.")
+    return OpenAI(api_key=OPENAI_API_KEY)
 
 def get_gmail_access_token():
     hostname = os.environ.get('REPLIT_CONNECTORS_HOSTNAME')
@@ -128,6 +138,64 @@ def api_send_email():
     except Exception as e:
         import traceback
         print(f"Email error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analyze-income-statement', methods=['POST', 'OPTIONS'])
+def api_analyze_income_statement():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        statement_data = data.get('statementData')
+        period_info = data.get('periodInfo', '')
+        
+        if not statement_data:
+            return jsonify({'error': 'Missing statement data'}), 400
+        
+        client = get_openai_client()
+        
+        system_prompt = """You are a seasoned CFO and financial analyst with 20+ years of experience analyzing construction company financials. 
+        
+Your task is to analyze the provided Income Statement and deliver insights that would be valuable to company leadership. Focus on:
+
+1. **Key Observations**: Identify the most significant trends, patterns, or anomalies in the data
+2. **Profitability Analysis**: Assess gross profit margins, operating margins, and overall profitability
+3. **Revenue Trends**: Comment on revenue patterns if multiple periods are shown
+4. **Cost Structure**: Analyze the cost of goods sold and operating expenses
+5. **Areas of Concern**: Flag any concerning trends or metrics that need attention
+6. **Positive Indicators**: Highlight strong performance areas
+7. **Recommendations**: Provide 2-3 actionable recommendations based on the data
+
+Keep your analysis concise but insightful. Use specific numbers from the data to support your observations. Format your response with clear headings and bullet points for readability."""
+
+        user_prompt = f"""Please analyze this Income Statement for FTG Builders:
+
+Period: {period_info}
+
+{statement_data}
+
+Provide a comprehensive but concise CFO-level analysis."""
+
+        response = client.chat.completions.create(
+            model="gpt-5",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_completion_tokens=2048
+        )
+        
+        analysis = response.choices[0].message.content
+        return jsonify({'success': True, 'analysis': analysis})
+        
+    except Exception as e:
+        import traceback
+        print(f"AI Analysis error: {str(e)}")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 

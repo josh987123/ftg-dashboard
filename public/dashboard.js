@@ -4331,6 +4331,147 @@ function initIncomeStatementControls() {
     }
     renderIncomeStatement();
   };
+  
+  // Initialize AI Analysis button
+  initAiAnalysis();
+}
+
+function initAiAnalysis() {
+  const analyzeBtn = document.getElementById("isAiAnalyzeBtn");
+  const closeBtn = document.getElementById("isAiCloseBtn");
+  const resultContainer = document.getElementById("isAiAnalysisResult");
+  
+  if (analyzeBtn) {
+    analyzeBtn.addEventListener("click", performAiAnalysis);
+  }
+  
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      resultContainer.classList.add("hidden");
+    });
+  }
+}
+
+async function performAiAnalysis() {
+  const analyzeBtn = document.getElementById("isAiAnalyzeBtn");
+  const resultContainer = document.getElementById("isAiAnalysisResult");
+  const contentContainer = document.getElementById("isAiAnalysisContent");
+  
+  // Show loading state
+  analyzeBtn.disabled = true;
+  analyzeBtn.innerHTML = '<span class="ai-spinner"></span> Analyzing...';
+  resultContainer.classList.remove("hidden");
+  contentContainer.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing your financial data...</div>';
+  
+  try {
+    // Extract the current Income Statement data
+    const statementData = extractIncomeStatementData();
+    const periodInfo = getIncomeStatementPeriodInfo();
+    
+    const response = await fetch("/api/analyze-income-statement", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ statementData, periodInfo })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success && result.analysis) {
+      contentContainer.innerHTML = formatMarkdown(result.analysis);
+    } else {
+      contentContainer.innerHTML = `<div style="color: #dc2626;">Error: ${result.error || "Failed to get analysis"}</div>`;
+    }
+  } catch (error) {
+    console.error("AI Analysis error:", error);
+    contentContainer.innerHTML = `<div style="color: #dc2626;">Error: ${error.message || "Failed to connect to AI service"}</div>`;
+  } finally {
+    analyzeBtn.disabled = false;
+    analyzeBtn.innerHTML = '<span class="ai-icon">🤖</span> AI Analysis';
+  }
+}
+
+function extractIncomeStatementData() {
+  const table = document.getElementById("incomeStatementTable");
+  if (!table) return "";
+  
+  let text = "";
+  const rows = table.querySelectorAll("tr");
+  
+  rows.forEach(row => {
+    if (row.classList.contains("is-spacer-row")) return;
+    if (row.classList.contains("is-row-hidden")) return;
+    
+    const cells = row.querySelectorAll("th, td");
+    const rowData = [];
+    cells.forEach(cell => {
+      let cellText = cell.textContent.trim();
+      rowData.push(cellText);
+    });
+    text += rowData.join("\t") + "\n";
+  });
+  
+  return text;
+}
+
+function getIncomeStatementPeriodInfo() {
+  const viewMode = document.getElementById("isViewMode").value;
+  const periodType = document.getElementById("isPeriodType").value;
+  const periodSelect = document.getElementById("isPeriodSelect");
+  const compare = document.querySelector('input[name="isCompareRadio"]:checked');
+  
+  let info = "";
+  
+  if (viewMode === "single") {
+    info = `${periodType.toUpperCase()}: ${periodSelect.options[periodSelect.selectedIndex]?.text || ""}`;
+  } else {
+    if (periodType === "year") {
+      const startYear = document.getElementById("isMatrixYearStart").value;
+      const endYear = document.getElementById("isMatrixYearEnd").value;
+      info = `Annual Matrix: ${startYear} - ${endYear}`;
+    } else {
+      info = `${periodType.toUpperCase()} Matrix: ${periodSelect.options[periodSelect.selectedIndex]?.text || ""}`;
+    }
+  }
+  
+  if (compare && compare.value !== "none") {
+    info += ` (compared to ${compare.value.replace("_", " ")})`;
+  }
+  
+  return info;
+}
+
+function formatMarkdown(text) {
+  // Simple markdown to HTML conversion
+  let html = text
+    // Headers
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    // Bold
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    // Bullet points
+    .replace(/^\s*[-*]\s+(.*)$/gim, '<li>$1</li>')
+    // Numbered lists
+    .replace(/^\s*\d+\.\s+(.*)$/gim, '<li>$1</li>')
+    // Line breaks
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+  
+  // Wrap list items in ul tags
+  html = html.replace(/(<li>.*?<\/li>)(?=\s*<li>)/g, '$1');
+  html = html.replace(/(<li>.*<\/li>)/gs, (match) => {
+    if (match.includes('<li>')) {
+      return '<ul>' + match + '</ul>';
+    }
+    return match;
+  });
+  
+  // Clean up nested ul tags
+  html = html.replace(/<\/ul>\s*<ul>/g, '');
+  
+  return '<p>' + html + '</p>';
 }
 
 function updateMatrixControlsVisibility() {
