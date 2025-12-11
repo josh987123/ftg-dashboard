@@ -820,5 +820,453 @@
         "isIncome": true
       }
     ]
+  },
+  "balance_sheet": {
+    "groups": [
+      {
+        "label": "ASSETS",
+        "level": 0,
+        "type": "header"
+      },
+      {
+        "label": "Current Assets",
+        "level": 1,
+        "type": "header"
+      },
+      {
+        "label": "Cash & Cash Equivalents",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1001, 1003, 1004, 1005, 1006, 1007, 1010, 1020, 1090],
+        "isDebit": true
+      },
+      {
+        "label": "Contracts Receivable",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1100],
+        "isDebit": true
+      },
+      {
+        "label": "Retention Receivables",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1105],
+        "isDebit": true
+      },
+      {
+        "label": "Employee Advances",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1030, 1110],
+        "isDebit": true
+      },
+      {
+        "label": "Underbillings",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1050],
+        "isDebit": true
+      },
+      {
+        "label": "Related Party Loans",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1120, 1122, 1124, 1126, 1130, 1140],
+        "isDebit": true
+      },
+      {
+        "label": "Inventory",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1200],
+        "isDebit": true
+      },
+      {
+        "label": "Prepaid Expenses",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1500, 1501, 1502, 1503, 1504, 1505, 1507, 1510, 1515, 1530, 1540, 1545, 1550, 1600, 1610],
+        "isDebit": true
+      },
+      {
+        "label": "Other Current Assets",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1040],
+        "isDebit": true
+      },
+      {
+        "label": "Total Current Assets",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Cash & Cash Equivalents + Contracts Receivable + Retention Receivables + Employee Advances + Underbillings + Related Party Loans + Inventory + Prepaid Expenses + Other Current Assets",
+        "isDebit": true,
+        "expandable": true
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "Fixed Assets",
+        "level": 1,
+        "type": "header"
+      },
+      {
+        "label": "Building Improvements",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1300],
+        "isDebit": true
+      },
+      {
+        "label": "Accum Depr - Building Improvements",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1305],
+        "isDebit": false
+      },
+      {
+        "label": "Equipment & Machinery",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1310],
+        "isDebit": true
+      },
+      {
+        "label": "Accum Depr - Equipment & Machinery",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1315],
+        "isDebit": false
+      },
+      {
+        "label": "Furniture & Equipment",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1320],
+        "isDebit": true
+      },
+      {
+        "label": "Accum Depr - Furniture & Equipment",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1325],
+        "isDebit": false
+      },
+      {
+        "label": "Vehicles",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1400],
+        "isDebit": true
+      },
+      {
+        "label": "Accum Depr - Vehicles",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1405],
+        "isDebit": false
+      },
+      {
+        "label": "Total Fixed Assets",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Building Improvements + Accum Depr - Building Improvements + Equipment & Machinery + Accum Depr - Equipment & Machinery + Furniture & Equipment + Accum Depr - Furniture & Equipment + Vehicles + Accum Depr - Vehicles",
+        "isDebit": true,
+        "expandable": true
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "Other Assets",
+        "level": 1,
+        "type": "header"
+      },
+      {
+        "label": "Security Deposits",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1700],
+        "isDebit": true
+      },
+      {
+        "label": "Organization Costs",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1750],
+        "isDebit": true
+      },
+      {
+        "label": "Client Knowledge",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1800],
+        "isDebit": true
+      },
+      {
+        "label": "Accum Amort - Client Knowledge",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1805],
+        "isDebit": false
+      },
+      {
+        "label": "Deferred Tax Asset",
+        "level": 2,
+        "type": "detail",
+        "accounts": [1900],
+        "isDebit": true
+      },
+      {
+        "label": "Total Other Assets",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Security Deposits + Organization Costs + Client Knowledge + Accum Amort - Client Knowledge + Deferred Tax Asset",
+        "isDebit": true,
+        "expandable": true
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "TOTAL ASSETS",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Total Current Assets + Total Fixed Assets + Total Other Assets",
+        "isDebit": true,
+        "highlight": "total"
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "LIABILITIES & EQUITY",
+        "level": 0,
+        "type": "header"
+      },
+      {
+        "label": "Current Liabilities",
+        "level": 1,
+        "type": "header"
+      },
+      {
+        "label": "Contracts Payable",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2000, 2005],
+        "isDebit": false
+      },
+      {
+        "label": "Retention Payable",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2010],
+        "isDebit": false
+      },
+      {
+        "label": "Credit Cards",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2015, 2016, 2017, 2018, 2019],
+        "isDebit": false
+      },
+      {
+        "label": "Accrued Payroll & Benefits",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2020, 2021, 2022, 2023, 2025, 2028, 2030, 2040],
+        "isDebit": false
+      },
+      {
+        "label": "Payroll Taxes Payable",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2050, 2060, 2070, 2080, 2090],
+        "isDebit": false
+      },
+      {
+        "label": "Accrued Workers Comp",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2100],
+        "isDebit": false
+      },
+      {
+        "label": "Insurance Financing",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2110],
+        "isDebit": false
+      },
+      {
+        "label": "Overbillings",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2120],
+        "isDebit": false
+      },
+      {
+        "label": "Taxes Payable",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2130, 2135, 2140],
+        "isDebit": false
+      },
+      {
+        "label": "Deferred Tax Liability",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2150],
+        "isDebit": false
+      },
+      {
+        "label": "Uninvoiced Receipts",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2200],
+        "isDebit": false
+      },
+      {
+        "label": "Short-term Notes Payable",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2210, 2250],
+        "isDebit": false
+      },
+      {
+        "label": "Total Current Liabilities",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Contracts Payable + Retention Payable + Credit Cards + Accrued Payroll & Benefits + Payroll Taxes Payable + Accrued Workers Comp + Insurance Financing + Overbillings + Taxes Payable + Deferred Tax Liability + Uninvoiced Receipts + Short-term Notes Payable",
+        "isDebit": false,
+        "expandable": true
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "Long-term Liabilities",
+        "level": 1,
+        "type": "header"
+      },
+      {
+        "label": "Loan - Bridge Bank",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2500],
+        "isDebit": false
+      },
+      {
+        "label": "Note - Vehicles",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2510],
+        "isDebit": false
+      },
+      {
+        "label": "Note - Former Shareholder",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2515],
+        "isDebit": false
+      },
+      {
+        "label": "Total Long-term Liabilities",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Loan - Bridge Bank + Note - Vehicles + Note - Former Shareholder",
+        "isDebit": false,
+        "expandable": true
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "TOTAL LIABILITIES",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Total Current Liabilities + Total Long-term Liabilities",
+        "isDebit": false,
+        "highlight": "total"
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "Stockholders' Equity",
+        "level": 1,
+        "type": "header"
+      },
+      {
+        "label": "Common Stock",
+        "level": 2,
+        "type": "detail",
+        "accounts": [3000],
+        "isDebit": false
+      },
+      {
+        "label": "Treasury Stock",
+        "level": 2,
+        "type": "detail",
+        "accounts": [3010],
+        "isDebit": true
+      },
+      {
+        "label": "Capital Accounts",
+        "level": 2,
+        "type": "detail",
+        "accounts": [3030, 3031, 3032, 3033, 3034],
+        "isDebit": false
+      },
+      {
+        "label": "Distributions",
+        "level": 2,
+        "type": "detail",
+        "accounts": [3035, 3036],
+        "isDebit": true
+      },
+      {
+        "label": "Deferred Compensation",
+        "level": 2,
+        "type": "detail",
+        "accounts": [3025],
+        "isDebit": false
+      },
+      {
+        "label": "Total Stockholders' Equity",
+        "level": 1,
+        "type": "subtotal",
+        "formula": "Common Stock + Treasury Stock + Capital Accounts + Distributions + Deferred Compensation",
+        "isDebit": false,
+        "expandable": true,
+        "note": "Excludes Retained Earnings"
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
+        "label": "TOTAL LIABILITIES & EQUITY",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "TOTAL LIABILITIES + Total Stockholders' Equity",
+        "isDebit": false,
+        "highlight": "total",
+        "note": "Excludes Retained Earnings and Current Period Net Income"
+      }
+    ]
   }
 }
