@@ -28,6 +28,13 @@ Preferred communication style: Simple, everyday language.
 - **Session persistence**: Uses `localStorage` to remember authentication state and current user email (`ftg_current_user`)
 - **User display**: Current user's first name shown in header after login
 - **User preferences**: Each user's settings saved to `localStorage` keyed by email (`ftg_prefs_${email}`)
+- **Saved Views**: Users can save and name custom view configurations for each page (`ftg_views_${email}`):
+  - SavedViewManager class manages named views per page per user
+  - Dropdown selector shows "Current Settings" (default) plus any saved named views
+  - Save button prompts for view name and stores current config
+  - Delete button removes selected saved view
+  - PageViewConfigs provides page-specific collect/apply/refresh methods
+  - Both auto-save (ftg_prefs) and named views (SavedViewManager) systems coexist
 
 ### Data Management
 - **Static JSON files**: Financial data is stored in `/public/data/financials.json` and account hierarchy in `/public/data/account_groups.json`
