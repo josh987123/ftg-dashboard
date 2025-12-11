@@ -1471,15 +1471,15 @@ function updateRevenueView(data) {
   ============================================================= */
   const showTrendline = document.getElementById("revTrendline").checked;
   if (showTrendline) {
-    const trendColors = ["#10b981", "#f59e0b"];
     const barDatasets = [...datasets];
-    barDatasets.forEach((ds, idx) => {
+    barDatasets.forEach((ds) => {
+      if (ds.label === "Prior Year") return;
       const trendData = calculateTrendline(ds.data);
       datasets.push({
         label: `${ds.label} Trend`,
         data: trendData,
         type: "line",
-        borderColor: trendColors[idx % trendColors.length],
+        borderColor: "#10b981",
         backgroundColor: "transparent",
         borderWidth: 2,
         borderDash: [5, 5],
@@ -2023,16 +2023,16 @@ function updateAccountView(data) {
   
   const showTrendline = document.getElementById("acctTrendline").checked;
   if (showTrendline && datasets.length > 0) {
-    const trendColors = ["#10b981", "#f59e0b"];
     const barDatasets = datasets.filter(ds => ds.type !== "line");
-    barDatasets.forEach((ds, idx) => {
+    barDatasets.forEach((ds) => {
+      if (ds.label === "Prior Year") return;
       if (ds.data.length > 1) {
         const trendData = calculateTrendline(ds.data);
         datasets.push({
           label: `${ds.label} Trend`,
           data: trendData,
           type: "line",
-          borderColor: trendColors[idx % trendColors.length],
+          borderColor: "#10b981",
           backgroundColor: "transparent",
           borderWidth: 2,
           borderDash: [5, 5],
