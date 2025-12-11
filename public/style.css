@@ -62,14 +62,14 @@ button, .nav-item, .config-header, .dropdown-item {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: #e5e7eb;
+  border-bottom: 1px solid #d1d5db;
   cursor: pointer;
   user-select: none;
 }
 
 .config-header:hover {
-  background: #f3f4f6;
+  background: #d1d5db;
 }
 
 .config-toggle {
@@ -94,7 +94,7 @@ button, .nav-item, .config-header, .dropdown-item {
   padding: 12px 14px;
   transition: max-height 0.3s ease, padding 0.3s ease;
   overflow: hidden;
-  background: #e5e7eb;
+  background: #fff;
 }
 
 .config-body.collapsed {
