@@ -696,7 +696,7 @@
       },
 
       {
-        "label": "Interest Income",
+        "label": "Misc Income",
         "level": 2,
         "type": "detail",
         "accounts": [8000],
@@ -704,7 +704,7 @@
         "parent": "Other Income/(Expense)"
       },
       {
-        "label": "Dividend Income",
+        "label": "Interest Income",
         "level": 2,
         "type": "detail",
         "accounts": [8005],
@@ -728,18 +728,18 @@
         "parent": "Other Income/(Expense)"
       },
       {
-        "label": "Interest Expense",
+        "label": "Gain/(Loss) on Asset Disposal",
         "level": 2,
         "type": "detail",
         "accounts": [8020],
-        "negate": true,
+        "isIncome": true,
         "parent": "Other Income/(Expense)"
       },
       {
         "label": "Other Income/(Expense)",
         "level": 1,
         "type": "subtotal",
-        "formula": "Interest Income + Dividend Income + Gain on Sale + Other Income + Interest Expense",
+        "formula": "Misc Income + Interest Income + Gain on Sale + Other Income + Gain/(Loss) on Asset Disposal",
         "expandable": true,
         "isIncome": true
       },
