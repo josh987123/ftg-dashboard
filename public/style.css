@@ -1043,6 +1043,80 @@ body {
     flex-direction: row;
     justify-content: space-between;
   }
+  
+  .is-table-box {
+    padding: 12px;
+    margin: 0 -18px;
+    border-radius: 0;
+  }
+  
+  #incomeStatementTable {
+    width: 100%;
+    max-width: none;
+    font-size: 11px;
+  }
+  
+  #incomeStatementTable th,
+  #incomeStatementTable td {
+    padding: 6px 8px;
+  }
+  
+  .is-indent-1 td:first-child { padding-left: 16px !important; }
+  .is-indent-2 td:first-child { padding-left: 24px !important; }
+  .is-indent-3 td:first-child { padding-left: 32px !important; }
+  
+  #acctTable {
+    font-size: 12px;
+  }
+  
+  #acctTable th,
+  #acctTable td {
+    padding: 8px 10px;
+  }
+  
+  .config-panel {
+    margin: 0 -18px 16px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .config-body {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 500px) {
+  .is-table-box {
+    padding: 8px;
+    margin: 0 -14px;
+  }
+  
+  #incomeStatementTable {
+    font-size: 10px;
+  }
+  
+  #incomeStatementTable th,
+  #incomeStatementTable td {
+    padding: 5px 6px;
+  }
+  
+  .is-indent-1 td:first-child { padding-left: 12px !important; }
+  .is-indent-2 td:first-child { padding-left: 18px !important; }
+  .is-indent-3 td:first-child { padding-left: 24px !important; }
+  
+  #acctTable {
+    font-size: 11px;
+  }
+  
+  #acctTable th,
+  #acctTable td {
+    padding: 6px 8px;
+  }
+  
+  .config-panel {
+    margin: 0 -14px 14px;
+  }
 }
 
 /* PRINT STYLES */
@@ -1245,4 +1319,41 @@ body {
 .email-status.error {
   background: #fee2e2;
   color: #991b1b;
+}
+
+@media (max-width: 500px) {
+  .modal-content {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .modal-header {
+    padding: 14px 16px;
+  }
+  
+  .modal-header h3 {
+    font-size: 16px;
+  }
+  
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .modal-body input[type="email"],
+  .modal-body input[type="text"] {
+    padding: 12px;
+    font-size: 16px;
+  }
+  
+  .modal-footer {
+    padding: 14px 16px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    padding: 12px;
+  }
 }
