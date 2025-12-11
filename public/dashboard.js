@@ -359,11 +359,13 @@ function setupOverviewUI() {
   };
   
   const excludeCheck = document.getElementById("overviewExclude");
+  const dataLabelsCheck = document.getElementById("overviewDataLabels");
   
   yearSelect.onchange = () => updateOverviewCharts();
   compareCheck.onchange = () => updateOverviewCharts();
   trendCheck.onchange = () => updateOverviewCharts();
   excludeCheck.onchange = () => updateOverviewCharts();
+  dataLabelsCheck.onchange = () => updateOverviewCharts();
   
   rangeStart.oninput = () => {
     if (+rangeStart.value > +rangeEnd.value) rangeStart.value = rangeEnd.value;
@@ -696,8 +698,8 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend)
     });
   }
   
-  const totalBars = labels.length * (showPrior ? 2 : 1);
-  const showDataLabels = totalBars <= 12;
+  const dataLabelsCheckbox = document.getElementById("overviewDataLabels");
+  const showDataLabels = dataLabelsCheckbox ? dataLabelsCheckbox.checked : true;
   
   overviewChartInstances[canvasId] = new Chart(canvas, {
     type: "bar",
@@ -1556,6 +1558,9 @@ function setupRevenueUI(data) {
   document.getElementById("revTrendline").onchange = () => {
     updateRevenueView(data);
   };
+  document.getElementById("revDataLabels").onchange = () => {
+    updateRevenueView(data);
+  };
   document.getElementById("revExcludeCurrent").onchange = () => {
     updateRevenueView(data);
   };
@@ -1931,6 +1936,9 @@ function renderRevenueChart(labels, datasets) {
       id: 'gradientPlugin',
       beforeDraw: (chart) => applyGradientToDatasets(chart.data.datasets, chart)
     };
+    
+    const dataLabelsCheckbox = document.getElementById("revDataLabels");
+    const showDataLabels = dataLabelsCheckbox ? dataLabelsCheckbox.checked : true;
 
     revChartInstance = new Chart(ctx, {
       type: "bar",
@@ -1944,7 +1952,7 @@ function renderRevenueChart(labels, datasets) {
           easing: "easeOutQuart"
         },
         layout: {
-          padding: { top: 30 }
+          padding: { top: showDataLabels ? 30 : 0 }
         },
         plugins: {
           legend: { position: "bottom" },
@@ -1961,6 +1969,11 @@ function renderRevenueChart(labels, datasets) {
             }
           },
           datalabels: {
+            display: (context) => {
+              if (!showDataLabels) return false;
+              if (context.dataset.type === "line") return false;
+              return true;
+            },
             anchor: "end",
             align: "top",
             offset: 4,
@@ -2200,6 +2213,7 @@ function setupAccountUI(data) {
   yearSelect.onchange = () => updateAccountView(data);
   document.getElementById("acctCompare").onchange = () => updateAccountView(data);
   document.getElementById("acctTrendline").onchange = () => updateAccountView(data);
+  document.getElementById("acctDataLabels").onchange = () => updateAccountView(data);
   document.getElementById("acctExcludeCurrent").onchange = () => updateAccountView(data);
 }
 
@@ -2449,6 +2463,9 @@ function renderAccountChart(labels, datasets) {
     beforeDraw: (chart) => applyGradientToDatasets(chart.data.datasets, chart)
   };
   
+  const dataLabelsCheckbox = document.getElementById("acctDataLabels");
+  const showDataLabels = dataLabelsCheckbox ? dataLabelsCheckbox.checked : true;
+  
   acctChartInstance = new Chart(ctx, {
     type: "bar",
     data: { labels, datasets },
@@ -2461,7 +2478,7 @@ function renderAccountChart(labels, datasets) {
         easing: "easeOutQuart"
       },
       layout: {
-        padding: { top: 30 }
+        padding: { top: showDataLabels ? 30 : 0 }
       },
       plugins: {
         legend: { position: "bottom" },
@@ -2475,6 +2492,11 @@ function renderAccountChart(labels, datasets) {
           }
         },
         datalabels: {
+          display: (context) => {
+            if (!showDataLabels) return false;
+            if (context.dataset.type === "line") return false;
+            return true;
+          },
           anchor: "end",
           align: "top",
           offset: 4,
