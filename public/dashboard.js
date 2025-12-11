@@ -1501,16 +1501,33 @@ const EMAILJS_CONFIG = {
 
 async function captureOverviewAsImage() {
   const tilesGrid = document.querySelector(".overview-tiles-grid");
-  if (!tilesGrid) return null;
+  if (!tilesGrid) {
+    console.log("No tiles grid found");
+    return null;
+  }
   
   try {
+    console.log("Starting chart capture...");
     const canvas = await html2canvas(tilesGrid, {
-      scale: 2,
+      scale: 1.5,
       useCORS: true,
       backgroundColor: "#ffffff",
-      logging: false
+      logging: false,
+      allowTaint: true
     });
-    return canvas.toDataURL("image/jpeg", 0.85);
+    
+    // Compress to keep under EmailJS limits
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+    const sizeKB = Math.round(dataUrl.length / 1024);
+    console.log(`Chart captured: ${sizeKB}KB`);
+    
+    // EmailJS has ~50KB limit for template params, use smaller if too big
+    if (sizeKB > 500) {
+      console.log("Image too large, using higher compression");
+      return canvas.toDataURL("image/jpeg", 0.3);
+    }
+    
+    return dataUrl;
   } catch (err) {
     console.error("html2canvas error:", err);
     return null;
@@ -1550,12 +1567,15 @@ async function sendReportEmail() {
     emailjs.init(EMAILJS_CONFIG.publicKey);
     
     const view = getCurrentView();
+    console.log("Current view:", view);
     let messageHtml = "";
     let chartImage = "";
     
     if (view === "overview") {
       statusEl.textContent = "Capturing charts...";
+      console.log("Attempting to capture overview...");
       chartImage = await captureOverviewAsImage();
+      console.log("Chart image result:", chartImage ? "success" : "failed");
       
       if (chartImage) {
         messageHtml = `
