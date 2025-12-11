@@ -42,7 +42,14 @@ exports.handler = async function(event, context) {
       };
     }
 
-    const systemPrompt = `You are a CFO analyzing a construction company's Income Statement. Provide insightful analysis with specific dollar amounts. Each bullet should be one concise sentence.`;
+    const systemPrompt = `You are a CFO analyzing a construction company's Income Statement.
+
+STRICT OUTPUT RULES:
+- Return EXACTLY 4 arrays: key_observations, positive_indicators, areas_of_concern, recommendations
+- Each array must have EXACTLY 3-4 items
+- Each item is one concise sentence with specific dollar amounts
+- DO NOT add any other fields or sections
+- DO NOT include profitability analysis, revenue trends, cost structure, or any other categories`;
 
     const userPrompt = `Analyze this Income Statement for FTG Builders:
 
@@ -163,28 +170,43 @@ ${statementData}`;
         recommendations: []
       };
       
-      const headerMap = {
-        'key observations': 'key_observations',
-        'positive indicators': 'positive_indicators',
-        'areas of concern': 'areas_of_concern',
-        'recommendations': 'recommendations'
-      };
+      const validHeaders = ['key observations', 'positive indicators', 'areas of concern', 'recommendations'];
+      const skipHeaders = ['profitability', 'revenue trends', 'cost structure', 'analysis'];
       
       let currentSection = null;
       for (const line of rawContent.split('\n')) {
         const trimmed = line.trim();
+        if (!trimmed) continue;
+        
         const lowerLine = trimmed.toLowerCase().replace(/#/g, '').trim();
         
-        for (const [header, key] of Object.entries(headerMap)) {
-          if (lowerLine.includes(header)) {
-            currentSection = key;
-            break;
-          }
+        // Check if this is a header to skip
+        const isSkipHeader = skipHeaders.some(skip => lowerLine.includes(skip));
+        if (isSkipHeader && !validHeaders.some(valid => lowerLine.includes(valid))) {
+          currentSection = null;
+          continue;
         }
         
-        if (currentSection && trimmed.startsWith('-')) {
-          const bullet = trimmed.slice(1).trim();
-          if (bullet && sections[currentSection].length < 4) {
+        // Check for valid section headers
+        if (lowerLine.includes('key observations')) {
+          currentSection = 'key_observations';
+          continue;
+        } else if (lowerLine.includes('positive indicators')) {
+          currentSection = 'positive_indicators';
+          continue;
+        } else if (lowerLine.includes('areas of concern')) {
+          currentSection = 'areas_of_concern';
+          continue;
+        } else if (lowerLine.includes('recommendations')) {
+          currentSection = 'recommendations';
+          continue;
+        }
+        
+        // Collect content for current valid section
+        if (currentSection && sections[currentSection].length < 4) {
+          const bullet = trimmed.replace(/^[-*]/, '').trim();
+          // Skip if it looks like a sub-header or is too short
+          if (bullet && bullet.length > 10 && bullet.includes(':')) {
             sections[currentSection].push(bullet);
           }
         }

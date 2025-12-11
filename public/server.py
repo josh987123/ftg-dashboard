@@ -159,7 +159,14 @@ def api_analyze_income_statement():
         
         client = get_openai_client()
         
-        system_prompt = """You are a CFO analyzing a construction company's Income Statement. Provide insightful analysis with specific dollar amounts. Each bullet should be one concise sentence."""
+        system_prompt = """You are a CFO analyzing a construction company's Income Statement.
+
+STRICT OUTPUT RULES:
+- Return EXACTLY 4 arrays: key_observations, positive_indicators, areas_of_concern, recommendations
+- Each array must have EXACTLY 3-4 items
+- Each item is one concise sentence with specific dollar amounts
+- DO NOT add any other fields or sections
+- DO NOT include profitability analysis, revenue trends, cost structure, or any other categories"""
 
         user_prompt = f"""Analyze this Income Statement for FTG Builders:
 
@@ -211,70 +218,25 @@ Period: {period_info}
         )
         
         import json
-        import re
         
-        raw_content = response.choices[0].message.content
+        raw_content = response.choices[0].message.content or ""
         
-        # Try to parse as JSON first
-        try:
-            result = json.loads(raw_content)
-            # Convert JSON to markdown format
-            analysis = "## Key Observations\n"
-            for item in result.get("key_observations", [])[:4]:
-                analysis += f"- {item}\n"
-            analysis += "\n## Positive Indicators\n"
-            for item in result.get("positive_indicators", [])[:4]:
-                analysis += f"- {item}\n"
-            analysis += "\n## Areas of Concern\n"
-            for item in result.get("areas_of_concern", [])[:4]:
-                analysis += f"- {item}\n"
-            analysis += "\n## Recommendations\n"
-            for item in result.get("recommendations", [])[:4]:
-                analysis += f"- {item}\n"
-        except (json.JSONDecodeError, TypeError):
-            # Fallback: extract only the 4 sections from text response
-            sections = {
-                'key_observations': [],
-                'positive_indicators': [],
-                'areas_of_concern': [],
-                'recommendations': []
-            }
-            
-            # Map section headers to keys
-            header_map = {
-                'key observations': 'key_observations',
-                'positive indicators': 'positive_indicators',
-                'areas of concern': 'areas_of_concern',
-                'recommendations': 'recommendations'
-            }
-            
-            current_section = None
-            for line in raw_content.split('\n'):
-                line = line.strip()
-                # Check for section headers
-                lower_line = line.lower().replace('#', '').strip()
-                for header, key in header_map.items():
-                    if header in lower_line:
-                        current_section = key
-                        break
-                # Collect bullet points for current valid section
-                if current_section and line.startswith('-'):
-                    bullet = line[1:].strip()
-                    if bullet and len(sections[current_section]) < 4:
-                        sections[current_section].append(bullet)
-            
-            analysis = "## Key Observations\n"
-            for item in sections['key_observations']:
-                analysis += f"- {item}\n"
-            analysis += "\n## Positive Indicators\n"
-            for item in sections['positive_indicators']:
-                analysis += f"- {item}\n"
-            analysis += "\n## Areas of Concern\n"
-            for item in sections['areas_of_concern']:
-                analysis += f"- {item}\n"
-            analysis += "\n## Recommendations\n"
-            for item in sections['recommendations']:
-                analysis += f"- {item}\n"
+        # Parse the JSON response
+        result = json.loads(raw_content)
+        
+        # Build markdown output with EXACTLY 4 sections, max 4 bullets each
+        analysis = "## Key Observations\n"
+        for item in result.get("key_observations", [])[:4]:
+            analysis += f"- {item}\n"
+        analysis += "\n## Positive Indicators\n"
+        for item in result.get("positive_indicators", [])[:4]:
+            analysis += f"- {item}\n"
+        analysis += "\n## Areas of Concern\n"
+        for item in result.get("areas_of_concern", [])[:4]:
+            analysis += f"- {item}\n"
+        analysis += "\n## Recommendations\n"
+        for item in result.get("recommendations", [])[:4]:
+            analysis += f"- {item}\n"
         
         return jsonify({'success': True, 'analysis': analysis})
         
