@@ -149,7 +149,10 @@
 
         <div class="overview-tiles-grid">
           <div class="overview-metric-tile">
-            <div class="metric-tile-title">Revenue</div>
+            <div class="metric-tile-header">
+              <div class="metric-tile-title">Revenue</div>
+              <button class="chart-expand-btn" data-chart="overviewRevenueChart" data-title="Revenue" title="Expand chart">⛶</button>
+            </div>
             <canvas id="overviewRevenueChart"></canvas>
             <div class="metric-stats" id="overviewRevenueStats">
               <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="revenueAvg">-</div></div>
@@ -159,7 +162,10 @@
             </div>
           </div>
           <div class="overview-metric-tile">
-            <div class="metric-tile-title">Gross Profit</div>
+            <div class="metric-tile-header">
+              <div class="metric-tile-title">Gross Profit</div>
+              <button class="chart-expand-btn" data-chart="overviewGrossProfitChart" data-title="Gross Profit" title="Expand chart">⛶</button>
+            </div>
             <canvas id="overviewGrossProfitChart"></canvas>
             <div class="metric-stats" id="overviewGrossProfitStats">
               <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="grossProfitAvg">-</div></div>
@@ -169,7 +175,10 @@
             </div>
           </div>
           <div class="overview-metric-tile">
-            <div class="metric-tile-title">Gross Profit Margin %</div>
+            <div class="metric-tile-header">
+              <div class="metric-tile-title">Gross Profit Margin %</div>
+              <button class="chart-expand-btn" data-chart="overviewGrossMarginChart" data-title="Gross Profit Margin %" title="Expand chart">⛶</button>
+            </div>
             <canvas id="overviewGrossMarginChart"></canvas>
             <div class="metric-stats" id="overviewGrossMarginStats">
               <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="grossMarginAvg">-</div></div>
@@ -179,7 +188,10 @@
             </div>
           </div>
           <div class="overview-metric-tile">
-            <div class="metric-tile-title">Operating Expenses</div>
+            <div class="metric-tile-header">
+              <div class="metric-tile-title">Operating Expenses</div>
+              <button class="chart-expand-btn" data-chart="overviewOpexChart" data-title="Operating Expenses" title="Expand chart">⛶</button>
+            </div>
             <canvas id="overviewOpexChart"></canvas>
             <div class="metric-stats" id="overviewOpexStats">
               <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="opexAvg">-</div></div>
@@ -189,7 +201,10 @@
             </div>
           </div>
           <div class="overview-metric-tile">
-            <div class="metric-tile-title">Operating Profit</div>
+            <div class="metric-tile-header">
+              <div class="metric-tile-title">Operating Profit</div>
+              <button class="chart-expand-btn" data-chart="overviewOpProfitChart" data-title="Operating Profit" title="Expand chart">⛶</button>
+            </div>
             <canvas id="overviewOpProfitChart"></canvas>
             <div class="metric-stats" id="overviewOpProfitStats">
               <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="opProfitAvg">-</div></div>
@@ -199,7 +214,10 @@
             </div>
           </div>
           <div class="overview-metric-tile">
-            <div class="metric-tile-title">Operating Profit %</div>
+            <div class="metric-tile-header">
+              <div class="metric-tile-title">Operating Profit %</div>
+              <button class="chart-expand-btn" data-chart="overviewOpMarginChart" data-title="Operating Profit %" title="Expand chart">⛶</button>
+            </div>
             <canvas id="overviewOpMarginChart"></canvas>
             <div class="metric-stats" id="overviewOpMarginStats">
               <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="opMarginAvg">-</div></div>
@@ -569,6 +587,18 @@
       </section>
 
     </main>
+  </div>
+
+  <!-- Chart Fullscreen Modal -->
+  <div id="chartFullscreenModal" class="chart-fullscreen-modal hidden">
+    <div class="chart-fullscreen-header">
+      <h3 id="chartFullscreenTitle">Chart</h3>
+      <button class="chart-fullscreen-close" onclick="closeChartFullscreen()">&times;</button>
+    </div>
+    <div class="chart-fullscreen-body">
+      <canvas id="chartFullscreenCanvas"></canvas>
+    </div>
+    <div class="chart-fullscreen-stats" id="chartFullscreenStats"></div>
   </div>
 
   <!-- Email Modal -->

@@ -3,6 +3,131 @@
 ============================================================ */
 
 /* ------------------------------------------------------------
+   CHART FULLSCREEN FUNCTIONALITY
+------------------------------------------------------------ */
+let fullscreenChartInstance = null;
+
+function setupChartExpandButtons() {
+  document.querySelectorAll(".chart-expand-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const chartId = btn.dataset.chart;
+      const title = btn.dataset.title;
+      openChartFullscreen(chartId, title);
+    });
+  });
+  
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeChartFullscreen();
+    }
+  });
+}
+
+function openChartFullscreen(chartId, title) {
+  const sourceChart = overviewChartInstances[chartId];
+  if (!sourceChart) return;
+  
+  const modal = document.getElementById("chartFullscreenModal");
+  const titleEl = document.getElementById("chartFullscreenTitle");
+  const canvas = document.getElementById("chartFullscreenCanvas");
+  const statsEl = document.getElementById("chartFullscreenStats");
+  
+  titleEl.textContent = title;
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  
+  const sourceStatsEl = sourceChart.canvas.closest(".overview-metric-tile")?.querySelector(".metric-stats");
+  if (sourceStatsEl) {
+    statsEl.innerHTML = sourceStatsEl.innerHTML;
+  }
+  
+  if (fullscreenChartInstance) {
+    fullscreenChartInstance.destroy();
+  }
+  
+  const ctx = canvas.getContext("2d");
+  const config = JSON.parse(JSON.stringify(sourceChart.config));
+  
+  config.data = {
+    labels: [...sourceChart.data.labels],
+    datasets: sourceChart.data.datasets.map(ds => ({
+      ...ds,
+      backgroundColor: ds.type === "line" ? "transparent" : ds.backgroundColor,
+      borderColor: ds.borderColor,
+      data: [...ds.data]
+    }))
+  };
+  
+  config.options = {
+    ...sourceChart.options,
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: { padding: { top: 30 } },
+    plugins: {
+      ...sourceChart.options.plugins,
+      legend: { 
+        display: true, 
+        position: "bottom",
+        labels: { color: "#fff", font: { size: 14 } }
+      },
+      datalabels: {
+        display: true,
+        anchor: "end",
+        align: "top",
+        offset: 4,
+        font: { size: 12, weight: "600" },
+        color: "#fff",
+        formatter: (value) => {
+          if (value === 0 || value === null) return "";
+          const isPercent = title.includes("%");
+          if (isPercent) return value.toFixed(1) + "%";
+          if (Math.abs(value) >= 1000000) return "$" + (value / 1000000).toFixed(1) + "M";
+          if (Math.abs(value) >= 1000) return "$" + (value / 1000).toFixed(0) + "K";
+          return "$" + value.toFixed(0);
+        }
+      }
+    },
+    scales: {
+      x: { 
+        grid: { color: "rgba(255,255,255,0.1)" },
+        ticks: { color: "#fff", font: { size: 14 } }
+      },
+      y: {
+        grid: { color: "rgba(255,255,255,0.1)" },
+        ticks: { 
+          color: "#fff",
+          font: { size: 12 },
+          callback: v => {
+            const isPercent = title.includes("%");
+            if (isPercent) return v.toFixed(0) + "%";
+            if (Math.abs(v) >= 1000000) return "$" + (v / 1000000).toFixed(1) + "M";
+            return "$" + (v / 1000).toFixed(0) + "K";
+          }
+        }
+      }
+    }
+  };
+  
+  fullscreenChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: config.data,
+    plugins: [ChartDataLabels],
+    options: config.options
+  });
+}
+
+function closeChartFullscreen() {
+  const modal = document.getElementById("chartFullscreenModal");
+  modal.classList.add("hidden");
+  document.body.style.overflow = "";
+  
+  if (fullscreenChartInstance) {
+    fullscreenChartInstance.destroy();
+    fullscreenChartInstance = null;
+  }
+}
+
+/* ------------------------------------------------------------
    PASSWORD PROTECTION
 ------------------------------------------------------------ */
 const SITE_PASSWORD = "Ftgb2025$";
@@ -60,6 +185,7 @@ document.addEventListener("DOMContentLoaded", function() {
   initNavigation();
   initConfigPanels();
   setupExportButtons();
+  setupChartExpandButtons();
   updateDataAsOfDates();
 });
 
