@@ -1132,11 +1132,12 @@ body {
 
 /* Expanded subtotal row styling */
 .is-expanded-subtotal {
-  background-color: #d1d5db !important;
+  background-color: #fef9c3 !important;
 }
 
 .is-expanded-subtotal td {
   font-weight: 600;
+  background-color: #fef9c3 !important;
 }
 
 /* Child rows of expanded subtotals - additional indent */
