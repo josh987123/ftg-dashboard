@@ -1507,20 +1507,44 @@ async function captureOverviewAsImage() {
   }
   
   try {
-    // Capture at reasonable scale for email attachment
+    // Wait a moment for charts to fully render
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Scroll the element into view to ensure it's rendered
+    tilesGrid.scrollIntoView({ behavior: 'instant', block: 'start' });
+    
+    // Capture with options optimized for Canvas elements
     const canvas = await html2canvas(tilesGrid, {
-      scale: 1,
+      scale: 2,
       useCORS: true,
-      backgroundColor: "#ffffff",
-      logging: false,
-      allowTaint: true
+      backgroundColor: "#f8fafc",
+      logging: true,
+      allowTaint: true,
+      foreignObjectRendering: false,
+      removeContainer: true,
+      imageTimeout: 15000,
+      onclone: (clonedDoc) => {
+        // Ensure cloned element is visible
+        const clonedGrid = clonedDoc.querySelector(".overview-tiles-grid");
+        if (clonedGrid) {
+          clonedGrid.style.display = "grid";
+          clonedGrid.style.visibility = "visible";
+          clonedGrid.style.opacity = "1";
+        }
+      }
     });
     
-    // Convert to PNG for good quality
-    const dataUrl = canvas.toDataURL("image/png", 0.8);
+    // Convert to PNG
+    const dataUrl = canvas.toDataURL("image/png", 0.9);
     const base64Data = dataUrl.split(",")[1];
     const sizeKB = Math.round(base64Data.length / 1024);
-    console.log("Chart image size:", sizeKB, "KB");
+    console.log("Chart image size:", sizeKB, "KB", "dimensions:", canvas.width, "x", canvas.height);
+    
+    // Check if we got a valid image (not just white)
+    if (canvas.width < 100 || canvas.height < 100) {
+      console.log("Canvas too small, capture failed");
+      return null;
+    }
     
     return base64Data;
   } catch (err) {
