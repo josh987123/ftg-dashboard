@@ -1017,7 +1017,7 @@ function setupExportButtons() {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -1059,6 +1059,14 @@ function getReportData() {
       tableHtml: getIncomeStatementTableHtml(),
       csvData: getIncomeStatementCsvData(),
       isWide: isIncomeStatementWide()
+    };
+  } else if (view === "balanceSheet") {
+    return {
+      title: "Balance Sheet",
+      subtitle: getBalanceSheetSubtitle(),
+      tableHtml: getBalanceSheetTableHtml(),
+      csvData: getBalanceSheetCsvData(),
+      isWide: isBalanceSheetWide()
     };
   }
   return null;
@@ -1367,6 +1375,51 @@ function isIncomeStatementWide() {
   return viewMode === "matrix";
 }
 
+function getBalanceSheetSubtitle() {
+  const periodValue = document.getElementById("bsPeriodSelect")?.value || "";
+  const compare = document.querySelector('input[name="bsCompareRadio"]:checked')?.value || "none";
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  let subtitle = "As of ";
+  if (periodValue) {
+    const [y, mo] = periodValue.split("-");
+    subtitle += `${monthNames[parseInt(mo) - 1]} ${y}`;
+  }
+  if (compare === "prior_year") subtitle += " (vs Prior Year)";
+  
+  return subtitle;
+}
+
+function getBalanceSheetTableHtml() {
+  const table = document.querySelector("#balanceSheet .is-table");
+  if (!table) return "<p>No data available</p>";
+  
+  const clone = table.cloneNode(true);
+  clone.querySelectorAll(".is-row-hidden").forEach(r => r.remove());
+  clone.querySelectorAll(".is-spacer-row").forEach(r => r.remove());
+  clone.querySelectorAll(".bs-toggle").forEach(t => t.remove());
+  
+  return clone.outerHTML;
+}
+
+function getBalanceSheetCsvData() {
+  const table = document.querySelector("#balanceSheet .is-table");
+  if (!table) return "";
+  
+  let csv = "";
+  const rows = table.querySelectorAll("tr:not(.is-row-hidden):not(.is-spacer-row)");
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("th, td");
+    csv += Array.from(cells).map(c => `"${c.textContent.trim()}"`).join(",") + "\n";
+  });
+  return csv;
+}
+
+function isBalanceSheetWide() {
+  const compare = document.querySelector('input[name="bsCompareRadio"]:checked')?.value;
+  return compare === "prior_year";
+}
+
 function generateReportHtml(data, forEmail = false) {
   const orientation = data.isWide ? "landscape" : "portrait";
   const pageSize = data.isWide ? "11in 8.5in" : "8.5in 11in";
@@ -1454,7 +1507,7 @@ function universalPrint() {
 
 function universalExportToPdf() {
   const data = getReportData();
-  if (!data) return alert("Please navigate to Revenue, Account, or Income Statement view to export.");
+  if (!data) return alert("Please navigate to a report view (Revenue, Account, Income Statement, or Balance Sheet) to export.");
   
   const html = generateReportHtml(data);
   const printWindow = window.open("", "_blank");
@@ -1465,7 +1518,7 @@ function universalExportToPdf() {
 
 function universalExportToCsv() {
   const data = getReportData();
-  if (!data) return alert("Please navigate to Revenue, Account, or Income Statement view to export.");
+  if (!data) return alert("Please navigate to a report view (Revenue, Account, Income Statement, or Balance Sheet) to export.");
   
   const view = getCurrentView();
   const filename = `ftg_${view}_${new Date().toISOString().split("T")[0]}.csv`;
@@ -1481,7 +1534,7 @@ function universalExportToCsv() {
 
 function openEmailModal() {
   const data = getReportData();
-  if (!data) return alert("Please navigate to Revenue, Account, or Income Statement view to email.");
+  if (!data) return alert("Please navigate to a report view (Revenue, Account, Income Statement, or Balance Sheet) to email.");
   
   document.getElementById("emailSubject").value = `FTG Dashboard - ${data.title} - ${new Date().toLocaleDateString()}`;
   document.getElementById("emailTo").value = "";

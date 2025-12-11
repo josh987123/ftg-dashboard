@@ -1362,6 +1362,18 @@ button, .nav-item, .config-header, .dropdown-item {
   background: #fff !important;
 }
 
+#balanceSheetTable tbody tr:hover:not(.is-spacer-row):not(.is-row-header) {
+  background: #f0f9ff;
+}
+
+#balanceSheetTable tbody tr.is-major-total {
+  background: #e5e7eb !important;
+}
+
+#balanceSheetTable tbody tr.is-major-total:hover {
+  background: #d1d5db !important;
+}
+
 .is-subtotal-col {
   border-left: 1px solid #000 !important;
 }
