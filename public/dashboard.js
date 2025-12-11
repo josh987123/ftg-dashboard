@@ -1501,71 +1501,52 @@ const EMAILJS_CONFIG = {
 
 async function captureOverviewAsImage() {
   try {
-    // Wait for fonts to load
-    if (document.fonts && document.fonts.ready) {
-      await document.fonts.ready;
-    }
+    // Get canvas elements and stats
+    const chartConfigs = [
+      { canvasId: "overviewRevenueChart", title: "Revenue", statsId: "overviewRevenueStats" },
+      { canvasId: "overviewGrossProfitChart", title: "Gross Profit", statsId: "overviewGrossProfitStats" },
+      { canvasId: "overviewGrossMarginChart", title: "Gross Margin %", statsId: "overviewGrossMarginStats" },
+      { canvasId: "overviewOpexChart", title: "Operating Expenses", statsId: "overviewOpexStats" },
+      { canvasId: "overviewOpProfitChart", title: "Operating Profit", statsId: "overviewOpProfitStats" },
+      { canvasId: "overviewOpMarginChart", title: "Operating Margin %", statsId: "overviewOpMarginStats" }
+    ];
     
-    // Get all metric tiles
-    const tiles = document.querySelectorAll(".overview-metric-tile");
-    console.log("Found", tiles.length, "metric tiles");
-    
-    if (tiles.length === 0) {
-      console.log("No metric tiles found");
-      return null;
-    }
-    
-    // Capture each tile using html2canvas
-    const tileImages = [];
-    for (let i = 0; i < tiles.length && i < 6; i++) {
-      const tile = tiles[i];
-      tile.scrollIntoView({ behavior: 'instant', block: 'center' });
-      await new Promise(r => setTimeout(r, 100));
-      
-      try {
-        const canvas = await html2canvas(tile, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          logging: false,
-          allowTaint: true,
-          removeContainer: true,
-          height: tile.scrollHeight,
-          windowHeight: tile.scrollHeight + 100,
-          onclone: (clonedDoc, clonedElement) => {
-            // Ensure full height is captured including stats
-            clonedElement.style.overflow = "visible";
-            clonedElement.style.height = "auto";
-            clonedElement.style.maxHeight = "none";
-            // Make stats visible
-            const stats = clonedElement.querySelector(".metric-stats");
-            if (stats) {
-              stats.style.display = "flex";
-              stats.style.visibility = "visible";
-              stats.style.opacity = "1";
-            }
-          }
-        });
-        tileImages.push(canvas);
-      } catch (e) {
-        console.log("Error capturing tile", i, e.message);
+    // Collect chart data
+    const chartData = [];
+    for (const cfg of chartConfigs) {
+      const canvas = document.getElementById(cfg.canvasId);
+      const statsEl = document.getElementById(cfg.statsId);
+      if (canvas) {
+        const stats = [];
+        if (statsEl) {
+          const statBoxes = statsEl.querySelectorAll(".stat-box");
+          statBoxes.forEach(box => {
+            const label = box.querySelector(".stat-label")?.textContent || "";
+            const value = box.querySelector(".stat-value")?.textContent || "-";
+            stats.push({ label, value });
+          });
+        }
+        chartData.push({ canvas, title: cfg.title, stats });
       }
     }
     
-    if (tileImages.length === 0) {
-      console.log("No tile images captured");
+    if (chartData.length === 0) {
+      console.log("No charts found");
       return null;
     }
     
     // Create composite canvas (2x3 grid)
-    const tileWidth = tileImages[0].width;
-    const tileHeight = tileImages[0].height;
+    const chartWidth = 380;
+    const chartHeight = 200;
+    const titleHeight = 30;
+    const statsHeight = 50;
+    const tileHeight = titleHeight + chartHeight + statsHeight;
     const cols = 3;
     const rows = 2;
-    const padding = 20;
+    const padding = 15;
     
     const compositeCanvas = document.createElement("canvas");
-    compositeCanvas.width = cols * tileWidth + (cols + 1) * padding;
+    compositeCanvas.width = cols * chartWidth + (cols + 1) * padding;
     compositeCanvas.height = rows * tileHeight + (rows + 1) * padding;
     const ctx = compositeCanvas.getContext("2d");
     
@@ -1573,20 +1554,55 @@ async function captureOverviewAsImage() {
     ctx.fillStyle = "#f8fafc";
     ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
     
-    // Draw each tile
-    for (let i = 0; i < tileImages.length && i < 6; i++) {
+    // Draw each chart with title and stats
+    for (let i = 0; i < chartData.length && i < 6; i++) {
+      const { canvas, title, stats } = chartData[i];
       const col = i % cols;
       const row = Math.floor(i / cols);
-      const x = padding + col * (tileWidth + padding);
+      const x = padding + col * (chartWidth + padding);
       const y = padding + row * (tileHeight + padding);
-      ctx.drawImage(tileImages[i], x, y);
+      
+      // Draw tile background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(x, y, chartWidth, tileHeight);
+      ctx.strokeStyle = "#e5e7eb";
+      ctx.strokeRect(x, y, chartWidth, tileHeight);
+      
+      // Draw title
+      ctx.fillStyle = "#374151";
+      ctx.font = "bold 14px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(title, x + chartWidth / 2, y + 20);
+      
+      // Draw chart
+      try {
+        ctx.drawImage(canvas, x + 5, y + titleHeight, chartWidth - 10, chartHeight);
+      } catch (e) {
+        console.log("Error drawing chart", i);
+      }
+      
+      // Draw stats
+      const statsY = y + titleHeight + chartHeight + 10;
+      const statWidth = (chartWidth - 20) / 4;
+      ctx.font = "bold 9px Arial";
+      ctx.textAlign = "center";
+      
+      for (let j = 0; j < stats.length && j < 4; j++) {
+        const statX = x + 10 + j * statWidth + statWidth / 2;
+        ctx.fillStyle = "#6b7280";
+        ctx.fillText(stats[j].label.toUpperCase(), statX, statsY + 12);
+        ctx.fillStyle = "#1f2937";
+        ctx.font = "bold 11px Arial";
+        ctx.fillText(stats[j].value, statX, statsY + 28);
+        ctx.font = "bold 9px Arial";
+      }
     }
     
-    // Convert to JPEG for smaller size
-    const dataUrl = compositeCanvas.toDataURL("image/jpeg", 0.85);
+    // Convert to JPEG
+    const dataUrl = compositeCanvas.toDataURL("image/jpeg", 0.9);
     const base64Data = dataUrl.split(",")[1];
     const sizeKB = Math.round(base64Data.length / 1024);
-    console.log("Composite tile image size:", sizeKB, "KB");
+    console.log("Composite chart image size:", sizeKB, "KB");
     
     return base64Data;
   } catch (err) {
