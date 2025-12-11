@@ -71,10 +71,17 @@ def send_gmail(to_email, subject, html_content):
     
     return response.json()
 
-@app.route('/api/send-email', methods=['POST'])
+@app.route('/api/send-email', methods=['POST', 'OPTIONS'])
 def api_send_email():
+    if request.method == 'OPTIONS':
+        response = app.make_default_options_response()
+        return response
+    
     try:
-        data = request.json
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
         to_email = data.get('to')
         subject = data.get('subject')
         html_content = data.get('html')
@@ -85,6 +92,9 @@ def api_send_email():
         result = send_gmail(to_email, subject, html_content)
         return jsonify({'success': True, 'messageId': result.get('id')})
     except Exception as e:
+        import traceback
+        print(f"Email error: {str(e)}")
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/')
