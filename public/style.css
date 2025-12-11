@@ -856,18 +856,20 @@ button, .nav-item, .config-header, .dropdown-item {
 .checkbox-label { 
   display:flex; 
   align-items:center; 
-  gap:8px;
+  gap:6px;
   cursor: pointer;
-  padding: 6px 0;
-  font-size: 14px;
+  padding: 4px 0;
+  font-size: 13px;
   color: #374151;
+  line-height: 1.2;
 }
 
 .checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
   accent-color: #3b82f6;
+  flex-shrink: 0;
 }
 
 .checkbox-label:hover {
@@ -877,7 +879,20 @@ button, .nav-item, .config-header, .dropdown-item {
 .checkbox-stack {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+}
+
+@media (max-width: 768px) {
+  .checkbox-label {
+    padding: 2px 0 !important;
+    font-size: 13px;
+    line-height: 1.2;
+    min-height: auto !important;
+  }
+  
+  .checkbox-stack {
+    gap: 0 !important;
+  }
 }
 
 /* RANGE SLIDER (DUAL) */
