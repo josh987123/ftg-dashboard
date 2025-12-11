@@ -2205,13 +2205,23 @@ function renderSinglePeriodView(groups, periodType, periodValue, compare, thead,
       return;
     }
     
+    const majorTotalLabels = ["Revenue", "Total Cost of Sales", "Gross Profit", "Operating Expenses", "Operating Income", "Net Profit Before Taxes", "Net Profit After Taxes"];
+    const isMajorTotal = majorTotalLabels.includes(row.label);
+    
+    if (!isMajorTotal && row.type !== "ratio" && row.type !== "header") {
+      const currentZero = row.value === 0 || row.value === null;
+      const compZero = !comparisonRows || comparisonRows[i].value === 0 || comparisonRows[i].value === null;
+      if (currentZero && compZero) {
+        return;
+      }
+    }
+    
     const isVisible = isRowVisibleByParent(row, rows);
     const hiddenClass = isVisible ? "" : "is-row-hidden";
     const typeClass = `is-row-${row.type}`;
     const indentClass = `is-indent-${row.level}`;
     const isIncome = row.isIncome || false;
-    const majorTotalLabels = ["Revenue", "Total Cost of Sales", "Gross Profit", "Operating Expenses", "Operating Income", "Net Profit Before Taxes", "Net Profit After Taxes"];
-    const majorTotalClass = majorTotalLabels.includes(row.label) ? "is-major-total" : "";
+    const majorTotalClass = isMajorTotal ? "is-major-total" : "";
     
     let toggleHtml = "";
     if (row.expandable) {
@@ -2305,12 +2315,24 @@ function renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, 
       return;
     }
     
+    const majorTotalLabels = ["Revenue", "Total Cost of Sales", "Gross Profit", "Operating Expenses", "Operating Income", "Net Profit Before Taxes", "Net Profit After Taxes"];
+    const isMajorTotal = majorTotalLabels.includes(row.label);
+    
+    if (!isMajorTotal && row.type !== "ratio" && row.type !== "header") {
+      const allZero = allPeriodRows.every(periodRows => {
+        const pRow = periodRows[i];
+        return pRow.value === 0 || pRow.value === null;
+      });
+      if (allZero) {
+        return;
+      }
+    }
+    
     const isVisible = isRowVisibleByParent(row, firstRows);
     const hiddenClass = isVisible ? "" : "is-row-hidden";
     const typeClass = `is-row-${row.type}`;
     const indentClass = `is-indent-${row.level}`;
-    const majorTotalLabels = ["Revenue", "Total Cost of Sales", "Gross Profit", "Operating Expenses", "Operating Income", "Net Profit Before Taxes", "Net Profit After Taxes"];
-    const majorTotalClass = majorTotalLabels.includes(row.label) ? "is-major-total" : "";
+    const majorTotalClass = isMajorTotal ? "is-major-total" : "";
     
     let toggleHtml = "";
     if (row.expandable) {
