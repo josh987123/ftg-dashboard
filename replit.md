@@ -46,7 +46,12 @@ Preferred communication style: Simple, everyday language.
   - Detail level selector: Summary/Medium/Account (stacked radio buttons right of Compare dropdown)
   - Expand/collapse hierarchy with disclosure icons
   - Accounting format: Whole dollars with parentheses for negatives, percentages for ratios
-- **Other sections**: Financials, Projects, Operations, Reports show "UNDER CONSTRUCTION" banners
+- **Balance Sheet**: Under construction - will display balance sheet reports
+- **Statement of Cash Flows**: Under construction - will display cash flow statements
+- **Over/Under Bill**: Under construction - will track billing variances
+- **Receivables/Payables**: Under construction - will manage AR/AP tracking
+- **Job Analytics**: Under construction - will provide job-level performance metrics
+- **Cash Reports**: Under construction - will display cash position reports
 
 ### Responsive Design
 - **Mobile-first approach**: Sidebar navigation with hamburger menu toggle for mobile devices
