@@ -4719,8 +4719,11 @@ function formatBSNumber(value) {
   if (value === null || value === undefined) return "";
   
   let displayValue = value;
+  let suffix = "";
+  
   if (showThousands) {
     displayValue = value / 1000;
+    suffix = "K";
   }
   
   const absVal = Math.abs(displayValue);
@@ -4730,9 +4733,9 @@ function formatBSNumber(value) {
   });
   
   if (value < 0) {
-    return `(${formatted})`;
+    return `($${formatted}${suffix})`;
   }
-  return formatted;
+  return `$${formatted}${suffix}`;
 }
 
 function formatBSVariance(current, prior) {
@@ -4743,8 +4746,11 @@ function formatBSVariance(current, prior) {
   const diff = current - prior;
   const showThousands = document.getElementById("bsShowThousands")?.checked || false;
   let displayDiff = diff;
+  let suffix = "";
+  
   if (showThousands) {
     displayDiff = diff / 1000;
+    suffix = "K";
   }
   
   const absDiff = Math.abs(displayDiff);
@@ -4756,17 +4762,23 @@ function formatBSVariance(current, prior) {
   let pctStr = "-";
   if (prior !== 0) {
     const pctChange = ((current - prior) / Math.abs(prior)) * 100;
-    pctStr = pctChange.toLocaleString(undefined, {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1
-    }) + "%";
+    if (pctChange > 1000) {
+      pctStr = "1,000%+";
+    } else if (pctChange < -1000) {
+      pctStr = "-1,000%+";
+    } else {
+      pctStr = pctChange.toLocaleString(undefined, {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      }) + "%";
+    }
   }
   
   const isPositive = diff >= 0;
   const pctClass = isPositive ? "is-variance-positive" : "is-variance-negative";
   
   return {
-    diff: diff < 0 ? `(${diffFormatted})` : diffFormatted,
+    diff: diff < 0 ? `($${diffFormatted}${suffix})` : `$${diffFormatted}${suffix}`,
     pct: `<span class="${pctClass}">${pctStr}</span>`
   };
 }

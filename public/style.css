@@ -1400,6 +1400,34 @@ button, .nav-item, .config-header, .dropdown-item {
   color: #1f2937;
 }
 
+#balanceSheetTable {
+  width: 80%;
+  max-width: 900px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+#balanceSheetTable th,
+#balanceSheetTable td {
+  padding: 10px 14px;
+  text-align: right;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+#balanceSheetTable th:first-child,
+#balanceSheetTable td:first-child {
+  text-align: left;
+}
+
+#balanceSheetTable th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #374151;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
 #balanceSheetTable tbody tr:nth-child(even) {
   background: #f9fafb;
 }
