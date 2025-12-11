@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", function() {
   initSidebar();
   initNavigation();
   initConfigPanels();
+  setupExportButtons();
 });
 
 function initConfigPanels() {
@@ -295,7 +296,6 @@ async function initRevenueModule() {
     }
 
     setupRevenueUI(revenueDataCache);
-    setupExportButtons();
     
     spinner.classList.add("hidden");
     updateRevenueView(revenueDataCache);
@@ -307,95 +307,95 @@ async function initRevenueModule() {
 }
 
 /* ------------------------------------------------------------
-   EXPORT DROPDOWN & FUNCTIONALITY
+   EXPORT DROPDOWN & FUNCTIONALITY (Universal for all views)
 ------------------------------------------------------------ */
 function setupExportButtons() {
   const dropdown = document.getElementById("exportDropdownMenu");
   const dropdownBtn = document.getElementById("exportDropdownBtn");
   
-  // Toggle dropdown
   dropdownBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     dropdown.classList.toggle("hidden");
   });
   
-  // Close dropdown when clicking outside
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".export-dropdown")) {
       dropdown.classList.add("hidden");
     }
   });
   
-  // Export button handlers
   document.getElementById("exportPrintBtn").onclick = () => {
     dropdown.classList.add("hidden");
-    window.print();
+    universalPrint();
   };
   
   document.getElementById("exportPdfBtn").onclick = () => {
     dropdown.classList.add("hidden");
-    exportToPdf();
+    universalExportToPdf();
   };
   
   document.getElementById("exportCsvBtn").onclick = () => {
     dropdown.classList.add("hidden");
-    exportToCsv();
+    universalExportToCsv();
+  };
+  
+  document.getElementById("exportEmailBtn").onclick = () => {
+    dropdown.classList.add("hidden");
+    openEmailModal();
   };
 }
 
-function exportToCsv() {
-  const { labels, datasets } = currentTableData;
-  if (!labels.length) return alert("No data to export");
-  
-  let csv = "Period," + datasets.map(ds => ds.label).join(",") + "\n";
-  
-  labels.forEach((lbl, i) => {
-    let row = lbl;
-    datasets.forEach(ds => {
-      row += "," + (ds.data[i] || 0);
-    });
-    csv += row + "\n";
-  });
-  
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "ftg_revenue_" + new Date().toISOString().split("T")[0] + ".csv";
-  a.click();
-  URL.revokeObjectURL(url);
+function getCurrentView() {
+  const sections = ["revenue", "accounts", "incomeStatement"];
+  for (const s of sections) {
+    const el = document.getElementById(s);
+    if (el && el.classList.contains("visible")) return s;
+  }
+  return "overview";
 }
 
-function exportToPdf() {
+function getReportData() {
+  const view = getCurrentView();
+  
+  if (view === "revenue") {
+    return {
+      title: "Revenue Report",
+      subtitle: getRevenueSubtitle(),
+      tableHtml: getRevenueTableHtml(),
+      csvData: getRevenueCsvData(),
+      isWide: isRevenueWide()
+    };
+  } else if (view === "accounts") {
+    return {
+      title: "Account Detail Report",
+      subtitle: getAccountSubtitle(),
+      tableHtml: getAccountTableHtml(),
+      csvData: getAccountCsvData(),
+      isWide: isAccountWide()
+    };
+  } else if (view === "incomeStatement") {
+    return {
+      title: "Income Statement",
+      subtitle: getIncomeStatementSubtitle(),
+      tableHtml: getIncomeStatementTableHtml(),
+      csvData: getIncomeStatementCsvData(),
+      isWide: isIncomeStatementWide()
+    };
+  }
+  return null;
+}
+
+function getRevenueSubtitle() {
+  const viewType = document.getElementById("revViewType")?.value || "monthly";
+  const year = document.getElementById("revYear")?.value || new Date().getFullYear();
+  return `${viewType.charAt(0).toUpperCase() + viewType.slice(1)} View - ${year}`;
+}
+
+function getRevenueTableHtml() {
   const { labels, datasets } = currentTableData;
-  if (!labels.length) return alert("No data to export");
+  if (!labels.length) return "<p>No data available</p>";
   
-  const view = document.getElementById("revViewType").value;
-  const year = document.getElementById("revYear").value;
-  
-  let html = `
-    <html>
-    <head>
-      <title>FTG Revenue Report</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 40px; }
-        h1 { color: #1f2937; }
-        h2 { color: #6b7280; font-weight: normal; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #d1d5db; padding: 12px; text-align: left; }
-        th { background: #f3f4f6; }
-        .positive { color: #10b981; }
-        .negative { color: #ef4444; }
-        .footer { margin-top: 40px; color: #9ca3af; font-size: 12px; }
-      </style>
-    </head>
-    <body>
-      <h1>FTG Builders Revenue Report</h1>
-      <h2>${view.charAt(0).toUpperCase() + view.slice(1)} View – ${year}</h2>
-      <table>
-        <tr><th>Period</th>${datasets.map(ds => `<th>${ds.label}</th>`).join("")}</tr>
-  `;
-  
+  let html = `<table><tr><th>Period</th>${datasets.map(ds => `<th>${ds.label}</th>`).join("")}</tr>`;
   labels.forEach((lbl, i) => {
     html += `<tr><td>${lbl}</td>`;
     datasets.forEach(ds => {
@@ -404,18 +404,277 @@ function exportToPdf() {
     });
     html += "</tr>";
   });
+  html += "</table>";
+  return html;
+}
+
+function getRevenueCsvData() {
+  const { labels, datasets } = currentTableData;
+  if (!labels.length) return "";
   
-  html += `
-      </table>
-      <div class="footer">Generated on ${new Date().toLocaleDateString()}</div>
+  let csv = "Period," + datasets.map(ds => ds.label).join(",") + "\n";
+  labels.forEach((lbl, i) => {
+    let row = lbl;
+    datasets.forEach(ds => {
+      row += "," + (ds.data[i] || 0);
+    });
+    csv += row + "\n";
+  });
+  return csv;
+}
+
+function isRevenueWide() {
+  const { datasets } = currentTableData;
+  return datasets && datasets.length > 3;
+}
+
+function getAccountSubtitle() {
+  const accountSelect = document.getElementById("acctSelect");
+  const viewType = document.getElementById("acctViewType")?.value || "monthly";
+  const accountName = accountSelect?.options[accountSelect.selectedIndex]?.text || "Account";
+  return `${accountName} - ${viewType.charAt(0).toUpperCase() + viewType.slice(1)} View`;
+}
+
+function getAccountTableHtml() {
+  const table = document.querySelector("#accounts .acct-table");
+  if (!table) return "<p>No data available</p>";
+  return table.outerHTML;
+}
+
+function getAccountCsvData() {
+  const table = document.querySelector("#accounts .acct-table");
+  if (!table) return "";
+  
+  let csv = "";
+  const rows = table.querySelectorAll("tr");
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("th, td");
+    csv += Array.from(cells).map(c => `"${c.textContent.trim()}"`).join(",") + "\n";
+  });
+  return csv;
+}
+
+function isAccountWide() {
+  const viewType = document.getElementById("acctViewType")?.value;
+  return viewType === "annual";
+}
+
+function getIncomeStatementSubtitle() {
+  const periodType = document.getElementById("isPeriodType")?.value || "month";
+  const viewMode = document.getElementById("isViewMode")?.value || "single";
+  const compare = document.getElementById("isCompare")?.value || "none";
+  
+  let subtitle = `${periodType.charAt(0).toUpperCase() + periodType.slice(1)}`;
+  if (viewMode === "matrix") subtitle += " - Matrix View";
+  if (compare !== "none") subtitle += ` (vs ${compare === "prior_period" ? "Prior Period" : "Prior Year"})`;
+  
+  return subtitle;
+}
+
+function getIncomeStatementTableHtml() {
+  const table = document.querySelector("#incomeStatement .is-table");
+  if (!table) return "<p>No data available</p>";
+  
+  const clone = table.cloneNode(true);
+  clone.querySelectorAll(".is-row-hidden").forEach(r => r.remove());
+  clone.querySelectorAll(".is-spacer-row").forEach(r => r.remove());
+  
+  return clone.outerHTML;
+}
+
+function getIncomeStatementCsvData() {
+  const table = document.querySelector("#incomeStatement .is-table");
+  if (!table) return "";
+  
+  let csv = "";
+  const rows = table.querySelectorAll("tr:not(.is-row-hidden):not(.is-spacer-row)");
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("th, td");
+    csv += Array.from(cells).map(c => `"${c.textContent.trim()}"`).join(",") + "\n";
+  });
+  return csv;
+}
+
+function isIncomeStatementWide() {
+  const viewMode = document.getElementById("isViewMode")?.value;
+  return viewMode === "matrix";
+}
+
+function generateReportHtml(data, forEmail = false) {
+  const orientation = data.isWide ? "landscape" : "portrait";
+  const pageSize = data.isWide ? "11in 8.5in" : "8.5in 11in";
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>FTG Builders - ${data.title}</title>
+      <style>
+        @page { size: ${pageSize}; margin: 0.5in; }
+        @media print {
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .no-print { display: none !important; }
+        }
+        * { box-sizing: border-box; }
+        body { 
+          font-family: Arial, sans-serif; 
+          padding: ${forEmail ? "20px" : "0.5in"}; 
+          margin: 0;
+          font-size: ${data.isWide ? "9pt" : "10pt"};
+        }
+        .header { 
+          display: flex; 
+          justify-content: space-between; 
+          align-items: center; 
+          border-bottom: 2px solid #1f2937; 
+          padding-bottom: 10px; 
+          margin-bottom: 15px; 
+        }
+        .header h1 { color: #1f2937; margin: 0; font-size: ${data.isWide ? "16pt" : "18pt"}; }
+        .header h2 { color: #6b7280; margin: 5px 0 0 0; font-weight: normal; font-size: ${data.isWide ? "11pt" : "12pt"}; }
+        .logo-section { text-align: right; }
+        .logo-section img { height: 40px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { 
+          border: 1px solid #d1d5db; 
+          padding: ${data.isWide ? "4px 6px" : "6px 10px"}; 
+          text-align: left; 
+          font-size: ${data.isWide ? "8pt" : "9pt"};
+        }
+        th { background: #f3f4f6; font-weight: 600; }
+        tr:nth-child(even) { background: #f9fafb; }
+        .is-major-total td, .is-major-total th { background: #e5e7eb; font-weight: bold; }
+        .footer { 
+          margin-top: 20px; 
+          padding-top: 10px; 
+          border-top: 1px solid #e5e7eb; 
+          color: #9ca3af; 
+          font-size: 9pt; 
+          display: flex; 
+          justify-content: space-between; 
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div>
+          <h1>FTG Builders - ${data.title}</h1>
+          <h2>${data.subtitle}</h2>
+        </div>
+        <div class="logo-section">
+          <div style="font-weight: bold; color: #1f2937;">FTG BUILDERS</div>
+        </div>
+      </div>
+      ${data.tableHtml}
+      <div class="footer">
+        <span>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</span>
+        <span>FTG Dashboard</span>
+      </div>
     </body>
     </html>
   `;
+}
+
+function universalPrint() {
+  const data = getReportData();
+  if (!data) return alert("Please navigate to Revenue, Account, or Income Statement view to print.");
   
+  const html = generateReportHtml(data);
   const printWindow = window.open("", "_blank");
   printWindow.document.write(html);
   printWindow.document.close();
-  printWindow.print();
+  setTimeout(() => printWindow.print(), 250);
+}
+
+function universalExportToPdf() {
+  const data = getReportData();
+  if (!data) return alert("Please navigate to Revenue, Account, or Income Statement view to export.");
+  
+  const html = generateReportHtml(data);
+  const printWindow = window.open("", "_blank");
+  printWindow.document.write(html);
+  printWindow.document.close();
+  setTimeout(() => printWindow.print(), 250);
+}
+
+function universalExportToCsv() {
+  const data = getReportData();
+  if (!data) return alert("Please navigate to Revenue, Account, or Income Statement view to export.");
+  
+  const view = getCurrentView();
+  const filename = `ftg_${view}_${new Date().toISOString().split("T")[0]}.csv`;
+  
+  const blob = new Blob([data.csvData], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function openEmailModal() {
+  const data = getReportData();
+  if (!data) return alert("Please navigate to Revenue, Account, or Income Statement view to email.");
+  
+  document.getElementById("emailSubject").value = `FTG Dashboard - ${data.title} - ${new Date().toLocaleDateString()}`;
+  document.getElementById("emailTo").value = "";
+  document.getElementById("emailStatus").textContent = "";
+  document.getElementById("emailModal").classList.remove("hidden");
+}
+
+function closeEmailModal() {
+  document.getElementById("emailModal").classList.add("hidden");
+}
+
+async function sendReportEmail() {
+  const toEmail = document.getElementById("emailTo").value.trim();
+  const subject = document.getElementById("emailSubject").value.trim();
+  const statusEl = document.getElementById("emailStatus");
+  const sendBtn = document.getElementById("sendEmailBtn");
+  
+  if (!toEmail) {
+    statusEl.textContent = "Please enter a recipient email address.";
+    statusEl.className = "email-status error";
+    return;
+  }
+  
+  const data = getReportData();
+  if (!data) {
+    statusEl.textContent = "No report data available.";
+    statusEl.className = "email-status error";
+    return;
+  }
+  
+  const html = generateReportHtml(data, true);
+  
+  statusEl.textContent = "Sending...";
+  statusEl.className = "email-status";
+  sendBtn.disabled = true;
+  
+  try {
+    const response = await fetch("/api/send-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: toEmail, subject: subject, html: html })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      statusEl.textContent = "Email sent successfully!";
+      statusEl.className = "email-status success";
+      setTimeout(closeEmailModal, 2000);
+    } else {
+      statusEl.textContent = result.error || "Failed to send email.";
+      statusEl.className = "email-status error";
+    }
+  } catch (err) {
+    statusEl.textContent = "Error sending email: " + err.message;
+    statusEl.className = "email-status error";
+  } finally {
+    sendBtn.disabled = false;
+  }
 }
 
 /* ------------------------------------------------------------

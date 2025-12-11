@@ -1,19 +1,107 @@
 #!/usr/bin/env python3
-import http.server
-import socketserver
+import os
+import json
+import base64
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from flask import Flask, send_from_directory, request, jsonify
+import requests
 
-class NoCacheHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def end_headers(self):
-        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        self.send_header('Pragma', 'no-cache')
-        self.send_header('Expires', '0')
-        super().end_headers()
+app = Flask(__name__, static_folder='.')
 
-PORT = 5000
+def get_gmail_access_token():
+    hostname = os.environ.get('REPLIT_CONNECTORS_HOSTNAME')
+    repl_identity = os.environ.get('REPL_IDENTITY')
+    web_repl_renewal = os.environ.get('WEB_REPL_RENEWAL')
+    
+    if repl_identity:
+        x_replit_token = f'repl {repl_identity}'
+    elif web_repl_renewal:
+        x_replit_token = f'depl {web_repl_renewal}'
+    else:
+        raise Exception('X_REPLIT_TOKEN not found')
+    
+    if not hostname:
+        raise Exception('REPLIT_CONNECTORS_HOSTNAME not found')
+    
+    response = requests.get(
+        f'https://{hostname}/api/v2/connection?include_secrets=true&connector_names=google-mail',
+        headers={
+            'Accept': 'application/json',
+            'X_REPLIT_TOKEN': x_replit_token
+        }
+    )
+    
+    data = response.json()
+    connection_settings = data.get('items', [{}])[0]
+    
+    access_token = (
+        connection_settings.get('settings', {}).get('access_token') or
+        connection_settings.get('settings', {}).get('oauth', {}).get('credentials', {}).get('access_token')
+    )
+    
+    if not access_token:
+        raise Exception('Gmail not connected')
+    
+    return access_token
 
-class ReuseAddrTCPServer(socketserver.TCPServer):
-    allow_reuse_address = True
+def send_gmail(to_email, subject, html_content):
+    access_token = get_gmail_access_token()
+    
+    message = MIMEMultipart('alternative')
+    message['to'] = to_email
+    message['subject'] = subject
+    
+    html_part = MIMEText(html_content, 'html')
+    message.attach(html_part)
+    
+    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
+    
+    response = requests.post(
+        'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
+        headers={
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json'
+        },
+        json={'raw': raw_message}
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f'Failed to send email: {response.text}')
+    
+    return response.json()
 
-with ReuseAddrTCPServer(("0.0.0.0", PORT), NoCacheHTTPRequestHandler) as httpd:
-    print(f"Serving on port {PORT}")
-    httpd.serve_forever()
+@app.route('/api/send-email', methods=['POST'])
+def api_send_email():
+    try:
+        data = request.json
+        to_email = data.get('to')
+        subject = data.get('subject')
+        html_content = data.get('html')
+        
+        if not all([to_email, subject, html_content]):
+            return jsonify({'error': 'Missing required fields: to, subject, html'}), 400
+        
+        result = send_gmail(to_email, subject, html_content)
+        return jsonify({'success': True, 'messageId': result.get('id')})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/')
+def serve_index():
+    response = send_from_directory('.', 'index.html')
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+@app.route('/<path:path>')
+def serve_static(path):
+    response = send_from_directory('.', path)
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=False)

@@ -62,6 +62,7 @@
           <button id="exportPrintBtn" class="dropdown-item">🖨️ Print</button>
           <button id="exportPdfBtn" class="dropdown-item">📄 PDF</button>
           <button id="exportCsvBtn" class="dropdown-item">📊 CSV</button>
+          <button id="exportEmailBtn" class="dropdown-item">📧 Email</button>
         </div>
       </div>
       
@@ -448,6 +449,27 @@
       </section>
 
     </main>
+  </div>
+
+  <!-- Email Modal -->
+  <div id="emailModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Email Report</h3>
+        <button class="modal-close" onclick="closeEmailModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="emailTo">Send to:</label>
+        <input type="email" id="emailTo" placeholder="recipient@example.com" />
+        <label for="emailSubject">Subject:</label>
+        <input type="text" id="emailSubject" value="FTG Dashboard Report" />
+        <div id="emailStatus" class="email-status"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeEmailModal()">Cancel</button>
+        <button class="btn-primary" id="sendEmailBtn" onclick="sendReportEmail()">Send Email</button>
+      </div>
+    </div>
   </div>
 
   <!-- JS LIBRARIES -->
