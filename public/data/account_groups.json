@@ -1180,64 +1180,116 @@
         "type": "spacer"
       },
       {
-        "label": "Stockholders' Equity",
-        "level": 1,
-        "type": "header"
-      },
-      {
-        "label": "Common Stock",
-        "level": 2,
-        "type": "detail",
-        "accounts": [3000],
-        "isDebit": false
-      },
-      {
         "label": "Treasury Stock",
         "level": 2,
         "type": "detail",
         "accounts": [3010],
-        "isDebit": true
+        "isDebit": true,
+        "parent": "Equity"
       },
       {
-        "label": "Capital Accounts",
-        "level": 2,
+        "label": "Capital Contribution - JJ",
+        "level": 3,
         "type": "detail",
-        "accounts": [3030, 3031, 3032, 3033, 3034],
-        "isDebit": false
+        "accounts": [3030],
+        "isDebit": false,
+        "parent": "Capital Contributions"
+      },
+      {
+        "label": "Capital Contribution - LV",
+        "level": 3,
+        "type": "detail",
+        "accounts": [3031],
+        "isDebit": false,
+        "parent": "Capital Contributions"
+      },
+      {
+        "label": "Capital Contribution - GBB",
+        "level": 3,
+        "type": "detail",
+        "accounts": [3032],
+        "isDebit": false,
+        "parent": "Capital Contributions"
+      },
+      {
+        "label": "Capital Contribution - RET",
+        "level": 3,
+        "type": "detail",
+        "accounts": [3033],
+        "isDebit": false,
+        "parent": "Capital Contributions"
+      },
+      {
+        "label": "Capital Contribution - RJG",
+        "level": 3,
+        "type": "detail",
+        "accounts": [3034],
+        "isDebit": false,
+        "parent": "Capital Contributions"
+      },
+      {
+        "label": "Capital Contributions",
+        "level": 2,
+        "type": "subtotal",
+        "formula": "Capital Contribution - JJ + Capital Contribution - LV + Capital Contribution - GBB + Capital Contribution - RET + Capital Contribution - RJG",
+        "isDebit": false,
+        "expandable": true,
+        "parent": "Equity"
+      },
+      {
+        "label": "Deferred Compensation",
+        "level": 3,
+        "type": "detail",
+        "accounts": [3025],
+        "isDebit": false,
+        "parent": "Distributions"
+      },
+      {
+        "label": "Distributions - JJ/LV",
+        "level": 3,
+        "type": "detail",
+        "accounts": [3035],
+        "isDebit": true,
+        "parent": "Distributions"
+      },
+      {
+        "label": "Distributions - Other",
+        "level": 3,
+        "type": "detail",
+        "accounts": [3036],
+        "isDebit": true,
+        "parent": "Distributions"
       },
       {
         "label": "Distributions",
         "level": 2,
-        "type": "detail",
-        "accounts": [3035, 3036],
-        "isDebit": true
-      },
-      {
-        "label": "Deferred Compensation",
-        "level": 2,
-        "type": "detail",
-        "accounts": [3025],
-        "isDebit": false
+        "type": "subtotal",
+        "formula": "Deferred Compensation + Distributions - JJ/LV + Distributions - Other",
+        "isDebit": false,
+        "expandable": true,
+        "parent": "Equity"
       },
       {
         "label": "Retained Earnings",
         "level": 2,
         "type": "detail",
         "specialCalc": "retained_earnings",
-        "isDebit": false
+        "isDebit": false,
+        "parent": "Equity"
       },
       {
         "label": "Current Year Net Income",
         "level": 2,
         "type": "detail",
         "specialCalc": "current_year_net_income",
-        "isDebit": false
+        "isDebit": false,
+        "parent": "Equity"
       },
       {
-        "label": "Total Stockholders' Equity",
+        "label": "Equity",
         "level": 1,
         "type": "subtotal",
-        "formula": "Common Stock + Treasury Stock + Capital Accounts + Distributions + Deferred Compensation + Retained Earnings + Current Year Net Income",
+        "formula": "Treasury Stock + Capital Contributions + Distributions + Retained Earnings + Current Year Net Income",
         "isDebit": false,
         "expandable": true
       },
@@ -1249,7 +1301,7 @@
         "label": "TOTAL LIABILITIES & EQUITY",
         "level": 0,
         "type": "subtotal",
-        "formula": "TOTAL LIABILITIES + Total Stockholders' Equity",
+        "formula": "TOTAL LIABILITIES + Equity",
         "isDebit": false,
         "highlight": "total"
       }

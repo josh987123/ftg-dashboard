@@ -68,8 +68,12 @@ Preferred communication style: Simple, everyday language.
   - **Long-Term Liabilities** (expandable subtotal):
     - Loan - Bridge Bank (2500), Note - Vehicles (2510), Note - Former Shareholder (2515), Deferred Tax Liability (2150)
   - **TOTAL LIABILITIES** = Current Liabilities + Long-Term Liabilities
-  - Equity (3000s) with existing structure
-  - Equity section includes Retained Earnings (cumulative through prior year-end) and Current Year Net Income (Jan 1 through selected date)
+  - **Equity** (expandable subtotal):
+    - Treasury Stock (3010)
+    - Capital Contributions (expandable): 3030, 3031, 3032, 3033, 3034
+    - Distributions (expandable): 3025, 3035, 3036
+    - Retained Earnings (cumulative through prior year-end)
+    - Current Year Net Income (Jan 1 through selected date)
   - Multi-level expand/collapse with recursive parent visibility checking
   - Mobile-responsive styling at 768px and 500px breakpoints
 - **Statement of Cash Flows**: Under construction - will display cash flow statements
