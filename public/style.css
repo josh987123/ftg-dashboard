@@ -1575,34 +1575,37 @@ button, .nav-item, .config-header, .dropdown-item {
   }
   
   .config-panel {
-    margin: 0 -18px 16px;
+    margin: 0 -18px 12px;
     border-radius: 0;
     border-left: none;
     border-right: none;
   }
   
   .config-body {
-    padding: 12px;
+    padding: 10px 12px;
   }
   
   .config-body .rev-controls {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 8px;
   }
   
   .config-body .rev-controls > label {
-    margin-bottom: -4px;
+    margin-bottom: -6px;
+    font-size: 13px;
   }
   
   .config-body .rev-controls select {
     width: 100%;
-    min-height: 44px;
-    font-size: 16px;
+    min-height: 40px;
+    font-size: 15px;
     -webkit-appearance: none;
     background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") no-repeat right 8px center;
     background-size: 20px;
     padding-right: 32px;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
   
   .config-body #overviewYearWrapper,
@@ -1621,22 +1624,24 @@ button, .nav-item, .config-header, .dropdown-item {
   }
   
   .config-body .checkbox-stack {
-    margin-top: 4px;
+    margin-top: 2px;
+    gap: 0;
   }
   
   .config-body .checkbox-label {
-    padding: 8px 0;
+    padding: 6px 0;
     font-size: 14px;
+    min-height: 36px;
   }
   
   .config-body .checkbox-label input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     margin-right: 8px;
   }
   
   .config-body .range-wrapper {
-    padding: 8px 0;
+    padding: 4px 0;
   }
   
   .overview-metric-tile {
