@@ -4386,7 +4386,7 @@ async function performAiAnalysis() {
     contentContainer.innerHTML = `<div style="color: #dc2626;">Error: ${error.message || "Failed to connect to AI service"}</div>`;
   } finally {
     analyzeBtn.disabled = false;
-    analyzeBtn.innerHTML = '<span class="ai-icon">🤖</span> AI Analysis';
+    analyzeBtn.textContent = 'AI Analysis';
   }
 }
 
