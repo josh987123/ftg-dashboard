@@ -907,15 +907,17 @@ button, .nav-item, .config-header, .dropdown-item {
 }
 
 .metric-visibility-section .section-label {
+  display: block;
   font-weight: 600;
   font-size: 13px;
   color: var(--text-secondary);
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
 
-.show-all-label {
+.metric-visibility-section .show-all-label {
+  display: flex;
   font-size: 13px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .metric-checkboxes {
