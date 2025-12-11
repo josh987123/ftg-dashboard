@@ -4,12 +4,10 @@ import json
 import base64
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Flask, send_from_directory, request, jsonify, make_response
-from flask_cors import CORS
+from flask import Flask, send_from_directory, request, jsonify, Response
 import requests
 
-app = Flask(__name__, static_folder='.')
-CORS(app)
+app = Flask(__name__, static_folder=None)
 
 def get_gmail_access_token():
     hostname = os.environ.get('REPLIT_CONNECTORS_HOSTNAME')
@@ -73,14 +71,33 @@ def send_gmail(to_email, subject, html_content):
     
     return response.json()
 
+@app.before_request
+def handle_preflight():
+    if request.method == 'OPTIONS':
+        response = Response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
+
 @app.route('/api/send-email', methods=['POST', 'OPTIONS'])
 def api_send_email():
+    print(f"API send-email called with method: {request.method}")
+    
     if request.method == 'OPTIONS':
-        response = app.make_default_options_response()
-        return response
+        return jsonify({'status': 'ok'})
     
     try:
         data = request.get_json(force=True, silent=True)
+        print(f"Received data: {data is not None}")
+        
         if not data:
             return jsonify({'error': 'Invalid JSON data'}), 400
         
@@ -103,17 +120,18 @@ def api_send_email():
 def serve_index():
     response = send_from_directory('.', 'index.html')
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
     return response
 
 @app.route('/<path:path>')
 def serve_static(path):
-    response = send_from_directory('.', path)
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
-    return response
+    if path.startswith('api/'):
+        return jsonify({'error': 'Not found'}), 404
+    try:
+        response = send_from_directory('.', path)
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        return response
+    except:
+        return jsonify({'error': 'File not found'}), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=True)
