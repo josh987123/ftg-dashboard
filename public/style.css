@@ -1706,27 +1706,31 @@ body {
 
 .chart-fullscreen-stats .stat-box {
   text-align: center;
+  background: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  min-width: 100px;
 }
 
 .chart-fullscreen-stats .stat-label {
-  color: rgba(255, 255, 255, 0.6);
+  color: #666;
   font-size: 12px;
   text-transform: uppercase;
   margin-bottom: 4px;
 }
 
 .chart-fullscreen-stats .stat-value {
-  color: #fff;
+  color: #1a1a2e;
   font-size: 20px;
   font-weight: 600;
 }
 
 .chart-fullscreen-stats .stat-value.negative {
-  color: #f87171;
+  color: #dc2626;
 }
 
 .chart-fullscreen-stats .stat-period {
-  color: rgba(255, 255, 255, 0.5);
+  color: #888;
   font-size: 11px;
   margin-top: 2px;
 }
