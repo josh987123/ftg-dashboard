@@ -1293,12 +1293,23 @@ async function sendReportEmail() {
   sendBtn.disabled = true;
   
   try {
-    const apiUrl = window.location.origin + "/api/send-email";
-    const response = await fetch(apiUrl, {
+    const payload = JSON.stringify({ to: toEmail, subject: subject, html: html });
+    const headers = { 
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    };
+    
+    let response = await fetch("/send-email.json", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to: toEmail, subject: subject, html: html })
+      headers: headers,
+      body: payload
     });
+    
+    let contentType = response.headers.get("content-type");
+    
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Email service temporarily unavailable. Please try again.");
+    }
     
     const result = await response.json();
     

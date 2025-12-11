@@ -72,7 +72,8 @@ def send_gmail(to_email, subject, html_content):
     return response.json()
 
 @app.before_request
-def handle_preflight():
+def log_request():
+    print(f"Incoming request: {request.method} {request.path}")
     if request.method == 'OPTIONS':
         response = Response()
         response.headers['Access-Control-Allow-Origin'] = '*'
@@ -88,6 +89,8 @@ def add_cors_headers(response):
     return response
 
 @app.route('/api/send-email', methods=['POST', 'OPTIONS'])
+@app.route('/__api__/send-email', methods=['POST', 'OPTIONS'])
+@app.route('/send-email.json', methods=['POST', 'OPTIONS'])
 def api_send_email():
     print(f"API send-email called with method: {request.method}")
     
@@ -124,14 +127,16 @@ def serve_index():
 
 @app.route('/<path:path>')
 def serve_static(path):
-    if path.startswith('api/'):
+    if path.startswith('api/') or path == 'send-email.json' or path.startswith('__api__'):
         return jsonify({'error': 'Not found'}), 404
     try:
         response = send_from_directory('.', path)
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         return response
     except:
-        return jsonify({'error': 'File not found'}), 404
+        response = send_from_directory('.', 'index.html')
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        return response
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
