@@ -1462,14 +1462,23 @@ button, .nav-item, .config-header, .dropdown-item {
   }
   
   .is-compare-detail-wrapper .radio-label {
-    padding: 1px 0;
+    padding: 0;
+    margin: 0;
     font-size: 12px;
-    line-height: 1.3;
+    line-height: 1;
+    height: 18px;
+  }
+  
+  .is-compare-detail-wrapper .radio-label input[type="radio"] {
+    width: 12px;
+    height: 12px;
+    margin: 0;
   }
   
   .is-compare-detail-wrapper > .is-options-stack > label {
     font-size: 11px;
     margin-bottom: 2px;
+    line-height: 1;
   }
 }
 
