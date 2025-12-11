@@ -52,8 +52,18 @@ Preferred communication style: Simple, everyday language.
 ### Fonts
 - **Google Fonts**: Inter font family (weights: 300, 400, 500, 600, 700) loaded via CDN
 
+### Backend Services
+- **Flask Server**: Python Flask application (`public/server.py`) serves static files and provides API endpoints
+- **Gmail Integration**: Uses Replit connectors to send emails via Gmail API
+- **API Endpoints**:
+  - `POST /api/send-email` - Send HTML email reports via Gmail
+
+### Export & Email Features
+- **Universal Export**: Print, PDF, and CSV export work for all three main views (Revenue, Account, Income Statement)
+- **Smart Page Orientation**: Exports automatically use landscape for wide content (matrix views, annual comparison) and portrait for tall content (single period views)
+- **Email Reports**: Modal dialog to email current report view directly via Gmail
+- **Page Formatting**: Exports are sized to fit on a single page with appropriate font scaling
+
 ### Static Assets
 - **Logo**: `logo.png` used in login screen and header
-- **No backend services**: Application runs entirely in the browser
 - **No database**: All data is stored in static JSON files
-- **No API integrations**: Self-contained application with no external API calls
