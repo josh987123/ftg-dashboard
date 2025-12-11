@@ -159,34 +159,13 @@ def api_analyze_income_statement():
         
         client = get_openai_client()
         
-        system_prompt = """Analyze this construction company's Income Statement. Output EXACTLY this format with NO other text:
+        system_prompt = """You are a CFO analyzing a construction company's Income Statement. Provide insightful analysis with specific dollar amounts. Each bullet should be one concise sentence."""
 
-## Key Observations
-- [3-4 bullets only]
-
-## Positive Indicators
-- [3-4 bullets only]
-
-## Areas of Concern
-- [3-4 bullets only]
-
-## Recommendations
-- [3-4 bullets only]
-
-CRITICAL RULES:
-1. Output ONLY these 4 sections - nothing else
-2. NO Profitability Analysis, Revenue Trends, Cost Structure, or any other sections
-3. NO introductory or concluding paragraphs
-4. Use raw dollar amounts (e.g. $3,844,000 not $3,844K)
-5. Each bullet: 1 sentence max"""
-
-        user_prompt = f"""Please analyze this Income Statement for FTG Builders:
+        user_prompt = f"""Analyze this Income Statement for FTG Builders:
 
 Period: {period_info}
 
-{statement_data}
-
-Provide a comprehensive but concise CFO-level analysis."""
+{statement_data}"""
 
         response = client.chat.completions.create(
             model="gpt-4o",
@@ -194,10 +173,60 @@ Provide a comprehensive but concise CFO-level analysis."""
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=2048
+            max_tokens=2048,
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "income_statement_analysis",
+                    "strict": True,
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "key_observations": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "3-4 key observations about the financial data"
+                            },
+                            "positive_indicators": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "3-4 positive financial indicators"
+                            },
+                            "areas_of_concern": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "3-4 areas requiring attention"
+                            },
+                            "recommendations": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "3-4 actionable recommendations"
+                            }
+                        },
+                        "required": ["key_observations", "positive_indicators", "areas_of_concern", "recommendations"],
+                        "additionalProperties": False
+                    }
+                }
+            }
         )
         
-        analysis = response.choices[0].message.content
+        import json
+        result = json.loads(response.choices[0].message.content)
+        
+        # Convert JSON to markdown format
+        analysis = "## Key Observations\n"
+        for item in result.get("key_observations", []):
+            analysis += f"- {item}\n"
+        analysis += "\n## Positive Indicators\n"
+        for item in result.get("positive_indicators", []):
+            analysis += f"- {item}\n"
+        analysis += "\n## Areas of Concern\n"
+        for item in result.get("areas_of_concern", []):
+            analysis += f"- {item}\n"
+        analysis += "\n## Recommendations\n"
+        for item in result.get("recommendations", []):
+            analysis += f"- {item}\n"
+        
         return jsonify({'success': True, 'analysis': analysis})
         
     except Exception as e:

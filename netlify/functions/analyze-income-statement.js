@@ -42,34 +42,13 @@ exports.handler = async function(event, context) {
       };
     }
 
-    const systemPrompt = `Analyze this construction company's Income Statement. Output EXACTLY this format with NO other text:
+    const systemPrompt = `You are a CFO analyzing a construction company's Income Statement. Provide insightful analysis with specific dollar amounts. Each bullet should be one concise sentence.`;
 
-## Key Observations
-- [3-4 bullets only]
-
-## Positive Indicators
-- [3-4 bullets only]
-
-## Areas of Concern
-- [3-4 bullets only]
-
-## Recommendations
-- [3-4 bullets only]
-
-CRITICAL RULES:
-1. Output ONLY these 4 sections - nothing else
-2. NO Profitability Analysis, Revenue Trends, Cost Structure, or any other sections
-3. NO introductory or concluding paragraphs
-4. Use raw dollar amounts (e.g. $3,844,000 not $3,844K)
-5. Each bullet: 1 sentence max`;
-
-    const userPrompt = `Please analyze this Income Statement for FTG Builders:
+    const userPrompt = `Analyze this Income Statement for FTG Builders:
 
 Period: ${periodInfo}
 
-${statementData}
-
-Provide a comprehensive but concise CFO-level analysis.`;
+${statementData}`;
 
     const requestBody = JSON.stringify({
       model: 'gpt-4o',
@@ -77,7 +56,41 @@ Provide a comprehensive but concise CFO-level analysis.`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      max_tokens: 2048
+      max_tokens: 2048,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "income_statement_analysis",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              key_observations: {
+                type: "array",
+                items: { type: "string" },
+                description: "3-4 key observations about the financial data"
+              },
+              positive_indicators: {
+                type: "array",
+                items: { type: "string" },
+                description: "3-4 positive financial indicators"
+              },
+              areas_of_concern: {
+                type: "array",
+                items: { type: "string" },
+                description: "3-4 areas requiring attention"
+              },
+              recommendations: {
+                type: "array",
+                items: { type: "string" },
+                description: "3-4 actionable recommendations"
+              }
+            },
+            required: ["key_observations", "positive_indicators", "areas_of_concern", "recommendations"],
+            additionalProperties: false
+          }
+        }
+      }
     });
 
     const response = await new Promise((resolve, reject) => {
@@ -118,7 +131,25 @@ Provide a comprehensive but concise CFO-level analysis.`;
       };
     }
 
-    const analysis = response.body.choices[0].message.content;
+    const result = JSON.parse(response.body.choices[0].message.content);
+    
+    // Convert JSON to markdown format
+    let analysis = "## Key Observations\n";
+    for (const item of (result.key_observations || [])) {
+      analysis += `- ${item}\n`;
+    }
+    analysis += "\n## Positive Indicators\n";
+    for (const item of (result.positive_indicators || [])) {
+      analysis += `- ${item}\n`;
+    }
+    analysis += "\n## Areas of Concern\n";
+    for (const item of (result.areas_of_concern || [])) {
+      analysis += `- ${item}\n`;
+    }
+    analysis += "\n## Recommendations\n";
+    for (const item of (result.recommendations || [])) {
+      analysis += `- ${item}\n`;
+    }
 
     return {
       statusCode: 200,
