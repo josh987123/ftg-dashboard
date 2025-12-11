@@ -1593,31 +1593,35 @@ button, .nav-item, .config-header, .dropdown-item {
 .ai-analysis-content h1,
 .ai-analysis-content h2,
 .ai-analysis-content h3 {
-  color: #166534;
-  margin-top: 10px;
-  margin-bottom: 0;
-  margin-left: 0;
-  padding-left: 0;
-  font-size: 12px;
-  text-indent: 0;
+  color: #166534 !important;
+  margin: 12px 0 0 0 !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  text-indent: 0 !important;
 }
 
 .ai-analysis-content h1:first-child,
 .ai-analysis-content h2:first-child,
 .ai-analysis-content h3:first-child {
-  margin-top: 0;
+  margin-top: 0 !important;
 }
 
 .ai-analysis-content ul,
 .ai-analysis-content ol {
-  margin: 0;
-  padding-left: 20px;
+  margin: 0 !important;
+  padding: 0 0 0 18px !important;
+  list-style-position: outside !important;
 }
 
 .ai-analysis-content li {
-  margin: 0;
-  padding: 0;
-  line-height: 1.4;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.35 !important;
+}
+
+.ai-analysis-content p {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .ai-analysis-content strong {

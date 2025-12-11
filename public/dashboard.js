@@ -4491,8 +4491,9 @@ function formatMarkdown(text) {
 }
 
 function formatDollarAmounts(text) {
-  // Match dollar amounts with optional K/M/B suffix like $3,844K or $50,310K or $1,234,567 or $1234
-  return text.replace(/\$\s*([\d,]+(?:\.\d+)?)\s*([KMB])?/gi, (match, numStr, suffix) => {
+  // Match dollar amounts with optional K/M/B suffix
+  // Handles: $3,844K, $3.8K, $50,310K, $1,234,567, $1234, etc.
+  return text.replace(/\$\s*([\d,]+(?:\.\d+)?)\s*([KkMmBb])?(?![KkMmBb])/g, (match, numStr, suffix) => {
     // Remove commas and parse
     let num = parseFloat(numStr.replace(/,/g, ''));
     if (isNaN(num)) return match;
