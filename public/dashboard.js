@@ -8826,9 +8826,9 @@ function renderCashChart() {
     // Monthly/Quarterly/Annual views use Balance Sheet data
     if (Object.keys(bsGLLookup).length === 0) {
       // Need to load Balance Sheet data first
-      const chartContainer = document.getElementById("cashChart");
+      const chartContainer = document.getElementById("cashChartContainer");
       if (chartContainer) {
-        chartContainer.parentElement.innerHTML = '<div class="loading-spinner">Loading financial data...</div><canvas id="cashChart"></canvas>';
+        chartContainer.innerHTML = '<div class="loading-spinner">Loading financial data...</div>';
       }
       
       fetch("/data/financials.json")
@@ -8846,10 +8846,17 @@ function renderCashChart() {
               });
             });
           }
+          // Restore the canvas element
+          if (chartContainer) {
+            chartContainer.innerHTML = '<canvas id="cashChart"></canvas>';
+          }
           renderCashChart(); // Re-render with loaded data
         })
         .catch(err => {
           console.error("Error loading Balance Sheet data:", err);
+          if (chartContainer) {
+            chartContainer.innerHTML = '<div class="error-message">Failed to load financial data</div><canvas id="cashChart"></canvas>';
+          }
         });
       return;
     }
