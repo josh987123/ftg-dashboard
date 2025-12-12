@@ -124,7 +124,7 @@ Preferred communication style: Simple, everyday language.
 - **Over/Under Bill**: Under construction - will track billing variances
 - **Receivables/Payables**: Under construction - will manage AR/AP tracking
 - **Job Analytics**: Under construction - will provide job-level performance metrics
-- **Cash Reports**: Cash position tracking with dual data sources:
+- **Cash Balances**: Cash position tracking with dual data sources:
   - **Daily view**: Uses Google Sheets data (Spreadsheet ID: 1Nkcn2Obvipqn30b-QEfKud0d8G9WTuWicUX07b76wXY)
     - Account selection checkboxes with Select All/None buttons
     - Balance calculation: Current balance - sum of transactions (walks backward)
