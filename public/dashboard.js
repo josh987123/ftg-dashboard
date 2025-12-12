@@ -215,15 +215,25 @@ function showChangePasswordModal() {
     // Event handlers
     document.getElementById("changePasswordClose").onclick = () => modal.classList.add("hidden");
     document.getElementById("changePasswordCancelBtn").onclick = () => modal.classList.add("hidden");
-    document.getElementById("changePasswordSaveBtn").onclick = async function() {
+    document.getElementById("changePasswordSaveBtn").onclick = function() {
       const current = document.getElementById("currentPasswordInput").value;
       const newPass = document.getElementById("newPasswordInput").value;
       const confirm = document.getElementById("confirmPasswordInput").value;
       const status = document.getElementById("changePasswordStatus");
-      const btn = document.getElementById("changePasswordSaveBtn");
       
-      if (!current) {
-        status.textContent = "Please enter your current password.";
+      const email = localStorage.getItem("ftg_current_user");
+      if (!email) {
+        status.textContent = "Please log in again.";
+        status.className = "email-status error";
+        return;
+      }
+      
+      // Get current password (custom or default)
+      const defaultPassword = "Ftgb2025$";
+      const storedPassword = localStorage.getItem("ftg_pwd_" + email) || defaultPassword;
+      
+      if (current !== storedPassword) {
+        status.textContent = "Current password is incorrect.";
         status.className = "email-status error";
         return;
       }
@@ -240,52 +250,16 @@ function showChangePasswordModal() {
         return;
       }
       
-      const token = localStorage.getItem("ftg_session_token");
-      if (!token) {
-        status.textContent = "Session expired. Please log in again.";
-        status.className = "email-status error";
-        return;
-      }
+      // Save new password to localStorage
+      localStorage.setItem("ftg_pwd_" + email, newPass);
       
-      btn.disabled = true;
-      btn.textContent = "Saving...";
-      status.textContent = "";
+      status.textContent = "Password changed successfully!";
+      status.className = "email-status success";
       
-      try {
-        const response = await fetch("/api/change-password", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: token,
-            currentPassword: current,
-            newPassword: newPass
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          // Update stored token
-          localStorage.setItem("ftg_session_token", data.token);
-          status.textContent = "Password changed successfully!";
-          status.className = "email-status success";
-          
-          // Clear form and close modal after delay
-          setTimeout(() => {
-            document.getElementById("changePasswordModal").classList.add("hidden");
-          }, 1500);
-        } else {
-          status.textContent = data.error || "Failed to change password.";
-          status.className = "email-status error";
-        }
-      } catch (e) {
-        status.textContent = "Connection error. Please try again.";
-        status.className = "email-status error";
-        console.error("Change password error:", e);
-      }
-      
-      btn.disabled = false;
-      btn.textContent = "Save Password";
+      // Close modal after delay
+      setTimeout(() => {
+        document.getElementById("changePasswordModal").classList.add("hidden");
+      }, 1500);
     };
     
     modal.onclick = function(e) {
