@@ -370,17 +370,22 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   gap: 16px;
 }
 
+/* User label - reset base styles, styled by parent container */
 .user-label {
-  font-weight: 600;
-  color: #1f2937;
-  font-size: 14px;
-  padding: 6px 12px;
-  background: #e5e7eb;
-  border-radius: 4px;
+  font-weight: 500;
 }
 
 .user-label:empty {
   display: none;
+}
+
+/* User label inside dropdown button inherits button styling */
+.user-dropdown-btn .user-label {
+  color: inherit;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
 }
 
 /* EXPORT DROPDOWN */
