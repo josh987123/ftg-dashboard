@@ -60,6 +60,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   border-radius: 8px;
   margin-bottom: 16px;
   overflow: hidden;
+  display: inline-block;
+  min-width: 300px;
 }
 
 .config-header {
@@ -1673,8 +1675,9 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   border-radius: 8px;
   margin-bottom: 20px;
   overflow: hidden;
-  width: 70%;
-  min-width: 400px;
+  display: inline-block;
+  min-width: 300px;
+  max-width: 800px;
 }
 
 .ai-analysis-header {
