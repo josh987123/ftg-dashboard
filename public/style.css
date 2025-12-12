@@ -3450,21 +3450,16 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   box-sizing: border-box;
 }
 
-/* Overview config: Visuals and Show Metrics side by side */
+/* Overview config: Time Period, Visuals, Show Metrics all in one row */
 #overview .config-body .rev-controls {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
 }
 
-#overview .config-body .overview-config-box:nth-child(1) {
-  flex: 0 0 100%;
-}
-
-#overview .config-body .overview-config-box:nth-child(2),
-#overview .config-body .overview-config-box:nth-child(3) {
-  flex: 1 1 45%;
-  min-width: 200px;
+#overview .config-body .overview-config-box {
+  flex: 1 1 30%;
+  min-width: 180px;
 }
 
 /* Mobile overrides for equal-width panels */
@@ -3486,8 +3481,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   }
   
   /* Stack overview config boxes on mobile */
-  #overview .config-body .overview-config-box:nth-child(2),
-  #overview .config-body .overview-config-box:nth-child(3) {
+  #overview .config-body .overview-config-box {
     flex: 0 0 100%;
   }
   
