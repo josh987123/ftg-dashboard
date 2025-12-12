@@ -61,7 +61,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-bottom: 16px;
   overflow: hidden;
   display: block;
-  width: fit-content;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .config-header {
@@ -1490,7 +1491,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   display: block;
-  width: fit-content;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 #incomeStatementTable {
@@ -1711,7 +1713,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-bottom: 20px;
   overflow: hidden;
   display: block;
-  width: fit-content;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .ai-analysis-header {
