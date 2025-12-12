@@ -1337,7 +1337,6 @@
         "level": 2,
         "type": "detail",
         "accounts": [8020],
-        "negate": true,
         "parent": "Adjustments for Non-Cash Items"
       },
       {
@@ -1353,7 +1352,7 @@
         "level": 2,
         "type": "detail",
         "accounts": [1100, 1105],
-        "changeCalc": "decrease_is_positive",
+        "changeCalc": "increase_is_positive",
         "parent": "Changes in Working Capital"
       },
       {
@@ -1361,7 +1360,7 @@
         "level": 2,
         "type": "detail",
         "accounts": [1050],
-        "changeCalc": "decrease_is_positive",
+        "changeCalc": "increase_is_positive",
         "parent": "Changes in Working Capital"
       },
       {
@@ -1369,7 +1368,7 @@
         "level": 2,
         "type": "detail",
         "accounts": [1030, 1110, 1120, 1130],
-        "changeCalc": "decrease_is_positive",
+        "changeCalc": "increase_is_positive",
         "parent": "Changes in Working Capital"
       },
       {
@@ -1377,7 +1376,7 @@
         "level": 2,
         "type": "detail",
         "accounts": [2000, 2005, 2010],
-        "changeCalc": "increase_is_positive",
+        "changeCalc": "decrease_is_positive",
         "parent": "Changes in Working Capital"
       },
       {
@@ -1385,7 +1384,7 @@
         "level": 2,
         "type": "detail",
         "accounts": [2120],
-        "changeCalc": "increase_is_positive",
+        "changeCalc": "decrease_is_positive",
         "parent": "Changes in Working Capital"
       },
       {
@@ -1393,7 +1392,7 @@
         "level": 2,
         "type": "detail",
         "accounts": [2021, 2023, 2025, 2028, 2030, 2070, 2100, 2110],
-        "changeCalc": "increase_is_positive",
+        "changeCalc": "decrease_is_positive",
         "parent": "Changes in Working Capital"
       },
       {
