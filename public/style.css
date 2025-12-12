@@ -57,7 +57,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 .config-panel {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 10px;
   margin-bottom: 16px;
   overflow: hidden;
   display: block;
@@ -2299,11 +2299,11 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     padding: 8px 10px;
   }
   
+  /* Config panel mobile - match AI analysis panel styling */
   .config-panel {
-    margin: 0 -18px 10px;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
+    margin: 0 0 12px 0;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
   }
   
   .config-body {
