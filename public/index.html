@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
-  <link rel="stylesheet" href="style.css?v=20251212b" />
+  <link rel="stylesheet" href="style.css?v=20251212c" />
 
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -1156,46 +1156,49 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251212b"></script>
+  <script src="dashboard.js?v=20251212c"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251212b';
+    const APP_VERSION = '20251212c';
     
-    // Aggressive cache clearing for Safari
+    // Force unregister old service workers and clear caches on every load
     (async function() {
-      const storedVersion = localStorage.getItem('ftg_app_version');
+      // Always unregister ALL existing service workers first
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) {
+          // Unregister any worker that's not our new v5
+          if (reg.active && !reg.active.scriptURL.includes('sw-v5.js')) {
+            await reg.unregister();
+            console.log('Unregistered old service worker');
+          }
+        }
+      }
       
-      if (storedVersion && storedVersion !== APP_VERSION) {
-        console.log('Version changed from', storedVersion, 'to', APP_VERSION, '- clearing caches');
-        
-        // Clear all caches
+      // Clear all caches on version change
+      const storedVersion = localStorage.getItem('ftg_app_version');
+      if (storedVersion !== APP_VERSION) {
+        console.log('Version changed - clearing all caches');
         if ('caches' in window) {
           const cacheNames = await caches.keys();
           await Promise.all(cacheNames.map(name => caches.delete(name)));
-          console.log('All caches cleared');
         }
-        
-        // Unregister all service workers
-        if ('serviceWorker' in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map(reg => reg.unregister()));
-          console.log('All service workers unregistered');
-        }
-        
-        // Store new version and reload
         localStorage.setItem('ftg_app_version', APP_VERSION);
-        window.location.reload(true);
-        return;
+        // Reload only if we had an old version (not first visit)
+        if (storedVersion) {
+          window.location.reload(true);
+          return;
+        }
       }
-      
       localStorage.setItem('ftg_app_version', APP_VERSION);
     })();
     
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const registration = await navigator.serviceWorker.register('/sw.js?v=' + APP_VERSION);
+          // Register NEW service worker at NEW path - forces Safari to get fresh worker
+          const registration = await navigator.serviceWorker.register('/sw-v5.js');
           console.log('SW registered:', registration.scope);
           
           // Check for updates every 5 minutes
