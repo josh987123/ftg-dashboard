@@ -3043,14 +3043,15 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   }
   
   .logout-btn {
-    padding: 8px 12px;
+    padding: 10px 14px;
     font-size: 12px;
+    min-height: 44px;
   }
   
   /* Export dropdown mobile */
   .export-dropdown-btn {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     font-size: 16px;
   }
 }
@@ -3450,4 +3451,212 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 #cashFlows > .config-panel,
 #cashFlows > .ai-analysis-panel {
   grid-column: 1;
+}
+
+/* Mobile overrides for equal-width panels */
+@media (max-width: 768px) {
+  #overview > .config-panel,
+  #overview > .ai-analysis-panel,
+  #revenue > .config-panel,
+  #revenue > .ai-analysis-panel,
+  #accounts > .config-panel,
+  #accounts > .ai-analysis-panel,
+  #incomeStatement > .config-panel,
+  #incomeStatement > .ai-analysis-panel,
+  #balanceSheet > .config-panel,
+  #balanceSheet > .ai-analysis-panel,
+  #cashFlows > .config-panel,
+  #cashFlows > .ai-analysis-panel {
+    display: block;
+    width: 100%;
+  }
+  
+  /* AI Analysis panel mobile improvements */
+  .ai-analysis-panel {
+    width: 100%;
+  }
+  
+  .ai-analysis-header {
+    padding: 12px 14px;
+    min-height: 44px;
+  }
+  
+  .ai-run-btn {
+    padding: 8px 14px;
+    font-size: 12px;
+    min-height: 36px;
+    min-width: 70px;
+  }
+  
+  .ai-analysis-content {
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 14px;
+  }
+  
+  .ai-analysis-content h1,
+  .ai-analysis-content h2,
+  .ai-analysis-content h3 {
+    font-size: 14px !important;
+  }
+  
+  /* Config panel 100% width on mobile */
+  .config-panel {
+    width: 100%;
+  }
+  
+  /* Table containers horizontal scroll */
+  .is-table-box,
+  .rev-table-box,
+  .bs-table-box,
+  .cf-table-box {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Touch-friendly buttons */
+  .ai-run-btn,
+  .config-header,
+  .ai-analysis-header,
+  .dropdown-item,
+  .nav-item {
+    min-height: 44px;
+  }
+  
+  /* Saved views controls mobile */
+  .saved-view-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .saved-view-controls select {
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  .saved-view-controls button {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 400px) {
+  .ai-analysis-content {
+    font-size: 12px;
+    padding: 10px;
+  }
+  
+  .ai-run-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  .saved-view-controls {
+    flex-direction: column;
+  }
+  
+  .saved-view-controls select,
+  .saved-view-controls button {
+    width: 100%;
+  }
+}
+
+/* Cash Flow table mobile styles */
+@media (max-width: 768px) {
+  #cashFlowTable {
+    font-size: 12px;
+    min-width: 500px;
+  }
+  
+  #cashFlowTable th,
+  #cashFlowTable td {
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 500px) {
+  #cashFlowTable {
+    font-size: 10px;
+    min-width: 400px;
+  }
+  
+  #cashFlowTable th,
+  #cashFlowTable td {
+    padding: 5px 6px;
+  }
+  
+  .is-indent-1 td:first-child { padding-left: 12px !important; }
+  .is-indent-2 td:first-child { padding-left: 18px !important; }
+  .is-indent-3 td:first-child { padding-left: 24px !important; }
+}
+
+/* Balance Sheet table container scroll */
+@media (max-width: 768px) {
+  .bs-table-box {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  
+  #balanceSheetTable {
+    min-width: 500px;
+  }
+}
+
+/* Login screen mobile improvements */
+@media (max-width: 500px) {
+  .login-box {
+    width: 95%;
+    padding: 24px 20px;
+    margin: 10px;
+  }
+  
+  .login-box h2 {
+    font-size: 20px;
+  }
+  
+  .login-box input {
+    font-size: 16px;
+    padding: 14px;
+    min-height: 48px;
+  }
+  
+  .login-box button {
+    font-size: 16px;
+    padding: 14px;
+    min-height: 48px;
+  }
+}
+
+/* Header user info mobile */
+@media (max-width: 768px) {
+  .header-right {
+    gap: 8px;
+  }
+  
+  .current-user {
+    font-size: 12px;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Sidebar touch improvements */
+@media (max-width: 768px) {
+  .nav-item {
+    padding: 16px 24px;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .sidebar {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
