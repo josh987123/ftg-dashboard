@@ -7557,12 +7557,8 @@ function populateCFPeriodOptions() {
 function applyCFDetailLevel(level) {
   const allExpandableRows = [
     "cf-row-Cash_from_Operating_Activities",
-    "cf-row-Adjustments_for_Non-Cash_Items",
-    "cf-row-Changes_in_Working_Capital",
     "cf-row-Cash_from_Investing_Activities",
-    "cf-row-Capital_Expenditures",
-    "cf-row-Cash_from_Financing_Activities",
-    "cf-row-Changes_in_Debt"
+    "cf-row-Cash_from_Financing_Activities"
   ];
   
   if (level === "summary") {
@@ -7841,7 +7837,9 @@ function isCFRowVisible(groups, idx) {
   const row = groups[idx];
   if (!row.parent) return true;
   
-  for (let i = idx - 1; i >= 0; i--) {
+  // Search both backward and forward since parent subtotals come after children in cash flow
+  for (let i = 0; i < groups.length; i++) {
+    if (i === idx) continue;
     if (groups[i].label === row.parent) {
       if (!groups[i].expandable) return isCFRowVisible(groups, i);
       const parentId = `cf-row-${groups[i].label.replace(/[^a-zA-Z0-9]/g, "_")}`;
