@@ -11,7 +11,7 @@ PORT = "3000"
 
 [agent]
 expertMode = true
-integrations = ["google-mail:1.0.0"]
+integrations = ["google-mail:1.0.0", "google-sheet:1.0.0"]
 
 [[ports]]
 localPort = 3000

@@ -95,41 +95,38 @@ def get_anthropic_client():
         raise Exception("Anthropic API key not configured. Please add ANTHROPIC_API_KEY to your secrets.")
     return Anthropic(api_key=ANTHROPIC_API_KEY)
 
-def get_gmail_access_token():
+def get_connector_access_token(connector_name):
+    """Get access token for a Replit connector (gmail, google-sheet, etc.)"""
     hostname = os.environ.get('REPLIT_CONNECTORS_HOSTNAME')
     repl_identity = os.environ.get('REPL_IDENTITY')
     web_repl_renewal = os.environ.get('WEB_REPL_RENEWAL')
-    
-    print(f"Checking Gmail connection - hostname: {hostname is not None}, repl_identity: {repl_identity is not None}, web_repl_renewal: {web_repl_renewal is not None}")
     
     if repl_identity:
         x_replit_token = f'repl {repl_identity}'
     elif web_repl_renewal:
         x_replit_token = f'depl {web_repl_renewal}'
     else:
-        raise Exception('Gmail authentication token not available. Please ensure the Gmail connection is set up.')
+        raise Exception(f'{connector_name} authentication token not available.')
     
     if not hostname:
         raise Exception('Replit connectors not available. Please try again.')
     
     response = requests.get(
-        f'https://{hostname}/api/v2/connection?include_secrets=true&connector_names=google-mail',
+        f'https://{hostname}/api/v2/connection?include_secrets=true&connector_names={connector_name}',
         headers={
             'Accept': 'application/json',
             'X_REPLIT_TOKEN': x_replit_token
         }
     )
     
-    print(f"Connector response status: {response.status_code}")
-    
     if response.status_code != 200:
-        raise Exception(f'Failed to get Gmail credentials: {response.status_code}')
+        raise Exception(f'Failed to get {connector_name} credentials: {response.status_code}')
     
     data = response.json()
     items = data.get('items', [])
     
     if not items:
-        raise Exception('Gmail not connected. Please connect your Gmail account in the Connections panel.')
+        raise Exception(f'{connector_name} not connected. Please connect in the Connections panel.')
     
     connection_settings = items[0]
     
@@ -139,9 +136,15 @@ def get_gmail_access_token():
     )
     
     if not access_token:
-        raise Exception('Gmail access token not found. Please reconnect your Gmail account.')
+        raise Exception(f'{connector_name} access token not found. Please reconnect.')
     
     return access_token
+
+def get_gmail_access_token():
+    return get_connector_access_token('google-mail')
+
+def get_sheets_access_token():
+    return get_connector_access_token('google-sheet')
 
 def send_gmail(to_email, subject, html_content):
     access_token = get_gmail_access_token()
@@ -471,6 +474,112 @@ Period: {period_info}
     except Exception as e:
         import traceback
         print(f"AI Analysis error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/sheets/<spreadsheet_id>', methods=['GET', 'OPTIONS'])
+@app.route('/api/sheets/<spreadsheet_id>/<sheet_name>', methods=['GET', 'OPTIONS'])
+def api_get_sheet_data(spreadsheet_id, sheet_name=None):
+    """Fetch data from a Google Sheet"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        access_token = get_sheets_access_token()
+        
+        # Default to first sheet if no name specified
+        range_param = sheet_name if sheet_name else 'Sheet1'
+        
+        # Fetch sheet data using Google Sheets API
+        response = requests.get(
+            f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_param}',
+            headers={
+                'Authorization': f'Bearer {access_token}',
+                'Accept': 'application/json'
+            }
+        )
+        
+        if response.status_code != 200:
+            error_data = response.json()
+            error_msg = error_data.get('error', {}).get('message', 'Unknown error')
+            return jsonify({'error': f'Failed to fetch sheet: {error_msg}'}), response.status_code
+        
+        data = response.json()
+        values = data.get('values', [])
+        
+        # Convert to structured format with headers
+        if len(values) > 0:
+            headers = values[0]
+            rows = []
+            for row in values[1:]:
+                row_dict = {}
+                for i, header in enumerate(headers):
+                    row_dict[header] = row[i] if i < len(row) else ''
+                rows.append(row_dict)
+            
+            return jsonify({
+                'success': True,
+                'headers': headers,
+                'rows': rows,
+                'raw_values': values
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'headers': [],
+                'rows': [],
+                'raw_values': []
+            })
+        
+    except Exception as e:
+        import traceback
+        print(f"Google Sheets error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/sheets-info/<spreadsheet_id>', methods=['GET', 'OPTIONS'])
+def api_get_sheet_info(spreadsheet_id):
+    """Get metadata about a spreadsheet (sheet names, etc.)"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        access_token = get_sheets_access_token()
+        
+        response = requests.get(
+            f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}?fields=properties.title,sheets.properties',
+            headers={
+                'Authorization': f'Bearer {access_token}',
+                'Accept': 'application/json'
+            }
+        )
+        
+        if response.status_code != 200:
+            error_data = response.json()
+            error_msg = error_data.get('error', {}).get('message', 'Unknown error')
+            return jsonify({'error': f'Failed to get sheet info: {error_msg}'}), response.status_code
+        
+        data = response.json()
+        
+        spreadsheet_title = data.get('properties', {}).get('title', 'Unknown')
+        sheets = []
+        for sheet in data.get('sheets', []):
+            props = sheet.get('properties', {})
+            sheets.append({
+                'title': props.get('title'),
+                'sheetId': props.get('sheetId'),
+                'index': props.get('index')
+            })
+        
+        return jsonify({
+            'success': True,
+            'title': spreadsheet_title,
+            'sheets': sheets
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Google Sheets info error: {str(e)}")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
