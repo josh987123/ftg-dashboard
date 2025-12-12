@@ -326,15 +326,22 @@ async function performOverviewAiAnalysis() {
 }
 
 function extractOverviewChartData() {
-  const metrics = {};
+  let text = "Executive Overview Metrics:\n\n";
+  
   ['revenue', 'grossProfit', 'grossMargin', 'opex', 'opProfit', 'opMargin', 'cash', 'receivables', 'payables'].forEach(m => {
-    const canvas = document.getElementById(`overview${m.charAt(0).toUpperCase() + m.slice(1)}Chart`);
-    if (canvas && overviewChartInstances[canvas.id]) {
-      const chart = overviewChartInstances[canvas.id];
-      metrics[m] = {label: chart.data.datasets[0].label, values: chart.data.datasets[0].data};
-    }
+    const tile = document.querySelector(`[data-metric="${m}"]`);
+    if (!tile) return;
+    
+    const title = tile.querySelector('.metric-title')?.textContent.trim() || m;
+    const value = tile.querySelector('.metric-value')?.textContent.trim() || 'N/A';
+    const stat = tile.querySelector('.metric-stat')?.textContent.trim() || '';
+    
+    text += `${title}: ${value}`;
+    if (stat) text += ` (${stat})`;
+    text += "\n";
   });
-  return JSON.stringify(metrics);
+  
+  return text || "No overview data available";
 }
 
 async function performRevenueAiAnalysis() {
@@ -366,11 +373,37 @@ async function performRevenueAiAnalysis() {
 }
 
 function extractRevenueChartData() {
-  if (revChartInstance) {
-    const chart = revChartInstance;
-    return JSON.stringify({labels: chart.data.labels, datasets: chart.data.datasets.map(d => ({label: d.label, data: d.data}))});
+  let text = "Revenue Analysis:\n\n";
+  
+  // Try to get revenue summary stats
+  const summaryDiv = document.getElementById('revenueSummary');
+  if (summaryDiv) {
+    const stats = summaryDiv.querySelectorAll('.stat-item');
+    stats.forEach(stat => {
+      const label = stat.querySelector('.stat-label')?.textContent.trim() || '';
+      const value = stat.querySelector('.stat-value')?.textContent.trim() || '';
+      if (label && value) {
+        text += `${label}: ${value}\n`;
+      }
+    });
   }
-  return '{}';
+  
+  // Try to get revenue table
+  const table = document.getElementById('revenueTable');
+  if (table) {
+    text += "\nRevenue Table:\n";
+    const rows = table.querySelectorAll('tr');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('th, td');
+      const rowData = [];
+      cells.forEach(cell => {
+        rowData.push(cell.textContent.trim());
+      });
+      text += rowData.join("\t") + "\n";
+    });
+  }
+  
+  return text || "No revenue data available";
 }
 
 async function performAccountAiAnalysis() {
@@ -402,11 +435,30 @@ async function performAccountAiAnalysis() {
 }
 
 function extractAccountChartData() {
-  if (acctChartInstance) {
-    const chart = acctChartInstance;
-    return JSON.stringify({labels: chart.data.labels, datasets: chart.data.datasets.map(d => ({label: d.label, data: d.data}))});
+  let text = "Account Detail:\n\n";
+  
+  // Get account info
+  const acctSelector = document.getElementById('acctSelector');
+  if (acctSelector) {
+    const selectedText = acctSelector.options[acctSelector.selectedIndex]?.text || 'Unknown Account';
+    text += `Account: ${selectedText}\n\n`;
   }
-  return '{}';
+  
+  // Get account detail table
+  const table = document.getElementById('acctTable');
+  if (table) {
+    const rows = table.querySelectorAll('tr');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('th, td');
+      const rowData = [];
+      cells.forEach(cell => {
+        rowData.push(cell.textContent.trim());
+      });
+      text += rowData.join("\t") + "\n";
+    });
+  }
+  
+  return text || "No account data available";
 }
 
 async function performBalanceSheetAiAnalysis() {
@@ -418,8 +470,7 @@ async function performBalanceSheetAiAnalysis() {
   panel.classList.remove('collapsed');
   content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing balance sheet...</div>';
   try {
-    const table = document.getElementById('balanceSheetTable');
-    const statementData = table ? table.innerHTML : '{}';
+    const statementData = extractBalanceSheetData();
     const hostname = window.location.hostname;
     const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
     const apiUrl = isReplit ? '/api/analyze-balance-sheet' : '/.netlify/functions/analyze-balance-sheet';
@@ -436,6 +487,25 @@ async function performBalanceSheetAiAnalysis() {
     btn.disabled = false;
     btn.textContent = 'Run Analysis';
   }
+}
+
+function extractBalanceSheetData() {
+  let text = "Balance Sheet:\n\n";
+  
+  const table = document.getElementById('balanceSheetTable');
+  if (table) {
+    const rows = table.querySelectorAll('tr');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('th, td');
+      const rowData = [];
+      cells.forEach(cell => {
+        rowData.push(cell.textContent.trim());
+      });
+      text += rowData.join("\t") + "\n";
+    });
+  }
+  
+  return text || "No balance sheet data available";
 }
 
 /* ------------------------------------------------------------
