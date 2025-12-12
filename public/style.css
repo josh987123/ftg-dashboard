@@ -3433,7 +3433,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   }
 }
 
-/* Config and AI panels - 50% screen width */
+/* Config and AI panels - 70% screen width */
 #overview > .config-panel,
 #overview > .ai-analysis-panel,
 #revenue > .config-panel,
@@ -3446,8 +3446,25 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 #balanceSheet > .ai-analysis-panel,
 #cashFlows > .config-panel,
 #cashFlows > .ai-analysis-panel {
-  width: 50%;
+  width: 70%;
   box-sizing: border-box;
+}
+
+/* Overview config: Visuals and Show Metrics side by side */
+#overview .config-body .rev-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+#overview .config-body .overview-config-box:nth-child(1) {
+  flex: 0 0 100%;
+}
+
+#overview .config-body .overview-config-box:nth-child(2),
+#overview .config-body .overview-config-box:nth-child(3) {
+  flex: 1 1 45%;
+  min-width: 200px;
 }
 
 /* Mobile overrides for equal-width panels */
@@ -3466,6 +3483,12 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   #cashFlows > .ai-analysis-panel {
     display: block;
     width: 100%;
+  }
+  
+  /* Stack overview config boxes on mobile */
+  #overview .config-body .overview-config-box:nth-child(2),
+  #overview .config-body .overview-config-box:nth-child(3) {
+    flex: 0 0 100%;
   }
   
   /* AI Analysis panel mobile improvements */
