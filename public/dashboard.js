@@ -7436,6 +7436,14 @@ function initCashFlowControls() {
     };
   }
   
+  const excludeSchwab = document.getElementById("cfExcludeSchwab");
+  if (excludeSchwab) {
+    excludeSchwab.onchange = () => {
+      renderCashFlowStatement();
+      saveCashFlowConfig();
+    };
+  }
+  
   if (matrixYearStart) {
     matrixYearStart.oninput = () => {
       document.getElementById("cfMatrixYearStartLabel").textContent = matrixYearStart.value;
@@ -7813,7 +7821,9 @@ function buildCashFlowRows(periodMonths, groups) {
     } else if (group.specialCalc === "beginning_balance") {
       let balance = 0;
       if (priorMonth && group.accounts) {
-        group.accounts.forEach(acctNum => {
+        const excludeSchwab = document.getElementById("cfExcludeSchwab")?.checked ?? true;
+        const filteredAccounts = excludeSchwab ? group.accounts.filter(a => a !== 1004) : group.accounts;
+        filteredAccounts.forEach(acctNum => {
           balance += getCFCumulativeBalance(acctNum, priorMonth);
         });
       }

@@ -104,6 +104,7 @@ Preferred communication style: Simple, everyday language.
   - View modes: Single Period or Matrix (12 months, 4 quarters, multi-year range)
   - Detail level selector: Summary (collapsed sections showing only subtotals) / Detailed (expanded sections showing all components)
   - Expand/collapse hierarchy with disclosure icons
+  - Options: Exclude Schwab (1004) - checked by default, excludes Schwab account from Beginning/Ending Cash Balance
   - **Operating Activities** (expandable, green highlight):
     - Net Income (from Income Statement)
     - Adjustments for Non-Cash Items: Depreciation (6060), Amortization (7220), Gain/Loss on Asset Disposal (8020)
