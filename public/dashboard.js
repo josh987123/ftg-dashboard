@@ -220,10 +220,21 @@ function initSidebar() {
 }
 
 function initNavigation() {
-  const navItems = document.querySelectorAll(".nav-item");
+  const navItems = document.querySelectorAll(".nav-item[data-section]");
   const sections = document.querySelectorAll(".dashboard-section");
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("overlay");
+
+  // Handle expandable Financial Statements parent
+  const finStatementsParent = document.getElementById("navFinancialStatements");
+  const finStatementsChildren = document.getElementById("navFinancialStatementsChildren");
+  
+  if (finStatementsParent && finStatementsChildren) {
+    finStatementsParent.addEventListener("click", () => {
+      finStatementsParent.classList.toggle("expanded");
+      finStatementsChildren.classList.toggle("expanded");
+    });
+  }
 
   navItems.forEach(item => {
     item.addEventListener("click", () => {
@@ -236,6 +247,12 @@ function initNavigation() {
       const id = item.dataset.section;
       const section = document.getElementById(id);
       if (section) section.classList.add("visible");
+
+      // Auto-expand Financial Statements if child is clicked
+      if (item.classList.contains("nav-child") && finStatementsParent && finStatementsChildren) {
+        finStatementsParent.classList.add("expanded");
+        finStatementsChildren.classList.add("expanded");
+      }
 
       // Auto-close sidebar on mobile
       if (window.innerWidth <= 768 && sidebar && overlay) {
@@ -2158,7 +2175,7 @@ function setupExportButtons() {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -2199,7 +2216,8 @@ function getReportData() {
       subtitle: getIncomeStatementSubtitle(),
       tableHtml: getIncomeStatementTableHtml(),
       csvData: getIncomeStatementCsvData(),
-      isWide: isIncomeStatementWide()
+      isWide: isIncomeStatementWide(),
+      aiAnalysis: getIncomeStatementAiAnalysis()
     };
   } else if (view === "balanceSheet") {
     return {
@@ -2207,7 +2225,17 @@ function getReportData() {
       subtitle: getBalanceSheetSubtitle(),
       tableHtml: getBalanceSheetTableHtml(),
       csvData: getBalanceSheetCsvData(),
-      isWide: isBalanceSheetWide()
+      isWide: isBalanceSheetWide(),
+      aiAnalysis: getBalanceSheetAiAnalysis()
+    };
+  } else if (view === "cashFlows") {
+    return {
+      title: "Statement of Cash Flows",
+      subtitle: getCashFlowSubtitle(),
+      tableHtml: getCashFlowTableHtml(),
+      csvData: getCashFlowCsvData(),
+      isWide: isCashFlowWide(),
+      aiAnalysis: getCashFlowAiAnalysis()
     };
   }
   return null;
@@ -2475,6 +2503,9 @@ function isAccountWide() {
 }
 
 function getIncomeStatementSubtitle() {
+  const periodEl = document.getElementById("isReportPeriod");
+  if (periodEl?.textContent) return periodEl.textContent;
+  
   const periodType = document.getElementById("isPeriodType")?.value || "month";
   const viewMode = document.getElementById("isViewMode")?.value || "single";
   const compare = document.querySelector('input[name="isCompareRadio"]:checked')?.value || "none";
@@ -2517,6 +2548,9 @@ function isIncomeStatementWide() {
 }
 
 function getBalanceSheetSubtitle() {
+  const periodEl = document.getElementById("bsReportPeriod");
+  if (periodEl?.textContent) return periodEl.textContent;
+  
   const periodValue = document.getElementById("bsPeriodSelect")?.value || "";
   const compare = document.querySelector('input[name="bsCompareRadio"]:checked')?.value || "none";
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -2557,13 +2591,104 @@ function getBalanceSheetCsvData() {
 }
 
 function isBalanceSheetWide() {
+  const viewMode = document.getElementById("bsViewMode")?.value;
   const compare = document.querySelector('input[name="bsCompareRadio"]:checked')?.value;
-  return compare === "prior_year";
+  return viewMode === "matrix" || compare !== "none";
+}
+
+function getBalanceSheetAiAnalysis() {
+  return null;
+}
+
+function getCashFlowSubtitle() {
+  const periodEl = document.getElementById("cfReportPeriod");
+  return periodEl?.textContent || "";
+}
+
+function getCashFlowTableHtml() {
+  const table = document.querySelector("#cashFlows .is-table");
+  if (!table) return "<p>No data available</p>";
+  
+  const clone = table.cloneNode(true);
+  clone.querySelectorAll(".is-row-hidden").forEach(r => r.remove());
+  clone.querySelectorAll(".is-spacer-row").forEach(r => r.remove());
+  clone.querySelectorAll(".cf-toggle").forEach(t => t.remove());
+  
+  return clone.outerHTML;
+}
+
+function getCashFlowCsvData() {
+  const table = document.querySelector("#cashFlows .is-table");
+  if (!table) return "";
+  
+  let csv = "";
+  const rows = table.querySelectorAll("tr:not(.is-row-hidden):not(.is-spacer-row)");
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("th, td");
+    csv += Array.from(cells).map(c => `"${c.textContent.trim()}"`).join(",") + "\n";
+  });
+  return csv;
+}
+
+function isCashFlowWide() {
+  const viewMode = document.getElementById("cfViewMode")?.value;
+  const compare = document.querySelector('input[name="cfCompareRadio"]:checked')?.value;
+  return viewMode === "matrix" || compare !== "none";
+}
+
+function getCashFlowAiAnalysis() {
+  const panel = document.getElementById("cfAiAnalysisPanel");
+  if (!panel || panel.classList.contains("collapsed")) return null;
+  const content = document.getElementById("cfAiAnalysisContent");
+  if (!content || !content.innerHTML.trim()) return null;
+  return content.innerHTML;
+}
+
+function getIncomeStatementAiAnalysis() {
+  const panel = document.getElementById("isAiAnalysisPanel");
+  if (!panel || panel.classList.contains("collapsed")) return null;
+  const content = document.getElementById("isAiAnalysisContent");
+  if (!content || !content.innerHTML.trim()) return null;
+  return content.innerHTML;
 }
 
 function generateReportHtml(data, forEmail = false) {
   const orientation = data.isWide ? "landscape" : "portrait";
   const pageSize = data.isWide ? "11in 8.5in" : "8.5in 11in";
+  
+  const isFinancialStatement = ["Income Statement", "Balance Sheet", "Statement of Cash Flows"].includes(data.title);
+  
+  let aiAnalysisHtml = "";
+  if (data.aiAnalysis) {
+    aiAnalysisHtml = `
+      <div class="ai-analysis-section">
+        <div class="ai-analysis-header">AI ANALYSIS</div>
+        <div class="ai-analysis-content">${data.aiAnalysis}</div>
+      </div>
+    `;
+  }
+  
+  let headerHtml;
+  if (isFinancialStatement) {
+    headerHtml = `
+      <div class="report-header">
+        <div class="report-company">FTG Builders</div>
+        <div class="report-title">${data.title}</div>
+        <div class="report-period">${data.subtitle}</div>
+      </div>
+    `;
+  } else {
+    headerHtml = `
+      <div class="header">
+        <div>
+          <h1>FTG Builders - ${data.title}</h1>
+          <h2>${data.subtitle}</h2>
+        </div>
+        <div class="logo-section">
+        </div>
+      </div>
+    `;
+  }
   
   return `
     <!DOCTYPE html>
@@ -2595,6 +2720,29 @@ function generateReportHtml(data, forEmail = false) {
         .header h2 { color: #6b7280; margin: 5px 0 0 0; font-weight: normal; font-size: ${data.isWide ? "11pt" : "12pt"}; }
         .logo-section { text-align: right; }
         .logo-section img { height: 40px; }
+        .report-header { text-align: center; margin-bottom: 20px; }
+        .report-company { font-size: 16pt; font-weight: 600; color: #1f2937; margin-bottom: 4px; }
+        .report-title { font-size: 14pt; font-weight: 500; color: #374151; margin-bottom: 4px; }
+        .report-period { font-size: 11pt; color: #6b7280; }
+        .ai-analysis-section { 
+          background: #f9fafb; 
+          border: 1px solid #e5e7eb; 
+          border-radius: 6px; 
+          padding: 15px; 
+          margin-bottom: 20px;
+        }
+        .ai-analysis-header { 
+          font-weight: 600; 
+          color: #1f2937; 
+          margin-bottom: 10px; 
+          font-size: 11pt;
+          border-bottom: 1px solid #e5e7eb;
+          padding-bottom: 8px;
+        }
+        .ai-analysis-content { font-size: 9pt; line-height: 1.5; color: #374151; }
+        .ai-analysis-content h4 { margin: 12px 0 6px 0; font-size: 10pt; color: #1f2937; }
+        .ai-analysis-content ul { margin: 6px 0; padding-left: 20px; }
+        .ai-analysis-content li { margin-bottom: 4px; }
         table { border-collapse: collapse; width: 100%; margin-top: 10px; }
         th, td { 
           border: 1px solid #d1d5db; 
@@ -2617,14 +2765,8 @@ function generateReportHtml(data, forEmail = false) {
       </style>
     </head>
     <body>
-      <div class="header">
-        <div>
-          <h1>FTG Builders - ${data.title}</h1>
-          <h2>${data.subtitle}</h2>
-        </div>
-        <div class="logo-section">
-        </div>
-      </div>
+      ${aiAnalysisHtml}
+      ${headerHtml}
       ${data.tableHtml}
       <div class="footer">
         <span>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</span>
@@ -5228,6 +5370,158 @@ function isPartialPeriod(periodValue, periodType) {
   return false;
 }
 
+function updateReportHeader(statementType) {
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  let periodText = "";
+  
+  if (statementType === "is") {
+    const viewMode = document.getElementById("isViewMode")?.value || "single";
+    const periodType = document.getElementById("isPeriodType")?.value || "month";
+    const periodValue = document.getElementById("isPeriodSelect")?.value || "";
+    const compare = document.querySelector('input[name="isCompareRadio"]:checked')?.value || "none";
+    
+    if (viewMode === "matrix") {
+      const yearStart = document.getElementById("isMatrixYearStart")?.value;
+      const yearEnd = document.getElementById("isMatrixYearEnd")?.value;
+      const year = periodValue;
+      
+      if (periodType === "year") {
+        periodText = `Annual, ${yearStart} - ${yearEnd}`;
+      } else if (periodType === "quarter") {
+        periodText = `Quarterly, ${year}`;
+      } else {
+        periodText = `Monthly, ${year}`;
+      }
+    } else {
+      const currentLabel = formatPeriodLabel(periodValue, periodType, false);
+      if (compare !== "none") {
+        let compPeriod;
+        if (compare === "prior_period") {
+          compPeriod = getPriorPeriod(periodValue, periodType);
+        } else {
+          compPeriod = getPriorYearPeriod(periodValue, periodType);
+        }
+        if (compPeriod) {
+          const compLabel = formatPeriodLabel(compPeriod, periodType, false);
+          periodText = `${currentLabel} vs ${compLabel}`;
+        } else {
+          periodText = currentLabel;
+        }
+      } else {
+        periodText = currentLabel;
+      }
+    }
+    
+    const periodEl = document.getElementById("isReportPeriod");
+    if (periodEl) periodEl.textContent = periodText;
+    
+  } else if (statementType === "bs") {
+    const viewMode = document.getElementById("bsViewMode")?.value || "single";
+    const periodValue = document.getElementById("bsPeriodSelect")?.value || "";
+    const compare = document.querySelector('input[name="bsCompareRadio"]:checked')?.value || "none";
+    const periodType = document.getElementById("bsPeriodType")?.value || "month";
+    
+    if (viewMode === "matrix") {
+      const yearStart = document.getElementById("bsMatrixYearStart")?.value;
+      const yearEnd = document.getElementById("bsMatrixYearEnd")?.value;
+      const year = document.getElementById("bsMatrixYear")?.value;
+      
+      if (periodType === "annual") {
+        periodText = `Annual, ${yearStart} - ${yearEnd}`;
+      } else if (periodType === "quarter") {
+        periodText = `Quarterly, ${year}`;
+      } else {
+        periodText = `Monthly, ${year}`;
+      }
+    } else {
+      if (periodValue) {
+        const [y, mo] = periodValue.split("-");
+        const currentLabel = `As of ${monthNames[parseInt(mo) - 1]} ${y}`;
+        
+        if (compare === "prior_year") {
+          const priorYear = parseInt(y) - 1;
+          periodText = `${currentLabel} vs ${monthNames[parseInt(mo) - 1]} ${priorYear}`;
+        } else if (compare === "prior_month") {
+          const availableMonths = getBSAvailableMonths();
+          const periodIdx = availableMonths.indexOf(periodValue);
+          if (periodIdx > 0) {
+            const priorPeriod = availableMonths[periodIdx - 1];
+            const [py, pm] = priorPeriod.split("-");
+            periodText = `${currentLabel} vs ${monthNames[parseInt(pm) - 1]} ${py}`;
+          } else {
+            periodText = currentLabel;
+          }
+        } else {
+          periodText = currentLabel;
+        }
+      }
+    }
+    
+    const periodEl = document.getElementById("bsReportPeriod");
+    if (periodEl) periodEl.textContent = periodText;
+    
+  } else if (statementType === "cf") {
+    const viewMode = document.getElementById("cfViewMode")?.value || "single";
+    const periodType = document.getElementById("cfPeriodType")?.value || "month";
+    const periodValue = document.getElementById("cfPeriodSelect")?.value || "";
+    const compare = document.querySelector('input[name="cfCompareRadio"]:checked')?.value || "none";
+    
+    if (viewMode === "matrix") {
+      const yearStart = document.getElementById("cfMatrixYearStart")?.value;
+      const yearEnd = document.getElementById("cfMatrixYearEnd")?.value;
+      const year = periodValue;
+      
+      if (periodType === "year") {
+        periodText = `Annual, ${yearStart} - ${yearEnd}`;
+      } else if (periodType === "quarter") {
+        periodText = `Quarterly, ${year}`;
+      } else {
+        periodText = `Monthly, ${year}`;
+      }
+    } else {
+      let currentLabel = "";
+      if (periodType === "month" && periodValue) {
+        const [y, mo] = periodValue.split("-");
+        currentLabel = `${monthNames[parseInt(mo) - 1]} ${y}`;
+      } else if (periodType === "quarter") {
+        currentLabel = periodValue;
+      } else if (periodType === "year") {
+        currentLabel = periodValue;
+      } else if (periodType === "ytd") {
+        const match = periodValue.match(/(\d{4})-YTD-(\d+)/);
+        if (match) {
+          currentLabel = `YTD ${monthNames[parseInt(match[2]) - 1]} ${match[1]}`;
+        }
+      } else if (periodType === "ttm") {
+        const match = periodValue.match(/TTM-(\d{4})-(\d{2})/);
+        if (match) {
+          currentLabel = `TTM ending ${monthNames[parseInt(match[2]) - 1]} ${match[1]}`;
+        }
+      }
+      
+      if (compare !== "none" && currentLabel) {
+        let compLabel = "";
+        if (compare === "prior_year" && periodType === "month" && periodValue) {
+          const [y, mo] = periodValue.split("-");
+          compLabel = `${monthNames[parseInt(mo) - 1]} ${parseInt(y) - 1}`;
+        } else if (compare === "prior_year" && periodType === "year") {
+          compLabel = String(parseInt(periodValue) - 1);
+        }
+        if (compLabel) {
+          periodText = `${currentLabel} vs ${compLabel}`;
+        } else {
+          periodText = currentLabel;
+        }
+      } else {
+        periodText = currentLabel;
+      }
+    }
+    
+    const periodEl = document.getElementById("cfReportPeriod");
+    if (periodEl) periodEl.textContent = periodText;
+  }
+}
+
 function renderIncomeStatement() {
   const viewMode = document.getElementById("isViewMode").value;
   const periodType = document.getElementById("isPeriodType").value;
@@ -5236,6 +5530,8 @@ function renderIncomeStatement() {
   const thead = document.getElementById("isTableHead");
   const tbody = document.getElementById("isTableBody");
   const footnote = document.getElementById("isPartialFootnote");
+  
+  updateReportHeader("is");
   
   let hasPartialPeriod = false;
   
@@ -6093,6 +6389,7 @@ function renderBalanceSheet() {
   const detailLevel = document.querySelector('input[name="bsDetailLevel"]:checked')?.value || "summary";
   
   setBSDetailLevelStates(detailLevel);
+  updateReportHeader("bs");
   
   const groups = bsAccountGroups.balance_sheet.groups;
   const thead = document.getElementById("bsTableHead");
@@ -6996,6 +7293,7 @@ function renderCashFlowStatement() {
   const detailLevel = document.querySelector('input[name="cfDetailLevel"]:checked')?.value || "summary";
   
   applyCFDetailLevel(detailLevel);
+  updateReportHeader("cf");
   
   if (viewMode === "matrix") {
     renderCashFlowMatrix();
