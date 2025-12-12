@@ -269,6 +269,42 @@ function initNavigation() {
       if (id === "cashFlows") loadCashFlowStatement();
     });
   });
+  
+  initAllAiPanelToggles();
+}
+
+function initAllAiPanelToggles() {
+  const panelPrefixes = ['overview', 'rev', 'acct', 'bs'];
+  
+  panelPrefixes.forEach(prefix => {
+    const panel = document.getElementById(`${prefix}AiAnalysisPanel`);
+    const header = document.getElementById(`${prefix}AiAnalysisHeader`);
+    const analyzeBtn = document.getElementById(`${prefix}AiAnalyzeBtn`);
+    
+    if (header && panel) {
+      header.addEventListener("click", (e) => {
+        if (analyzeBtn && (e.target === analyzeBtn || analyzeBtn.contains(e.target))) return;
+        panel.classList.toggle("collapsed");
+      });
+    }
+    
+    if (analyzeBtn) {
+      analyzeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        showAiComingSoon(prefix);
+      });
+    }
+  });
+}
+
+function showAiComingSoon(prefix) {
+  const panel = document.getElementById(`${prefix}AiAnalysisPanel`);
+  const content = document.getElementById(`${prefix}AiAnalysisContent`);
+  
+  if (panel) panel.classList.remove("collapsed");
+  if (content) {
+    content.innerHTML = '<div style="padding: 12px; color: #6b7280; font-style: italic;">AI analysis for this section coming soon...</div>';
+  }
 }
 
 /* ------------------------------------------------------------
