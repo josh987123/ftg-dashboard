@@ -3455,11 +3455,11 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  align-items: flex-start;
 }
 
 #overview .config-body .overview-config-box {
-  flex: 1 1 30%;
-  min-width: 180px;
+  flex: 0 0 auto;
 }
 
 /* Mobile overrides for equal-width panels */
