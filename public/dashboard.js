@@ -7565,21 +7565,16 @@ function buildCashFlowRows(periodMonths, groups) {
   return rows;
 }
 
-function isCFRowVisible(groups, idx) {
-  const row = groups[idx];
+function isCFRowVisible(row, rows) {
   if (!row.parent) return true;
   
-  for (let i = idx - 1; i >= 0; i--) {
-    if (groups[i].label === row.parent) {
-      if (!groups[i].expandable) return isCFRowVisible(groups, i);
-      const parentId = `cf-row-${groups[i].label.replace(/[^a-zA-Z0-9]/g, "_")}`;
-      if (cfRowStates[parentId] === true) {
-        return isCFRowVisible(groups, i);
-      }
-      return false;
-    }
-  }
-  return true;
+  const parentRow = rows.find(r => r.label === row.parent);
+  if (!parentRow) return true;
+  
+  const parentExpanded = cfRowStates[parentRow.id] === true;
+  if (!parentExpanded) return false;
+  
+  return isCFRowVisible(parentRow, rows);
 }
 
 function formatCFNumber(value, inThousands = false) {
@@ -7703,7 +7698,7 @@ function renderCashFlowStatement() {
       return;
     }
     
-    const visible = isCFRowVisible(groups, rowIdx);
+    const visible = isCFRowVisible(row, rows);
     const hiddenClass = visible ? "" : "is-row-hidden";
     
     const typeClass = row.type === "header" ? "is-header" : 
