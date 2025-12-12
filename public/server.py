@@ -537,6 +537,95 @@ def api_get_sheet_data(spreadsheet_id, sheet_name=None):
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/cash-data', methods=['GET', 'OPTIONS'])
+def api_get_cash_data():
+    """Fetch accounts and transactions from Google Sheet and calculate daily balances"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        access_token = get_sheets_access_token()
+        spreadsheet_id = '1Nkcn2Obvipqn30b-QEfKud0d8G9WTuWicUX07b76wXY'
+        
+        # Fetch Accounts sheet (columns A=name, B=balance, D=last update)
+        accounts_resp = requests.get(
+            f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Accounts',
+            headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/json'}
+        )
+        
+        if accounts_resp.status_code != 200:
+            return jsonify({'error': 'Failed to fetch Accounts sheet'}), accounts_resp.status_code
+        
+        accounts_data = accounts_resp.json().get('values', [])
+        
+        # Fetch Transactions sheet (columns A=date, B=account, C=amount)
+        txn_resp = requests.get(
+            f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/Transactions',
+            headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/json'}
+        )
+        
+        if txn_resp.status_code != 200:
+            return jsonify({'error': 'Failed to fetch Transactions sheet'}), txn_resp.status_code
+        
+        txn_data = txn_resp.json().get('values', [])
+        
+        # Parse accounts (skip header row)
+        accounts = []
+        if len(accounts_data) > 1:
+            for row in accounts_data[1:]:
+                if len(row) >= 2:
+                    name = row[0] if len(row) > 0 else ''
+                    balance_str = row[1] if len(row) > 1 else '0'
+                    last_update = row[3] if len(row) > 3 else ''
+                    
+                    # Parse balance (remove $ and commas)
+                    balance = 0
+                    try:
+                        balance = float(balance_str.replace('$', '').replace(',', ''))
+                    except:
+                        pass
+                    
+                    if name:
+                        accounts.append({
+                            'name': name,
+                            'balance': balance,
+                            'lastUpdate': last_update
+                        })
+        
+        # Parse transactions (skip header row)
+        transactions = []
+        if len(txn_data) > 1:
+            for row in txn_data[1:]:
+                if len(row) >= 3:
+                    date_str = row[0] if len(row) > 0 else ''
+                    account = row[1] if len(row) > 1 else ''
+                    amount_str = row[2] if len(row) > 2 else '0'
+                    
+                    amount = 0
+                    try:
+                        amount = float(amount_str.replace('$', '').replace(',', ''))
+                    except:
+                        pass
+                    
+                    if date_str and account:
+                        transactions.append({
+                            'date': date_str,
+                            'account': account,
+                            'amount': amount
+                        })
+        
+        return jsonify({
+            'success': True,
+            'accounts': accounts,
+            'transactions': transactions
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Cash data error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/sheets-info/<spreadsheet_id>', methods=['GET', 'OPTIONS'])
 def api_get_sheet_info(spreadsheet_id):
     """Get metadata about a spreadsheet (sheet names, etc.)"""
