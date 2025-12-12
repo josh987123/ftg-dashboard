@@ -3923,6 +3923,34 @@ function renderRevenueTable(labels, datasets) {
     row += "</tr>";
     body.innerHTML += row;
   });
+  
+  const exportBtn = document.getElementById("revTableExportBtn");
+  if (exportBtn) {
+    exportBtn.onclick = () => exportTableToCSV("revTable", "revenue-breakdown");
+  }
+}
+
+function exportTableToCSV(tableId, filename) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  
+  let csv = [];
+  const rows = table.querySelectorAll("tr");
+  
+  rows.forEach(row => {
+    const cols = row.querySelectorAll("td, th");
+    const csvRow = [];
+    cols.forEach(col => {
+      csvRow.push('"' + col.textContent.trim().replace(/"/g, '""') + '"');
+    });
+    csv.push(csvRow.join(","));
+  });
+  
+  const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(csv.join("\n"));
+  const link = document.createElement("a");
+  link.setAttribute("href", csvContent);
+  link.setAttribute("download", filename + ".csv");
+  link.click();
 }
 
 /* ============================================================
@@ -4449,6 +4477,11 @@ function renderAccountTable(labels, datasets) {
     row += "</tr>";
     return row;
   }).join("");
+  
+  const exportBtn = document.getElementById("acctTableExportBtn");
+  if (exportBtn) {
+    exportBtn.onclick = () => exportTableToCSV("acctTable", "account-breakdown");
+  }
 }
 
 /* ============================================================

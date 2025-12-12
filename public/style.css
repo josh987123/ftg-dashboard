@@ -1241,6 +1241,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   border-radius:10px;
   box-shadow:0 2px 8px rgba(0,0,0,0.08);
   margin-top:12px;
+  width: fit-content;
+  display: block;
 }
 
 .rev-table-box h3 {
@@ -1248,6 +1250,30 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   font-size:18px;
   color:#1f2937;
   font-weight:600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.export-table-btn {
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.export-table-btn:hover {
+  background: #2563eb;
+}
+
+.export-table-btn:active {
+  transform: scale(0.98);
 }
 
 .table-scroll{ overflow-x:auto; }
