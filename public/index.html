@@ -206,7 +206,7 @@
               </div>
 
               <div class="overview-config-box">
-                <label class="section-label">Show Metrics:</label>
+                <label class="section-label" style="font-weight: 600;">Show Metrics:</label>
                 <div class="metric-checkboxes">
                   <label class="checkbox-label">
                     <input type="checkbox" id="showRevenue" checked data-metric="revenue">
@@ -417,38 +417,44 @@
               <button type="button" id="revDeleteViewBtn" class="delete-view-btn" title="Delete selected view">×</button>
             </div>
             <div class="rev-controls">
-              <div class="dropdown-stack">
-                <div class="dropdown-row">
-                  <label>View:</label>
-                  <select id="revViewType">
-                    <option value="monthly">Monthly</option>
-                    <option value="quarterly">Quarterly</option>
-                    <option value="annual">Annual</option>
-                  </select>
-                </div>
-                <div class="dropdown-row" id="revYearWrapper">
-                  <label>Year:</label>
-                  <select id="revYear"></select>
+              <div class="overview-config-box">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Time Period:</div>
+                <div class="dropdown-stack">
+                  <div class="dropdown-row">
+                    <label>View:</label>
+                    <select id="revViewType">
+                      <option value="monthly">Monthly</option>
+                      <option value="quarterly">Quarterly</option>
+                      <option value="annual">Annual</option>
+                    </select>
+                  </div>
+                  <div class="dropdown-row" id="revYearWrapper">
+                    <label>Year:</label>
+                    <select id="revYear"></select>
+                  </div>
                 </div>
               </div>
 
-              <div class="checkbox-stack">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="revCompare">
-                  Compare to Prior Year
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" id="revTrendline">
-                  Show Trendline
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" id="revDataLabels" checked>
-                  Show Data Labels
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" id="revExcludeCurrent" checked>
-                  <span id="revExcludeLabel">Exclude Month in Progress</span>
-                </label>
+              <div class="overview-config-box">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Visuals:</div>
+                <div class="checkbox-stack">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="revCompare">
+                    Compare to Prior Year
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="revTrendline">
+                    Show Trendline
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="revDataLabels" checked>
+                    Show Data Labels
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="revExcludeCurrent" checked>
+                    <span id="revExcludeLabel">Exclude Month in Progress</span>
+                  </label>
+                </div>
               </div>
 
               <div id="revRangeWrapper" class="range-wrapper hidden">
