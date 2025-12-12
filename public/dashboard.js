@@ -5509,16 +5509,20 @@ function hasChildRows(groups, idx) {
 function evaluateFormula(formula, computedValues) {
   let expr = formula;
   
+  // Replace all label references with their values, longest names first
   Object.keys(computedValues).sort((a, b) => b.length - a.length).forEach(label => {
     const val = computedValues[label] || 0;
     expr = expr.split(label).join(`(${val})`);
   });
   
   try {
-    expr = expr.replace(/[^0-9+\-*/().]/g, "");
+    // Remove spaces and any remaining non-formula characters
+    expr = expr.replace(/\s+/g, "").replace(/[^0-9+\-*/().]/g, "");
+    // Safety check: ensure expression doesn't end with an operator
+    if (/[+\-*\/]$/.test(expr)) expr += "0";
     return eval(expr) || 0;
   } catch (e) {
-    console.error("Formula eval error:", formula, e);
+    console.error("Formula eval error:", formula, "Result expression:", expr, e);
     return 0;
   }
 }
