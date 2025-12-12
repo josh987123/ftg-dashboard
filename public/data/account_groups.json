@@ -1319,10 +1319,42 @@
       {
         "label": "Depreciation",
         "level": 2,
-        "type": "detail",
-        "accounts": [6060],
-        "addBack": true,
+        "type": "subtotal",
+        "formula": "Leasehold Improvements Depreciation + Equipment Depreciation + Office Furniture Depreciation + Vehicles Depreciation",
+        "expandable": true,
         "parent": "Adjustments for Non-Cash Items"
+      },
+      {
+        "label": "Leasehold Improvements Depreciation",
+        "level": 3,
+        "type": "detail",
+        "accounts": [1305],
+        "changeCalc": "increase_is_positive",
+        "parent": "Depreciation"
+      },
+      {
+        "label": "Equipment Depreciation",
+        "level": 3,
+        "type": "detail",
+        "accounts": [1315],
+        "changeCalc": "increase_is_positive",
+        "parent": "Depreciation"
+      },
+      {
+        "label": "Office Furniture Depreciation",
+        "level": 3,
+        "type": "detail",
+        "accounts": [1325],
+        "changeCalc": "increase_is_positive",
+        "parent": "Depreciation"
+      },
+      {
+        "label": "Vehicles Depreciation",
+        "level": 3,
+        "type": "detail",
+        "accounts": [1405],
+        "changeCalc": "increase_is_positive",
+        "parent": "Depreciation"
       },
       {
         "label": "Amortization",
