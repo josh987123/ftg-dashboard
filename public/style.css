@@ -1493,8 +1493,12 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   width: fit-content;
 }
 
+.is-table-box table {
+  width: 100%;
+}
+
 #incomeStatementTable {
-  width: auto;
+  width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
@@ -1634,6 +1638,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 #cashFlowTable {
+  width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
@@ -1893,7 +1898,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 #balanceSheetTable {
-  width: auto;
+  width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
