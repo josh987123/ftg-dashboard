@@ -2,13 +2,89 @@
 import os
 import json
 import base64
+import uuid
+import hashlib
+from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, send_from_directory, request, jsonify, Response
 import requests
 from anthropic import Anthropic
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__, static_folder=None)
+
+# Database connection
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
+def hash_password(password):
+    """Simple SHA-256 hash for password storage"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def init_database():
+    """Initialize database tables and seed default users"""
+    if not DATABASE_URL:
+        print("No DATABASE_URL found, skipping database initialization")
+        return
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Create users table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                display_name VARCHAR(100) NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Create sessions table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS sessions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                token VARCHAR(255) UNIQUE NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Seed default users if they don't exist
+        default_users = [
+            ('rodney@ftgbuilders.com', 'Rodney'),
+            ('sergio@ftghbuilders.com', 'Sergio'),
+            ('joshl@ftgbuilders.com', 'Josh'),
+            ('greg@ftgbuilders.com', 'Greg'),
+            ('bailey@ftgbuilders.com', 'Bailey')
+        ]
+        
+        default_password_hash = hash_password('Ftgb2025$')
+        
+        for email, display_name in default_users:
+            cur.execute("""
+                INSERT INTO users (email, display_name, password_hash)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (email) DO NOTHING
+            """, (email, display_name, default_password_hash))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("Database initialized successfully")
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+
+# Initialize database on startup
+init_database()
 
 # Using Anthropic Claude for AI analysis
 # The newest Anthropic model is "claude-sonnet-4-20250514"
@@ -396,6 +472,138 @@ Period: {period_info}
         import traceback
         print(f"AI Analysis error: {str(e)}")
         traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/login', methods=['POST', 'OPTIONS'])
+def api_login():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        email = data.get('email', '').lower().strip()
+        password = data.get('password', '')
+        
+        if not email or not password:
+            return jsonify({'error': 'Email and password are required'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Find user by email
+        cur.execute("SELECT id, email, display_name, password_hash FROM users WHERE email = %s", (email,))
+        user = cur.fetchone()
+        
+        if not user:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Invalid email address'}), 401
+        
+        # Check password
+        if user['password_hash'] != hash_password(password):
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Incorrect password'}), 401
+        
+        # Create session token
+        token = str(uuid.uuid4())
+        expires_at = datetime.now() + timedelta(days=30)
+        
+        cur.execute("""
+            INSERT INTO sessions (user_id, token, expires_at)
+            VALUES (%s, %s, %s)
+        """, (user['id'], token, expires_at))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'displayName': user['display_name'],
+            'email': user['email'],
+            'token': token
+        })
+        
+    except Exception as e:
+        print(f"Login error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/change-password', methods=['POST', 'OPTIONS'])
+def api_change_password():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        token = data.get('token')
+        current_password = data.get('currentPassword')
+        new_password = data.get('newPassword')
+        
+        if not all([token, current_password, new_password]):
+            return jsonify({'error': 'All fields are required'}), 400
+        
+        if len(new_password) < 6:
+            return jsonify({'error': 'New password must be at least 6 characters'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Find session and user
+        cur.execute("""
+            SELECT s.user_id, u.password_hash, u.email
+            FROM sessions s
+            JOIN users u ON s.user_id = u.id
+            WHERE s.token = %s AND s.expires_at > NOW()
+        """, (token,))
+        session = cur.fetchone()
+        
+        if not session:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Invalid or expired session. Please log in again.'}), 401
+        
+        # Verify current password
+        if session['password_hash'] != hash_password(current_password):
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Current password is incorrect'}), 401
+        
+        # Update password
+        new_hash = hash_password(new_password)
+        cur.execute("""
+            UPDATE users SET password_hash = %s, updated_at = NOW()
+            WHERE id = %s
+        """, (new_hash, session['user_id']))
+        
+        # Invalidate old sessions and create new one
+        cur.execute("DELETE FROM sessions WHERE user_id = %s", (session['user_id'],))
+        
+        new_token = str(uuid.uuid4())
+        expires_at = datetime.now() + timedelta(days=30)
+        cur.execute("""
+            INSERT INTO sessions (user_id, token, expires_at)
+            VALUES (%s, %s, %s)
+        """, (session['user_id'], new_token, expires_at))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Password changed successfully',
+            'token': new_token
+        })
+        
+    except Exception as e:
+        print(f"Change password error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/')

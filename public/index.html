@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
-  <link rel="stylesheet" href="style.css?v=20251212h" />
+  <link rel="stylesheet" href="style.css?v=20251212i" />
 
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -50,38 +50,54 @@
     </div>
   </div>
   <script>
-    var validUsers = {
-      'rodney@ftgbuilders.com': 'Rodney',
-      'sergio@ftghbuilders.com': 'Sergio',
-      'joshl@ftgbuilders.com': 'Josh',
-      'greg@ftgbuilders.com': 'Greg',
-      'bailey@ftgbuilders.com': 'Bailey'
-    };
-    function doLogin(event) {
+    async function doLogin(event) {
       if (event) event.preventDefault();
       var email = document.getElementById('loginUsername').value.toLowerCase().trim();
       var pwd = document.getElementById('loginPassword').value;
       var err = document.getElementById('loginError');
-      if (!validUsers[email]) {
-        err.textContent = 'Please enter a valid email address.';
+      var btn = document.getElementById('loginBtn');
+      
+      if (!email || !pwd) {
+        err.textContent = 'Please enter email and password.';
         return false;
       }
-      if (pwd === 'Ftgb2025$') {
-        localStorage.setItem('ftg_authenticated', 'true');
-        localStorage.setItem('ftg_current_user', email);
-        document.getElementById('loginScreen').classList.add('hidden');
-        err.textContent = '';
-        var displayName = validUsers[email];
-        var userLabel = document.getElementById('currentUser');
-        if (userLabel) userLabel.textContent = displayName;
-        if (typeof loadUserPreferences === 'function') {
-          setTimeout(function() { loadUserPreferences(); }, 100);
+      
+      btn.disabled = true;
+      btn.textContent = 'Logging in...';
+      err.textContent = '';
+      
+      try {
+        var response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: pwd })
+        });
+        
+        var data = await response.json();
+        
+        if (data.success) {
+          localStorage.setItem('ftg_authenticated', 'true');
+          localStorage.setItem('ftg_current_user', data.email);
+          localStorage.setItem('ftg_session_token', data.token);
+          document.getElementById('loginScreen').classList.add('hidden');
+          var userLabel = document.getElementById('currentUser');
+          if (userLabel) userLabel.textContent = data.displayName;
+          if (typeof loadUserPreferences === 'function') {
+            setTimeout(function() { loadUserPreferences(); }, 100);
+          }
+        } else {
+          err.textContent = data.error || 'Login failed. Please try again.';
         }
-      } else {
-        err.textContent = 'Incorrect password. Please try again.';
+      } catch (e) {
+        err.textContent = 'Connection error. Please try again.';
+        console.error('Login error:', e);
       }
+      
+      btn.disabled = false;
+      btn.textContent = 'Login';
       return false;
     }
+    
     if (localStorage.getItem('ftg_authenticated') === 'true' && localStorage.getItem('ftg_current_user')) {
       document.getElementById('loginScreen').classList.add('hidden');
     }
@@ -1156,11 +1172,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251212h"></script>
+  <script src="dashboard.js?v=20251212i"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251212h';
+    const APP_VERSION = '20251212i';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {
