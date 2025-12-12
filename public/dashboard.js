@@ -7770,6 +7770,30 @@ function renderCashFlowStatement() {
         const priorYear = parseInt(periodValue) - 1;
         compPeriodMonths = getCFPeriodMonths("year", String(priorYear));
         compPeriodLabel = String(priorYear);
+      } else if (periodType === "quarter") {
+        const match = periodValue.match(/(\d{4})\s*Q(\d)/);
+        if (match) {
+          const priorYear = parseInt(match[1]) - 1;
+          const quarter = match[2];
+          compPeriodMonths = getCFPeriodMonths("quarter", `${priorYear} Q${quarter}`);
+          compPeriodLabel = `${priorYear} Q${quarter}`;
+        }
+      } else if (periodType === "ytd") {
+        const match = periodValue.match(/(\d{4})-YTD-(\d+)/);
+        if (match) {
+          const priorYear = parseInt(match[1]) - 1;
+          const monthNum = match[2];
+          compPeriodMonths = getCFPeriodMonths("ytd", `${priorYear}-YTD-${monthNum}`);
+          compPeriodLabel = `YTD ${monthNames[parseInt(monthNum) - 1]} ${priorYear}`;
+        }
+      } else if (periodType === "ttm") {
+        const match = periodValue.match(/TTM-(\d{4})-(\d{2})/);
+        if (match) {
+          const priorYear = parseInt(match[1]) - 1;
+          const monthNum = match[2];
+          compPeriodMonths = getCFPeriodMonths("ttm", `TTM-${priorYear}-${monthNum}`);
+          compPeriodLabel = `TTM ending ${monthNames[parseInt(monthNum) - 1]} ${priorYear}`;
+        }
       }
     } else if (compare === "prior_period") {
       const allMonths = getCFAvailableMonths();
@@ -7780,6 +7804,24 @@ function renderCashFlowStatement() {
           const [y, mo] = allMonths[idx - 1].split("-");
           compPeriodLabel = `${monthNames[parseInt(mo) - 1]} ${y}`;
         }
+      } else if (periodType === "quarter") {
+        const match = periodValue.match(/(\d{4})\s*Q(\d)/);
+        if (match) {
+          const year = parseInt(match[1]);
+          const quarter = parseInt(match[2]);
+          let priorYear = year;
+          let priorQuarter = quarter - 1;
+          if (priorQuarter < 1) {
+            priorQuarter = 4;
+            priorYear = year - 1;
+          }
+          compPeriodMonths = getCFPeriodMonths("quarter", `${priorYear} Q${priorQuarter}`);
+          compPeriodLabel = `${priorYear} Q${priorQuarter}`;
+        }
+      } else if (periodType === "year") {
+        const priorYear = parseInt(periodValue) - 1;
+        compPeriodMonths = getCFPeriodMonths("year", String(priorYear));
+        compPeriodLabel = String(priorYear);
       }
     }
     
