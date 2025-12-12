@@ -124,15 +124,18 @@ Preferred communication style: Simple, everyday language.
 - **Over/Under Bill**: Under construction - will track billing variances
 - **Receivables/Payables**: Under construction - will manage AR/AP tracking
 - **Job Analytics**: Under construction - will provide job-level performance metrics
-- **Cash Reports**: Real-time cash position tracking with Google Sheets integration:
-  - **Data source**: Fetches Accounts and Transactions from Google Sheets (Spreadsheet ID: 1Nkcn2Obvipqn30b-QEfKud0d8G9WTuWicUX07b76wXY)
-  - Account selection checkboxes with Select All/None buttons
-  - View types: Daily, Monthly, Quarterly, Annual
-  - Year selector for daily/monthly/quarterly views
-  - Year range sliders for annual view
+- **Cash Reports**: Cash position tracking with dual data sources:
+  - **Daily view**: Uses Google Sheets data (Spreadsheet ID: 1Nkcn2Obvipqn30b-QEfKud0d8G9WTuWicUX07b76wXY)
+    - Account selection checkboxes with Select All/None buttons
+    - Balance calculation: Current balance - sum of transactions (walks backward)
+    - Multi-account color coding
+  - **Monthly/Quarterly/Annual views**: Uses Balance Sheet data from financials.json
+    - Shows "Cash & Cash Equivalents" total from accounts [1001, 1005, 1040, 1003, 1004, 1006, 1007, 1090]
+    - Uses getCumulativeBalance() function (same as Balance Sheet)
+    - Year selector for monthly/quarterly views (2015-2025)
+    - Year range sliders for annual view
   - Options: Show in Thousands, Stack Bars
-  - **Balance calculation**: Current balance - sum of transactions (walks backward to compute historical balances)
-  - Bar chart visualization using Chart.js with multi-account color coding
+  - Bar chart visualization using Chart.js
   - Summary tiles: Current Total, Average, Highest, Lowest
 
 ### Responsive Design

@@ -8562,7 +8562,8 @@ function populateCashYearDropdown() {
   const currentYear = new Date().getFullYear();
   yearSelect.innerHTML = "";
   
-  for (let y = currentYear; y >= 2020; y--) {
+  // Use 2015 as start year to match Balance Sheet data range
+  for (let y = currentYear; y >= 2015; y--) {
     const opt = document.createElement("option");
     opt.value = y;
     opt.textContent = y;
@@ -8714,22 +8715,54 @@ function aggregateBalances(dailyBalances, viewType, year, yearStart, yearEnd) {
   return aggregated;
 }
 
-function renderCashChart() {
-  if (!cashReportsData) return;
+// Cash accounts from Balance Sheet (Cash & Cash Equivalents)
+const CASH_ACCOUNTS_BS = [1001, 1005, 1040, 1003, 1004, 1006, 1007, 1090];
+
+function getCashBalancesFromBalanceSheet(viewType, year, yearStart, yearEnd) {
+  // Uses Balance Sheet data (bsGLLookup) for Monthly/Quarterly/Annual views
+  const allMonths = getBSAvailableMonths();
+  const result = {};
   
-  const container = document.getElementById("cashAccountCheckboxes");
-  const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
-  const selectedAccounts = Array.from(checkboxes).map(cb => cb.value);
-  
-  if (selectedAccounts.length === 0) {
-    if (cashChartInstance) {
-      cashChartInstance.destroy();
-      cashChartInstance = null;
+  if (viewType === "monthly") {
+    // Get balance at end of each month in selected year
+    const yearMonths = allMonths.filter(m => m.startsWith(year.toString()));
+    yearMonths.forEach(monthKey => {
+      const balance = getCumulativeBalance(CASH_ACCOUNTS_BS, monthKey, true);
+      result[monthKey] = { "Cash & Cash Equivalents": balance };
+    });
+  } else if (viewType === "quarterly") {
+    // Get balance at end of each quarter in selected year
+    for (let q = 1; q <= 4; q++) {
+      const endMonth = q * 3;
+      const monthKey = `${year}-${String(endMonth).padStart(2, "0")}`;
+      if (allMonths.includes(monthKey)) {
+        const balance = getCumulativeBalance(CASH_ACCOUNTS_BS, monthKey, true);
+        result[`${year}-Q${q}`] = { "Cash & Cash Equivalents": balance };
+      }
     }
-    updateCashSummaryTiles(0, 0, 0, 0);
-    return;
+  } else if (viewType === "annual") {
+    // Get balance at year-end for each year in range
+    for (let y = parseInt(yearStart); y <= parseInt(yearEnd); y++) {
+      const yearEndMonth = `${y}-12`;
+      if (allMonths.includes(yearEndMonth)) {
+        const balance = getCumulativeBalance(CASH_ACCOUNTS_BS, yearEndMonth, true);
+        result[y.toString()] = { "Cash & Cash Equivalents": balance };
+      } else {
+        // Find the latest available month for that year
+        const yearMonths = allMonths.filter(m => m.startsWith(y.toString()));
+        if (yearMonths.length > 0) {
+          const latestMonth = yearMonths[yearMonths.length - 1];
+          const balance = getCumulativeBalance(CASH_ACCOUNTS_BS, latestMonth, true);
+          result[y.toString()] = { "Cash & Cash Equivalents": balance };
+        }
+      }
+    }
   }
   
+  return result;
+}
+
+function renderCashChart() {
   const viewType = document.getElementById("cashViewType").value;
   const year = document.getElementById("cashYearSelect").value;
   const yearStart = document.getElementById("cashYearStart").value;
@@ -8737,13 +8770,68 @@ function renderCashChart() {
   const showThousands = document.getElementById("cashShowThousands").checked;
   const stackBars = document.getElementById("cashStackBars").checked;
   
-  const dailyBalances = calculateDailyBalances(
-    cashReportsData.accounts, 
-    cashReportsData.transactions, 
-    selectedAccounts
-  );
+  let aggregated;
+  let selectedAccounts;
   
-  const aggregated = aggregateBalances(dailyBalances, viewType, year, yearStart, yearEnd);
+  if (viewType === "daily") {
+    // Daily view uses Google Sheets data
+    if (!cashReportsData) return;
+    
+    const container = document.getElementById("cashAccountCheckboxes");
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+    selectedAccounts = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (selectedAccounts.length === 0) {
+      if (cashChartInstance) {
+        cashChartInstance.destroy();
+        cashChartInstance = null;
+      }
+      updateCashSummaryTiles(0, 0, 0, 0);
+      return;
+    }
+    
+    const dailyBalances = calculateDailyBalances(
+      cashReportsData.accounts, 
+      cashReportsData.transactions, 
+      selectedAccounts
+    );
+    
+    aggregated = aggregateBalances(dailyBalances, viewType, year, yearStart, yearEnd);
+  } else {
+    // Monthly/Quarterly/Annual views use Balance Sheet data
+    if (Object.keys(bsGLLookup).length === 0) {
+      // Need to load Balance Sheet data first
+      const chartContainer = document.getElementById("cashChart");
+      if (chartContainer) {
+        chartContainer.parentElement.innerHTML = '<div class="loading-spinner">Loading financial data...</div><canvas id="cashChart"></canvas>';
+      }
+      
+      fetch("/data/financials.json")
+        .then(r => r.json())
+        .then(data => {
+          if (data.gl_history_all) {
+            bsGLLookup = {};
+            data.gl_history_all.forEach(row => {
+              const acctNum = parseInt(row.account_no);
+              if (!bsGLLookup[acctNum]) bsGLLookup[acctNum] = {};
+              Object.keys(row).forEach(key => {
+                if (/^\d{4}-\d{2}$/.test(key)) {
+                  bsGLLookup[acctNum][key] = parseFloat(row[key]) || 0;
+                }
+              });
+            });
+          }
+          renderCashChart(); // Re-render with loaded data
+        })
+        .catch(err => {
+          console.error("Error loading Balance Sheet data:", err);
+        });
+      return;
+    }
+    
+    selectedAccounts = ["Cash & Cash Equivalents"];
+    aggregated = getCashBalancesFromBalanceSheet(viewType, year, yearStart, yearEnd);
+  }
   
   const labels = Object.keys(aggregated).sort();
   
