@@ -6510,6 +6510,7 @@ let bsData = null;
 let bsAccountGroups = null;
 let bsGLLookup = {};
 let bsRowStates = {};
+let bsLastDetailLevel = null;
 let bsInceptionDate = "2015-01";
 
 function initBalanceSheet() {
@@ -6924,7 +6925,10 @@ function renderBalanceSheet() {
   const viewMode = document.getElementById("bsViewMode")?.value || "single";
   const detailLevel = document.querySelector('input[name="bsDetailLevel"]:checked')?.value || "summary";
   
-  setBSDetailLevelStates(detailLevel);
+  if (detailLevel !== bsLastDetailLevel) {
+    setBSDetailLevelStates(detailLevel);
+    bsLastDetailLevel = detailLevel;
+  }
   updateReportHeader("bs");
   
   const groups = bsAccountGroups.balance_sheet.groups;
@@ -7166,7 +7170,10 @@ function renderBalanceSheetMatrix() {
   const periodType = document.getElementById("bsPeriodType").value;
   const detailLevel = document.querySelector('input[name="bsDetailLevel"]:checked')?.value || "summary";
   
-  setBSDetailLevelStates(detailLevel);
+  if (detailLevel !== bsLastDetailLevel) {
+    setBSDetailLevelStates(detailLevel);
+    bsLastDetailLevel = detailLevel;
+  }
   
   const groups = bsAccountGroups.balance_sheet.groups;
   const thead = document.getElementById("bsTableHead");
