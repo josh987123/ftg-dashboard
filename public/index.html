@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
-  <link rel="stylesheet" href="style.css?v=20251212j" />
+  <link rel="stylesheet" href="style.css?v=20251212k" />
 
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -47,6 +47,7 @@
         <button type="submit" id="loginBtn">Login</button>
       </form>
       <p id="loginError" class="login-error"></p>
+      <a href="#" id="forgotPasswordLink" style="font-size:12px;color:#6b7280;text-decoration:underline;cursor:pointer;">Forgot password?</a>
     </div>
   </div>
   <script>
@@ -96,6 +97,27 @@
     if (localStorage.getItem('ftg_authenticated') === 'true' && localStorage.getItem('ftg_current_user')) {
       document.getElementById('loginScreen').classList.add('hidden');
     }
+    
+    // Forgot password handler
+    document.getElementById('forgotPasswordLink').onclick = function(e) {
+      e.preventDefault();
+      var email = document.getElementById('loginUsername').value.toLowerCase().trim();
+      var err = document.getElementById('loginError');
+      
+      if (!validUsers[email]) {
+        err.textContent = 'Please enter your email address first.';
+        return;
+      }
+      
+      var resetCode = prompt('Enter admin reset code to reset password to default:');
+      if (resetCode === 'FTG2025Reset') {
+        localStorage.removeItem('ftg_pwd_' + email);
+        err.style.color = '#166534';
+        err.textContent = 'Password reset! Use default password: Ftgb2025$';
+      } else if (resetCode) {
+        err.textContent = 'Invalid reset code. Contact administrator.';
+      }
+    };
   </script>
 
   <!-- HEADER -->
@@ -1167,11 +1189,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251212j"></script>
+  <script src="dashboard.js?v=20251212k"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251212j';
+    const APP_VERSION = '20251212k';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {
