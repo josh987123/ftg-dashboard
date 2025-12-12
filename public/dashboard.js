@@ -239,8 +239,9 @@ function showChangePasswordModal() {
         return;
       }
       
-      // Note: In a real app, this would call a backend API
-      status.textContent = "Password change is not available in demo mode.";
+      // Password changes require a backend server for secure storage
+      // This is a static dashboard without user management backend
+      status.textContent = "Password changes require a backend server. Please contact your administrator to change passwords.";
       status.className = "email-status error";
     };
     
