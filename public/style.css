@@ -3448,18 +3448,24 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   /* AI Analysis panel mobile improvements */
   .ai-analysis-panel {
     width: 100%;
+    display: block !important;
+    visibility: visible !important;
+    margin-top: 12px;
   }
   
   .ai-analysis-header {
-    padding: 12px 14px;
-    min-height: 44px;
+    padding: 14px 16px;
+    min-height: 48px;
+    background: #d1fae5;
+    border: 2px solid #166534;
   }
   
   .ai-run-btn {
-    padding: 8px 14px;
-    font-size: 12px;
-    min-height: 36px;
-    min-width: 70px;
+    padding: 10px 16px;
+    font-size: 14px;
+    min-height: 44px;
+    min-width: 80px;
+    font-weight: 700;
   }
   
   .ai-analysis-content {
