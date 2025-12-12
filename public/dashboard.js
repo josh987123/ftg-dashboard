@@ -5919,35 +5919,16 @@ function updateReportHeader(statementType) {
         periodText = `Monthly, ${year}`;
       }
     } else {
-      let currentLabel = "";
-      if (periodType === "month" && periodValue) {
-        const [y, mo] = periodValue.split("-");
-        currentLabel = `${monthNames[parseInt(mo) - 1]} ${y}`;
-      } else if (periodType === "quarter") {
-        currentLabel = periodValue;
-      } else if (periodType === "year") {
-        currentLabel = periodValue;
-      } else if (periodType === "ytd") {
-        const match = periodValue.match(/(\d{4})-YTD-(\d+)/);
-        if (match) {
-          currentLabel = `YTD ${monthNames[parseInt(match[2]) - 1]} ${match[1]}`;
-        }
-      } else if (periodType === "ttm") {
-        const match = periodValue.match(/TTM-(\d{4})-(\d{2})/);
-        if (match) {
-          currentLabel = `TTM ending ${monthNames[parseInt(match[2]) - 1]} ${match[1]}`;
-        }
-      }
-      
+      const currentLabel = formatPeriodLabel(periodValue, periodType, false);
       if (compare !== "none" && currentLabel) {
-        let compLabel = "";
-        if (compare === "prior_year" && periodType === "month" && periodValue) {
-          const [y, mo] = periodValue.split("-");
-          compLabel = `${monthNames[parseInt(mo) - 1]} ${parseInt(y) - 1}`;
-        } else if (compare === "prior_year" && periodType === "year") {
-          compLabel = String(parseInt(periodValue) - 1);
+        let compPeriod;
+        if (compare === "prior_period") {
+          compPeriod = getCFPriorPeriod(periodValue, periodType);
+        } else {
+          compPeriod = getCFPriorYearPeriod(periodValue, periodType);
         }
-        if (compLabel) {
+        if (compPeriod) {
+          const compLabel = formatPeriodLabel(compPeriod, periodType, false);
           periodText = `${currentLabel} vs ${compLabel}`;
         } else {
           periodText = currentLabel;
@@ -7480,6 +7461,53 @@ function applyCFDetailLevel(level) {
       cfRowStates[rowId] = true;
     });
   }
+}
+
+function getCFPriorPeriod(periodValue, periodType) {
+  const months = getCFAvailableMonths();
+  
+  if (periodType === "month") {
+    const idx = months.indexOf(periodValue);
+    return idx > 0 ? months[idx - 1] : null;
+  } else if (periodType === "quarter") {
+    const [y, qStr] = periodValue.split("-Q");
+    const q = parseInt(qStr);
+    if (q > 1) return `${y}-Q${q - 1}`;
+    return `${parseInt(y) - 1}-Q4`;
+  } else if (periodType === "year") {
+    return String(parseInt(periodValue) - 1);
+  } else if (periodType === "ytd") {
+    const parts = periodValue.split("-YTD-");
+    return `${parseInt(parts[0]) - 1}-YTD-${parts[1]}`;
+  } else if (periodType === "ttm") {
+    const endMonth = periodValue.replace("TTM-", "");
+    const idx = months.indexOf(endMonth);
+    if (idx >= 12) {
+      return `TTM-${months[idx - 1]}`;
+    }
+    return null;
+  }
+  return null;
+}
+
+function getCFPriorYearPeriod(periodValue, periodType) {
+  if (periodType === "month") {
+    const [y, mo] = periodValue.split("-");
+    return `${parseInt(y) - 1}-${mo}`;
+  } else if (periodType === "quarter") {
+    const [y, q] = periodValue.split("-Q");
+    return `${parseInt(y) - 1}-Q${q}`;
+  } else if (periodType === "year") {
+    return String(parseInt(periodValue) - 1);
+  } else if (periodType === "ytd") {
+    const parts = periodValue.split("-YTD-");
+    return `${parseInt(parts[0]) - 1}-YTD-${parts[1]}`;
+  } else if (periodType === "ttm") {
+    const endMonth = periodValue.replace("TTM-", "");
+    const [y, mo] = endMonth.split("-");
+    return `TTM-${parseInt(y) - 1}-${mo}`;
+  }
+  return null;
 }
 
 function getCFPeriodMonths(periodType, periodValue) {
