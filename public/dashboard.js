@@ -7690,10 +7690,65 @@ function formatCFNumber(value, inThousands = false) {
   
   let displayValue = inThousands ? value / 1000 : value;
   const isNegative = displayValue < 0;
-  displayValue = Math.abs(Math.round(displayValue));
+  const suffix = inThousands ? "K" : "";
   
-  const formatted = displayValue.toLocaleString();
-  return isNegative ? `(${formatted})` : formatted;
+  const absVal = Math.abs(displayValue);
+  const formatted = absVal.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  
+  if (isNegative) {
+    return `<span class="cf-negative">($${formatted}${suffix})</span>`;
+  }
+  return `$${formatted}${suffix}`;
+}
+
+function formatCFVariance(current, prior, inThousands = false) {
+  if (current === null || prior === null) {
+    return { diff: "-", pct: "-" };
+  }
+  
+  const diff = current - prior;
+  let displayDiff = inThousands ? diff / 1000 : diff;
+  const suffix = inThousands ? "K" : "";
+  
+  const absDiff = Math.abs(displayDiff);
+  const diffFormatted = absDiff.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  
+  let diffStr;
+  if (diff < 0) {
+    diffStr = `<span class="cf-negative">($${diffFormatted}${suffix})</span>`;
+  } else if (diff === 0) {
+    diffStr = "-";
+  } else {
+    diffStr = `$${diffFormatted}${suffix}`;
+  }
+  
+  let pctStr = "-";
+  if (prior !== 0) {
+    const pctChange = ((current - prior) / Math.abs(prior)) * 100;
+    if (pctChange > 1000) {
+      pctStr = "1,000%+";
+    } else if (pctChange < -1000) {
+      pctStr = "<span class=\"cf-negative\">-1,000%+</span>";
+    } else {
+      const pctFormatted = pctChange.toLocaleString(undefined, {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      });
+      if (pctChange < 0) {
+        pctStr = `<span class="cf-negative">${pctFormatted}%</span>`;
+      } else {
+        pctStr = `${pctFormatted}%`;
+      }
+    }
+  }
+  
+  return { diff: diffStr, pct: pctStr };
 }
 
 function renderCashFlowStatement() {
@@ -7889,13 +7944,12 @@ function renderCashFlowStatement() {
       const compRow = comparisonRows[rowIdx];
       const currentVal = row.value;
       const compVal = compRow ? compRow.value : 0;
-      const dollarVar = currentVal - compVal;
-      const pctVar = compVal !== 0 ? ((currentVal - compVal) / Math.abs(compVal)) * 100 : 0;
+      const variance = formatCFVariance(currentVal, compVal, showThousands);
       
       bodyHtml += `<td>${formatCFNumber(compVal, showThousands)}</td>`;
       bodyHtml += `<td>${formatCFNumber(currentVal, showThousands)}</td>`;
-      bodyHtml += `<td class="var-col-left ${dollarVar < 0 ? 'is-negative' : ''}">${formatCFNumber(dollarVar, showThousands)}</td>`;
-      bodyHtml += `<td class="${pctVar < 0 ? 'is-negative' : ''}">${compVal !== 0 ? pctVar.toFixed(1) + '%' : '-'}</td>`;
+      bodyHtml += `<td class="var-col-left">${variance.diff}</td>`;
+      bodyHtml += `<td>${variance.pct}</td>`;
     } else {
       bodyHtml += `<td>${formatCFNumber(row.value, showThousands)}</td>`;
     }

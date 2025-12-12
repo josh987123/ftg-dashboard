@@ -1536,6 +1536,10 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   color: #dc2626;
 }
 
+.cf-negative {
+  color: #dc2626;
+}
+
 .is-table-box {
   background: #fff;
   border-radius: 12px;
