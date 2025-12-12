@@ -1726,7 +1726,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 .ai-analysis-panel {
   background: #fff;
   border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border-radius: 10px;
   margin-bottom: 20px;
   overflow: hidden;
   display: block;
@@ -1773,13 +1773,13 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 .ai-run-btn {
-  padding: 3px 8px;
+  padding: 4px 10px;
   font-size: 10px;
   font-weight: 600;
   color: #fff;
   background: #166534;
   border: none;
-  border-radius: 3px;
+  border-radius: 6px;
   cursor: pointer;
   transition: background 0.2s;
 }
