@@ -7176,9 +7176,7 @@ function buildCashFlowRows(periodMonths, groups) {
     
     if (group.specialCalc === "net_income") {
       let netIncome = 0;
-      const incomeAccounts = Object.keys(cfGLLookup).map(Number).filter(n => 
-        (n >= 4000 && n < 8000) || (n >= 8000 && n < 9000)
-      );
+      const incomeAccounts = Object.keys(cfGLLookup).map(Number).filter(n => n >= 4000);
       incomeAccounts.forEach(acctNum => {
         const activity = getCFPeriodActivity(acctNum, periodMonths);
         if ((acctNum >= 4000 && acctNum < 5000) || (acctNum >= 8000 && acctNum < 9000)) {
