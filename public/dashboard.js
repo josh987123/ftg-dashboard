@@ -1160,6 +1160,7 @@ const PageViewConfigs = {
         compare: document.querySelector('input[name="cfCompareRadio"]:checked')?.value,
         detailLevel: document.querySelector('input[name="cfDetailLevel"]:checked')?.value,
         showThousands: document.getElementById("cfShowThousands")?.checked,
+        showSubtotal: document.getElementById("cfShowSubtotal")?.checked,
         excludeCurrent: document.getElementById("cfExcludeCurrent")?.checked,
         matrixYearStart: document.getElementById("cfMatrixYearStart")?.value,
         matrixYearEnd: document.getElementById("cfMatrixYearEnd")?.value
@@ -1190,6 +1191,10 @@ const PageViewConfigs = {
       if (cfg.showThousands !== undefined) {
         const el = document.getElementById("cfShowThousands");
         if (el) el.checked = cfg.showThousands;
+      }
+      if (cfg.showSubtotal !== undefined) {
+        const el = document.getElementById("cfShowSubtotal");
+        if (el) el.checked = cfg.showSubtotal;
       }
       if (cfg.excludeCurrent !== undefined) {
         const el = document.getElementById("cfExcludeCurrent");
@@ -7279,6 +7284,11 @@ function initCashFlowControls() {
     showThousands.onchange = () => { renderCashFlowStatement(); saveCashFlowConfig(); };
   }
   
+  const showSubtotalCb = document.getElementById("cfShowSubtotal");
+  if (showSubtotalCb) {
+    showSubtotalCb.onchange = () => { renderCashFlowStatement(); saveCashFlowConfig(); };
+  }
+  
   if (excludeCurrent) {
     excludeCurrent.onchange = () => { 
       populateCFPeriodOptions();
@@ -7989,6 +7999,7 @@ function renderCashFlowMatrix() {
   const yearStart = document.getElementById("cfMatrixYearStart")?.value;
   const yearEnd = document.getElementById("cfMatrixYearEnd")?.value;
   const showThousands = document.getElementById("cfShowThousands")?.checked || false;
+  const showSubtotal = document.getElementById("cfShowSubtotal")?.checked || false;
   const groups = cfAccountGroups?.cash_flow?.groups;
   const thead = document.getElementById("cfTableHead");
   const tbody = document.getElementById("cfTableBody");
@@ -8055,10 +8066,15 @@ function renderCashFlowMatrix() {
   
   const allRowsData = periods.map(p => buildCashFlowRows(p.months, groups));
   
+  const colCount = periods.length + 1 + (showSubtotal ? 1 : 0);
+  
   let headerHtml = "<tr><th>Account</th>";
   periods.forEach(p => {
     headerHtml += `<th>${p.label}</th>`;
   });
+  if (showSubtotal) {
+    headerHtml += '<th class="is-subtotal-col">Subtotal</th>';
+  }
   headerHtml += "</tr>";
   thead.innerHTML = headerHtml;
   
@@ -8067,7 +8083,7 @@ function renderCashFlowMatrix() {
   
   rows.forEach((row, rowIdx) => {
     if (row.type === "spacer") {
-      bodyHtml += `<tr class="is-spacer-row"><td colspan="${periods.length + 1}"></td></tr>`;
+      bodyHtml += `<tr class="is-spacer-row"><td colspan="${colCount}"></td></tr>`;
       return;
     }
     
@@ -8102,14 +8118,24 @@ function renderCashFlowMatrix() {
     bodyHtml += `<tr class="${typeClass} ${indentClass} ${hiddenClass} ${highlightClass} ${expandedClass}" data-row-id="${row.id}">`;
     bodyHtml += `<td>${toggleHtml}${row.label}</td>`;
     
+    let rowSubtotal = 0;
     allRowsData.forEach(periodRows => {
       const periodRow = periodRows[rowIdx];
       if (row.type === "header") {
         bodyHtml += `<td></td>`;
       } else {
         bodyHtml += `<td>${formatCFNumber(periodRow?.value, showThousands)}</td>`;
+        rowSubtotal += periodRow?.value || 0;
       }
     });
+    
+    if (showSubtotal) {
+      if (row.type === "header") {
+        bodyHtml += '<td class="is-subtotal-col"></td>';
+      } else {
+        bodyHtml += `<td class="is-subtotal-col"><strong>${formatCFNumber(rowSubtotal, showThousands)}</strong></td>`;
+      }
+    }
     
     bodyHtml += "</tr>";
   });
@@ -8126,6 +8152,7 @@ function saveCashFlowConfig() {
     compare: document.querySelector('input[name="cfCompareRadio"]:checked')?.value,
     detailLevel: document.querySelector('input[name="cfDetailLevel"]:checked')?.value,
     showThousands: document.getElementById("cfShowThousands")?.checked,
+    showSubtotal: document.getElementById("cfShowSubtotal")?.checked,
     excludeCurrent: document.getElementById("cfExcludeCurrent")?.checked,
     matrixYearStart: document.getElementById("cfMatrixYearStart")?.value,
     matrixYearEnd: document.getElementById("cfMatrixYearEnd")?.value
