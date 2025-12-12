@@ -557,19 +557,25 @@
               <button type="button" id="acctDeleteViewBtn" class="delete-view-btn" title="Delete selected view">×</button>
             </div>
             <div class="rev-controls">
-              <label>Account:</label>
-              <select id="acctSelect"></select>
+              <label style="display: block; font-weight: 600; margin-bottom: 8px;">Account:</label>
+              <select id="acctSelect" style="display: block; margin-bottom: 12px; width: 100%;"></select>
 
-              <label>View:</label>
-              <select id="acctViewType">
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="annual">Annual</option>
-              </select>
-
-              <div id="acctYearWrapper">
-                <label>Year:</label>
-                <select id="acctYear"></select>
+              <div class="overview-config-box">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Time Period:</div>
+                <div class="dropdown-stack">
+                  <div class="dropdown-row">
+                    <label>View:</label>
+                    <select id="acctViewType">
+                      <option value="monthly">Monthly</option>
+                      <option value="quarterly">Quarterly</option>
+                      <option value="annual">Annual</option>
+                    </select>
+                  </div>
+                  <div id="acctYearWrapper" class="dropdown-row">
+                    <label>Year:</label>
+                    <select id="acctYear"></select>
+                  </div>
+                </div>
               </div>
 
               <div id="acctRangeWrapper" class="range-wrapper hidden">
@@ -584,23 +590,26 @@
                 </div>
               </div>
 
-              <div class="checkbox-stack">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="acctCompare">
-                  Compare to Prior Year
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" id="acctTrendline">
-                  Show Trendline
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" id="acctDataLabels" checked>
-                  Show Data Labels
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" id="acctExcludeCurrent" checked>
-                  <span id="acctExcludeLabel">Exclude Month in Progress</span>
-                </label>
+              <div class="overview-config-box">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Visuals:</div>
+                <div class="checkbox-stack">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="acctCompare">
+                    Compare to Prior Year
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="acctTrendline">
+                    Show Trendline
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="acctDataLabels" checked>
+                    Show Data Labels
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="acctExcludeCurrent" checked>
+                    <span id="acctExcludeLabel">Exclude Month in Progress</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
