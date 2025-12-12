@@ -274,36 +274,155 @@ function initNavigation() {
 }
 
 function initAllAiPanelToggles() {
-  const panelPrefixes = ['overview', 'rev', 'acct', 'bs'];
-  
-  panelPrefixes.forEach(prefix => {
+  ['overview', 'rev', 'acct', 'bs'].forEach(prefix => {
     const panel = document.getElementById(`${prefix}AiAnalysisPanel`);
     const header = document.getElementById(`${prefix}AiAnalysisHeader`);
     const analyzeBtn = document.getElementById(`${prefix}AiAnalyzeBtn`);
-    
-    if (header && panel) {
-      header.addEventListener("click", (e) => {
-        if (analyzeBtn && (e.target === analyzeBtn || analyzeBtn.contains(e.target))) return;
-        panel.classList.toggle("collapsed");
-      });
-    }
-    
-    if (analyzeBtn) {
-      analyzeBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        showAiComingSoon(prefix);
-      });
-    }
+    if (header && panel) header.addEventListener("click", (e) => {
+      if (analyzeBtn && (e.target === analyzeBtn || analyzeBtn.contains(e.target))) return;
+      panel.classList.toggle("collapsed");
+    });
   });
+  
+  const overviewBtn = document.getElementById('overviewAiAnalyzeBtn');
+  if (overviewBtn) overviewBtn.addEventListener('click', performOverviewAiAnalysis);
+  
+  const revBtn = document.getElementById('revAiAnalyzeBtn');
+  if (revBtn) revBtn.addEventListener('click', performRevenueAiAnalysis);
+  
+  const acctBtn = document.getElementById('acctAiAnalyzeBtn');
+  if (acctBtn) acctBtn.addEventListener('click', performAccountAiAnalysis);
+  
+  const bsBtn = document.getElementById('bsAiAnalyzeBtn');
+  if (bsBtn) bsBtn.addEventListener('click', performBalanceSheetAiAnalysis);
 }
 
-function showAiComingSoon(prefix) {
-  const panel = document.getElementById(`${prefix}AiAnalysisPanel`);
-  const content = document.getElementById(`${prefix}AiAnalysisContent`);
-  
-  if (panel) panel.classList.remove("collapsed");
-  if (content) {
-    content.innerHTML = '<div style="padding: 12px; color: #6b7280; font-style: italic;">AI analysis for this section coming soon...</div>';
+async function performOverviewAiAnalysis() {
+  const btn = document.getElementById('overviewAiAnalyzeBtn');
+  const panel = document.getElementById('overviewAiAnalysisPanel');
+  const content = document.getElementById('overviewAiAnalysisContent');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  panel.classList.remove('collapsed');
+  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing overview...</div>';
+  try {
+    const chartData = extractOverviewChartData();
+    const response = await fetch('/api/analyze-overview', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({chartData, periodInfo: 'Executive Overview'})
+    });
+    const result = await response.json();
+    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+  } catch (e) {
+    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis';
+  }
+}
+
+function extractOverviewChartData() {
+  const metrics = {};
+  ['revenue', 'grossProfit', 'grossMargin', 'opex', 'opProfit', 'opMargin', 'cash', 'receivables', 'payables'].forEach(m => {
+    const canvas = document.getElementById(`overview${m.charAt(0).toUpperCase() + m.slice(1)}Chart`);
+    if (canvas && overviewChartInstances[canvas.id]) {
+      const chart = overviewChartInstances[canvas.id];
+      metrics[m] = {label: chart.data.datasets[0].label, values: chart.data.datasets[0].data};
+    }
+  });
+  return JSON.stringify(metrics);
+}
+
+async function performRevenueAiAnalysis() {
+  const btn = document.getElementById('revAiAnalyzeBtn');
+  const panel = document.getElementById('revAiAnalysisPanel');
+  const content = document.getElementById('revAiAnalysisContent');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  panel.classList.remove('collapsed');
+  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing revenue...</div>';
+  try {
+    const chartData = extractRevenueChartData();
+    const response = await fetch('/api/analyze-revenue', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({chartData, periodInfo: 'Revenue Analysis'})
+    });
+    const result = await response.json();
+    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+  } catch (e) {
+    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis';
+  }
+}
+
+function extractRevenueChartData() {
+  if (revChartInstance) {
+    const chart = revChartInstance;
+    return JSON.stringify({labels: chart.data.labels, datasets: chart.data.datasets.map(d => ({label: d.label, data: d.data}))});
+  }
+  return '{}';
+}
+
+async function performAccountAiAnalysis() {
+  const btn = document.getElementById('acctAiAnalyzeBtn');
+  const panel = document.getElementById('acctAiAnalysisPanel');
+  const content = document.getElementById('acctAiAnalysisContent');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  panel.classList.remove('collapsed');
+  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing account...</div>';
+  try {
+    const chartData = extractAccountChartData();
+    const response = await fetch('/api/analyze-account', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({chartData, periodInfo: 'Account Detail'})
+    });
+    const result = await response.json();
+    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+  } catch (e) {
+    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis';
+  }
+}
+
+function extractAccountChartData() {
+  if (acctChartInstance) {
+    const chart = acctChartInstance;
+    return JSON.stringify({labels: chart.data.labels, datasets: chart.data.datasets.map(d => ({label: d.label, data: d.data}))});
+  }
+  return '{}';
+}
+
+async function performBalanceSheetAiAnalysis() {
+  const btn = document.getElementById('bsAiAnalyzeBtn');
+  const panel = document.getElementById('bsAiAnalysisPanel');
+  const content = document.getElementById('bsAiAnalysisContent');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  panel.classList.remove('collapsed');
+  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing balance sheet...</div>';
+  try {
+    const table = document.getElementById('balanceSheetTable');
+    const chartData = table ? table.innerHTML : '{}';
+    const response = await fetch('/api/analyze-balance-sheet', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({chartData, periodInfo: 'Balance Sheet'})
+    });
+    const result = await response.json();
+    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+  } catch (e) {
+    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis';
   }
 }
 
