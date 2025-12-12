@@ -1725,7 +1725,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 /* AI Analysis Styles */
 .ai-analysis-panel {
   background: #fff;
-  border: 1px solid #d1d5db;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   margin-bottom: 20px;
   overflow: hidden;
@@ -3471,7 +3471,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     padding: 14px 16px;
     min-height: 48px;
     background: #d1fae5;
-    border: 2px solid #166534;
+    border: none;
   }
   
   .ai-run-btn {
