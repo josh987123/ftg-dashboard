@@ -61,7 +61,6 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-bottom: 16px;
   overflow: hidden;
   display: block;
-  width: fit-content;
 }
 
 .config-header {
@@ -1711,7 +1710,6 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-bottom: 20px;
   overflow: hidden;
   display: block;
-  width: fit-content;
 }
 
 .ai-analysis-header {
