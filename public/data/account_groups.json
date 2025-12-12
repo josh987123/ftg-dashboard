@@ -12,16 +12,18 @@
         "label": "Product Revenue",
         "level": 2,
         "type": "detail",
-        "accounts": [4100]
+        "accounts": [4100],
+        "parent": "Revenue"
       },
       {
         "label": "Service Revenue",
         "level": 2,
         "type": "detail",
-        "accounts": [4200, 4300, 4400, 4500, 4600, 4700]
+        "accounts": [4200, 4300, 4400, 4500, 4600, 4700],
+        "parent": "Revenue"
       },
       {
-        "label": "Cost of Sales",
+        "label": "Total Cost of Sales",
         "level": 1,
         "type": "subtotal",
         "formula": "Material & Subcontractors + Direct Labor + Direct Equipment + Direct Facility",
@@ -31,79 +33,71 @@
         "label": "Material & Subcontractors",
         "level": 2,
         "type": "detail",
-        "accounts": [5100, 5200, 5300, 5400]
+        "accounts": [5100, 5200, 5300, 5400],
+        "parent": "Total Cost of Sales"
       },
       {
-        "label": "Total Cost of Sales",
-        "level": 1,
-        "type": "subtotal",
-        "formula": "Cost of Sales",
-        "highlight": "subtotal"
+        "label": "Direct Labor",
+        "level": 2,
+        "type": "detail",
+        "formula": "Labor - Direct + Bonus Expense - Direct + Payroll Taxes - Direct + Workers Comp - Direct + Benefits - Direct + 401K/PSP - Direct",
+        "parent": "Total Cost of Sales"
+      },
+      {
+        "label": "Direct Equipment",
+        "level": 2,
+        "type": "detail",
+        "accounts": [5500],
+        "parent": "Total Cost of Sales"
+      },
+      {
+        "label": "Direct Facility",
+        "level": 2,
+        "type": "detail",
+        "accounts": [5600],
+        "parent": "Total Cost of Sales"
       },
       {
         "label": "Gross Profit",
         "level": 0,
         "type": "subtotal",
         "formula": "Revenue - Total Cost of Sales",
-        "highlight": "total"
+        "highlight": "subtotal"
       },
       {
-        "label": "Direct Expenses",
-        "level": 1,
-        "type": "subtotal",
-        "formula": "Direct Labor + Direct Equipment + Direct Facility",
-        "expandable": true
-      },
-      {
-        "label": "Direct Labor",
-        "level": 2,
-        "type": "detail",
-        "formula": "Labor - Direct + Bonus Expense - Direct + Payroll Taxes - Direct + Workers Comp - Direct + Benefits - Direct + 401K/PSP - Direct"
-      },
-      {
-        "label": "Direct Equipment",
-        "level": 2,
-        "type": "detail",
-        "accounts": [5500]
-      },
-      {
-        "label": "Direct Facility",
-        "level": 2,
-        "type": "detail",
-        "accounts": [5600]
+        "label": "Gross Profit %",
+        "level": 0,
+        "type": "ratio",
+        "formula": "(Gross Profit / Revenue) * 100",
+        "highlight": "ratio"
       },
       {
         "label": "Total Direct Expenses",
         "level": 1,
         "type": "subtotal",
-        "formula": "Direct Expenses",
-        "highlight": "subtotal"
+        "formula": "Material & Subcontractors + Direct Labor + Direct Equipment + Direct Facility",
+        "expandable": true
       },
       {
-        "label": "Indirect Expenses",
+        "label": "Total Indirect Expenses",
         "level": 1,
         "type": "subtotal",
-        "formula": "Indirect Labor + Indirect Equipment + Indirect Facility",
+        "formula": "Indirect Labor + Depreciation",
         "expandable": true
       },
       {
         "label": "Indirect Labor",
         "level": 2,
         "type": "detail",
-        "formula": "Labor - Indirect + Labor - Project Mgr + Bonus Expense - Indirect + Payroll Taxes - Indirect + Workers Comp - Indirect + Benefits - Indirect + 401K/PSP - Indirect"
+        "formula": "Labor - Indirect + Labor - Project Mgr + Bonus Expense - Indirect + Payroll Taxes - Indirect + Workers Comp - Indirect + Benefits - Indirect + 401K/PSP - Indirect",
+        "parent": "Total Indirect Expenses"
       },
       {
         "label": "Depreciation",
         "level": 2,
         "type": "detail",
-        "accounts": [6060]
-      },
-      {
-        "label": "Total Indirect Expenses",
-        "level": 1,
-        "type": "subtotal",
-        "formula": "Indirect Expenses",
-        "highlight": "subtotal"
+        "accounts": [6060],
+        "parent": "Total Indirect Expenses"
       },
       {
         "label": "Operating Expenses",
@@ -116,51 +110,57 @@
         "label": "Salaries & Benefits",
         "level": 2,
         "type": "detail",
-        "accounts": [6100, 6110, 6120]
+        "accounts": [6100, 6110, 6120],
+        "parent": "Operating Expenses"
       },
       {
         "label": "Facility",
         "level": 2,
         "type": "detail",
-        "accounts": [6200, 6210, 6220, 6230, 6240, 6250, 6260, 6270]
+        "accounts": [6200, 6210, 6220, 6230, 6240, 6250, 6260, 6270],
+        "parent": "Operating Expenses"
       },
       {
         "label": "Travel & Entertainment",
         "level": 2,
         "type": "detail",
-        "accounts": [6300, 6310, 6320, 6330]
+        "accounts": [6300, 6310, 6320, 6330],
+        "parent": "Operating Expenses"
       },
       {
         "label": "Insurance",
         "level": 2,
         "type": "detail",
-        "accounts": [6400, 6410, 6420]
+        "accounts": [6400, 6410, 6420],
+        "parent": "Operating Expenses"
       },
       {
         "label": "Professional Services",
         "level": 2,
         "type": "detail",
-        "accounts": [6500, 6510, 6520, 6530, 6540, 6550, 6560]
+        "accounts": [6500, 6510, 6520, 6530, 6540, 6550, 6560],
+        "parent": "Operating Expenses"
       },
       {
         "label": "Administrative & Other",
         "level": 2,
         "type": "detail",
-        "accounts": [6600, 6610, 6620, 6630, 6640, 6650]
-      },
-      {
-        "label": "Total Operating Expenses",
-        "level": 1,
-        "type": "subtotal",
-        "formula": "Operating Expenses",
-        "highlight": "subtotal"
+        "accounts": [6600, 6610, 6620, 6630, 6640, 6650],
+        "parent": "Operating Expenses"
       },
       {
         "label": "Operating Profit",
         "level": 0,
         "type": "subtotal",
-        "formula": "Gross Profit - Total Direct Expenses - Total Indirect Expenses - Total Operating Expenses",
+        "formula": "Gross Profit - Total Indirect Expenses - Operating Expenses",
         "highlight": "subtotal"
+      },
+      {
+        "label": "Operating Profit %",
+        "level": 0,
+        "type": "ratio",
+        "formula": "(Operating Profit / Revenue) * 100",
+        "highlight": "ratio"
       },
       {
         "label": "Other Income/(Expense)",
@@ -173,25 +173,29 @@
         "label": "Interest Income",
         "level": 2,
         "type": "detail",
-        "accounts": [7100]
+        "accounts": [7100],
+        "parent": "Other Income/(Expense)"
       },
       {
         "label": "Other Income",
         "level": 2,
         "type": "detail",
-        "accounts": [7200, 7210, 7230, 7240]
+        "accounts": [7200, 7210, 7230, 7240],
+        "parent": "Other Income/(Expense)"
       },
       {
         "label": "Interest Expense",
         "level": 2,
         "type": "detail",
-        "accounts": [8100]
+        "accounts": [8100],
+        "parent": "Other Income/(Expense)"
       },
       {
         "label": "Other Expense",
         "level": 2,
         "type": "detail",
-        "accounts": [8200, 8210, 8220]
+        "accounts": [8200, 8210, 8220],
+        "parent": "Other Income/(Expense)"
       },
       {
         "label": "Taxes",
@@ -204,31 +208,36 @@
         "label": "Federal Income Taxes",
         "level": 2,
         "type": "detail",
-        "accounts": [9100]
+        "accounts": [9100],
+        "parent": "Taxes"
       },
       {
         "label": "State Income Taxes",
         "level": 2,
         "type": "detail",
-        "accounts": [9110]
+        "accounts": [9110],
+        "parent": "Taxes"
       },
       {
         "label": "Payroll Taxes",
         "level": 2,
         "type": "detail",
-        "accounts": [9200, 9210]
+        "accounts": [9200, 9210],
+        "parent": "Taxes"
       },
       {
         "label": "Property Taxes",
         "level": 2,
         "type": "detail",
-        "accounts": [9300]
+        "accounts": [9300],
+        "parent": "Taxes"
       },
       {
         "label": "Other Taxes",
         "level": 2,
         "type": "detail",
-        "accounts": [9400]
+        "accounts": [9400],
+        "parent": "Taxes"
       },
       {
         "label": "Net Income",
@@ -253,75 +262,87 @@
         "level": 2,
         "type": "subtotal",
         "formula": "Checking + Savings & Investments + Undeposited Funds",
-        "expandable": true
+        "expandable": true,
+        "parent": "Current Assets"
       },
       {
         "label": "Checking",
         "level": 3,
         "type": "detail",
-        "accounts": [1001, 1005, 1040]
+        "accounts": [1001, 1005, 1040],
+        "parent": "Cash & Cash Equivalents"
       },
       {
         "label": "Savings & Investments",
         "level": 3,
         "type": "detail",
-        "accounts": [1003, 1004, 1006, 1007]
+        "accounts": [1003, 1004, 1006, 1007],
+        "parent": "Cash & Cash Equivalents"
       },
       {
         "label": "Undeposited Funds",
         "level": 3,
         "type": "detail",
-        "accounts": [1090]
+        "accounts": [1090],
+        "parent": "Cash & Cash Equivalents"
       },
       {
         "label": "Receivables",
         "level": 2,
         "type": "subtotal",
         "formula": "Contracts + Retention + Emp Dependent + Loans + Underbillings",
-        "expandable": true
+        "expandable": true,
+        "parent": "Current Assets"
       },
       {
         "label": "Contracts",
         "level": 3,
         "type": "detail",
-        "accounts": [1100]
+        "accounts": [1100],
+        "parent": "Receivables"
       },
       {
         "label": "Retention",
         "level": 3,
         "type": "detail",
-        "accounts": [1105]
+        "accounts": [1105],
+        "parent": "Receivables"
       },
       {
         "label": "Emp Dependent",
         "level": 3,
         "type": "detail",
-        "accounts": [1110]
+        "accounts": [1110],
+        "parent": "Receivables"
       },
       {
         "label": "Loans",
         "level": 3,
         "type": "detail",
-        "accounts": [1120, 1130]
+        "accounts": [1120, 1130],
+        "parent": "Receivables"
       },
       {
         "label": "Underbillings",
         "level": 3,
         "type": "detail",
-        "accounts": [1050]
+        "accounts": [1050],
+        "parent": "Receivables"
       },
       {
         "label": "Other Current Assets",
         "level": 2,
         "type": "subtotal",
         "formula": "Employee Advances",
-        "expandable": true
+        "expandable": true,
+        "parent": "Current Assets"
       },
       {
         "label": "Employee Advances",
         "level": 3,
         "type": "detail",
-        "accounts": [1030]
+        "accounts": [1030],
+        "parent": "Other Current Assets"
       },
       {
         "label": "Long-Term Assets",
@@ -335,62 +356,72 @@
         "level": 2,
         "type": "subtotal",
         "formula": "Leasehold Improvements + Equipment & Machinery + Office Furniture + Vehicles",
-        "expandable": true
+        "expandable": true,
+        "parent": "Long-Term Assets"
       },
       {
         "label": "Leasehold Improvements",
         "level": 3,
         "type": "detail",
-        "accounts": [1300, 1305]
+        "accounts": [1300, 1305],
+        "parent": "Fixed Assets"
       },
       {
         "label": "Equipment & Machinery",
         "level": 3,
         "type": "detail",
-        "accounts": [1310, 1315]
+        "accounts": [1310, 1315],
+        "parent": "Fixed Assets"
       },
       {
         "label": "Office Furniture",
         "level": 3,
         "type": "detail",
-        "accounts": [1320, 1325]
+        "accounts": [1320, 1325],
+        "parent": "Fixed Assets"
       },
       {
         "label": "Vehicles",
         "level": 3,
         "type": "detail",
-        "accounts": [1400, 1405]
+        "accounts": [1400, 1405],
+        "parent": "Fixed Assets"
       },
       {
         "label": "Intangible Assets",
         "level": 2,
         "type": "subtotal",
         "formula": "Organization Costs + Client Knowledge",
-        "expandable": true
+        "expandable": true,
+        "parent": "Long-Term Assets"
       },
       {
         "label": "Organization Costs",
         "level": 3,
         "type": "detail",
-        "accounts": [1750]
+        "accounts": [1750],
+        "parent": "Intangible Assets"
       },
       {
         "label": "Client Knowledge",
         "level": 3,
         "type": "detail",
-        "accounts": [1800, 1805]
+        "accounts": [1800, 1805],
+        "parent": "Intangible Assets"
       },
       {
         "label": "Prepaid Assets",
         "level": 2,
         "type": "detail",
-        "accounts": [1500, 1600]
+        "accounts": [1500, 1600],
+        "parent": "Long-Term Assets"
       },
       {
         "label": "Other Long-Term Assets",
         "level": 2,
         "type": "detail",
-        "accounts": [1610, 1700, 1900]
+        "accounts": [1610, 1700, 1900],
+        "parent": "Long-Term Assets"
       },
       {
         "label": "TOTAL ASSETS",
@@ -411,43 +442,50 @@
         "level": 2,
         "type": "subtotal",
         "formula": "Contracts + Retention + Credit Cards",
-        "expandable": true
+        "expandable": true,
+        "parent": "Current Liabilities"
       },
       {
         "label": "Contracts",
         "level": 3,
         "type": "detail",
-        "accounts": [2000, 2005]
+        "accounts": [2000, 2005],
+        "parent": "Accounts Payable"
       },
       {
         "label": "Retention",
         "level": 3,
         "type": "detail",
-        "accounts": [2010]
+        "accounts": [2010],
+        "parent": "Accounts Payable"
       },
       {
         "label": "Credit Cards",
         "level": 3,
         "type": "detail",
-        "accounts": [2015, 2016, 2017, 2018]
+        "accounts": [2015, 2016, 2017, 2018],
+        "parent": "Accounts Payable"
       },
       {
         "label": "Accrued Expenses",
         "level": 2,
         "type": "detail",
-        "accounts": [2021, 2023, 2025, 2028, 2030, 2070, 2100, 2110]
+        "accounts": [2021, 2023, 2025, 2028, 2030, 2070, 2100, 2110],
+        "parent": "Current Liabilities"
       },
       {
         "label": "Overbillings",
         "level": 2,
         "type": "detail",
-        "accounts": [2120]
+        "accounts": [2120],
+        "parent": "Current Liabilities"
       },
       {
         "label": "Other Current Liabilities",
         "level": 2,
         "type": "detail",
-        "accounts": [2130, 2140, 2200, 2250]
+        "accounts": [2130, 2140, 2200, 2250],
+        "parent": "Current Liabilities"
       },
       {
         "label": "Long-Term Liabilities",
@@ -460,25 +498,29 @@
         "label": "Loan - Bridge Bank",
         "level": 2,
         "type": "detail",
-        "accounts": [2500]
+        "accounts": [2500],
+        "parent": "Long-Term Liabilities"
       },
       {
         "label": "Note - Vehicles",
         "level": 2,
         "type": "detail",
-        "accounts": [2510]
+        "accounts": [2510],
+        "parent": "Long-Term Liabilities"
       },
       {
         "label": "Note - Former Shareholder",
         "level": 2,
         "type": "detail",
-        "accounts": [2515]
+        "accounts": [2515],
+        "parent": "Long-Term Liabilities"
       },
       {
         "label": "Deferred Tax Liability",
         "level": 2,
         "type": "detail",
-        "accounts": [2150]
+        "accounts": [2150],
+        "parent": "Long-Term Liabilities"
       },
       {
         "label": "TOTAL LIABILITIES",
@@ -498,88 +540,100 @@
         "label": "Treasury Stock",
         "level": 2,
         "type": "detail",
-        "accounts": [3010]
+        "accounts": [3010],
+        "parent": "Equity"
       },
       {
         "label": "Capital Contributions",
         "level": 2,
         "type": "subtotal",
         "formula": "3030 + 3031 + 3032 + 3033 + 3034",
-        "expandable": true
+        "expandable": true,
+        "parent": "Equity"
       },
       {
         "label": "3030",
         "level": 3,
         "type": "detail",
-        "accounts": [3030]
+        "accounts": [3030],
+        "parent": "Capital Contributions"
       },
       {
         "label": "3031",
         "level": 3,
         "type": "detail",
-        "accounts": [3031]
+        "accounts": [3031],
+        "parent": "Capital Contributions"
       },
       {
         "label": "3032",
         "level": 3,
         "type": "detail",
-        "accounts": [3032]
+        "accounts": [3032],
+        "parent": "Capital Contributions"
       },
       {
         "label": "3033",
         "level": 3,
         "type": "detail",
-        "accounts": [3033]
+        "accounts": [3033],
+        "parent": "Capital Contributions"
       },
       {
         "label": "3034",
         "level": 3,
         "type": "detail",
-        "accounts": [3034]
+        "accounts": [3034],
+        "parent": "Capital Contributions"
       },
       {
         "label": "Distributions",
         "level": 2,
         "type": "subtotal",
         "formula": "3025 + 3035 + 3036",
-        "expandable": true
+        "expandable": true,
+        "parent": "Equity"
       },
       {
         "label": "3025",
         "level": 3,
         "type": "detail",
-        "accounts": [3025]
+        "accounts": [3025],
+        "parent": "Distributions"
       },
       {
         "label": "3035",
         "level": 3,
         "type": "detail",
-        "accounts": [3035]
+        "accounts": [3035],
+        "parent": "Distributions"
       },
       {
         "label": "3036",
         "level": 3,
         "type": "detail",
-        "accounts": [3036]
+        "accounts": [3036],
+        "parent": "Distributions"
       },
       {
         "label": "Retained Earnings",
         "level": 2,
         "type": "detail",
-        "accounts": [3000]
+        "accounts": [3000],
+        "parent": "Equity"
       },
       {
         "label": "Current Year Net Income",
         "level": 2,
         "type": "detail",
-        "accounts": [3001]
+        "accounts": [3001],
+        "parent": "Equity"
       },
       {
         "label": "TOTAL LIABILITIES & EQUITY",
         "level": 0,
         "type": "subtotal",
         "formula": "TOTAL LIABILITIES + Equity",
-        "isDebit": false,
         "highlight": "total"
       }
     ]
