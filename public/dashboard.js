@@ -1663,6 +1663,29 @@ function updateOverviewCharts() {
   
   const showTrend = document.getElementById("overviewTrend").checked;
   
+  // Track which indices contain the current month (for coloring)
+  const currentMonthIndices = [];
+  if (!excludeCurrent && viewType === "monthly") {
+    for (let m = 1; m <= 12; m++) {
+      const key = `${year}-${String(m).padStart(2, "0")}`;
+      if (key === currentMonthKey) {
+        currentMonthIndices.push(m - 1);
+      }
+    }
+  } else if (!excludeCurrent && viewType === "quarterly") {
+    const currentMonth = currentMonthKey.split("-")[1];
+    const currentQuarter = Math.ceil(parseInt(currentMonth) / 3) - 1;
+    if (parseInt(currentMonthKey.split("-")[0]) === year) {
+      currentMonthIndices.push(currentQuarter);
+    }
+  } else if (!excludeCurrent && viewType === "annual") {
+    for (let y = rangeStart; y <= rangeEnd; y++) {
+      if (y === currentYear) {
+        currentMonthIndices.push(y - rangeStart);
+      }
+    }
+  }
+  
   const chartConfigs = [
     { id: "overviewRevenueChart", data: metrics.revenue },
     { id: "overviewGrossProfitChart", data: metrics.grossProfit },
@@ -1676,16 +1699,16 @@ function updateOverviewCharts() {
   ];
   
   chartConfigs.forEach(cfg => {
-    renderOverviewChart(cfg.id, labels, cfg.data, compare, showTrend);
+    renderOverviewChart(cfg.id, labels, cfg.data, compare, showTrend, currentMonthIndices);
   });
   
-  updateOverviewStats(metrics, labels);
+  updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndices);
   } catch (err) {
     console.error("Error updating overview charts:", err);
   }
 }
 
-function updateOverviewStats(metrics, labels) {
+function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndices) {
   try {
   const statConfigs = [
     { key: "revenue", avgId: "revenueAvg", highId: "revenueHigh", lowId: "revenueLow", cagrId: "revenueCagr", highPeriodId: "revenueHighPeriod", lowPeriodId: "revenueLowPeriod", growthLabelId: "revenueGrowthLabel", isPercent: false },
@@ -1708,8 +1731,23 @@ function updateOverviewStats(metrics, labels) {
     const growthLabelEl = document.getElementById(cfg.growthLabelId);
     if (growthLabelEl) growthLabelEl.textContent = growthLabel;
     
-    const allValues = metrics[cfg.key]?.values || [];
-    const priorValues = metrics[cfg.key]?.priorValues || [];
+    let allValues = metrics[cfg.key]?.values || [];
+    let priorValues = metrics[cfg.key]?.priorValues || [];
+    
+    // Filter out current month if exclude is checked
+    if (excludeCurrent && currentMonthIndices.length > 0) {
+      const filteredValues = [];
+      const filteredPriorValues = [];
+      allValues.forEach((v, idx) => {
+        if (!currentMonthIndices.includes(idx)) {
+          filteredValues.push(v);
+          if (priorValues[idx] !== undefined) filteredPriorValues.push(priorValues[idx]);
+        }
+      });
+      allValues = filteredValues;
+      priorValues = filteredPriorValues;
+    }
+    
     const values = allValues.filter(v => v !== 0);
     
     if (values.length === 0) {
@@ -1843,7 +1881,7 @@ const gradientColors = {
   orange: { start: "#d97706", end: "#fbbf24" }
 };
 
-function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend) {
+function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend, currentMonthIndices) {
   try {
     const canvas = document.getElementById(canvasId);
     if (!canvas) {
@@ -1884,6 +1922,14 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend)
     backgroundColor: (context) => {
       const chart = context.chart;
       const { ctx, chartArea } = chart;
+      const datasetIndex = context.datasetIndex;
+      const dataIndex = context.dataIndex;
+      
+      // Use orange for current month if not excluding it
+      if (currentMonthIndices && currentMonthIndices.length > 0 && currentMonthIndices.includes(dataIndex)) {
+        return createBarGradient(ctx, chartArea, gradientColors.orange.start, gradientColors.orange.end);
+      }
+      
       return createBarGradient(ctx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
     },
     borderRadius: 4,
