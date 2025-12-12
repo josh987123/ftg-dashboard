@@ -7184,6 +7184,8 @@ let cfGLLookup = {};
 let cfRowStates = {};
 let cfControlsInitialized = false;
 let cfInceptionDate = "2015-01";
+let cfAvailableMonthsCache = null;
+let cfCumulativeBalanceCache = {};
 
 async function loadCashFlowStatement() {
   if (!cfData || !cfAccountGroups) {
@@ -7211,7 +7213,10 @@ async function loadCashFlowStatement() {
 
 function buildCFGLLookup() {
   cfGLLookup = {};
+  cfAvailableMonthsCache = null;
+  cfCumulativeBalanceCache = {};
   const glHistory = cfData.gl_history_all || [];
+  const monthSet = new Set();
   
   glHistory.forEach(row => {
     const acctNum = parseInt(row.Account_Num || row.Account, 10);
@@ -7225,19 +7230,33 @@ function buildCFGLLookup() {
       if (/^\d{4}-\d{2}$/.test(key)) {
         const val = parseFloat(row[key]) || 0;
         cfGLLookup[acctNum][key] = val;
+        monthSet.add(key);
       }
+    });
+  });
+  
+  cfAvailableMonthsCache = Array.from(monthSet).sort();
+  
+  Object.keys(cfGLLookup).forEach(acctNum => {
+    cfCumulativeBalanceCache[acctNum] = {};
+    let cumulative = 0;
+    cfAvailableMonthsCache.forEach(month => {
+      cumulative += cfGLLookup[acctNum][month] || 0;
+      cfCumulativeBalanceCache[acctNum][month] = cumulative;
     });
   });
 }
 
 function getCFAvailableMonths() {
+  if (cfAvailableMonthsCache) return cfAvailableMonthsCache;
   const months = new Set();
   Object.values(cfGLLookup).forEach(acctData => {
     Object.keys(acctData).forEach(key => {
       if (/^\d{4}-\d{2}$/.test(key)) months.add(key);
     });
   });
-  return Array.from(months).sort();
+  cfAvailableMonthsCache = Array.from(months).sort();
+  return cfAvailableMonthsCache;
 }
 
 function initCashFlowControls() {
@@ -7533,6 +7552,9 @@ function getCFAccountBalance(acctNum, period) {
 }
 
 function getCFCumulativeBalance(acctNum, endPeriod) {
+  if (cfCumulativeBalanceCache[acctNum] && cfCumulativeBalanceCache[acctNum][endPeriod] !== undefined) {
+    return cfCumulativeBalanceCache[acctNum][endPeriod];
+  }
   if (!cfGLLookup[acctNum]) return 0;
   const months = getCFAvailableMonths().filter(m => m <= endPeriod);
   return months.reduce((sum, m) => sum + (cfGLLookup[acctNum][m] || 0), 0);
