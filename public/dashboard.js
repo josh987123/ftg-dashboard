@@ -7492,17 +7492,29 @@ function updateCFMatrixControlsVisibility() {
     } else {
       yearControls.classList.add("hidden");
       periodSelect.classList.remove("hidden");
-      if (periodSelectLabel) periodSelectLabel.classList.remove("hidden");
+      if (periodSelectLabel) {
+        periodSelectLabel.classList.remove("hidden");
+        periodSelectLabel.textContent = "Year:";
+      }
+      
+      if (periodType === "quarter" || periodType === "month") {
+        populateCFMatrixYearOptions();
+      }
     }
   } else {
     singleControls.classList.remove("hidden");
     matrixControls.classList.add("hidden");
     periodSelect.classList.remove("hidden");
-    if (periodSelectLabel) periodSelectLabel.classList.remove("hidden");
+    if (periodSelectLabel) {
+      periodSelectLabel.classList.remove("hidden");
+      periodSelectLabel.textContent = "Period:";
+    }
     if (showSubtotalWrapper) showSubtotalWrapper.classList.add("hidden");
     
     if (ytdOption) ytdOption.disabled = false;
     if (ttmOption) ttmOption.disabled = false;
+    
+    populateCFPeriodOptions();
   }
 }
 
@@ -7562,6 +7574,17 @@ function populateCFPeriodOptions() {
   
   periodSelect.innerHTML = options.map(o => 
     `<option value="${o.value}">${o.label}</option>`
+  ).join("");
+}
+
+function populateCFMatrixYearOptions() {
+  const periodSelect = document.getElementById("cfPeriodSelect");
+  const months = getCFAvailableMonths();
+  const years = new Set();
+  months.forEach(m => years.add(m.split("-")[0]));
+  
+  periodSelect.innerHTML = Array.from(years).sort().reverse().map(y => 
+    `<option value="${y}">${y}</option>`
   ).join("");
 }
 
