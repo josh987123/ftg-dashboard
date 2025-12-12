@@ -691,33 +691,36 @@
               <button type="button" id="isDeleteViewBtn" class="delete-view-btn" title="Delete selected view">×</button>
             </div>
             <div class="is-controls">
-              <div class="is-period-stack">
-                <div class="is-period-row">
-                  <label>View:</label>
-                  <select id="isViewMode">
-                    <option value="single">Single Period</option>
-                    <option value="matrix">Matrix</option>
-                  </select>
-                </div>
-                <div class="is-period-row">
-                  <label>Period Type:</label>
-                  <select id="isPeriodType">
-                    <option value="month">Month</option>
-                    <option value="quarter">Quarter</option>
-                    <option value="year">Year</option>
-                    <option value="ytd">YTD</option>
-                    <option value="ttm">TTM</option>
-                  </select>
-                </div>
-                <div class="is-period-row">
-                  <label id="isPeriodSelectLabel">Period:</label>
-                  <select id="isPeriodSelect"></select>
+              <div class="overview-config-box">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Time Period:</div>
+                <div class="is-period-stack">
+                  <div class="is-period-row">
+                    <label>View:</label>
+                    <select id="isViewMode">
+                      <option value="single">Single Period</option>
+                      <option value="matrix">Matrix</option>
+                    </select>
+                  </div>
+                  <div class="is-period-row">
+                    <label>Period Type:</label>
+                    <select id="isPeriodType">
+                      <option value="month">Month</option>
+                      <option value="quarter">Quarter</option>
+                      <option value="year">Year</option>
+                      <option value="ytd">YTD</option>
+                      <option value="ttm">TTM</option>
+                    </select>
+                  </div>
+                  <div class="is-period-row">
+                    <label id="isPeriodSelectLabel">Period:</label>
+                    <select id="isPeriodSelect"></select>
+                  </div>
                 </div>
               </div>
 
               <div class="is-compare-detail-wrapper">
                 <div id="isSingleControls" class="is-options-stack is-compare-box">
-                  <label>Compare:</label>
+                  <label style="font-weight: 600;">Compare:</label>
                   <div class="radio-group-stacked">
                     <label class="radio-label"><input type="radio" name="isCompareRadio" value="none" checked> None</label>
                     <label class="radio-label"><input type="radio" name="isCompareRadio" value="prior_period"> Prior Period</label>
@@ -726,7 +729,7 @@
                 </div>
 
                 <div class="is-options-stack is-detail-box">
-                  <label>Detail:</label>
+                  <label style="font-weight: 600;">Detail:</label>
                   <div class="radio-group-stacked">
                     <label class="radio-label"><input type="radio" name="isDetailLevel" value="summary" checked> Summary</label>
                     <label class="radio-label"><input type="radio" name="isDetailLevel" value="medium"> Medium</label>
@@ -817,29 +820,32 @@
               <button type="button" id="bsDeleteViewBtn" class="delete-view-btn" title="Delete selected view">×</button>
             </div>
             <div class="is-controls">
-              <div class="is-period-stack">
-                <div class="is-period-row">
-                  <label>View:</label>
-                  <select id="bsViewMode">
-                    <option value="single">Single Period</option>
-                    <option value="matrix">Matrix</option>
-                  </select>
-                </div>
-                <div class="is-period-row" id="bsPeriodTypeRow" style="display: none;">
-                  <label>Period Type:</label>
-                  <select id="bsPeriodType">
-                    <option value="month">Month</option>
-                    <option value="quarter">Quarter</option>
-                    <option value="annual">Annual</option>
-                  </select>
-                </div>
-                <div class="is-period-row" id="bsSinglePeriodRow">
-                  <label>As of Date:</label>
-                  <select id="bsPeriodSelect"></select>
-                </div>
-                <div class="is-period-row" id="bsMatrixYearRow" style="display: none;">
-                  <label>Year:</label>
-                  <select id="bsMatrixYear"></select>
+              <div class="overview-config-box">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Time Period:</div>
+                <div class="is-period-stack">
+                  <div class="is-period-row">
+                    <label>View:</label>
+                    <select id="bsViewMode">
+                      <option value="single">Single Period</option>
+                      <option value="matrix">Matrix</option>
+                    </select>
+                  </div>
+                  <div class="is-period-row" id="bsPeriodTypeRow" style="display: none;">
+                    <label>Period Type:</label>
+                    <select id="bsPeriodType">
+                      <option value="month">Month</option>
+                      <option value="quarter">Quarter</option>
+                      <option value="annual">Annual</option>
+                    </select>
+                  </div>
+                  <div class="is-period-row" id="bsSinglePeriodRow">
+                    <label>As of Date:</label>
+                    <select id="bsPeriodSelect"></select>
+                  </div>
+                  <div class="is-period-row" id="bsMatrixYearRow" style="display: none;">
+                    <label>Year:</label>
+                    <select id="bsMatrixYear"></select>
+                  </div>
                 </div>
               </div>
 
@@ -857,7 +863,7 @@
 
               <div class="is-compare-detail-wrapper">
                 <div class="is-options-stack is-compare-box" id="bsSingleCompareBox">
-                  <label>Compare:</label>
+                  <label style="font-weight: 600;">Compare:</label>
                   <div class="radio-group-stacked">
                     <label class="radio-label"><input type="radio" name="bsCompareRadio" value="none" checked> None</label>
                     <label class="radio-label"><input type="radio" name="bsCompareRadio" value="prior_month"> Prior Month</label>
@@ -866,7 +872,7 @@
                 </div>
 
                 <div class="is-options-stack is-detail-box">
-                  <label>Detail:</label>
+                  <label style="font-weight: 600;">Detail:</label>
                   <div class="radio-group-stacked">
                     <label class="radio-label"><input type="radio" name="bsDetailLevel" value="summary" checked> Summary</label>
                     <label class="radio-label"><input type="radio" name="bsDetailLevel" value="medium"> Medium</label>
@@ -939,33 +945,36 @@
               <button type="button" id="cfDeleteViewBtn" class="delete-view-btn" title="Delete selected view">×</button>
             </div>
             <div class="is-controls">
-              <div class="is-period-stack">
-                <div class="is-period-row">
-                  <label>View:</label>
-                  <select id="cfViewMode">
-                    <option value="single">Single Period</option>
-                    <option value="matrix">Matrix</option>
-                  </select>
-                </div>
-                <div class="is-period-row">
-                  <label>Period Type:</label>
-                  <select id="cfPeriodType">
-                    <option value="month">Month</option>
-                    <option value="quarter">Quarter</option>
-                    <option value="year">Year</option>
-                    <option value="ytd">YTD</option>
-                    <option value="ttm">TTM</option>
-                  </select>
-                </div>
-                <div class="is-period-row">
-                  <label id="cfPeriodSelectLabel">Period:</label>
-                  <select id="cfPeriodSelect"></select>
+              <div class="overview-config-box">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Time Period:</div>
+                <div class="is-period-stack">
+                  <div class="is-period-row">
+                    <label>View:</label>
+                    <select id="cfViewMode">
+                      <option value="single">Single Period</option>
+                      <option value="matrix">Matrix</option>
+                    </select>
+                  </div>
+                  <div class="is-period-row">
+                    <label>Period Type:</label>
+                    <select id="cfPeriodType">
+                      <option value="month">Month</option>
+                      <option value="quarter">Quarter</option>
+                      <option value="year">Year</option>
+                      <option value="ytd">YTD</option>
+                      <option value="ttm">TTM</option>
+                    </select>
+                  </div>
+                  <div class="is-period-row">
+                    <label id="cfPeriodSelectLabel">Period:</label>
+                    <select id="cfPeriodSelect"></select>
+                  </div>
                 </div>
               </div>
 
               <div class="is-compare-detail-wrapper">
                 <div id="cfSingleControls" class="is-options-stack is-compare-box">
-                  <label>Compare:</label>
+                  <label style="font-weight: 600;">Compare:</label>
                   <div class="radio-group-stacked">
                     <label class="radio-label"><input type="radio" name="cfCompareRadio" value="none" checked> None</label>
                     <label class="radio-label"><input type="radio" name="cfCompareRadio" value="prior_period"> Prior Period</label>
@@ -974,7 +983,7 @@
                 </div>
 
                 <div class="is-options-stack is-detail-box">
-                  <label>Detail:</label>
+                  <label style="font-weight: 600;">Detail:</label>
                   <div class="radio-group-stacked">
                     <label class="radio-label"><input type="radio" name="cfDetailLevel" value="summary" checked> Summary</label>
                     <label class="radio-label"><input type="radio" name="cfDetailLevel" value="medium"> Medium</label>
