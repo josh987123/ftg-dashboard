@@ -1310,11 +1310,6 @@
   "cash_flow": {
     "groups": [
       {
-        "label": "OPERATING ACTIVITIES",
-        "level": 0,
-        "type": "header"
-      },
-      {
         "label": "Net Income",
         "level": 1,
         "type": "detail",
