@@ -307,7 +307,10 @@ async function performOverviewAiAnalysis() {
   content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing overview...</div>';
   try {
     const chartData = extractOverviewChartData();
-    const response = await fetch('/api/analyze-overview', {
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/analyze-overview' : '/.netlify/functions/analyze-overview';
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({chartData, periodInfo: 'Executive Overview'})
@@ -344,7 +347,10 @@ async function performRevenueAiAnalysis() {
   content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing revenue...</div>';
   try {
     const chartData = extractRevenueChartData();
-    const response = await fetch('/api/analyze-revenue', {
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/analyze-revenue' : '/.netlify/functions/analyze-revenue';
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({chartData, periodInfo: 'Revenue Analysis'})
@@ -377,7 +383,10 @@ async function performAccountAiAnalysis() {
   content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing account...</div>';
   try {
     const chartData = extractAccountChartData();
-    const response = await fetch('/api/analyze-account', {
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/analyze-account' : '/.netlify/functions/analyze-account';
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({chartData, periodInfo: 'Account Detail'})
@@ -411,7 +420,10 @@ async function performBalanceSheetAiAnalysis() {
   try {
     const table = document.getElementById('balanceSheetTable');
     const chartData = table ? table.innerHTML : '{}';
-    const response = await fetch('/api/analyze-balance-sheet', {
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/analyze-balance-sheet' : '/.netlify/functions/analyze-balance-sheet';
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({chartData, periodInfo: 'Balance Sheet'})
@@ -1193,7 +1205,6 @@ function loadUserPreferences() {
     }
     
     applyMetricVisibility();
-    updateShowAllCheckbox();
   } finally {
     isLoadingPreferences = false;
   }
