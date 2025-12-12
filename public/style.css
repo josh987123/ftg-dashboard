@@ -2761,7 +2761,13 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-bottom: 8px;
 }
 
-.chart-expand-btn {
+.metric-tile-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.chart-expand-btn,
+.chart-close-btn {
   background: transparent;
   border: 1px solid #d1d5db;
   border-radius: 4px;
@@ -2773,7 +2779,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   line-height: 1;
 }
 
-.chart-expand-btn:hover {
+.chart-expand-btn:hover,
+.chart-close-btn:hover {
   background: #f3f4f6;
   color: #374151;
   border-color: #9ca3af;

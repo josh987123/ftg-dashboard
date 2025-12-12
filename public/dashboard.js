@@ -16,6 +16,17 @@ function setupChartExpandButtons() {
     });
   });
   
+  document.querySelectorAll(".chart-close-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const metricCheckboxId = btn.dataset.metric;
+      const checkbox = document.getElementById(metricCheckboxId);
+      if (checkbox) {
+        checkbox.checked = false;
+        checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+  });
+  
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeChartFullscreen();
