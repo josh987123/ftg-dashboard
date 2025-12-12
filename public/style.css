@@ -1663,16 +1663,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 /* Cash Flow Statement specific styles */
-.cf-operating td {
-  font-weight: 700;
-  background: #dcfce7 !important;
-}
-
-.cf-investing td {
-  font-weight: 700;
-  background: #dbeafe !important;
-}
-
+.cf-operating td,
+.cf-investing td,
 .cf-financing td {
   font-weight: 700;
   background: #fef3c7 !important;
