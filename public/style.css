@@ -132,6 +132,15 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   font-size: 12px;
 }
 
+/* OVERVIEW CONFIG BOXES */
+.overview-config-box {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
 /* SAVED VIEWS ROW */
 .saved-views-row {
   display: flex;
