@@ -5509,20 +5509,16 @@ function hasChildRows(groups, idx) {
 function evaluateFormula(formula, computedValues) {
   let expr = formula;
   
-  // Replace all label references with their values, longest names first
   Object.keys(computedValues).sort((a, b) => b.length - a.length).forEach(label => {
     const val = computedValues[label] || 0;
     expr = expr.split(label).join(`(${val})`);
   });
   
   try {
-    // Remove spaces and any remaining non-formula characters
-    expr = expr.replace(/\s+/g, "").replace(/[^0-9+\-*/().]/g, "");
-    // Safety check: ensure expression doesn't end with an operator
-    if (/[+\-*\/]$/.test(expr)) expr += "0";
+    expr = expr.replace(/[^0-9+\-*/().]/g, "");
     return eval(expr) || 0;
   } catch (e) {
-    console.error("Formula eval error:", formula, "Result expression:", expr, e);
+    console.error("Formula eval error:", formula, e);
     return 0;
   }
 }
@@ -6772,8 +6768,12 @@ function renderBalanceSheet() {
     const isDetailRow = row.type === "detail";
     const isSubtotal = row.type === "subtotal";
     
-    // Always apply parent visibility check so expand/collapse works
-    const isVisible = isBSRowVisibleByParent(row, rows);
+    let isVisible;
+    if (detailLevel === "account") {
+      isVisible = true;
+    } else {
+      isVisible = isBSRowVisibleByParent(row, rows);
+    }
     const hiddenClass = isVisible ? "" : "is-row-hidden";
     const typeClass = `is-row-${row.type}`;
     const indentClass = `is-indent-${row.level}`;
@@ -7484,19 +7484,19 @@ function buildCashFlowRows(periodMonths, groups) {
       return;
     }
     
-    // Check if this row should have its sign flipped (all activity rows except final reconciliation)
-    const shouldFlipSign = !["NET CHANGE IN CASH", "Beginning Cash Balance", "Ending Cash Balance"].includes(group.label);
-    
     if (group.specialCalc === "net_income") {
-      // Sum all accounts >= 4000 for the specified period (no accumulated values)
       let netIncome = 0;
-      const allAccounts = Object.keys(cfGLLookup).map(Number).filter(n => n >= 4000);
-      allAccounts.forEach(acctNum => {
+      const incomeAccounts = Object.keys(cfGLLookup).map(Number).filter(n => n >= 4000);
+      incomeAccounts.forEach(acctNum => {
         const activity = getCFPeriodActivity(acctNum, periodMonths);
-        netIncome += activity;
+        if ((acctNum >= 4000 && acctNum < 5000) || (acctNum >= 8000 && acctNum < 9000)) {
+          netIncome += activity;
+        } else {
+          netIncome -= activity;
+        }
       });
-      row.value = shouldFlipSign ? -netIncome : netIncome;
-      calculatedValues[group.label] = row.value;
+      row.value = netIncome;
+      calculatedValues[group.label] = netIncome;
     } else if (group.specialCalc === "beginning_balance") {
       let balance = 0;
       if (priorMonth && group.accounts) {
@@ -7506,18 +7506,6 @@ function buildCashFlowRows(periodMonths, groups) {
       }
       row.value = balance;
       calculatedValues[group.label] = balance;
-    } else if (group.label === "Depreciation") {
-      // Depreciation = change in fixed asset accounts (1305, 1315, 1325, 1405)
-      const depreciationAccounts = [1305, 1315, 1325, 1405];
-      row.value = getCFBalanceChange(depreciationAccounts, periodMonths, "increase_is_positive");
-      if (shouldFlipSign) row.value = -row.value;
-      calculatedValues[group.label] = row.value;
-    } else if (group.label === "Amortization") {
-      // Amortization = change in intangible asset account (1805)
-      const amortizationAccounts = [1805];
-      row.value = getCFBalanceChange(amortizationAccounts, periodMonths, "increase_is_positive");
-      if (shouldFlipSign) row.value = -row.value;
-      calculatedValues[group.label] = row.value;
     } else if (group.accounts) {
       if (group.changeCalc) {
         row.value = getCFBalanceChange(group.accounts, periodMonths, group.changeCalc);
@@ -7540,7 +7528,6 @@ function buildCashFlowRows(periodMonths, groups) {
         });
         row.value = total;
       }
-      if (shouldFlipSign) row.value = -row.value;
       calculatedValues[group.label] = row.value;
     } else if (group.formula) {
       const formula = group.formula;
@@ -7559,8 +7546,8 @@ function buildCashFlowRows(periodMonths, groups) {
           }
         }
       });
-      row.value = shouldFlipSign ? -value : value;
-      calculatedValues[group.label] = row.value;
+      row.value = value;
+      calculatedValues[group.label] = value;
     }
     
     rows.push(row);
@@ -7569,16 +7556,21 @@ function buildCashFlowRows(periodMonths, groups) {
   return rows;
 }
 
-function isCFRowVisible(row, rows) {
+function isCFRowVisible(groups, idx) {
+  const row = groups[idx];
   if (!row.parent) return true;
   
-  const parentRow = rows.find(r => r.label === row.parent);
-  if (!parentRow) return true;
-  
-  const parentExpanded = cfRowStates[parentRow.id] === true;
-  if (!parentExpanded) return false;
-  
-  return isCFRowVisible(parentRow, rows);
+  for (let i = idx - 1; i >= 0; i--) {
+    if (groups[i].label === row.parent) {
+      if (!groups[i].expandable) return isCFRowVisible(groups, i);
+      const parentId = `cf-row-${groups[i].label.replace(/[^a-zA-Z0-9]/g, "_")}`;
+      if (cfRowStates[parentId] === true) {
+        return isCFRowVisible(groups, i);
+      }
+      return false;
+    }
+  }
+  return true;
 }
 
 function formatCFNumber(value, inThousands = false) {
@@ -7702,7 +7694,7 @@ function renderCashFlowStatement() {
       return;
     }
     
-    const visible = isCFRowVisible(row, rows);
+    const visible = isCFRowVisible(groups, rowIdx);
     const hiddenClass = visible ? "" : "is-row-hidden";
     
     const typeClass = row.type === "header" ? "is-header" : 
