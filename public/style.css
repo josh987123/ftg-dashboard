@@ -3719,38 +3719,59 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   right: 0;
 }
 
+/* Export bar - ensure it's always visible and below header */
+.export-bar {
+  display: flex !important;
+  position: relative;
+  z-index: 99;
+}
+
 /* Mobile user label scaling */
 @media (max-width: 768px) {
+  /* Ensure header-right doesn't push too wide */
+  .header-right {
+    flex-shrink: 0;
+    gap: 8px;
+  }
+  
   .user-dropdown-btn {
-    padding: 6px 10px;
-    font-size: 11px;
-    max-width: 120px;
+    padding: 4px 8px;
+    font-size: 10px;
+    max-width: 80px;
   }
   
   .user-dropdown-btn .user-label {
-    max-width: 70px;
+    max-width: 50px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 10px;
   }
   
   .user-dropdown-arrow {
-    font-size: 8px;
+    font-size: 7px;
   }
   
+  /* Export bar below header on mobile */
   .export-bar {
-    padding: 6px 16px;
+    padding: 8px 16px;
+    display: flex !important;
   }
 }
 
 @media (max-width: 500px) {
   .user-dropdown-btn {
-    padding: 5px 8px;
-    font-size: 10px;
-    max-width: 100px;
+    padding: 3px 6px;
+    font-size: 9px;
+    max-width: 70px;
   }
   
   .user-dropdown-btn .user-label {
-    max-width: 55px;
+    max-width: 40px;
+    font-size: 9px;
+  }
+  
+  .user-dropdown-arrow {
+    font-size: 6px;
   }
 }
