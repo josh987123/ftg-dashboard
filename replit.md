@@ -124,7 +124,16 @@ Preferred communication style: Simple, everyday language.
 - **Over/Under Bill**: Under construction - will track billing variances
 - **Receivables/Payables**: Under construction - will manage AR/AP tracking
 - **Job Analytics**: Under construction - will provide job-level performance metrics
-- **Cash Reports**: Under construction - will display cash position reports
+- **Cash Reports**: Real-time cash position tracking with Google Sheets integration:
+  - **Data source**: Fetches Accounts and Transactions from Google Sheets (Spreadsheet ID: 1Nkcn2Obvipqn30b-QEfKud0d8G9WTuWicUX07b76wXY)
+  - Account selection checkboxes with Select All/None buttons
+  - View types: Daily, Monthly, Quarterly, Annual
+  - Year selector for daily/monthly/quarterly views
+  - Year range sliders for annual view
+  - Options: Show in Thousands, Stack Bars
+  - **Balance calculation**: Current balance - sum of transactions (walks backward to compute historical balances)
+  - Bar chart visualization using Chart.js with multi-account color coding
+  - Summary tiles: Current Total, Average, Highest, Lowest
 
 ### Responsive Design
 - **Mobile-first approach**: Sidebar navigation with hamburger menu toggle for mobile devices
