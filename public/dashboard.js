@@ -513,6 +513,7 @@ function initNavigation() {
       if (id === "incomeStatement") loadIncomeStatement();
       if (id === "balanceSheet") initBalanceSheet();
       if (id === "cashFlows") loadCashFlowStatement();
+      if (id === "cashReports") initCashReports();
     });
   });
   
@@ -8474,6 +8475,408 @@ if (operationsEl) operationsEl.innerText = "Operations metrics load here.";
 
 const reportsEl = document.getElementById("reportsContent");
 if (reportsEl) reportsEl.innerText = "Reports will appear here.";
+
+/* ============================================================
+   CASH REPORTS MODULE
+============================================================ */
+let cashReportsData = null;
+let cashChartInstance = null;
+let cashReportsInitialized = false;
+
+async function initCashReports() {
+  if (cashReportsInitialized && cashReportsData) {
+    renderCashChart();
+    return;
+  }
+  
+  const checkboxContainer = document.getElementById("cashAccountCheckboxes");
+  const yearSelect = document.getElementById("cashYearSelect");
+  
+  checkboxContainer.innerHTML = '<div class="loading-spinner">Loading accounts...</div>';
+  
+  try {
+    const response = await fetch("/api/cash-data");
+    const data = await response.json();
+    
+    if (!data.success) {
+      checkboxContainer.innerHTML = `<div class="error-message">Error: ${data.error}</div>`;
+      return;
+    }
+    
+    cashReportsData = data;
+    cashReportsInitialized = true;
+    
+    buildAccountCheckboxes(data.accounts);
+    populateCashYearDropdown();
+    setupCashReportsListeners();
+    updateCashDataAsOf();
+    renderCashChart();
+    
+  } catch (error) {
+    console.error("Cash Reports error:", error);
+    checkboxContainer.innerHTML = `<div class="error-message">Failed to load accounts: ${error.message}</div>`;
+  }
+}
+
+function buildAccountCheckboxes(accounts) {
+  const container = document.getElementById("cashAccountCheckboxes");
+  container.innerHTML = "";
+  
+  accounts.forEach((acct, idx) => {
+    const label = document.createElement("label");
+    label.className = "checkbox-label";
+    
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = `cashAcct_${idx}`;
+    checkbox.value = acct.name;
+    checkbox.checked = true;
+    checkbox.addEventListener("change", renderCashChart);
+    
+    const balanceStr = formatCurrency(acct.balance);
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(` ${acct.name} (${balanceStr})`));
+    container.appendChild(label);
+  });
+  
+  document.getElementById("cashSelectAll").onclick = () => {
+    container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+    renderCashChart();
+  };
+  
+  document.getElementById("cashSelectNone").onclick = () => {
+    container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    renderCashChart();
+  };
+}
+
+function populateCashYearDropdown() {
+  const yearSelect = document.getElementById("cashYearSelect");
+  const currentYear = new Date().getFullYear();
+  yearSelect.innerHTML = "";
+  
+  for (let y = currentYear; y >= 2020; y--) {
+    const opt = document.createElement("option");
+    opt.value = y;
+    opt.textContent = y;
+    yearSelect.appendChild(opt);
+  }
+}
+
+function setupCashReportsListeners() {
+  const viewType = document.getElementById("cashViewType");
+  const yearSelect = document.getElementById("cashYearSelect");
+  const yearSliderWrapper = document.getElementById("cashYearSliderWrapper");
+  const yearSelectWrapper = document.getElementById("cashYearSelectWrapper");
+  const yearStart = document.getElementById("cashYearStart");
+  const yearEnd = document.getElementById("cashYearEnd");
+  const showThousands = document.getElementById("cashShowThousands");
+  const stackBars = document.getElementById("cashStackBars");
+  
+  viewType.addEventListener("change", () => {
+    const view = viewType.value;
+    if (view === "annual") {
+      yearSelectWrapper.classList.add("hidden");
+      yearSliderWrapper.classList.remove("hidden");
+    } else {
+      yearSelectWrapper.classList.remove("hidden");
+      yearSliderWrapper.classList.add("hidden");
+    }
+    renderCashChart();
+  });
+  
+  yearSelect.addEventListener("change", renderCashChart);
+  
+  yearStart.addEventListener("input", () => {
+    document.getElementById("cashYearStartLabel").textContent = yearStart.value;
+    if (parseInt(yearStart.value) > parseInt(yearEnd.value)) {
+      yearEnd.value = yearStart.value;
+      document.getElementById("cashYearEndLabel").textContent = yearEnd.value;
+    }
+    renderCashChart();
+  });
+  
+  yearEnd.addEventListener("input", () => {
+    document.getElementById("cashYearEndLabel").textContent = yearEnd.value;
+    if (parseInt(yearEnd.value) < parseInt(yearStart.value)) {
+      yearStart.value = yearEnd.value;
+      document.getElementById("cashYearStartLabel").textContent = yearStart.value;
+    }
+    renderCashChart();
+  });
+  
+  showThousands.addEventListener("change", renderCashChart);
+  stackBars.addEventListener("change", renderCashChart);
+}
+
+function updateCashDataAsOf() {
+  const el = document.getElementById("cashDataAsOf");
+  if (el) {
+    const now = new Date();
+    el.textContent = now.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  }
+}
+
+function calculateDailyBalances(accounts, transactions, selectedAccounts) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const dailyBalances = {};
+  
+  selectedAccounts.forEach(acctName => {
+    const acct = accounts.find(a => a.name === acctName);
+    if (!acct) return;
+    
+    const currentBalance = acct.balance;
+    const acctTxns = transactions.filter(t => t.account === acctName);
+    
+    acctTxns.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    let runningBalance = currentBalance;
+    
+    for (let daysBack = 0; daysBack < 365; daysBack++) {
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() - daysBack);
+      const dateKey = targetDate.toISOString().split('T')[0];
+      
+      if (!dailyBalances[dateKey]) {
+        dailyBalances[dateKey] = {};
+      }
+      
+      dailyBalances[dateKey][acctName] = runningBalance;
+      
+      const txnsOnDate = acctTxns.filter(t => {
+        const txnDate = new Date(t.date);
+        txnDate.setHours(0, 0, 0, 0);
+        return txnDate.getTime() === targetDate.getTime();
+      });
+      
+      txnsOnDate.forEach(t => {
+        runningBalance -= t.amount;
+      });
+    }
+  });
+  
+  return dailyBalances;
+}
+
+function aggregateBalances(dailyBalances, viewType, year, yearStart, yearEnd) {
+  const aggregated = {};
+  const dates = Object.keys(dailyBalances).sort();
+  
+  if (viewType === "daily") {
+    const filteredDates = dates.filter(d => d.startsWith(year.toString()));
+    filteredDates.forEach(date => {
+      aggregated[date] = dailyBalances[date];
+    });
+  } else if (viewType === "monthly") {
+    const months = {};
+    dates.filter(d => d.startsWith(year.toString())).forEach(date => {
+      const monthKey = date.substring(0, 7);
+      if (!months[monthKey]) {
+        months[monthKey] = dailyBalances[date];
+      }
+    });
+    Object.assign(aggregated, months);
+  } else if (viewType === "quarterly") {
+    const quarters = {};
+    dates.filter(d => d.startsWith(year.toString())).forEach(date => {
+      const month = parseInt(date.substring(5, 7));
+      const q = Math.ceil(month / 3);
+      const qKey = `${year}-Q${q}`;
+      if (!quarters[qKey]) {
+        quarters[qKey] = dailyBalances[date];
+      }
+    });
+    Object.assign(aggregated, quarters);
+  } else if (viewType === "annual") {
+    const years = {};
+    for (let y = parseInt(yearStart); y <= parseInt(yearEnd); y++) {
+      const yearDates = dates.filter(d => d.startsWith(y.toString()));
+      if (yearDates.length > 0) {
+        years[y.toString()] = dailyBalances[yearDates[0]];
+      }
+    }
+    Object.assign(aggregated, years);
+  }
+  
+  return aggregated;
+}
+
+function renderCashChart() {
+  if (!cashReportsData) return;
+  
+  const container = document.getElementById("cashAccountCheckboxes");
+  const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+  const selectedAccounts = Array.from(checkboxes).map(cb => cb.value);
+  
+  if (selectedAccounts.length === 0) {
+    if (cashChartInstance) {
+      cashChartInstance.destroy();
+      cashChartInstance = null;
+    }
+    updateCashSummaryTiles(0, 0, 0, 0);
+    return;
+  }
+  
+  const viewType = document.getElementById("cashViewType").value;
+  const year = document.getElementById("cashYearSelect").value;
+  const yearStart = document.getElementById("cashYearStart").value;
+  const yearEnd = document.getElementById("cashYearEnd").value;
+  const showThousands = document.getElementById("cashShowThousands").checked;
+  const stackBars = document.getElementById("cashStackBars").checked;
+  
+  const dailyBalances = calculateDailyBalances(
+    cashReportsData.accounts, 
+    cashReportsData.transactions, 
+    selectedAccounts
+  );
+  
+  const aggregated = aggregateBalances(dailyBalances, viewType, year, yearStart, yearEnd);
+  
+  const labels = Object.keys(aggregated).sort();
+  
+  const datasets = [];
+  const colors = [
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+  ];
+  
+  selectedAccounts.forEach((acctName, idx) => {
+    const data = labels.map(label => {
+      const balances = aggregated[label];
+      if (!balances || !balances[acctName]) return 0;
+      let val = balances[acctName];
+      if (showThousands) val = val / 1000;
+      return Math.round(val);
+    });
+    
+    datasets.push({
+      label: acctName,
+      data: data,
+      backgroundColor: colors[idx % colors.length],
+      borderColor: colors[idx % colors.length],
+      borderWidth: 1
+    });
+  });
+  
+  const displayLabels = labels.map(l => {
+    if (viewType === "daily") {
+      const d = new Date(l + 'T12:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else if (viewType === "monthly") {
+      const d = new Date(l + '-01T12:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    }
+    return l;
+  });
+  
+  const ctx = document.getElementById("cashChart").getContext("2d");
+  
+  if (cashChartInstance) {
+    cashChartInstance.destroy();
+  }
+  
+  cashChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: displayLabels,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: selectedAccounts.length > 1,
+          position: 'top'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let val = context.parsed.y;
+              if (showThousands) {
+                return context.dataset.label + ': $' + val.toLocaleString() + 'K';
+              }
+              return context.dataset.label + ': $' + val.toLocaleString();
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: stackBars,
+          grid: { display: false }
+        },
+        y: {
+          stacked: stackBars,
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              if (showThousands) {
+                return '$' + value.toLocaleString() + 'K';
+              }
+              if (Math.abs(value) >= 1000000) {
+                return '$' + (value / 1000000).toFixed(1) + 'M';
+              }
+              if (Math.abs(value) >= 1000) {
+                return '$' + (value / 1000).toFixed(0) + 'K';
+              }
+              return '$' + value;
+            }
+          }
+        }
+      }
+    }
+  });
+  
+  calculateCashSummaryStats(aggregated, selectedAccounts, showThousands);
+}
+
+function calculateCashSummaryStats(aggregated, selectedAccounts, showThousands) {
+  const labels = Object.keys(aggregated).sort();
+  
+  let totals = labels.map(label => {
+    const balances = aggregated[label];
+    let sum = 0;
+    selectedAccounts.forEach(acct => {
+      if (balances && balances[acct]) {
+        sum += balances[acct];
+      }
+    });
+    return sum;
+  });
+  
+  if (totals.length === 0) {
+    updateCashSummaryTiles(0, 0, 0, 0);
+    return;
+  }
+  
+  const current = totals[totals.length - 1];
+  const avg = totals.reduce((a, b) => a + b, 0) / totals.length;
+  const max = Math.max(...totals);
+  const min = Math.min(...totals);
+  
+  updateCashSummaryTiles(current, avg, max, min, showThousands);
+}
+
+function updateCashSummaryTiles(current, avg, max, min, showThousands = false) {
+  const fmt = (val) => {
+    if (showThousands) {
+      return '$' + (val / 1000).toLocaleString(undefined, {maximumFractionDigits: 0}) + 'K';
+    }
+    return formatCurrency(val);
+  };
+  
+  document.getElementById("cashTotalValue").textContent = fmt(current);
+  document.getElementById("cashAvgValue").textContent = fmt(avg);
+  document.getElementById("cashMaxValue").textContent = fmt(max);
+  document.getElementById("cashMinValue").textContent = fmt(min);
+}
 
 
 
