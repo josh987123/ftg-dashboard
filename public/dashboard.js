@@ -328,16 +328,22 @@ async function performOverviewAiAnalysis() {
 function extractOverviewChartData() {
   let text = "Executive Overview Metrics:\n\n";
   
-  ['revenue', 'grossProfit', 'grossMargin', 'opex', 'opProfit', 'opMargin', 'cash', 'receivables', 'payables'].forEach(m => {
-    const tile = document.querySelector(`[data-metric="${m}"]`);
-    if (!tile) return;
+  const tiles = document.querySelectorAll('.overview-metric-tile');
+  tiles.forEach(tile => {
+    const title = tile.querySelector('.metric-tile-title')?.textContent.trim() || 'Unknown';
+    text += `${title}:\n`;
     
-    const title = tile.querySelector('.metric-title')?.textContent.trim() || m;
-    const value = tile.querySelector('.metric-value')?.textContent.trim() || 'N/A';
-    const stat = tile.querySelector('.metric-stat')?.textContent.trim() || '';
-    
-    text += `${title}: ${value}`;
-    if (stat) text += ` (${stat})`;
+    const statsDiv = tile.querySelector('.metric-stats');
+    if (statsDiv) {
+      const statBoxes = statsDiv.querySelectorAll('.stat-box');
+      statBoxes.forEach(box => {
+        const label = box.querySelector('.stat-label')?.textContent.trim() || '';
+        const value = box.querySelector('.stat-value')?.textContent.trim() || '-';
+        if (label) {
+          text += `  ${label}: ${value}\n`;
+        }
+      });
+    }
     text += "\n";
   });
   
