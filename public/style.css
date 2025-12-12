@@ -3406,73 +3406,27 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   }
 }
 
-/* Equal width for config-panel and ai-analysis-panel pairs */
-#overview > .config-panel,
-#overview > .ai-analysis-panel,
-#revenue > .config-panel,
-#revenue > .ai-analysis-panel,
-#accounts > .config-panel,
-#accounts > .ai-analysis-panel,
-#incomeStatement > .config-panel,
-#incomeStatement > .ai-analysis-panel,
-#balanceSheet > .config-panel,
-#balanceSheet > .ai-analysis-panel,
-#cashFlows > .config-panel,
-#cashFlows > .ai-analysis-panel {
-  display: inline-grid;
-  width: auto;
+/* Ensure config-panel, ai-analysis-panel, and tables stack vertically */
+.config-panel,
+.ai-analysis-panel,
+.is-table-box,
+.bs-table-box,
+.cf-table-box,
+.chart-with-tiles,
+.chart-box,
+.overview-tiles-grid {
+  display: block;
+  clear: both;
 }
 
-#overview > .config-panel,
-#overview > .ai-analysis-panel {
-  grid-column: 1;
-}
-
-#revenue > .config-panel,
-#revenue > .ai-analysis-panel {
-  grid-column: 1;
-}
-
-#accounts > .config-panel,
-#accounts > .ai-analysis-panel {
-  grid-column: 1;
-}
-
-#incomeStatement > .config-panel,
-#incomeStatement > .ai-analysis-panel {
-  grid-column: 1;
-}
-
-#balanceSheet > .config-panel,
-#balanceSheet > .ai-analysis-panel {
-  grid-column: 1;
-}
-
-#cashFlows > .config-panel,
-#cashFlows > .ai-analysis-panel {
-  grid-column: 1;
-}
-
-/* Mobile overrides for equal-width panels */
+/* Mobile overrides for panels */
 @media (max-width: 768px) {
-  #overview > .config-panel,
-  #overview > .ai-analysis-panel,
-  #revenue > .config-panel,
-  #revenue > .ai-analysis-panel,
-  #accounts > .config-panel,
-  #accounts > .ai-analysis-panel,
-  #incomeStatement > .config-panel,
-  #incomeStatement > .ai-analysis-panel,
-  #balanceSheet > .config-panel,
-  #balanceSheet > .ai-analysis-panel,
-  #cashFlows > .config-panel,
-  #cashFlows > .ai-analysis-panel {
-    display: block;
+  /* AI Analysis panel mobile improvements */
+  .ai-analysis-panel {
     width: 100%;
   }
   
-  /* AI Analysis panel mobile improvements */
-  .ai-analysis-panel {
+  .config-panel {
     width: 100%;
   }
   
