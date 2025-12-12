@@ -3406,29 +3406,73 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   }
 }
 
-/* Ensure config-panel and ai-analysis-panel stack vertically with line breaks */
-.config-panel,
-.ai-analysis-panel {
-  display: block;
-  clear: both;
+/* Equal width for config-panel and ai-analysis-panel pairs */
+#overview > .config-panel,
+#overview > .ai-analysis-panel,
+#revenue > .config-panel,
+#revenue > .ai-analysis-panel,
+#accounts > .config-panel,
+#accounts > .ai-analysis-panel,
+#incomeStatement > .config-panel,
+#incomeStatement > .ai-analysis-panel,
+#balanceSheet > .config-panel,
+#balanceSheet > .ai-analysis-panel,
+#cashFlows > .config-panel,
+#cashFlows > .ai-analysis-panel {
+  display: inline-grid;
+  width: auto;
 }
 
-/* Financial statement tables stack below AI analysis */
-.is-table-box,
-.bs-table-box,
-.cf-table-box {
-  display: block;
-  clear: both;
+#overview > .config-panel,
+#overview > .ai-analysis-panel {
+  grid-column: 1;
 }
 
-/* Mobile overrides for panels */
+#revenue > .config-panel,
+#revenue > .ai-analysis-panel {
+  grid-column: 1;
+}
+
+#accounts > .config-panel,
+#accounts > .ai-analysis-panel {
+  grid-column: 1;
+}
+
+#incomeStatement > .config-panel,
+#incomeStatement > .ai-analysis-panel {
+  grid-column: 1;
+}
+
+#balanceSheet > .config-panel,
+#balanceSheet > .ai-analysis-panel {
+  grid-column: 1;
+}
+
+#cashFlows > .config-panel,
+#cashFlows > .ai-analysis-panel {
+  grid-column: 1;
+}
+
+/* Mobile overrides for equal-width panels */
 @media (max-width: 768px) {
-  /* AI Analysis panel mobile improvements */
-  .ai-analysis-panel {
+  #overview > .config-panel,
+  #overview > .ai-analysis-panel,
+  #revenue > .config-panel,
+  #revenue > .ai-analysis-panel,
+  #accounts > .config-panel,
+  #accounts > .ai-analysis-panel,
+  #incomeStatement > .config-panel,
+  #incomeStatement > .ai-analysis-panel,
+  #balanceSheet > .config-panel,
+  #balanceSheet > .ai-analysis-panel,
+  #cashFlows > .config-panel,
+  #cashFlows > .ai-analysis-panel {
+    display: block;
     width: 100%;
   }
   
-  .config-panel {
+  /* AI Analysis panel mobile improvements */
+  .ai-analysis-panel {
     width: 100%;
   }
   
