@@ -351,20 +351,28 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   align-items:center;
   gap:12px;
   margin-left:10px;
-}
-
-.header-logo {
-  height:32px;
-  object-fit:contain;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .logo {
   font-size:22px;
   font-weight:600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-logo {
+  height:32px;
+  object-fit:contain;
+  flex-shrink: 0;
 }
 
 .header-right { 
-  margin-left:auto; 
+  margin-left: 12px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 16px;
