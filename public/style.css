@@ -104,6 +104,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 .config-body.collapsed {
+  display: none !important;
   max-height: 0 !important;
   padding-top: 0;
   padding-bottom: 0;
