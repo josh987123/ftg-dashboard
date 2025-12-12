@@ -572,7 +572,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 /* Report Headers */
 .report-header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   padding: 10px 0;
 }
 
@@ -1452,6 +1452,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   padding: 20px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  display: inline-block;
+  min-width: 400px;
 }
 
 #incomeStatementTable {
