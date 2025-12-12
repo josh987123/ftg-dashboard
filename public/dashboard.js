@@ -7826,11 +7826,11 @@ function renderCashFlowStatement() {
         compPeriodMonths = getCFPeriodMonths("year", String(priorYear));
         compPeriodLabel = String(priorYear);
       } else if (periodType === "quarter") {
-        const match = periodValue.match(/(\d{4})\s*Q(\d)/);
+        const match = periodValue.match(/(\d{4})-Q(\d)/);
         if (match) {
           const priorYear = parseInt(match[1]) - 1;
           const quarter = match[2];
-          compPeriodMonths = getCFPeriodMonths("quarter", `${priorYear} Q${quarter}`);
+          compPeriodMonths = getCFPeriodMonths("quarter", `${priorYear}-Q${quarter}`);
           compPeriodLabel = `${priorYear} Q${quarter}`;
         }
       } else if (periodType === "ytd") {
@@ -7860,7 +7860,7 @@ function renderCashFlowStatement() {
           compPeriodLabel = `${monthNames[parseInt(mo) - 1]} ${y}`;
         }
       } else if (periodType === "quarter") {
-        const match = periodValue.match(/(\d{4})\s*Q(\d)/);
+        const match = periodValue.match(/(\d{4})-Q(\d)/);
         if (match) {
           const year = parseInt(match[1]);
           const quarter = parseInt(match[2]);
@@ -7870,7 +7870,7 @@ function renderCashFlowStatement() {
             priorQuarter = 4;
             priorYear = year - 1;
           }
-          compPeriodMonths = getCFPeriodMonths("quarter", `${priorYear} Q${priorQuarter}`);
+          compPeriodMonths = getCFPeriodMonths("quarter", `${priorYear}-Q${priorQuarter}`);
           compPeriodLabel = `${priorYear} Q${priorQuarter}`;
         }
       } else if (periodType === "year") {
