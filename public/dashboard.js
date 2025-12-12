@@ -127,6 +127,120 @@ function closeChartFullscreen() {
   }
 }
 
+function setupPageChartExpandButtons() {
+  document.querySelectorAll(".page-chart-expand-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const chartId = btn.dataset.chart;
+      const title = btn.dataset.title;
+      openPageChartFullscreen(chartId, title);
+    });
+  });
+}
+
+function openPageChartFullscreen(chartId, title) {
+  let sourceChart = null;
+  let statsHtml = "";
+  
+  if (chartId === "revChart" && revChartInstance) {
+    sourceChart = revChartInstance;
+    const summaryTiles = document.getElementById("revSummaryTiles");
+    if (summaryTiles) {
+      statsHtml = `
+        <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value">${document.getElementById("revAvgValue")?.textContent || "-"}</div></div>
+        <div class="stat-box"><div class="stat-label">Largest</div><div class="stat-value">${document.getElementById("revMaxValue")?.textContent || "-"}</div></div>
+        <div class="stat-box"><div class="stat-label">Smallest</div><div class="stat-value">${document.getElementById("revMinValue")?.textContent || "-"}</div></div>
+        <div class="stat-box"><div class="stat-label">CAGR</div><div class="stat-value">${document.getElementById("revCagrValue")?.textContent || "-"}</div></div>
+      `;
+    }
+  } else if (chartId === "acctChart" && acctChartInstance) {
+    sourceChart = acctChartInstance;
+    const summaryTiles = document.getElementById("acctSummaryTiles");
+    if (summaryTiles) {
+      statsHtml = `
+        <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value">${document.getElementById("acctAvgValue")?.textContent || "-"}</div></div>
+        <div class="stat-box"><div class="stat-label">Largest</div><div class="stat-value">${document.getElementById("acctMaxValue")?.textContent || "-"}</div></div>
+        <div class="stat-box"><div class="stat-label">Smallest</div><div class="stat-value">${document.getElementById("acctMinValue")?.textContent || "-"}</div></div>
+        <div class="stat-box"><div class="stat-label">CAGR</div><div class="stat-value">${document.getElementById("acctCagrValue")?.textContent || "-"}</div></div>
+      `;
+    }
+  }
+  
+  if (!sourceChart) return;
+  
+  const modal = document.getElementById("chartFullscreenModal");
+  const titleEl = document.getElementById("chartFullscreenTitle");
+  const canvas = document.getElementById("chartFullscreenCanvas");
+  const statsEl = document.getElementById("chartFullscreenStats");
+  
+  titleEl.textContent = title;
+  statsEl.innerHTML = statsHtml;
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  
+  if (fullscreenChartInstance) {
+    fullscreenChartInstance.destroy();
+  }
+  
+  const ctx = canvas.getContext("2d");
+  
+  fullscreenChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: [...sourceChart.data.labels],
+      datasets: sourceChart.data.datasets.map(ds => ({
+        ...ds,
+        backgroundColor: ds.type === "line" ? "transparent" : ds.backgroundColor,
+        borderColor: ds.borderColor,
+        data: [...ds.data]
+      }))
+    },
+    plugins: [ChartDataLabels],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 30 } },
+      plugins: {
+        legend: { 
+          display: true, 
+          position: "bottom",
+          labels: { color: "#fff", font: { size: 14 } }
+        },
+        datalabels: {
+          display: true,
+          anchor: "end",
+          align: "top",
+          offset: 4,
+          font: { size: 12, weight: "600" },
+          color: "#fff",
+          formatter: (value) => {
+            if (value === 0 || value === null) return "";
+            if (Math.abs(value) >= 1000000) return "$" + (value / 1000000).toFixed(1) + "M";
+            if (Math.abs(value) >= 1000) return "$" + (value / 1000).toFixed(0) + "K";
+            return "$" + value.toFixed(0);
+          }
+        }
+      },
+      scales: {
+        x: { 
+          grid: { color: "rgba(255,255,255,0.1)" },
+          ticks: { color: "#fff", font: { size: 14 } }
+        },
+        y: {
+          grid: { color: "rgba(255,255,255,0.1)" },
+          ticks: { 
+            color: "#fff",
+            font: { size: 12 },
+            callback: v => {
+              if (Math.abs(v) >= 1000000) return "$" + (v / 1000000).toFixed(1) + "M";
+              return "$" + (v / 1000).toFixed(0) + "K";
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 /* ------------------------------------------------------------
    USER SESSION MANAGEMENT
 ------------------------------------------------------------ */
@@ -283,6 +397,7 @@ document.addEventListener("DOMContentLoaded", function() {
   initConfigPanels();
   setupExportButtons();
   setupChartExpandButtons();
+  setupPageChartExpandButtons();
   updateDataAsOfDates();
   initAllSavedViewsHandlers();
 });

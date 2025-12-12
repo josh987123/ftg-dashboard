@@ -3475,8 +3475,10 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 #overview > .ai-analysis-panel,
 #revenue > .config-panel,
 #revenue > .ai-analysis-panel,
+#revenue > .chart-with-tiles,
 #accounts > .config-panel,
 #accounts > .ai-analysis-panel,
+#accounts > .chart-with-tiles,
 #incomeStatement > .config-panel,
 #incomeStatement > .ai-analysis-panel,
 #balanceSheet > .config-panel,
@@ -3485,6 +3487,35 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 #cashFlows > .ai-analysis-panel {
   width: 70%;
   box-sizing: border-box;
+}
+
+/* Chart header with expand button */
+.chart-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.chart-header-row .chart-title {
+  margin-bottom: 0;
+}
+
+.page-chart-expand-btn {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 16px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.page-chart-expand-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #374151;
 }
 
 /* Overview config: Time Period, Visuals, Show Metrics all in one row */
@@ -3505,8 +3536,10 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   #overview > .ai-analysis-panel,
   #revenue > .config-panel,
   #revenue > .ai-analysis-panel,
+  #revenue > .chart-with-tiles,
   #accounts > .config-panel,
   #accounts > .ai-analysis-panel,
+  #accounts > .chart-with-tiles,
   #incomeStatement > .config-panel,
   #incomeStatement > .ai-analysis-panel,
   #balanceSheet > .config-panel,
