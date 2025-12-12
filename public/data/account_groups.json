@@ -1415,6 +1415,17 @@
         "type": "spacer"
       },
       {
+        "label": "FREE CASH FLOW",
+        "level": 0,
+        "type": "subtotal",
+        "formula": "Cash from Operating Activities + Fixed Asset Purchases",
+        "highlight": "netChange"
+      },
+      {
+        "label": "spacer",
+        "type": "spacer"
+      },
+      {
         "label": "FINANCING ACTIVITIES",
         "level": 0,
         "type": "header"
