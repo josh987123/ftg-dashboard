@@ -6510,18 +6510,6 @@ function initBalanceSheetControls() {
     };
   }
   
-  const configHeader = document.querySelector('#balanceSheet .config-header');
-  if (configHeader) {
-    configHeader.onclick = () => {
-      const target = document.getElementById("bsConfigBody");
-      const toggle = configHeader.querySelector('.config-toggle');
-      if (target) {
-        target.classList.toggle("collapsed");
-        if (toggle) toggle.textContent = target.classList.contains("collapsed") ? "▶" : "▼";
-      }
-    };
-  }
-  
   updateBSControlVisibility();
 }
 
