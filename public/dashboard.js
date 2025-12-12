@@ -7587,16 +7587,14 @@ function buildCashFlowRows(periodMonths, groups) {
     }
     
     if (group.specialCalc === "net_income") {
-      let netIncome = 0;
-      const incomeAccounts = Object.keys(cfGLLookup).map(Number).filter(n => n >= 4000);
-      incomeAccounts.forEach(acctNum => {
-        const activity = getCFPeriodActivity(acctNum, periodMonths);
-        if ((acctNum >= 4000 && acctNum < 5000) || (acctNum >= 8000 && acctNum < 9000)) {
-          netIncome += activity;
-        } else {
-          netIncome -= activity;
-        }
+      // Net Income = negative sum of all accounts 4000 and higher for the selected period
+      let sumActivity = 0;
+      const incomeExpenseAccounts = Object.keys(cfGLLookup).map(Number).filter(n => n >= 4000);
+      incomeExpenseAccounts.forEach(acctNum => {
+        sumActivity += getCFPeriodActivity(acctNum, periodMonths);
       });
+      // Negate because revenues are credits (negative) and expenses are debits (positive)
+      const netIncome = -sumActivity;
       row.value = netIncome;
       calculatedValues[group.label] = netIncome;
     } else if (group.specialCalc === "beginning_balance") {
