@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
-  <link rel="stylesheet" href="style.css?v=20251212p" />
+  <link rel="stylesheet" href="style.css?v=20251212q" />
 
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -145,19 +145,6 @@
     </div>
   </header>
 
-  <!-- Export Dropdown - Outside header for mobile -->
-  <div class="export-bar">
-    <div class="export-dropdown">
-      <button id="exportDropdownBtn" class="export-dropdown-btn" title="Export options">⬇️</button>
-      <div id="exportDropdownMenu" class="dropdown-menu hidden">
-        <button id="exportPrintBtn" class="dropdown-item">🖨️ Print</button>
-        <button id="exportPdfBtn" class="dropdown-item">📄 PDF</button>
-        <button id="exportCsvBtn" class="dropdown-item">📊 CSV</button>
-        <button id="exportEmailBtn" class="dropdown-item">📧 Email</button>
-      </div>
-    </div>
-  </div>
-
   <div class="layout">
 
     <!-- SIDEBAR -->
@@ -188,6 +175,18 @@
 
     <!-- MAIN CONTENT -->
     <main class="content">
+      <!-- Export Dropdown - positioned top right of content -->
+      <div class="content-export-dropdown">
+        <div class="export-dropdown">
+          <button id="exportDropdownBtn" class="export-dropdown-btn" title="Export options">⬇️</button>
+          <div id="exportDropdownMenu" class="dropdown-menu hidden">
+            <button id="exportPrintBtn" class="dropdown-item">🖨️ Print</button>
+            <button id="exportPdfBtn" class="dropdown-item">📄 PDF</button>
+            <button id="exportCsvBtn" class="dropdown-item">📊 CSV</button>
+            <button id="exportEmailBtn" class="dropdown-item">📧 Email</button>
+          </div>
+        </div>
+      </div>
 
       <!-- OVERVIEW SECTION -->
       <section id="overview" class="dashboard-section visible">
