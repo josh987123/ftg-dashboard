@@ -1396,10 +1396,18 @@
         "parent": "Changes in Working Capital"
       },
       {
+        "label": "Increase/(Decrease) in Credit Card Debt",
+        "level": 2,
+        "type": "detail",
+        "accounts": [2015, 2016, 2017, 2018],
+        "changeCalc": "decrease_is_positive",
+        "parent": "Changes in Working Capital"
+      },
+      {
         "label": "Changes in Working Capital",
         "level": 1,
         "type": "subtotal",
-        "formula": "(Increase)/Decrease in Accounts Receivable + (Increase)/Decrease in Underbillings + (Increase)/Decrease in Employee Advances + Increase/(Decrease) in Accounts Payable + Increase/(Decrease) in Overbillings + Increase/(Decrease) in Accrued Expenses",
+        "formula": "(Increase)/Decrease in Accounts Receivable + (Increase)/Decrease in Underbillings + (Increase)/Decrease in Employee Advances + Increase/(Decrease) in Accounts Payable + Increase/(Decrease) in Overbillings + Increase/(Decrease) in Accrued Expenses + Increase/(Decrease) in Credit Card Debt",
         "expandable": true,
         "parent": "Cash from Operating Activities"
       },
@@ -1494,14 +1502,6 @@
         "type": "header"
       },
       {
-        "label": "Changes in Credit Card Debt",
-        "level": 2,
-        "type": "detail",
-        "accounts": [2015, 2016, 2017, 2018],
-        "changeCalc": "increase_is_positive",
-        "parent": "Changes in Debt"
-      },
-      {
         "label": "Changes in Bridge Bank Loan",
         "level": 2,
         "type": "detail",
@@ -1529,7 +1529,7 @@
         "label": "Changes in Debt",
         "level": 1,
         "type": "subtotal",
-        "formula": "Changes in Credit Card Debt + Changes in Bridge Bank Loan + Changes in Vehicle Notes + Changes in Other Notes",
+        "formula": "Changes in Bridge Bank Loan + Changes in Vehicle Notes + Changes in Other Notes",
         "expandable": true,
         "parent": "Cash from Financing Activities"
       },
