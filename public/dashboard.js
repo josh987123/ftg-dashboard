@@ -7506,6 +7506,18 @@ function buildCashFlowRows(periodMonths, groups) {
       }
       row.value = balance;
       calculatedValues[group.label] = balance;
+    } else if (group.label === "Depreciation") {
+      // Depreciation = change in fixed asset accounts (1305, 1315, 1325, 1405)
+      const depreciationAccounts = [1305, 1315, 1325, 1405];
+      row.value = getCFBalanceChange(depreciationAccounts, periodMonths, "increase_is_positive");
+      if (shouldFlipSign) row.value = -row.value;
+      calculatedValues[group.label] = row.value;
+    } else if (group.label === "Amortization") {
+      // Amortization = change in intangible asset account (1805)
+      const amortizationAccounts = [1805];
+      row.value = getCFBalanceChange(amortizationAccounts, periodMonths, "increase_is_positive");
+      if (shouldFlipSign) row.value = -row.value;
+      calculatedValues[group.label] = row.value;
     } else if (group.accounts) {
       if (group.changeCalc) {
         row.value = getCFBalanceChange(group.accounts, periodMonths, group.changeCalc);
