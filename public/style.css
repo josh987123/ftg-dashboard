@@ -3406,7 +3406,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   }
 }
 
-/* Equal width for config-panel and ai-analysis-panel pairs */
+/* Config and AI panels - 50% screen width */
 #overview > .config-panel,
 #overview > .ai-analysis-panel,
 #revenue > .config-panel,
@@ -3419,38 +3419,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 #balanceSheet > .ai-analysis-panel,
 #cashFlows > .config-panel,
 #cashFlows > .ai-analysis-panel {
-  display: inline-grid;
-  width: auto;
-}
-
-#overview > .config-panel,
-#overview > .ai-analysis-panel {
-  grid-column: 1;
-}
-
-#revenue > .config-panel,
-#revenue > .ai-analysis-panel {
-  grid-column: 1;
-}
-
-#accounts > .config-panel,
-#accounts > .ai-analysis-panel {
-  grid-column: 1;
-}
-
-#incomeStatement > .config-panel,
-#incomeStatement > .ai-analysis-panel {
-  grid-column: 1;
-}
-
-#balanceSheet > .config-panel,
-#balanceSheet > .ai-analysis-panel {
-  grid-column: 1;
-}
-
-#cashFlows > .config-panel,
-#cashFlows > .ai-analysis-panel {
-  grid-column: 1;
+  width: 50%;
+  box-sizing: border-box;
 }
 
 /* Mobile overrides for equal-width panels */
