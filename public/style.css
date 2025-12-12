@@ -61,8 +61,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-bottom: 16px;
   overflow: hidden;
   display: block;
-  width: 100%;
-  box-sizing: border-box;
+  width: fit-content;
 }
 
 .config-header {
@@ -1491,8 +1490,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   display: block;
-  width: 100%;
-  box-sizing: border-box;
+  width: fit-content;
 }
 
 #incomeStatementTable {
@@ -1713,8 +1711,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-bottom: 20px;
   overflow: hidden;
   display: block;
-  width: 100%;
-  box-sizing: border-box;
+  width: fit-content;
 }
 
 .ai-analysis-header {
@@ -3406,4 +3403,51 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   .update-banner {
     animation: none;
   }
+}
+
+/* Equal width for config-panel and ai-analysis-panel pairs */
+#overview > .config-panel,
+#overview > .ai-analysis-panel,
+#revenue > .config-panel,
+#revenue > .ai-analysis-panel,
+#accounts > .config-panel,
+#accounts > .ai-analysis-panel,
+#incomeStatement > .config-panel,
+#incomeStatement > .ai-analysis-panel,
+#balanceSheet > .config-panel,
+#balanceSheet > .ai-analysis-panel,
+#cashFlows > .config-panel,
+#cashFlows > .ai-analysis-panel {
+  display: inline-grid;
+  width: auto;
+}
+
+#overview > .config-panel,
+#overview > .ai-analysis-panel {
+  grid-column: 1;
+}
+
+#revenue > .config-panel,
+#revenue > .ai-analysis-panel {
+  grid-column: 1;
+}
+
+#accounts > .config-panel,
+#accounts > .ai-analysis-panel {
+  grid-column: 1;
+}
+
+#incomeStatement > .config-panel,
+#incomeStatement > .ai-analysis-panel {
+  grid-column: 1;
+}
+
+#balanceSheet > .config-panel,
+#balanceSheet > .ai-analysis-panel {
+  grid-column: 1;
+}
+
+#cashFlows > .config-panel,
+#cashFlows > .ai-analysis-panel {
+  grid-column: 1;
 }
