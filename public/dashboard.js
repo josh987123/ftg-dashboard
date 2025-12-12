@@ -306,14 +306,14 @@ async function performOverviewAiAnalysis() {
   panel.classList.remove('collapsed');
   content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing overview...</div>';
   try {
-    const chartData = extractOverviewChartData();
+    const statementData = extractOverviewChartData();
     const hostname = window.location.hostname;
     const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
     const apiUrl = isReplit ? '/api/analyze-overview' : '/.netlify/functions/analyze-overview';
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({chartData, periodInfo: 'Executive Overview'})
+      body: JSON.stringify({statementData, periodInfo: 'Executive Overview'})
     });
     const result = await response.json();
     content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
@@ -346,14 +346,14 @@ async function performRevenueAiAnalysis() {
   panel.classList.remove('collapsed');
   content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing revenue...</div>';
   try {
-    const chartData = extractRevenueChartData();
+    const statementData = extractRevenueChartData();
     const hostname = window.location.hostname;
     const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
     const apiUrl = isReplit ? '/api/analyze-revenue' : '/.netlify/functions/analyze-revenue';
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({chartData, periodInfo: 'Revenue Analysis'})
+      body: JSON.stringify({statementData, periodInfo: 'Revenue Analysis'})
     });
     const result = await response.json();
     content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
@@ -382,14 +382,14 @@ async function performAccountAiAnalysis() {
   panel.classList.remove('collapsed');
   content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing account...</div>';
   try {
-    const chartData = extractAccountChartData();
+    const statementData = extractAccountChartData();
     const hostname = window.location.hostname;
     const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
     const apiUrl = isReplit ? '/api/analyze-account' : '/.netlify/functions/analyze-account';
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({chartData, periodInfo: 'Account Detail'})
+      body: JSON.stringify({statementData, periodInfo: 'Account Detail'})
     });
     const result = await response.json();
     content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
@@ -419,14 +419,14 @@ async function performBalanceSheetAiAnalysis() {
   content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing balance sheet...</div>';
   try {
     const table = document.getElementById('balanceSheetTable');
-    const chartData = table ? table.innerHTML : '{}';
+    const statementData = table ? table.innerHTML : '{}';
     const hostname = window.location.hostname;
     const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
     const apiUrl = isReplit ? '/api/analyze-balance-sheet' : '/.netlify/functions/analyze-balance-sheet';
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({chartData, periodInfo: 'Balance Sheet'})
+      body: JSON.stringify({statementData, periodInfo: 'Balance Sheet'})
     });
     const result = await response.json();
     content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;

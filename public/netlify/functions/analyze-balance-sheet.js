@@ -1,6 +1,7 @@
 const https = require('https');
 
 exports.handler = async function(event, context) {
+  // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -55,8 +56,7 @@ STRICT RULES:
 - Return ONLY the JSON object, no other text before or after
 - Each array must have exactly 3-4 items
 - Each item is one concise sentence with specific dollar amounts
-- Round all dollar amounts to whole numbers - use $3.8M not $3.84M, use $150K not $150,234
-- Focus on asset composition, debt levels, working capital, and financial position strength
+- Round all dollar amounts to whole numbers (no decimals) - use $3.8M not $3.84M
 - DO NOT add any other fields or sections`;
 
     const userPrompt = `Analyze this Balance Sheet for FTG Builders:
@@ -65,6 +65,7 @@ Period: ${periodInfo}
 
 ${statementData}`;
 
+    // Using Claude Sonnet 4 - the latest model
     const requestBody = JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
@@ -116,8 +117,10 @@ ${statementData}`;
     const rawContent = response.body.content[0].text;
     let analysis;
     
+    // Parse the JSON response
     try {
       const result = JSON.parse(rawContent);
+      // Convert JSON to markdown format
       analysis = "## Key Observations\n";
       for (const item of (result.key_observations || []).slice(0, 4)) {
         analysis += `- ${item}\n`;
@@ -134,8 +137,15 @@ ${statementData}`;
       for (const item of (result.recommendations || []).slice(0, 4)) {
         analysis += `- ${item}\n`;
       }
-    } catch (parseError) {
-      analysis = rawContent;
+    } catch (parseErr) {
+      return {
+        statusCode: 500,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({ error: 'Failed to parse AI response' })
+      };
     }
 
     return {
@@ -146,9 +156,7 @@ ${statementData}`;
       },
       body: JSON.stringify({ success: true, analysis })
     };
-
   } catch (error) {
-    console.error('Error:', error);
     return {
       statusCode: 500,
       headers: { 

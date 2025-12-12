@@ -1,6 +1,7 @@
 const https = require('https');
 
 exports.handler = async function(event, context) {
+  // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -22,13 +23,13 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    const { overviewData, periodInfo } = JSON.parse(event.body);
+    const { statementData, periodInfo } = JSON.parse(event.body);
 
-    if (!overviewData) {
+    if (!statementData) {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Missing overview data' })
+        body: JSON.stringify({ error: 'Missing statement data' })
       };
     }
 
@@ -41,7 +42,7 @@ exports.handler = async function(event, context) {
       };
     }
 
-    const systemPrompt = `You are a CFO analyzing a construction company's Executive Overview metrics.
+    const systemPrompt = `You are a CFO analyzing a construction company's Executive Overview.
 
 You must respond with ONLY a valid JSON object containing exactly these 4 arrays:
 {
@@ -55,16 +56,16 @@ STRICT RULES:
 - Return ONLY the JSON object, no other text before or after
 - Each array must have exactly 3-4 items
 - Each item is one concise sentence with specific dollar amounts
-- Round all dollar amounts to whole numbers - use $3.8M not $3.84M, use $150K not $150,234
-- Analyze profitability, cash position, and receivables from a holistic business perspective
+- Round all dollar amounts to whole numbers (no decimals) - use $3.8M not $3.84M
 - DO NOT add any other fields or sections`;
 
     const userPrompt = `Analyze this Executive Overview for FTG Builders:
 
 Period: ${periodInfo}
 
-${overviewData}`;
+${statementData}`;
 
+    // Using Claude Sonnet 4 - the latest model
     const requestBody = JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
@@ -116,8 +117,10 @@ ${overviewData}`;
     const rawContent = response.body.content[0].text;
     let analysis;
     
+    // Parse the JSON response
     try {
       const result = JSON.parse(rawContent);
+      // Convert JSON to markdown format
       analysis = "## Key Observations\n";
       for (const item of (result.key_observations || []).slice(0, 4)) {
         analysis += `- ${item}\n`;
@@ -134,8 +137,15 @@ ${overviewData}`;
       for (const item of (result.recommendations || []).slice(0, 4)) {
         analysis += `- ${item}\n`;
       }
-    } catch (parseError) {
-      analysis = rawContent;
+    } catch (parseErr) {
+      return {
+        statusCode: 500,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({ error: 'Failed to parse AI response' })
+      };
     }
 
     return {
@@ -146,9 +156,7 @@ ${overviewData}`;
       },
       body: JSON.stringify({ success: true, analysis })
     };
-
   } catch (error) {
-    console.error('Error:', error);
     return {
       statusCode: 500,
       headers: { 
