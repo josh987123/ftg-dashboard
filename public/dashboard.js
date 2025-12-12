@@ -7484,6 +7484,9 @@ function buildCashFlowRows(periodMonths, groups) {
       return;
     }
     
+    // Check if this row should have its sign flipped (all activity rows except final reconciliation)
+    const shouldFlipSign = !["NET CHANGE IN CASH", "Beginning Cash Balance", "Ending Cash Balance"].includes(group.label);
+    
     if (group.specialCalc === "net_income") {
       let netIncome = 0;
       const incomeAccounts = Object.keys(cfGLLookup).map(Number).filter(n => n >= 4000);
@@ -7495,8 +7498,8 @@ function buildCashFlowRows(periodMonths, groups) {
           netIncome -= activity;
         }
       });
-      row.value = netIncome;
-      calculatedValues[group.label] = netIncome;
+      row.value = shouldFlipSign ? -netIncome : netIncome;
+      calculatedValues[group.label] = row.value;
     } else if (group.specialCalc === "beginning_balance") {
       let balance = 0;
       if (priorMonth && group.accounts) {
@@ -7528,6 +7531,7 @@ function buildCashFlowRows(periodMonths, groups) {
         });
         row.value = total;
       }
+      if (shouldFlipSign) row.value = -row.value;
       calculatedValues[group.label] = row.value;
     } else if (group.formula) {
       const formula = group.formula;
@@ -7546,8 +7550,8 @@ function buildCashFlowRows(periodMonths, groups) {
           }
         }
       });
-      row.value = value;
-      calculatedValues[group.label] = value;
+      row.value = shouldFlipSign ? -value : value;
+      calculatedValues[group.label] = row.value;
     }
     
     rows.push(row);
