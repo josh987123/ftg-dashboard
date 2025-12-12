@@ -6768,12 +6768,8 @@ function renderBalanceSheet() {
     const isDetailRow = row.type === "detail";
     const isSubtotal = row.type === "subtotal";
     
-    let isVisible;
-    if (detailLevel === "account") {
-      isVisible = true;
-    } else {
-      isVisible = isBSRowVisibleByParent(row, rows);
-    }
+    // Always apply parent visibility check so expand/collapse works
+    const isVisible = isBSRowVisibleByParent(row, rows);
     const hiddenClass = isVisible ? "" : "is-row-hidden";
     const typeClass = `is-row-${row.type}`;
     const indentClass = `is-indent-${row.level}`;
