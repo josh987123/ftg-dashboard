@@ -1489,6 +1489,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   display: block;
+  min-width: 50%;
   width: fit-content;
 }
 
