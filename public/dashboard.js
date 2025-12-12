@@ -1655,6 +1655,8 @@ function updateOverviewCharts() {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     for (let m = 1; m <= 12; m++) {
       const key = `${year}-${String(m).padStart(2, "0")}`;
+      // Skip current month if exclude is checked
+      if (excludeCurrent && key === currentMonthKey) continue;
       labels.push(monthNames[m - 1]);
       periods.push([key]);
       if (compare || needPriorForYoY) {
@@ -1663,18 +1665,22 @@ function updateOverviewCharts() {
     }
   } else if (viewType === "quarterly") {
     for (let q = 1; q <= 4; q++) {
-      labels.push(`Q${q}`);
       const qMonths = [];
       const priorQMonths = [];
       for (let m = (q - 1) * 3 + 1; m <= q * 3; m++) {
         qMonths.push(`${year}-${String(m).padStart(2, "0")}`);
         if (compare || needPriorForYoY) priorQMonths.push(`${year - 1}-${String(m).padStart(2, "0")}`);
       }
+      // Skip current quarter if exclude is checked and it contains current month
+      if (excludeCurrent && qMonths.includes(currentMonthKey)) continue;
+      labels.push(`Q${q}`);
       periods.push(qMonths);
       if (compare || needPriorForYoY) priorPeriods.push(priorQMonths);
     }
   } else {
     for (let y = rangeStart; y <= rangeEnd; y++) {
+      // Skip current year if exclude is checked
+      if (excludeCurrent && y === currentYear) continue;
       labels.push(String(y));
       const yearMonths = [];
       const priorYearMonths = [];
@@ -1706,11 +1712,7 @@ function updateOverviewCharts() {
   const payablesAccounts = [2000, 2005, 2010, 2015, 2016, 2017, 2018];
   
   periods.forEach((periodMonths, idx) => {
-    let filteredPeriodMonths = periodMonths;
-    if (excludeCurrent) {
-      filteredPeriodMonths = periodMonths.filter(m => m !== currentMonthKey);
-    }
-    const rows = buildIncomeStatementRows(filteredPeriodMonths, groups);
+    const rows = buildIncomeStatementRows(periodMonths, groups);
     const revenueRow = rows.find(r => r.label === "Revenue");
     const grossProfitRow = rows.find(r => r.label === "Gross Profit");
     const opexRow = rows.find(r => r.label === "Operating Expenses");
@@ -1728,9 +1730,7 @@ function updateOverviewCharts() {
     metrics.opProfit.values.push(opInc);
     metrics.opMargin.values.push(rev ? (opInc / rev) * 100 : 0);
     
-    const endOfPeriod = filteredPeriodMonths.length > 0 
-      ? filteredPeriodMonths[filteredPeriodMonths.length - 1] 
-      : periodMonths[periodMonths.length - 1];
+    const endOfPeriod = periodMonths[periodMonths.length - 1];
     
     if (typeof getCumulativeBalance === 'function' && typeof bsGLLookup !== 'undefined') {
       const cashBal = getCumulativeBalance(cashAccounts, endOfPeriod, true);
@@ -1784,23 +1784,33 @@ function updateOverviewCharts() {
   
   // Track which indices contain the current month (for coloring)
   const currentMonthIndices = [];
-  if (!excludeCurrent && viewType === "monthly") {
-    for (let m = 1; m <= 12; m++) {
-      const key = `${year}-${String(m).padStart(2, "0")}`;
-      if (key === currentMonthKey) {
-        currentMonthIndices.push(m - 1);
+  if (!excludeCurrent) {
+    if (viewType === "monthly") {
+      for (let m = 1; m <= 12; m++) {
+        const key = `${year}-${String(m).padStart(2, "0")}`;
+        if (key === currentMonthKey) {
+          // Count only non-excluded months before this one
+          let idx = 0;
+          for (let i = 1; i < m; i++) {
+            idx++;
+          }
+          currentMonthIndices.push(idx);
+        }
       }
-    }
-  } else if (!excludeCurrent && viewType === "quarterly") {
-    const currentMonth = currentMonthKey.split("-")[1];
-    const currentQuarter = Math.ceil(parseInt(currentMonth) / 3) - 1;
-    if (parseInt(currentMonthKey.split("-")[0]) === year) {
-      currentMonthIndices.push(currentQuarter);
-    }
-  } else if (!excludeCurrent && viewType === "annual") {
-    for (let y = rangeStart; y <= rangeEnd; y++) {
-      if (y === currentYear) {
-        currentMonthIndices.push(y - rangeStart);
+    } else if (viewType === "quarterly") {
+      const currentMonth = currentMonthKey.split("-")[1];
+      const currentQuarter = Math.ceil(parseInt(currentMonth) / 3) - 1;
+      if (parseInt(currentMonthKey.split("-")[0]) === year) {
+        currentMonthIndices.push(currentQuarter);
+      }
+    } else if (viewType === "annual") {
+      let yearIdx = 0;
+      for (let y = rangeStart; y <= rangeEnd; y++) {
+        if (y === currentYear) {
+          currentMonthIndices.push(yearIdx);
+          break;
+        }
+        yearIdx++;
       }
     }
   }
