@@ -7612,24 +7612,30 @@ function buildCashFlowRows(periodMonths, groups) {
       }
       row.value = balance;
       calculatedValues[group.label] = balance;
-    } else if (group.accounts) {
+    } else if (group.accounts || group.accounts_range) {
+      let accountList = group.accounts || [];
+      if (group.accounts_range) {
+        const [start, end] = group.accounts_range;
+        const allAccounts = Object.keys(cfGLLookup).map(Number);
+        accountList = allAccounts.filter(a => a >= start && a <= end);
+      }
       if (group.changeCalc) {
-        row.value = getCFBalanceChange(group.accounts, periodMonths, group.changeCalc);
+        row.value = getCFBalanceChange(accountList, periodMonths, group.changeCalc);
       } else if (group.addBack) {
         let total = 0;
-        group.accounts.forEach(acctNum => {
+        accountList.forEach(acctNum => {
           total += getCFPeriodActivity(acctNum, periodMonths);
         });
         row.value = Math.abs(total);
       } else if (group.negate) {
         let total = 0;
-        group.accounts.forEach(acctNum => {
+        accountList.forEach(acctNum => {
           total += getCFPeriodActivity(acctNum, periodMonths);
         });
         row.value = -total;
       } else {
         let total = 0;
-        group.accounts.forEach(acctNum => {
+        accountList.forEach(acctNum => {
           total += getCFPeriodActivity(acctNum, periodMonths);
         });
         row.value = total;
