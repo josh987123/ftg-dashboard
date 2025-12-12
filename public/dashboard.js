@@ -134,6 +134,9 @@ function initAuth() {
   const loginScreen = document.getElementById("loginScreen");
   const logoutBtn = document.getElementById("logoutBtn");
   const currentUserEl = document.getElementById("currentUser");
+  const userDropdownBtn = document.getElementById("userDropdownBtn");
+  const userDropdownMenu = document.getElementById("userDropdownMenu");
+  const changePasswordBtn = document.getElementById("changePasswordBtn");
   
   const isAuthenticated = localStorage.getItem("ftg_authenticated");
   const currentUser = localStorage.getItem("ftg_current_user");
@@ -146,14 +149,113 @@ function initAuth() {
     }
   }
   
+  // User dropdown toggle
+  if (userDropdownBtn && userDropdownMenu) {
+    userDropdownBtn.onclick = function(e) {
+      e.stopPropagation();
+      userDropdownMenu.classList.toggle("hidden");
+    };
+    
+    document.addEventListener("click", function(e) {
+      if (!userDropdownBtn.contains(e.target) && !userDropdownMenu.contains(e.target)) {
+        userDropdownMenu.classList.add("hidden");
+      }
+    });
+  }
+  
   if (logoutBtn) {
     logoutBtn.onclick = function() {
       localStorage.removeItem("ftg_authenticated");
       localStorage.removeItem("ftg_current_user");
       if (currentUserEl) currentUserEl.textContent = "";
+      if (userDropdownMenu) userDropdownMenu.classList.add("hidden");
       loginScreen.classList.remove("hidden");
     };
   }
+  
+  // Change password functionality
+  if (changePasswordBtn) {
+    changePasswordBtn.onclick = function() {
+      if (userDropdownMenu) userDropdownMenu.classList.add("hidden");
+      showChangePasswordModal();
+    };
+  }
+}
+
+function showChangePasswordModal() {
+  // Create modal if it doesn't exist
+  let modal = document.getElementById("changePasswordModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "changePasswordModal";
+    modal.className = "modal-overlay";
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Change Password</h3>
+          <button class="modal-close" id="changePasswordClose">&times;</button>
+        </div>
+        <div class="modal-body">
+          <label>Current Password:</label>
+          <input type="password" id="currentPasswordInput" placeholder="Enter current password">
+          <label>New Password:</label>
+          <input type="password" id="newPasswordInput" placeholder="Enter new password">
+          <label>Confirm New Password:</label>
+          <input type="password" id="confirmPasswordInput" placeholder="Confirm new password">
+          <div id="changePasswordStatus" class="email-status"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="changePasswordCancelBtn">Cancel</button>
+          <button class="btn-primary" id="changePasswordSaveBtn">Save Password</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Event handlers
+    document.getElementById("changePasswordClose").onclick = () => modal.classList.add("hidden");
+    document.getElementById("changePasswordCancelBtn").onclick = () => modal.classList.add("hidden");
+    document.getElementById("changePasswordSaveBtn").onclick = function() {
+      const current = document.getElementById("currentPasswordInput").value;
+      const newPass = document.getElementById("newPasswordInput").value;
+      const confirm = document.getElementById("confirmPasswordInput").value;
+      const status = document.getElementById("changePasswordStatus");
+      
+      if (current !== "Ftgb2025$") {
+        status.textContent = "Current password is incorrect.";
+        status.className = "email-status error";
+        return;
+      }
+      
+      if (newPass.length < 6) {
+        status.textContent = "New password must be at least 6 characters.";
+        status.className = "email-status error";
+        return;
+      }
+      
+      if (newPass !== confirm) {
+        status.textContent = "New passwords do not match.";
+        status.className = "email-status error";
+        return;
+      }
+      
+      // Note: In a real app, this would call a backend API
+      status.textContent = "Password change is not available in demo mode.";
+      status.className = "email-status error";
+    };
+    
+    modal.onclick = function(e) {
+      if (e.target === modal) modal.classList.add("hidden");
+    };
+  }
+  
+  // Reset form and show
+  document.getElementById("currentPasswordInput").value = "";
+  document.getElementById("newPasswordInput").value = "";
+  document.getElementById("confirmPasswordInput").value = "";
+  document.getElementById("changePasswordStatus").textContent = "";
+  document.getElementById("changePasswordStatus").className = "email-status";
+  modal.classList.remove("hidden");
 }
 
 document.addEventListener("DOMContentLoaded", function() {

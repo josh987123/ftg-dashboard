@@ -98,22 +98,32 @@
     </div>
 
     <div class="header-right">
-      <span id="currentUser" class="user-label"></span>
-      
-      <!-- Export Dropdown -->
-      <div class="export-dropdown">
-        <button id="exportDropdownBtn" class="export-dropdown-btn" title="Export options">⬇️</button>
-        <div id="exportDropdownMenu" class="dropdown-menu hidden">
-          <button id="exportPrintBtn" class="dropdown-item">🖨️ Print</button>
-          <button id="exportPdfBtn" class="dropdown-item">📄 PDF</button>
-          <button id="exportCsvBtn" class="dropdown-item">📊 CSV</button>
-          <button id="exportEmailBtn" class="dropdown-item">📧 Email</button>
+      <!-- User Menu Dropdown -->
+      <div class="user-dropdown">
+        <button id="userDropdownBtn" class="user-dropdown-btn">
+          <span id="currentUser" class="user-label"></span>
+          <span class="user-dropdown-arrow">▼</span>
+        </button>
+        <div id="userDropdownMenu" class="dropdown-menu hidden">
+          <button id="changePasswordBtn" class="dropdown-item">🔑 Change Password</button>
+          <button id="logoutBtn" class="dropdown-item">🚪 Logout</button>
         </div>
       </div>
-      
-      <button id="logoutBtn" class="logout-btn">Logout</button>
     </div>
   </header>
+
+  <!-- Export Dropdown - Outside header for mobile -->
+  <div class="export-bar">
+    <div class="export-dropdown">
+      <button id="exportDropdownBtn" class="export-dropdown-btn" title="Export options">⬇️</button>
+      <div id="exportDropdownMenu" class="dropdown-menu hidden">
+        <button id="exportPrintBtn" class="dropdown-item">🖨️ Print</button>
+        <button id="exportPdfBtn" class="dropdown-item">📄 PDF</button>
+        <button id="exportCsvBtn" class="dropdown-item">📊 CSV</button>
+        <button id="exportEmailBtn" class="dropdown-item">📧 Email</button>
+      </div>
+    </div>
+  </div>
 
   <div class="layout">
 

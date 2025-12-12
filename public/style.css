@@ -3640,3 +3640,103 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* User dropdown menu */
+.user-dropdown {
+  position: relative;
+}
+
+.user-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.user-dropdown-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.user-dropdown-arrow {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.user-dropdown .dropdown-menu {
+  right: 0;
+  min-width: 160px;
+}
+
+/* Export bar - positioned below header */
+.export-bar {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.export-bar .export-dropdown-btn {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.export-bar .export-dropdown-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.export-bar .dropdown-menu {
+  right: 0;
+}
+
+/* Mobile user label scaling */
+@media (max-width: 768px) {
+  .user-dropdown-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+    max-width: 120px;
+  }
+  
+  .user-dropdown-btn .user-label {
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .user-dropdown-arrow {
+    font-size: 8px;
+  }
+  
+  .export-bar {
+    padding: 6px 16px;
+  }
+}
+
+@media (max-width: 500px) {
+  .user-dropdown-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+    max-width: 100px;
+  }
+  
+  .user-dropdown-btn .user-label {
+    max-width: 55px;
+  }
+}
