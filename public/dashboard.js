@@ -1185,7 +1185,12 @@ const PageViewConfigs = {
         if (radio) radio.checked = true;
       }
       if (cfg.detailLevel) {
-        const radio = document.querySelector(`input[name="cfDetailLevel"][value="${cfg.detailLevel}"]`);
+        // Migrate old "medium" or "account" values to "detailed"
+        let detailValue = cfg.detailLevel;
+        if (detailValue === "medium" || detailValue === "account") {
+          detailValue = "detailed";
+        }
+        const radio = document.querySelector(`input[name="cfDetailLevel"][value="${detailValue}"]`);
         if (radio) radio.checked = true;
       }
       if (cfg.showThousands !== undefined) {
@@ -7454,12 +7459,6 @@ function populateCFPeriodOptions() {
 }
 
 function applyCFDetailLevel(level) {
-  const mediumExpandRows = [
-    "cf-row-Cash_from_Operating_Activities",
-    "cf-row-Cash_from_Investing_Activities",
-    "cf-row-Cash_from_Financing_Activities"
-  ];
-  
   const allExpandableRows = [
     "cf-row-Cash_from_Operating_Activities",
     "cf-row-Adjustments_for_Non-Cash_Items",
@@ -7471,17 +7470,12 @@ function applyCFDetailLevel(level) {
   ];
   
   if (level === "summary") {
+    // Collapse all sections - only show subtotals
     allExpandableRows.forEach(rowId => {
       cfRowStates[rowId] = false;
     });
-  } else if (level === "medium") {
-    allExpandableRows.forEach(rowId => {
-      cfRowStates[rowId] = false;
-    });
-    mediumExpandRows.forEach(rowId => {
-      cfRowStates[rowId] = true;
-    });
-  } else if (level === "account") {
+  } else if (level === "detailed") {
+    // Expand all sections - show all components
     allExpandableRows.forEach(rowId => {
       cfRowStates[rowId] = true;
     });
@@ -7959,7 +7953,7 @@ function renderCashFlowStatement() {
     if (row.expandable) {
       const expanded = cfRowStates[row.id] === true;
       toggleHtml = `<span class="cf-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
-    } else if (row.parent && detailLevel !== "account") {
+    } else if (row.parent && detailLevel !== "detailed") {
       toggleHtml = `<span class="cf-toggle-placeholder"></span>`;
     }
     
@@ -8133,7 +8127,7 @@ function renderCashFlowMatrix() {
     if (row.expandable) {
       const expanded = cfRowStates[row.id] === true;
       toggleHtml = `<span class="cf-toggle" data-row="${row.id}">${expanded ? "▼" : "▶"}</span>`;
-    } else if (row.parent && detailLevel !== "account") {
+    } else if (row.parent && detailLevel !== "detailed") {
       toggleHtml = `<span class="cf-toggle-placeholder"></span>`;
     }
     

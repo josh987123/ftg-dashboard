@@ -102,7 +102,7 @@ Preferred communication style: Simple, everyday language.
   - Period types: Month, Quarter, Year, YTD, TTM
   - Comparison modes: None, Prior Period, Prior Year (with $ and % variance)
   - View modes: Single Period or Matrix (12 months, 4 quarters, multi-year range)
-  - Detail level selector: Summary/Medium/Account
+  - Detail level selector: Summary (collapsed sections showing only subtotals) / Detailed (expanded sections showing all components)
   - Expand/collapse hierarchy with disclosure icons
   - **Operating Activities** (expandable, green highlight):
     - Net Income (from Income Statement)
