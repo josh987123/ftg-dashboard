@@ -7488,15 +7488,12 @@ function buildCashFlowRows(periodMonths, groups) {
     const shouldFlipSign = !["NET CHANGE IN CASH", "Beginning Cash Balance", "Ending Cash Balance"].includes(group.label);
     
     if (group.specialCalc === "net_income") {
+      // Sum all accounts >= 4000 for the specified period (no accumulated values)
       let netIncome = 0;
-      const incomeAccounts = Object.keys(cfGLLookup).map(Number).filter(n => n >= 4000);
-      incomeAccounts.forEach(acctNum => {
+      const allAccounts = Object.keys(cfGLLookup).map(Number).filter(n => n >= 4000);
+      allAccounts.forEach(acctNum => {
         const activity = getCFPeriodActivity(acctNum, periodMonths);
-        if ((acctNum >= 4000 && acctNum < 5000) || (acctNum >= 8000 && acctNum < 9000)) {
-          netIncome += activity;
-        } else {
-          netIncome -= activity;
-        }
+        netIncome += activity;
       });
       row.value = shouldFlipSign ? -netIncome : netIncome;
       calculatedValues[group.label] = row.value;
