@@ -1738,6 +1738,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   justify-content: space-between;
   padding: 8px 14px;
   background: #e5e7eb;
+  border-bottom: 1px solid #d1d5db;
   cursor: pointer;
   user-select: none;
 }
@@ -3470,8 +3471,9 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   .ai-analysis-header {
     padding: 14px 16px;
     min-height: 48px;
-    background: #d1fae5;
+    background: #e5e7eb;
     border: none;
+    border-bottom: 1px solid #d1d5db;
   }
   
   .ai-run-btn {
