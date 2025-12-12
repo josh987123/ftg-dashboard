@@ -2301,9 +2301,17 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   
   /* Config panel mobile - match AI analysis panel styling */
   .config-panel {
-    margin: 0 0 12px 0;
+    margin: 0;
+    margin-bottom: 12px;
     border-radius: 10px;
     border: 1px solid #e5e7eb;
+  }
+  
+  /* Both panels same horizontal alignment on mobile */
+  .config-panel,
+  .ai-analysis-panel {
+    margin-left: 0;
+    margin-right: 0;
   }
   
   .config-body {
@@ -3469,8 +3477,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   }
   
   .ai-analysis-header {
-    padding: 14px 16px;
-    min-height: 48px;
+    padding: 10px 14px;
+    min-height: auto;
     background: #e5e7eb;
     border: none;
     border-bottom: 1px solid #d1d5db;
