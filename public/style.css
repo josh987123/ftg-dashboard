@@ -3406,15 +3406,17 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   }
 }
 
-/* Ensure config-panel, ai-analysis-panel, and tables stack vertically */
+/* Ensure config-panel and ai-analysis-panel stack vertically with line breaks */
 .config-panel,
-.ai-analysis-panel,
+.ai-analysis-panel {
+  display: block;
+  clear: both;
+}
+
+/* Financial statement tables stack below AI analysis */
 .is-table-box,
 .bs-table-box,
-.cf-table-box,
-.chart-with-tiles,
-.chart-box,
-.overview-tiles-grid {
+.cf-table-box {
   display: block;
   clear: both;
 }
