@@ -8615,6 +8615,11 @@ function setupCashReportsListeners() {
   
   showThousands.addEventListener("change", renderCashChart);
   stackBars.addEventListener("change", renderCashChart);
+  
+  const excludeSchwab = document.getElementById("cashExcludeSchwab");
+  if (excludeSchwab) {
+    excludeSchwab.addEventListener("change", renderCashChart);
+  }
 }
 
 function updateCashDataAsOf() {
@@ -8716,18 +8721,28 @@ function aggregateBalances(dailyBalances, viewType, year, yearStart, yearEnd) {
 }
 
 // Cash accounts from Balance Sheet (Cash & Cash Equivalents)
-const CASH_ACCOUNTS_BS = [1001, 1005, 1040, 1003, 1004, 1006, 1007, 1090];
+const CASH_ACCOUNTS_BS_ALL = [1001, 1005, 1040, 1003, 1004, 1006, 1007, 1090];
+const SCHWAB_ACCOUNT = 1004;
+
+function getCashAccountsForBalanceSheet() {
+  const excludeSchwab = document.getElementById("cashExcludeSchwab")?.checked ?? true;
+  if (excludeSchwab) {
+    return CASH_ACCOUNTS_BS_ALL.filter(acct => acct !== SCHWAB_ACCOUNT);
+  }
+  return CASH_ACCOUNTS_BS_ALL;
+}
 
 function getCashBalancesFromBalanceSheet(viewType, year, yearStart, yearEnd) {
   // Uses Balance Sheet data (bsGLLookup) for Monthly/Quarterly/Annual views
   const allMonths = getBSAvailableMonths();
   const result = {};
+  const cashAccounts = getCashAccountsForBalanceSheet();
   
   if (viewType === "monthly") {
     // Get balance at end of each month in selected year
     const yearMonths = allMonths.filter(m => m.startsWith(year.toString()));
     yearMonths.forEach(monthKey => {
-      const balance = getCumulativeBalance(CASH_ACCOUNTS_BS, monthKey, true);
+      const balance = getCumulativeBalance(cashAccounts, monthKey, true);
       result[monthKey] = { "Cash & Cash Equivalents": balance };
     });
   } else if (viewType === "quarterly") {
@@ -8736,7 +8751,7 @@ function getCashBalancesFromBalanceSheet(viewType, year, yearStart, yearEnd) {
       const endMonth = q * 3;
       const monthKey = `${year}-${String(endMonth).padStart(2, "0")}`;
       if (allMonths.includes(monthKey)) {
-        const balance = getCumulativeBalance(CASH_ACCOUNTS_BS, monthKey, true);
+        const balance = getCumulativeBalance(cashAccounts, monthKey, true);
         result[`${year}-Q${q}`] = { "Cash & Cash Equivalents": balance };
       }
     }
@@ -8745,14 +8760,14 @@ function getCashBalancesFromBalanceSheet(viewType, year, yearStart, yearEnd) {
     for (let y = parseInt(yearStart); y <= parseInt(yearEnd); y++) {
       const yearEndMonth = `${y}-12`;
       if (allMonths.includes(yearEndMonth)) {
-        const balance = getCumulativeBalance(CASH_ACCOUNTS_BS, yearEndMonth, true);
+        const balance = getCumulativeBalance(cashAccounts, yearEndMonth, true);
         result[y.toString()] = { "Cash & Cash Equivalents": balance };
       } else {
         // Find the latest available month for that year
         const yearMonths = allMonths.filter(m => m.startsWith(y.toString()));
         if (yearMonths.length > 0) {
           const latestMonth = yearMonths[yearMonths.length - 1];
-          const balance = getCumulativeBalance(CASH_ACCOUNTS_BS, latestMonth, true);
+          const balance = getCumulativeBalance(cashAccounts, latestMonth, true);
           result[y.toString()] = { "Cash & Cash Equivalents": balance };
         }
       }

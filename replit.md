@@ -134,7 +134,7 @@ Preferred communication style: Simple, everyday language.
     - Uses getCumulativeBalance() function (same as Balance Sheet)
     - Year selector for monthly/quarterly views (2015-2025)
     - Year range sliders for annual view
-  - Options: Show in Thousands, Stack Bars
+  - Options: Exclude Schwab (1004) - checked by default, Show in Thousands, Stack Bars
   - Bar chart visualization using Chart.js
   - Summary tiles: Current Total, Average, Highest, Lowest
 
