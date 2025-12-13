@@ -619,6 +619,7 @@ def api_get_cash_data():
                     date_str = row[0] if len(row) > 0 else ''
                     account = row[1] if len(row) > 1 else ''
                     amount_str = row[2] if len(row) > 2 else '0'
+                    description = row[3] if len(row) > 3 else ''
                     
                     amount = 0
                     try:
@@ -630,7 +631,8 @@ def api_get_cash_data():
                         transactions.append({
                             'date': date_str,
                             'account': account,
-                            'amount': amount
+                            'amount': amount,
+                            'description': description
                         })
         
         # Store in cache

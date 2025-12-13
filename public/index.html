@@ -1275,11 +1275,21 @@
           </div>
         </div>
 
-        <!-- Data Table -->
+        <!-- Data Tables with Tabs -->
         <div class="cash-history-section">
-          <h3>Daily Balance History</h3>
-          <div id="dailyBalanceTableContainer" class="daily-balance-table-container">
-            <div class="loading-spinner">Calculating daily balances...</div>
+          <div class="cash-tabs">
+            <button class="cash-tab active" data-tab="balances">Daily Balances</button>
+            <button class="cash-tab" data-tab="transactions">Transactions</button>
+          </div>
+          <div id="cashTabBalances" class="cash-tab-content active">
+            <div id="dailyBalanceTableContainer" class="daily-balance-table-container">
+              <div class="loading-spinner">Calculating daily balances...</div>
+            </div>
+          </div>
+          <div id="cashTabTransactions" class="cash-tab-content">
+            <div id="transactionTableContainer" class="transaction-table-container">
+              <div class="loading-spinner">Loading transactions...</div>
+            </div>
           </div>
         </div>
       </section>

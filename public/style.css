@@ -4281,3 +4281,142 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     font-size: 24px;
   }
 }
+
+/* Cash Tabs */
+.cash-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.cash-tab {
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s ease;
+}
+
+.cash-tab:hover {
+  color: #374151;
+  background: #f9fafb;
+}
+
+.cash-tab.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  background: transparent;
+}
+
+.cash-tab-content {
+  display: none;
+  padding-top: 16px;
+}
+
+.cash-tab-content.active {
+  display: block;
+}
+
+/* Transaction Table */
+.transaction-table-container {
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.transaction-table th {
+  position: sticky;
+  top: 0;
+  background: #1e3a5f;
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+
+.transaction-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+.transaction-table tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.transaction-table tr:hover {
+  background: #f3f4f6;
+}
+
+.transaction-table .txn-date {
+  white-space: nowrap;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.transaction-table .txn-account {
+  font-weight: 500;
+  color: #374151;
+  max-width: 200px;
+}
+
+.transaction-table .txn-description {
+  color: #6b7280;
+  max-width: 300px;
+}
+
+.transaction-table .txn-amount {
+  text-align: right;
+  font-family: 'SF Mono', 'Consolas', monospace;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.transaction-table .txn-amount.positive {
+  color: #059669;
+}
+
+.transaction-table .txn-amount.negative {
+  color: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .cash-tab {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  
+  .transaction-table {
+    font-size: 11px;
+  }
+  
+  .transaction-table th,
+  .transaction-table td {
+    padding: 6px 8px;
+  }
+  
+  .transaction-table .txn-account {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .transaction-table .txn-description {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

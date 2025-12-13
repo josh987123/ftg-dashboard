@@ -8628,6 +8628,27 @@ function setupCashEventListeners() {
   // Stack bars / Show total
   document.getElementById("cashStackBars")?.addEventListener("change", updateCashDisplay);
   document.getElementById("cashShowTotal")?.addEventListener("change", updateCashDisplay);
+  
+  // Tab switching
+  document.querySelectorAll(".cash-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      const tabName = tab.dataset.tab;
+      
+      // Update tab buttons
+      document.querySelectorAll(".cash-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      
+      // Update tab content
+      document.querySelectorAll(".cash-tab-content").forEach(c => c.classList.remove("active"));
+      const content = document.getElementById(tabName === "balances" ? "cashTabBalances" : "cashTabTransactions");
+      if (content) content.classList.add("active");
+      
+      // Render transaction table if switching to transactions tab
+      if (tabName === "transactions") {
+        renderCashTransactionTable();
+      }
+    });
+  });
 }
 
 function calculateDailyBalances(accounts, transactions) {
@@ -8990,6 +9011,90 @@ function renderCashDailyTable() {
   });
   
   html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
+
+function renderCashTransactionTable() {
+  const container = document.getElementById("transactionTableContainer");
+  if (!container) return;
+  
+  const daysRange = parseInt(document.getElementById("cashDaysRange")?.value || 30);
+  
+  // Filter transactions by selected accounts and date range
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysRange);
+  const cutoffStr = cutoffDate.toISOString().split('T')[0];
+  
+  const filteredTxns = cashData.transactions.filter(txn => {
+    // Check if account is selected
+    if (!cashSelectedAccounts.includes(txn.account)) return false;
+    
+    // Check if within date range
+    try {
+      const txnDate = new Date(txn.date);
+      const txnDateStr = txnDate.toISOString().split('T')[0];
+      return txnDateStr >= cutoffStr;
+    } catch (e) {
+      return false;
+    }
+  });
+  
+  // Sort by date descending (newest first)
+  filteredTxns.sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateB - dateA;
+  });
+  
+  if (filteredTxns.length === 0) {
+    container.innerHTML = '<div class="error-message" style="padding:20px;text-align:center;color:#6b7280;">No transactions found for selected accounts in this date range</div>';
+    return;
+  }
+  
+  let html = `
+    <table class="transaction-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Account</th>
+          <th>Description</th>
+          <th style="text-align:right;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  filteredTxns.forEach(txn => {
+    const dateObj = new Date(txn.date);
+    const displayDate = dateObj.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+    
+    const amountClass = txn.amount >= 0 ? 'positive' : 'negative';
+    const amountDisplay = formatCurrency(txn.amount);
+    
+    // Shorten account name for display
+    let shortAccount = txn.account;
+    const acctMatch = txn.account.match(/\((\d+)\)$/);
+    if (acctMatch && txn.account.length > 25) {
+      shortAccount = txn.account.substring(0, 18) + '..(' + acctMatch[1] + ')';
+    }
+    
+    html += `
+      <tr>
+        <td class="txn-date">${displayDate}</td>
+        <td class="txn-account" title="${txn.account}">${shortAccount}</td>
+        <td class="txn-description">${txn.description || '-'}</td>
+        <td class="txn-amount ${amountClass}">${amountDisplay}</td>
+      </tr>
+    `;
+  });
+  
+  html += `</tbody></table>`;
+  html += `<div style="padding:10px;text-align:center;color:#6b7280;font-size:12px;">${filteredTxns.length} transaction${filteredTxns.length !== 1 ? 's' : ''}</div>`;
+  
   container.innerHTML = html;
 }
 
