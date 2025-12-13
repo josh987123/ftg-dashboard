@@ -1053,20 +1053,20 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   }
   
   .metric-stats {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
   }
   
   .stat-box {
-    padding: 8px 6px;
+    padding: 6px 2px;
   }
   
   .stat-label {
-    font-size: 10px;
+    font-size: 8px;
   }
   
   .stat-value {
-    font-size: 14px;
+    font-size: 11px;
   }
 }
 
