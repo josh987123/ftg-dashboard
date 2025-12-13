@@ -4176,9 +4176,9 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 .cash-header-accounts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 16px;
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid rgba(255,255,255,0.2);
@@ -4186,20 +4186,36 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 
 .cash-header-account {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
 }
 
 .cash-header-account-name {
-  font-size: 11px;
-  opacity: 0.7;
-  text-transform: uppercase;
+  font-size: 10px;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 .cash-header-account-value {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
   font-family: 'SF Mono', 'Consolas', monospace;
+  white-space: nowrap;
+}
+
+@media (max-width: 500px) {
+  .cash-header-accounts {
+    grid-template-columns: 1fr;
+  }
+  
+  .cash-header-account-name {
+    max-width: 150px;
+  }
 }
 
 /* Cash Chart Section */
@@ -4291,16 +4307,20 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 .cash-tab {
-  padding: 12px 20px;
+  flex: 1;
+  padding: 14px 16px;
   background: transparent;
   border: none;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: #6b7280;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  border-bottom: 3px solid transparent;
   margin-bottom: -2px;
   transition: all 0.2s ease;
+  text-align: center;
+  min-width: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .cash-tab:hover {
@@ -4308,10 +4328,14 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   background: #f9fafb;
 }
 
+.cash-tab:active {
+  background: #e5e7eb;
+}
+
 .cash-tab.active {
   color: #2563eb;
   border-bottom-color: #2563eb;
-  background: transparent;
+  background: #f0f5ff;
 }
 
 .cash-tab-content {

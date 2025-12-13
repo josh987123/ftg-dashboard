@@ -8727,10 +8727,29 @@ function renderCashCurrentHeader() {
   if (selectedAccounts.length > 1) {
     accountsHtml = `<div class="cash-header-accounts">`;
     selectedAccounts.forEach(a => {
+      // Shorten account name: extract account number and abbreviate name
+      let shortName = a.name;
+      const acctMatch = a.name.match(/\((\d+)\)$/);
+      if (acctMatch) {
+        const acctNum = acctMatch[1];
+        const namePart = a.name.replace(/\s*\(\d+\)$/, '');
+        // Keep first 12 chars of name + account number
+        shortName = namePart.length > 12 ? namePart.substring(0, 12) + '..' : namePart;
+        shortName += ' (' + acctNum + ')';
+      }
+      
+      // Format balance more compactly for millions
+      let balanceDisplay = formatCurrency(a.balance);
+      if (Math.abs(a.balance) >= 1000000) {
+        balanceDisplay = '$' + (a.balance / 1000000).toFixed(2) + 'M';
+      } else if (Math.abs(a.balance) >= 1000) {
+        balanceDisplay = '$' + (a.balance / 1000).toFixed(1) + 'K';
+      }
+      
       accountsHtml += `
         <div class="cash-header-account">
-          <div class="cash-header-account-name">${a.name}</div>
-          <div class="cash-header-account-value">${formatCurrency(a.balance)}</div>
+          <div class="cash-header-account-name" title="${a.name}">${shortName}</div>
+          <div class="cash-header-account-value">${balanceDisplay}</div>
         </div>
       `;
     });
