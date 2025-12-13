@@ -856,12 +856,115 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   transform: translateY(0);
 }
 
+.metric-tile-title-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+}
+
 .metric-tile-title {
   font-size: 14px;
   font-weight: 600;
   color: #374151;
   text-align: center;
+  margin-bottom: 0;
+}
+
+.metric-tile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 12px;
+}
+
+.metric-info-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 50%;
+  transition: color 0.2s, background 0.2s;
+  line-height: 1;
+  display: none;
+}
+
+.metric-info-btn:hover {
+  color: #3b82f6;
+  background: #e0f2fe;
+}
+
+.metric-info-btn:active {
+  background: #bfdbfe;
+}
+
+@media (max-width: 768px) {
+  .metric-info-btn {
+    display: inline-block;
+  }
+}
+
+.metric-info-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #1f2937;
+  color: #fff;
+  padding: 16px 20px;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  z-index: 10000;
+  max-width: 300px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+  animation: popupFadeIn 0.2s ease-out;
+}
+
+.metric-info-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 9999;
+  animation: overlayFadeIn 0.2s ease-out;
+}
+
+@keyframes popupFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.metric-info-popup-close {
+  display: block;
+  margin: 12px auto 0;
+  padding: 8px 20px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.metric-info-popup-close:hover {
+  background: #2563eb;
 }
 
 .overview-metric-tile canvas {

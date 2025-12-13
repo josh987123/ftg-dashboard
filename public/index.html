@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
-  <link rel="stylesheet" href="style.css?v=20251213a" />
+  <link rel="stylesheet" href="style.css?v=20251213b" />
 
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -324,7 +324,10 @@
         <div class="overview-tiles-grid">
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title" title="Total income from sales and services before any deductions">Revenue</div>
+              <div class="metric-tile-title-wrapper">
+                <span class="metric-tile-title" title="Total income from sales and services before any deductions">Revenue</span>
+                <button class="metric-info-btn" data-info="Total income from sales and services before any deductions" aria-label="Info about Revenue">ⓘ</button>
+              </div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewRevenueChart" data-title="Revenue" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showRevenue" title="Hide this metric">×</button>
@@ -340,7 +343,10 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title" title="Revenue minus cost of goods sold (direct costs of construction)">Gross Profit</div>
+              <div class="metric-tile-title-wrapper">
+                <span class="metric-tile-title" title="Revenue minus cost of goods sold (direct costs of construction)">Gross Profit</span>
+                <button class="metric-info-btn" data-info="Revenue minus cost of goods sold (direct costs of construction)" aria-label="Info about Gross Profit">ⓘ</button>
+              </div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewGrossProfitChart" data-title="Gross Profit" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showGrossProfit" title="Hide this metric">×</button>
@@ -356,7 +362,10 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title" title="Gross Profit as a percentage of Revenue - measures production efficiency">Gross Profit Margin %</div>
+              <div class="metric-tile-title-wrapper">
+                <span class="metric-tile-title" title="Gross Profit as a percentage of Revenue - measures production efficiency">Gross Profit Margin %</span>
+                <button class="metric-info-btn" data-info="Gross Profit as a percentage of Revenue - measures production efficiency" aria-label="Info about Gross Profit Margin">ⓘ</button>
+              </div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewGrossMarginChart" data-title="Gross Profit Margin %" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showGrossMargin" title="Hide this metric">×</button>
@@ -372,7 +381,10 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title" title="Overhead costs like salaries, rent, utilities, and administrative expenses">Operating Expenses</div>
+              <div class="metric-tile-title-wrapper">
+                <span class="metric-tile-title" title="Overhead costs like salaries, rent, utilities, and administrative expenses">Operating Expenses</span>
+                <button class="metric-info-btn" data-info="Overhead costs like salaries, rent, utilities, and administrative expenses" aria-label="Info about Operating Expenses">ⓘ</button>
+              </div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewOpexChart" data-title="Operating Expenses" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showOpExpenses" title="Hide this metric">×</button>
@@ -388,7 +400,10 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title" title="Gross Profit minus Operating Expenses - profit from core business operations">Operating Profit</div>
+              <div class="metric-tile-title-wrapper">
+                <span class="metric-tile-title" title="Gross Profit minus Operating Expenses - profit from core business operations">Operating Profit</span>
+                <button class="metric-info-btn" data-info="Gross Profit minus Operating Expenses - profit from core business operations" aria-label="Info about Operating Profit">ⓘ</button>
+              </div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewOpProfitChart" data-title="Operating Profit" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showOpProfit" title="Hide this metric">×</button>
@@ -404,7 +419,10 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title" title="Operating Profit as a percentage of Revenue - measures overall operational efficiency">Operating Profit %</div>
+              <div class="metric-tile-title-wrapper">
+                <span class="metric-tile-title" title="Operating Profit as a percentage of Revenue - measures overall operational efficiency">Operating Profit %</span>
+                <button class="metric-info-btn" data-info="Operating Profit as a percentage of Revenue - measures overall operational efficiency" aria-label="Info about Operating Profit %">ⓘ</button>
+              </div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewOpMarginChart" data-title="Operating Profit %" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showOpMargin" title="Hide this metric">×</button>
@@ -420,7 +438,10 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title" title="Total cash and cash equivalents including checking, savings, and undeposited funds">Cash</div>
+              <div class="metric-tile-title-wrapper">
+                <span class="metric-tile-title" title="Total cash and cash equivalents including checking, savings, and undeposited funds">Cash</span>
+                <button class="metric-info-btn" data-info="Total cash and cash equivalents including checking, savings, and undeposited funds" aria-label="Info about Cash">ⓘ</button>
+              </div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewCashChart" data-title="Cash" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showCash" title="Hide this metric">×</button>
@@ -436,7 +457,10 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title" title="Money owed to the company by customers for completed work">Receivables</div>
+              <div class="metric-tile-title-wrapper">
+                <span class="metric-tile-title" title="Money owed to the company by customers for completed work">Receivables</span>
+                <button class="metric-info-btn" data-info="Money owed to the company by customers for completed work" aria-label="Info about Receivables">ⓘ</button>
+              </div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewReceivablesChart" data-title="Receivables" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showReceivables" title="Hide this metric">×</button>
@@ -452,7 +476,10 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title" title="Money the company owes to vendors and suppliers">Accounts Payable</div>
+              <div class="metric-tile-title-wrapper">
+                <span class="metric-tile-title" title="Money the company owes to vendors and suppliers">Accounts Payable</span>
+                <button class="metric-info-btn" data-info="Money the company owes to vendors and suppliers" aria-label="Info about Accounts Payable">ⓘ</button>
+              </div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewPayablesChart" data-title="Accounts Payable" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showPayables" title="Hide this metric">×</button>
@@ -468,7 +495,10 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title" title="Current Assets divided by Current Liabilities - measures ability to pay short-term obligations. Above 1.0 is healthy.">Current Ratio</div>
+              <div class="metric-tile-title-wrapper">
+                <span class="metric-tile-title" title="Current Assets divided by Current Liabilities - measures ability to pay short-term obligations. Above 1.0 is healthy.">Current Ratio</span>
+                <button class="metric-info-btn" data-info="Current Assets divided by Current Liabilities - measures ability to pay short-term obligations. Above 1.0 is healthy." aria-label="Info about Current Ratio">ⓘ</button>
+              </div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewCurrentRatioChart" data-title="Current Ratio" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showCurrentRatio" title="Hide this metric">×</button>

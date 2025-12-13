@@ -430,9 +430,51 @@ document.addEventListener("DOMContentLoaded", function() {
   setupExportButtons();
   setupChartExpandButtons();
   setupPageChartExpandButtons();
+  setupMetricInfoButtons();
   updateDataAsOfDates();
   initAllSavedViewsHandlers();
 });
+
+function setupMetricInfoButtons() {
+  document.querySelectorAll(".metric-info-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const infoText = btn.dataset.info;
+      if (infoText) {
+        showMetricInfoPopup(infoText);
+      }
+    });
+  });
+}
+
+function showMetricInfoPopup(text) {
+  closeMetricInfoPopup();
+  
+  const overlay = document.createElement("div");
+  overlay.className = "metric-info-popup-overlay";
+  overlay.id = "metricInfoOverlay";
+  overlay.addEventListener("click", closeMetricInfoPopup);
+  
+  const popup = document.createElement("div");
+  popup.className = "metric-info-popup";
+  popup.id = "metricInfoPopup";
+  popup.innerHTML = `
+    <div class="metric-info-popup-text">${text}</div>
+    <button class="metric-info-popup-close">Got it</button>
+  `;
+  
+  document.body.appendChild(overlay);
+  document.body.appendChild(popup);
+  
+  popup.querySelector(".metric-info-popup-close").addEventListener("click", closeMetricInfoPopup);
+}
+
+function closeMetricInfoPopup() {
+  const overlay = document.getElementById("metricInfoOverlay");
+  const popup = document.getElementById("metricInfoPopup");
+  if (overlay) overlay.remove();
+  if (popup) popup.remove();
+}
 
 function updateDataAsOfDates() {
   const now = new Date();

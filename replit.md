@@ -45,14 +45,15 @@ Preferred communication style: Simple, everyday language.
 - **Historical range**: Covers 2015-2025 with monthly granularity
 
 ### Dashboard Views
-- **Executive Overview**: Nine metric tiles with bar charts showing key financial metrics:
+- **Executive Overview**: Ten metric tiles with bar charts showing key financial metrics:
   - P&L Metrics: Revenue, Gross Profit, Gross Profit %, Operating Expenses, Operating Profit, Operating Profit %
-  - Balance Sheet Metrics: Cash, Receivables, Accounts Payable (cumulative balances at period end)
+  - Balance Sheet Metrics: Cash, Receivables, Accounts Payable, Current Ratio (cumulative balances at period end)
   - Configuration options: View type (monthly/quarterly/annual), year selector, year range slider for annual view
   - Compare to prior year option adds red bars for prior year comparison
   - Metric visibility checkboxes allow users to show/hide individual metric tiles
   - User preferences saved per user (metric visibility, view settings)
   - Responsive grid layout (3 columns desktop, 2 tablet, 1 mobile)
+  - Mobile info icons: ⓘ buttons appear on mobile (768px and below) next to metric titles - tap to show popup explanation of each metric
 - **Revenue**: Monthly/quarterly/annual revenue charts with year comparison, trendlines, summary KPI tiles (Average, Largest, Smallest, CAGR), and export options (Print/PDF/CSV). Partial periods shown in orange with "Exclude Current Period" option.
 - **Account Detail**: GL account drilldown with dropdown selector (accounts 4000+), monthly/quarterly/annual views, trendlines, and data tables. Income accounts (4000-4999, 8000-8999) display as positive values.
 - **Income Statement**: Full P&L statement with hierarchical account groups from account_groups.json:
