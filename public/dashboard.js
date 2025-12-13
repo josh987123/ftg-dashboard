@@ -202,6 +202,9 @@ function openPageChartFullscreen(chartId, title) {
   
   const ctx = canvas.getContext("2d");
   
+  // Determine if this is the cash chart - disable data labels for it
+  const isCashChart = chartId === "cashChart";
+  
   fullscreenChartInstance = new Chart(ctx, {
     type: "bar",
     data: {
@@ -213,7 +216,7 @@ function openPageChartFullscreen(chartId, title) {
         data: [...ds.data]
       }))
     },
-    plugins: [ChartDataLabels],
+    plugins: isCashChart ? [] : [ChartDataLabels],
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -224,7 +227,7 @@ function openPageChartFullscreen(chartId, title) {
           position: "bottom",
           labels: { color: "#fff", font: { size: 14 } }
         },
-        datalabels: {
+        datalabels: isCashChart ? { display: false } : {
           display: true,
           anchor: "end",
           align: "top",
@@ -8905,7 +8908,8 @@ function renderCashChart() {
           callbacks: {
             label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
           }
-        }
+        },
+        datalabels: { display: false }
       },
       scales: {
         x: { 
