@@ -537,17 +537,30 @@ def api_get_sheet_data(spreadsheet_id, sheet_name=None):
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+# Cache for cash data (5 minute TTL)
+cash_data_cache = {
+    'data': None,
+    'timestamp': None
+}
+CASH_CACHE_TTL = 300  # 5 minutes
+
 @app.route('/api/cash-data', methods=['GET', 'OPTIONS'])
 def api_get_cash_data():
-    """Fetch accounts and transactions from Google Sheet and calculate daily balances"""
+    """Fetch accounts and transactions from Google Sheet with caching"""
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'})
     
     try:
-        print("Starting cash-data request...")
+        # Check cache first
+        now = datetime.now()
+        if (cash_data_cache['data'] and cash_data_cache['timestamp'] and 
+            (now - cash_data_cache['timestamp']).total_seconds() < CASH_CACHE_TTL):
+            print("Returning cached cash data")
+            return jsonify(cash_data_cache['data'])
+        
+        print("Fetching fresh cash data from Google Sheets...")
         try:
             access_token = get_sheets_access_token()
-            print(f"Got access token: {access_token[:20] if access_token else 'None'}...")
         except Exception as token_error:
             print(f"Token error: {str(token_error)}")
             return jsonify({'error': f'Google Sheets authentication failed: {str(token_error)}'}), 500
@@ -620,11 +633,17 @@ def api_get_cash_data():
                             'amount': amount
                         })
         
-        return jsonify({
+        # Store in cache
+        result = {
             'success': True,
             'accounts': accounts,
             'transactions': transactions
-        })
+        }
+        cash_data_cache['data'] = result
+        cash_data_cache['timestamp'] = datetime.now()
+        print(f"Cached cash data: {len(accounts)} accounts, {len(transactions)} transactions")
+        
+        return jsonify(result)
         
     except Exception as e:
         import traceback
