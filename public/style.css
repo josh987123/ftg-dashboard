@@ -1584,7 +1584,6 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   .chart-header-row { margin-bottom: 4px; }
   #revChartTitleLine2, #acctChartTitleLine2 { font-size: 13px; }
   .chart-updated { margin-top: 2px; font-size: 10px !important; }
-  .page-chart-expand-btn { width: 18px; height: 18px; min-width: 18px; min-height: 18px; max-width: 18px; max-height: 18px; font-size: 10px; }
   .chart-expand-btn, .chart-close-btn { width: 16px; height: 16px; min-width: 16px; min-height: 16px; max-width: 16px; max-height: 16px; font-size: 9px; }
   
   .rev-table-box { padding:18px; }
@@ -1602,7 +1601,6 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   .chart-title div { font-size:14px; margin-bottom: 0; }
   #revChartTitleLine2, #acctChartTitleLine2 { font-size: 12px; }
   .chart-updated { display: none; }
-  .page-chart-expand-btn { width: 16px; height: 16px; min-width: 16px; min-height: 16px; max-width: 16px; max-height: 16px; font-size: 9px; }
   .chart-expand-btn, .chart-close-btn { width: 14px; height: 14px; min-width: 14px; min-height: 14px; max-width: 14px; max-height: 14px; font-size: 8px; }
   
   .rev-table-box { padding:14px; }
@@ -3716,34 +3714,6 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-bottom: 0;
 }
 
-.page-chart-expand-btn {
-  background: transparent;
-  border: 1px solid #d1d5db;
-  border-radius: 2px;
-  width: 20px;
-  height: 20px;
-  min-width: 20px;
-  min-height: 20px;
-  max-width: 20px;
-  max-height: 20px;
-  padding: 0;
-  margin: 0;
-  font-size: 11px;
-  cursor: pointer;
-  color: #6b7280;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  flex-shrink: 0;
-}
-
-.page-chart-expand-btn:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
-  color: #374151;
-}
 
 /* Overview config: Time Period, Visuals, Show Metrics all in one row */
 #overview .config-body .rev-controls {
