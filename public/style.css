@@ -1584,8 +1584,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   .chart-header-row { margin-bottom: 4px; }
   #revChartTitleLine2, #acctChartTitleLine2 { font-size: 13px; }
   .chart-updated { margin-top: 2px; font-size: 10px !important; }
-  .page-chart-expand-btn { padding: 2px 6px; font-size: 14px; }
-  .chart-expand-btn, .chart-close-btn { padding: 2px 6px; font-size: 12px; }
+  .page-chart-expand-btn { width: 22px; height: 22px; font-size: 11px; }
+  .chart-expand-btn, .chart-close-btn { width: 18px; height: 18px; font-size: 10px; }
   
   .rev-table-box { padding:18px; }
   #revTable th, #revTable td { padding:11px 12px; font-size:13px; }
@@ -1602,8 +1602,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   .chart-title div { font-size:14px; margin-bottom: 0; }
   #revChartTitleLine2, #acctChartTitleLine2 { font-size: 12px; }
   .chart-updated { display: none; }
-  .page-chart-expand-btn { padding: 2px 4px; font-size: 12px; }
-  .chart-expand-btn, .chart-close-btn { padding: 2px 4px; font-size: 10px; }
+  .page-chart-expand-btn { width: 20px; height: 20px; font-size: 10px; }
+  .chart-expand-btn, .chart-close-btn { width: 16px; height: 16px; font-size: 9px; }
   
   .rev-table-box { padding:14px; }
   #revTable { min-width:320px; }
@@ -2924,7 +2924,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .metric-tile-buttons {
@@ -2936,13 +2936,18 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 .chart-close-btn {
   background: transparent;
   border: 1px solid #d1d5db;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 14px;
+  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 11px;
   cursor: pointer;
   color: #6b7280;
   transition: all 0.2s ease;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chart-expand-btn:hover,
@@ -3666,8 +3671,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 .chart-header-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
+  align-items: center;
+  margin-bottom: 4px;
 }
 
 .chart-header-row .chart-title {
@@ -3677,12 +3682,17 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 .page-chart-expand-btn {
   background: transparent;
   border: 1px solid #d1d5db;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 16px;
+  border-radius: 3px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 12px;
   cursor: pointer;
   color: #6b7280;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .page-chart-expand-btn:hover {
