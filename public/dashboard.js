@@ -899,7 +899,8 @@ function extractBalanceSheetData() {
 /* ------------------------------------------------------------
    EXECUTIVE OVERVIEW MODULE
 ------------------------------------------------------------ */
-document.getElementById("currentUser").innerText = "";
+const currentUserEl = document.getElementById("currentUser");
+if (currentUserEl) currentUserEl.innerText = "";
 
 let overviewDataCache = null;
 let overviewChartInstances = {};
