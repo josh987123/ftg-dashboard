@@ -1180,88 +1180,14 @@
         <h2>Cash Balances</h2>
         <p class="data-as-of">Data as of: <span id="cashDataAsOf">-</span></p>
         
-        <div class="report-layout">
-          <aside class="config-panel">
-            <div class="config-section">
-              <div class="config-header" data-target="cashAccountsBody">Accounts</div>
-              <div class="config-body" id="cashAccountsBody">
-                <div id="cashAccountCheckboxes" class="checkbox-grid">
-                  <div class="loading-spinner">Loading accounts...</div>
-                </div>
-                <div class="checkbox-actions">
-                  <button type="button" class="btn-small" id="cashSelectAll">Select All</button>
-                  <button type="button" class="btn-small" id="cashSelectNone">Select None</button>
-                </div>
-              </div>
-            </div>
-            
-            <div class="config-section">
-              <div class="config-header" data-target="cashTimePeriodBody">Time Period</div>
-              <div class="config-body" id="cashTimePeriodBody">
-                <label for="cashViewType">View:</label>
-                <select id="cashViewType">
-                  <option value="daily">Daily</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
-                  <option value="annual">Annual</option>
-                </select>
-                
-                <div id="cashYearSelectWrapper">
-                  <label for="cashYearSelect">Year:</label>
-                  <select id="cashYearSelect"></select>
-                </div>
-                
-                <div id="cashYearSliderWrapper" class="hidden">
-                  <label>Year Range:</label>
-                  <div class="year-slider-container">
-                    <input type="range" id="cashYearStart" min="2015" max="2025" value="2015">
-                    <span id="cashYearStartLabel">2015</span>
-                    <span> - </span>
-                    <input type="range" id="cashYearEnd" min="2015" max="2025" value="2025">
-                    <span id="cashYearEndLabel">2025</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="config-section">
-              <div class="config-header" data-target="cashOptionsBody">Options</div>
-              <div class="config-body" id="cashOptionsBody">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="cashExcludeSchwab" checked> Exclude Schwab (1004)
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" id="cashShowThousands"> Show in Thousands
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" id="cashStackBars"> Stack Bars
-                </label>
-              </div>
-            </div>
-          </aside>
+        <div class="cash-balances-container">
+          <div id="cashBalancesContent" class="cash-balances-content">
+            <div class="loading-spinner">Loading account balances...</div>
+          </div>
           
-          <div class="report-content">
-            <div class="chart-container" id="cashChartContainer">
-              <canvas id="cashChart"></canvas>
-            </div>
-            <div id="cashSummaryTiles" class="summary-tiles">
-              <div class="summary-tile">
-                <div class="tile-label">Current Total</div>
-                <div class="tile-value" id="cashTotalValue">-</div>
-              </div>
-              <div class="summary-tile">
-                <div class="tile-label">Average</div>
-                <div class="tile-value" id="cashAvgValue">-</div>
-              </div>
-              <div class="summary-tile">
-                <div class="tile-label">Highest</div>
-                <div class="tile-value" id="cashMaxValue">-</div>
-              </div>
-              <div class="summary-tile">
-                <div class="tile-label">Lowest</div>
-                <div class="tile-value" id="cashMinValue">-</div>
-              </div>
-            </div>
+          <div class="cash-balances-total">
+            <span class="total-label">Total Cash:</span>
+            <span class="total-value" id="cashTotalValue">-</span>
           </div>
         </div>
       </section>
