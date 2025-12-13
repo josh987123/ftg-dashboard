@@ -3945,6 +3945,19 @@ function formatTileValue(val) {
   return "$" + val.toLocaleString();
 }
 
+function formatCurrency(value) {
+  if (value === null || value === undefined) return "-";
+  const absVal = Math.abs(value);
+  const formatted = absVal.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  if (value < 0) {
+    return `($${formatted})`;
+  }
+  return `$${formatted}`;
+}
+
 function calculateCAGR(values) {
   if (values.length < 2) return 0;
   const first = values[0];
