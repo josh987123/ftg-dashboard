@@ -544,7 +544,13 @@ def api_get_cash_data():
         return jsonify({'status': 'ok'})
     
     try:
-        access_token = get_sheets_access_token()
+        print("Starting cash-data request...")
+        try:
+            access_token = get_sheets_access_token()
+            print(f"Got access token: {access_token[:20] if access_token else 'None'}...")
+        except Exception as token_error:
+            print(f"Token error: {str(token_error)}")
+            return jsonify({'error': f'Google Sheets authentication failed: {str(token_error)}'}), 500
         spreadsheet_id = '1Nkcn2Obvipqn30b-QEfKud0d8G9WTuWicUX07b76wXY'
         
         # Fetch Accounts sheet (columns A=name, B=balance, D=last update)
