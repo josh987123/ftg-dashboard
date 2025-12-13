@@ -4139,7 +4139,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   text-align: right;
   font-family: 'SF Mono', 'Consolas', monospace;
   font-size: 12px;
-  word-wrap: break-word;
+  white-space: nowrap;
 }
 
 .daily-balance-table td.date-col {
@@ -4507,7 +4507,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   padding: 6px 10px;
   border-bottom: 1px solid #e5e7eb;
   vertical-align: top;
-  word-wrap: break-word;
+  white-space: nowrap;
 }
 
 .transaction-table tr:nth-child(even) {
