@@ -8803,6 +8803,8 @@ function updateCashDisplay() {
   renderCashDailyTable();
 }
 
+let cashHeaderExpanded = false;
+
 function renderCashCurrentHeader() {
   const container = document.getElementById("cashCurrentHeader");
   if (!container) return;
@@ -8818,20 +8820,26 @@ function renderCashCurrentHeader() {
   
   let accountsHtml = '';
   if (selectedAccounts.length > 1) {
-    accountsHtml = `<div class="cash-header-accounts">`;
+    const collapsedClass = cashHeaderExpanded ? '' : 'collapsed';
+    const toggleIcon = cashHeaderExpanded ? '▲' : '▼';
+    
+    accountsHtml = `
+      <div class="cash-header-toggle" id="cashHeaderToggle">
+        <span class="toggle-text">${cashHeaderExpanded ? 'Hide Details' : 'Show Details'}</span>
+        <span class="toggle-icon">${toggleIcon}</span>
+      </div>
+      <div class="cash-header-accounts ${collapsedClass}" id="cashHeaderAccounts">`;
+    
     selectedAccounts.forEach(a => {
-      // Shorten account name: extract account number and abbreviate name
       let shortName = a.name;
       const acctMatch = a.name.match(/\((\d+)\)$/);
       if (acctMatch) {
         const acctNum = acctMatch[1];
         const namePart = a.name.replace(/\s*\(\d+\)$/, '');
-        // Keep first 12 chars of name + account number
         shortName = namePart.length > 12 ? namePart.substring(0, 12) + '..' : namePart;
         shortName += ' (' + acctNum + ')';
       }
       
-      // Format balance more compactly for millions
       let balanceDisplay = formatCurrency(a.balance);
       if (Math.abs(a.balance) >= 1000000) {
         balanceDisplay = '$' + (a.balance / 1000000).toFixed(2) + 'M';
@@ -8854,6 +8862,15 @@ function renderCashCurrentHeader() {
     <div class="cash-header-total">${formatCurrency(total)}</div>
     ${accountsHtml}
   `;
+  
+  // Add toggle event listener
+  const toggleBtn = document.getElementById("cashHeaderToggle");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      cashHeaderExpanded = !cashHeaderExpanded;
+      renderCashCurrentHeader();
+    });
+  }
 }
 
 function getOldestTransactionDate() {

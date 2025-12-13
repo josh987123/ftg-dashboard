@@ -4215,6 +4215,28 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   font-family: 'SF Mono', 'Consolas', monospace;
 }
 
+.cash-header-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 16px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.8);
+  font-size: 12px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  transition: color 0.2s;
+}
+
+.cash-header-toggle:hover {
+  color: #fff;
+}
+
+.cash-header-toggle .toggle-icon {
+  font-size: 10px;
+}
+
 .cash-header-accounts {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -4222,6 +4244,16 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid rgba(255,255,255,0.2);
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+
+.cash-header-accounts.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 .cash-header-account {
