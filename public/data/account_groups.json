@@ -1312,7 +1312,8 @@
       {
         "label": "OPERATING ACTIVITIES",
         "level": 0,
-        "type": "header"
+        "type": "header",
+        "parent": "Cash from Operating Activities"
       },
       {
         "label": "Net Income",
@@ -1392,7 +1393,8 @@
       {
         "label": "INVESTING ACTIVITIES",
         "level": 0,
-        "type": "header"
+        "type": "header",
+        "parent": "Cash from Investing Activities"
       },
       {
         "label": "Fixed Asset Purchases",
@@ -1428,7 +1430,8 @@
       {
         "label": "FINANCING ACTIVITIES",
         "level": 0,
-        "type": "header"
+        "type": "header",
+        "parent": "Cash from Financing Activities"
       },
       {
         "label": "Capital Contributions",
