@@ -2321,10 +2321,11 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
     };
     
     const formatGrowth = (val) => {
+      const sign = val >= 0 ? "+" : "";
       const formatted = Math.abs(val) >= 1000 
         ? val.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
         : val.toFixed(1);
-      return formatted + "%";
+      return sign + formatted + "%";
     };
     
     const avgEl = document.getElementById(cfg.avgId);
