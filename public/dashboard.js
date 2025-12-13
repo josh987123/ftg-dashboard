@@ -205,6 +205,12 @@ function openPageChartFullscreen(chartId, title) {
   // Determine if this is the cash chart - disable data labels for it
   const isCashChart = chartId === "cashChart";
   
+  // Get Y-axis min/max from source chart to maintain consistent scale
+  const sourceYScale = sourceChart.options?.scales?.y || {};
+  const yMin = sourceYScale.min;
+  const yMax = sourceYScale.max;
+  const isStacked = sourceChart.options?.scales?.x?.stacked || false;
+  
   fullscreenChartInstance = new Chart(ctx, {
     type: "bar",
     data: {
@@ -244,10 +250,14 @@ function openPageChartFullscreen(chartId, title) {
       },
       scales: {
         x: { 
+          stacked: isStacked,
           grid: { color: "rgba(255,255,255,0.1)" },
           ticks: { color: "#fff", font: { size: 14 } }
         },
         y: {
+          stacked: isStacked,
+          min: yMin,
+          max: yMax,
           grid: { color: "rgba(255,255,255,0.1)" },
           ticks: { 
             color: "#fff",
