@@ -51,4 +51,4 @@ packages = ["freetype", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["python3", "public/server.py"]
+run = ["sh", "-c", "python3 -m http.server 3000 --directory public"]
