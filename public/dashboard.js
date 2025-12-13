@@ -2723,7 +2723,50 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
   }
   
   const dataLabelsCheckbox = document.getElementById("overviewDataLabels");
-  const showDataLabels = dataLabelsCheckbox ? dataLabelsCheckbox.checked : true;
+  const showDataLabels = dataLabelsCheckbox ? dataLabelsCheckbox.checked : false;
+  
+  // Calculate Y-axis minimum based on data
+  let allValues = [...metricData.values];
+  if (showPrior && metricData.priorValues.length > 0) {
+    allValues = allValues.concat(metricData.priorValues);
+  }
+  const validValues = allValues.filter(v => v !== null && v !== undefined && !isNaN(v));
+  const dataMin = validValues.length > 0 ? Math.min(...validValues) : 0;
+  const dataMax = validValues.length > 0 ? Math.max(...validValues) : 0;
+  
+  // Calculate appropriate Y-axis min (start just below the lowest value)
+  let yMin = undefined;
+  if (dataMin > 0) {
+    const range = dataMax - dataMin;
+    // Use 15% of range as padding, or 10% of dataMin if flat data
+    const padding = range > 0 ? range * 0.15 : dataMin * 0.1;
+    
+    if (metricData.isRatio) {
+      // For ratios, round to nearest 0.1
+      yMin = Math.floor((dataMin - padding) * 10) / 10;
+      if (yMin < 0) yMin = 0;
+    } else if (metricData.isPercent) {
+      // For percentages, round to nearest 1%
+      yMin = Math.floor(dataMin - padding);
+      if (yMin < 0) yMin = 0;
+    } else {
+      // For currency, round to a nice number
+      let step;
+      if (dataMin >= 1000000) {
+        step = 100000;
+      } else if (dataMin >= 100000) {
+        step = 10000;
+      } else if (dataMin >= 10000) {
+        step = 5000;
+      } else if (dataMin >= 1000) {
+        step = 500;
+      } else {
+        step = 100;
+      }
+      yMin = Math.floor((dataMin - padding) / step) * step;
+      if (yMin < 0) yMin = 0;
+    }
+  }
   
   overviewChartInstances[canvasId] = new Chart(canvas, {
     type: "bar",
@@ -2805,6 +2848,7 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 9 } } },
         y: {
+          min: yMin,
           ticks: {
             font: { size: 9 },
             callback: v => metricData.isRatio ? v.toFixed(1) + "x" : (metricData.isPercent ? v.toFixed(0) + "%" : (Math.abs(v) >= 1000000 ? "$" + (v / 1000000).toFixed(1) + "M" : "$" + (v / 1000).toFixed(0) + "K"))
@@ -4611,7 +4655,40 @@ function renderRevenueChart(labels, datasets) {
     };
     
     const dataLabelsCheckbox = document.getElementById("revDataLabels");
-    const showDataLabels = dataLabelsCheckbox ? dataLabelsCheckbox.checked : true;
+    const showDataLabels = dataLabelsCheckbox ? dataLabelsCheckbox.checked : false;
+    
+    // Calculate Y-axis minimum based on data
+    let allValues = [];
+    datasets.forEach(ds => {
+      if (ds.type !== 'line' && ds.data) {
+        allValues = allValues.concat(ds.data.filter(v => v !== null && v !== undefined && !isNaN(v)));
+      }
+    });
+    const dataMin = allValues.length > 0 ? Math.min(...allValues) : 0;
+    const dataMax = allValues.length > 0 ? Math.max(...allValues) : 0;
+    
+    // Calculate appropriate Y-axis min (start just below the lowest value)
+    let yMin = undefined;
+    if (dataMin > 0) {
+      const range = dataMax - dataMin;
+      // Use 15% of range as padding, or 10% of dataMin if flat data
+      const padding = range > 0 ? range * 0.15 : dataMin * 0.1;
+      
+      let step;
+      if (dataMin >= 1000000) {
+        step = 100000;
+      } else if (dataMin >= 100000) {
+        step = 10000;
+      } else if (dataMin >= 10000) {
+        step = 5000;
+      } else if (dataMin >= 1000) {
+        step = 500;
+      } else {
+        step = 100;
+      }
+      yMin = Math.floor((dataMin - padding) / step) * step;
+      if (yMin < 0) yMin = 0;
+    }
 
     revChartInstance = new Chart(ctx, {
       type: "bar",
@@ -4694,6 +4771,7 @@ function renderRevenueChart(labels, datasets) {
             }
           },
           y: {
+            min: yMin,
             ticks: {
               font: { size: 11 },
               callback: v => "$" + (v / 1000000).toFixed(1) + "M"
@@ -5194,7 +5272,40 @@ function renderAccountChart(labels, datasets) {
   };
   
   const dataLabelsCheckbox = document.getElementById("acctDataLabels");
-  const showDataLabels = dataLabelsCheckbox ? dataLabelsCheckbox.checked : true;
+  const showDataLabels = dataLabelsCheckbox ? dataLabelsCheckbox.checked : false;
+  
+  // Calculate Y-axis minimum based on data
+  let allValues = [];
+  datasets.forEach(ds => {
+    if (ds.type !== 'line' && ds.data) {
+      allValues = allValues.concat(ds.data.filter(v => v !== null && v !== undefined && !isNaN(v)));
+    }
+  });
+  const dataMin = allValues.length > 0 ? Math.min(...allValues) : 0;
+  const dataMax = allValues.length > 0 ? Math.max(...allValues) : 0;
+  
+  // Calculate appropriate Y-axis min (start just below the lowest value)
+  let yMin = undefined;
+  if (dataMin > 0) {
+    const range = dataMax - dataMin;
+    // Use 15% of range as padding, or 10% of dataMin if flat data
+    const padding = range > 0 ? range * 0.15 : dataMin * 0.1;
+    
+    let step;
+    if (dataMin >= 1000000) {
+      step = 100000;
+    } else if (dataMin >= 100000) {
+      step = 10000;
+    } else if (dataMin >= 10000) {
+      step = 5000;
+    } else if (dataMin >= 1000) {
+      step = 500;
+    } else {
+      step = 100;
+    }
+    yMin = Math.floor((dataMin - padding) / step) * step;
+    if (yMin < 0) yMin = 0;
+  }
   
   acctChartInstance = new Chart(ctx, {
     type: "bar",
@@ -5271,6 +5382,7 @@ function renderAccountChart(labels, datasets) {
           grid: { drawOnChartArea: false }
         },
         y: {
+          min: yMin,
           ticks: {
             callback: v => {
               if (Math.abs(v) >= 1000000) {
