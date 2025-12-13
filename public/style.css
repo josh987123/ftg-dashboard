@@ -888,7 +888,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .metric-info-btn {
