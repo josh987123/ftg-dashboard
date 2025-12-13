@@ -8519,7 +8519,11 @@ async function initCashReports() {
   contentEl.innerHTML = '<div class="loading-spinner">Loading account balances...</div>';
   
   try {
-    const response = await fetch("/api/cash-data");
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/cash-data' : '/.netlify/functions/cash-data';
+    
+    const response = await fetch(apiUrl);
     const data = await response.json();
     
     if (!data.success) {

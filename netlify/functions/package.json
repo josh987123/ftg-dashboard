@@ -1,0 +1,8 @@
+{
+  "name": "ftg-netlify-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for FTG Dashboard",
+  "dependencies": {
+    "googleapis": "^131.0.0"
+  }
+}
