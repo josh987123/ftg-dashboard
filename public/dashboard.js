@@ -8548,6 +8548,7 @@ let cashData = { accounts: [], transactions: [] };
 let cashChartInstance = null;
 let cashSelectedAccounts = [];
 let cashDailyBalances = {};
+let cashTableExpanded = false;
 
 async function initCashReports() {
   const headerEl = document.getElementById("cashCurrentHeader");
@@ -9141,13 +9142,22 @@ function renderCashDailyTable() {
   const todayStr = today.toISOString().split('T')[0];
   const accountNames = selectedAccounts.map(a => a.name);
   
+  const expandedClass = cashTableExpanded ? 'expanded' : '';
+  const toggleText = cashTableExpanded ? 'Hide Accounts' : 'Show Accounts';
+  const toggleIcon = cashTableExpanded ? '◀' : '▶';
+  
   let html = `
+    <div class="table-expand-toggle">
+      <button class="table-expand-btn" onclick="toggleCashTableExpand()">
+        <span class="expand-icon">${toggleIcon}</span> ${toggleText}
+      </button>
+    </div>
     <div class="daily-balance-table-wrapper">
-      <table class="daily-balance-table">
+      <table class="daily-balance-table ${expandedClass}">
         <thead>
           <tr>
             <th class="date-col">Date</th>
-            ${accountNames.map(name => `<th class="balance-col">${name}</th>`).join('')}
+            ${accountNames.map(name => `<th class="balance-col account-col">${name}</th>`).join('')}
             <th class="total-col">Total</th>
           </tr>
         </thead>
@@ -9171,7 +9181,7 @@ function renderCashDailyTable() {
       const bal = balances[acctName] || 0;
       rowTotal += bal;
       const balClass = bal < 0 ? 'negative' : '';
-      html += `<td class="balance-col ${balClass}">${formatCurrency(bal)}</td>`;
+      html += `<td class="balance-col account-col ${balClass}">${formatCurrency(bal)}</td>`;
     });
     
     const totalClass = rowTotal < 0 ? 'negative' : '';
@@ -9181,6 +9191,11 @@ function renderCashDailyTable() {
   
   html += `</tbody></table></div>`;
   container.innerHTML = html;
+}
+
+function toggleCashTableExpand() {
+  cashTableExpanded = !cashTableExpanded;
+  renderCashDailyTable();
 }
 
 function renderCashTransactionTable() {
