@@ -79,7 +79,7 @@ function openChartFullscreen(chartId, title) {
       legend: { 
         display: true, 
         position: "bottom",
-        labels: { color: "#fff", font: { size: 14 } }
+        labels: { color: "#fff", font: { size: 10 }, boxWidth: 12, padding: 8 }
       },
       datalabels: {
         display: true,
@@ -101,7 +101,7 @@ function openChartFullscreen(chartId, title) {
     scales: {
       x: { 
         grid: { color: "rgba(255,255,255,0.1)" },
-        ticks: { color: "#fff", font: { size: 14 } }
+        ticks: { color: "#fff", font: { size: 12 } }
       },
       y: {
         grid: { color: "rgba(255,255,255,0.1)" },
@@ -231,7 +231,7 @@ function openPageChartFullscreen(chartId, title) {
         legend: { 
           display: true, 
           position: "bottom",
-          labels: { color: "#fff", font: { size: 14 } }
+          labels: { color: "#fff", font: { size: 10 }, boxWidth: 12, padding: 8 }
         },
         datalabels: isCashChart ? { display: false } : {
           display: true,
