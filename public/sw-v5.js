@@ -1,15 +1,13 @@
-const CACHE_NAME = 'ftg-dashboard-v4';
+const CACHE_NAME = 'ftg-dashboard-v5';
 
-// Only cache truly static assets - NOT versioned CSS/JS
+// Only cache truly static assets - NOT versioned CSS/JS or API routes
 const ASSETS_TO_CACHE = [
-  '/logo.png',
-  '/data/financials.json',
-  '/data/account_groups.json'
+  '/logo.png'
 ];
 
 // Install - cache only static assets and skip waiting immediately
 self.addEventListener('install', (event) => {
-  console.log('SW v4: Installing');
+  console.log('SW v5: Installing');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(ASSETS_TO_CACHE))
@@ -19,13 +17,13 @@ self.addEventListener('install', (event) => {
 
 // Activate - delete ALL old caches immediately
 self.addEventListener('activate', (event) => {
-  console.log('SW v4: Activating');
+  console.log('SW v5: Activating');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((name) => {
           if (name !== CACHE_NAME) {
-            console.log('SW v4: Deleting cache:', name);
+            console.log('SW v5: Deleting cache:', name);
             return caches.delete(name);
           }
         })
@@ -34,23 +32,25 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch - NEVER cache HTML, CSS, or JS - always fetch from network
+// Fetch - NEVER cache HTML, CSS, JS, or API routes - always fetch from network
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   
   const url = new URL(event.request.url);
   
-  // Always fetch HTML, CSS, JS from network - never use cache
+  // Always fetch HTML, CSS, JS, JSON, and API routes from network - never use cache
   if (url.pathname.endsWith('.html') || 
       url.pathname.endsWith('.css') || 
       url.pathname.endsWith('.js') ||
+      url.pathname.endsWith('.json') ||
+      url.pathname.startsWith('/api/') ||
       url.pathname === '/' ||
       url.search.includes('v=')) {
     event.respondWith(fetch(event.request));
     return;
   }
   
-  // For other assets, try cache first, then network
+  // For other assets (images), try cache first, then network
   event.respondWith(
     caches.match(event.request)
       .then((cached) => cached || fetch(event.request))
