@@ -3,6 +3,78 @@
 ============================================================ */
 
 /* ------------------------------------------------------------
+   ANIMATED NUMBER COUNTER UTILITY
+------------------------------------------------------------ */
+function animateValue(element, start, end, duration, formatter) {
+  if (!element) return;
+  
+  // Ensure we have valid numbers
+  const startVal = typeof start === 'number' && !isNaN(start) ? start : 0;
+  const endVal = typeof end === 'number' && !isNaN(end) ? end : 0;
+  
+  // If values are the same or very small difference, just set it
+  if (Math.abs(endVal - startVal) < 0.01) {
+    element.textContent = formatter ? formatter(endVal) : endVal;
+    return;
+  }
+  
+  const startTime = performance.now();
+  const range = endVal - startVal;
+  
+  function easeOutQuart(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+  
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easedProgress = easeOutQuart(progress);
+    const currentValue = startVal + (range * easedProgress);
+    
+    element.textContent = formatter ? formatter(currentValue) : currentValue.toFixed(0);
+    
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    }
+  }
+  
+  requestAnimationFrame(update);
+}
+
+function animateCurrency(element, endValue, duration = 600) {
+  const currentText = element?.textContent || '$0';
+  const currentValue = parseFloat(currentText.replace(/[$,KM%()]/g, '')) || 0;
+  // Handle K and M suffixes
+  let multiplier = 1;
+  if (currentText.includes('M')) multiplier = 1000000;
+  else if (currentText.includes('K')) multiplier = 1000;
+  const startValue = currentValue * multiplier;
+  
+  animateValue(element, startValue, endValue, duration, (val) => {
+    if (Math.abs(val) >= 1000000) return '$' + (val / 1000000).toFixed(1) + 'M';
+    if (Math.abs(val) >= 1000) return '$' + (val / 1000).toFixed(0) + 'K';
+    return '$' + Math.round(val).toLocaleString();
+  });
+}
+
+function animatePercent(element, endValue, duration = 600, showPlusSign = true) {
+  const currentText = element?.textContent || '0%';
+  const currentValue = parseFloat(currentText.replace(/[%+]/g, '')) || 0;
+  
+  animateValue(element, currentValue, endValue, duration, (val) => {
+    const prefix = showPlusSign && val >= 0 ? '+' : '';
+    return prefix + val.toFixed(1) + '%';
+  });
+}
+
+function animateRatio(element, endValue, duration = 600) {
+  const currentText = element?.textContent || '0.00';
+  const currentValue = parseFloat(currentText.replace('x', '')) || 0;
+  
+  animateValue(element, currentValue, endValue, duration, (val) => val.toFixed(2) + 'x');
+}
+
+/* ------------------------------------------------------------
    CHART FULLSCREEN FUNCTIONALITY
 ------------------------------------------------------------ */
 let fullscreenChartInstance = null;
@@ -2390,20 +2462,38 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
     
     const avgEl = document.getElementById(cfg.avgId);
     if (avgEl) {
-      avgEl.textContent = formatValue(avg, cfg.isPercent, cfg.isRatio);
       avgEl.className = avg < 0 ? "stat-value negative" : "stat-value";
+      if (cfg.isRatio) {
+        animateRatio(avgEl, avg, 600);
+      } else if (cfg.isPercent) {
+        animatePercent(avgEl, avg, 600, false);
+      } else {
+        animateCurrency(avgEl, avg, 600);
+      }
     }
     
     const highEl = document.getElementById(cfg.highId);
     if (highEl) {
-      highEl.textContent = formatValue(high, cfg.isPercent, cfg.isRatio);
       highEl.className = high < 0 ? "stat-value negative" : "stat-value";
+      if (cfg.isRatio) {
+        animateRatio(highEl, high, 600);
+      } else if (cfg.isPercent) {
+        animatePercent(highEl, high, 600, false);
+      } else {
+        animateCurrency(highEl, high, 600);
+      }
     }
     
     const lowEl = document.getElementById(cfg.lowId);
     if (lowEl) {
-      lowEl.textContent = formatValue(low, cfg.isPercent, cfg.isRatio);
       lowEl.className = low < 0 ? "stat-value negative" : "stat-value";
+      if (cfg.isRatio) {
+        animateRatio(lowEl, low, 600);
+      } else if (cfg.isPercent) {
+        animatePercent(lowEl, low, 600, false);
+      } else {
+        animateCurrency(lowEl, low, 600);
+      }
     }
     
     const highPeriodEl = document.getElementById(cfg.highPeriodId);
@@ -2413,8 +2503,8 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
     
     const cagrEl = document.getElementById(cfg.cagrId);
     if (cagrEl) {
-      cagrEl.textContent = formatGrowth(growthRate);
       cagrEl.className = growthRate < 0 ? "stat-value negative" : "stat-value";
+      animatePercent(cagrEl, growthRate, 600, true);
     }
   });
   } catch (err) {
@@ -2710,6 +2800,20 @@ function renderFinancialBar(id, label, labels, values) {
     options: {
       responsive: true,
       aspectRatio: 1.8,
+      animation: {
+        duration: 800,
+        easing: 'easeOutQuart',
+        delay: (context) => {
+          let delay = 0;
+          if (context.type === 'data' && context.mode === 'default') {
+            delay = context.dataIndex * 50;
+          }
+          return delay;
+        }
+      },
+      transitions: {
+        active: { animation: { duration: 200 } }
+      },
       scales: {
         y: {
           ticks: {
@@ -9090,6 +9194,20 @@ function renderCashChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: {
+        duration: 800,
+        easing: 'easeOutQuart',
+        delay: (context) => {
+          let delay = 0;
+          if (context.type === 'data' && context.mode === 'default') {
+            delay = context.dataIndex * 30 + context.datasetIndex * 60;
+          }
+          return delay;
+        }
+      },
+      transitions: {
+        active: { animation: { duration: 200 } }
+      },
       layout: {
         padding: { bottom: isMobile ? 10 : 0 }
       },
@@ -9179,12 +9297,13 @@ function updateCashStatsTiles(dates, selectedAccounts) {
   
   const formatDate = (d) => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   
-  document.getElementById("cashAvgValue").textContent = formatCurrency(avg);
-  document.getElementById("cashMaxValue").textContent = formatCurrency(max.total);
+  // Animate the stat values
+  animateCurrency(document.getElementById("cashAvgValue"), avg, 600);
+  animateCurrency(document.getElementById("cashMaxValue"), max.total, 600);
   document.getElementById("cashMaxDate").textContent = formatDate(max.date);
-  document.getElementById("cashMinValue").textContent = formatCurrency(min.total);
+  animateCurrency(document.getElementById("cashMinValue"), min.total, 600);
   document.getElementById("cashMinDate").textContent = formatDate(min.date);
-  document.getElementById("cashGrowthValue").textContent = (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%';
+  animatePercent(document.getElementById("cashGrowthValue"), growth, 600);
 }
 
 function renderCashDailyTable() {

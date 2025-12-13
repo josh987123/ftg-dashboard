@@ -770,6 +770,12 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   padding:20px;
   border-radius:8px;
   box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
 }
 
 .card-title { font-size:14px; font-weight:600; color:#6b7280; }
@@ -795,6 +801,12 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   text-align: center;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.summary-tile:hover {
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
 }
 
 .tile-label {
@@ -986,11 +998,13 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   border-radius: 6px;
   padding: 10px 6px;
   text-align: center;
-  transition: background 0.15s ease;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .stat-box:hover {
   background: #f1f5f9;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.12);
+  transform: translateY(-1px);
 }
 
 .stat-label {
