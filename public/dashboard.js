@@ -8636,7 +8636,6 @@ function calculateDailyBalances(accounts, transactions) {
   accounts.forEach(a => { currentBalances[a.name] = a.balance; });
   
   const txnByDateAccount = {};
-  const allDates = new Set();
   
   transactions.forEach(txn => {
     let dateKey = '';
@@ -8648,21 +8647,31 @@ function calculateDailyBalances(accounts, transactions) {
     } catch (e) {}
     
     if (!dateKey) return;
-    allDates.add(dateKey);
     
     if (!txnByDateAccount[dateKey]) txnByDateAccount[dateKey] = {};
     if (!txnByDateAccount[dateKey][txn.account]) txnByDateAccount[dateKey][txn.account] = 0;
     txnByDateAccount[dateKey][txn.account] += txn.amount;
   });
   
-  const sortedDates = Array.from(allDates).sort((a, b) => b.localeCompare(a));
   const dailyBalances = {};
   const runningBalances = { ...currentBalances };
   
-  const today = new Date().toISOString().split('T')[0];
-  dailyBalances[today] = { ...currentBalances };
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  dailyBalances[todayStr] = { ...currentBalances };
   
-  for (const dateKey of sortedDates) {
+  // Generate all dates from 120 days ago to today (covers max range)
+  const allDatesInRange = [];
+  for (let i = 0; i <= 120; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    allDatesInRange.push(d.toISOString().split('T')[0]);
+  }
+  
+  // Walk backward from today, applying transactions and filling all dates
+  for (const dateKey of allDatesInRange) {
+    if (dateKey === todayStr) continue; // Already set today's balance
+    
     const txnsOnDate = txnByDateAccount[dateKey] || {};
     accountNames.forEach(acctName => {
       const txnAmount = txnsOnDate[acctName] || 0;

@@ -4211,6 +4211,18 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+.cash-chart-section .chart-wrapper {
+  min-height: 300px;
+  height: 350px;
+}
+
+@media (max-width: 768px) {
+  .cash-chart-section .chart-wrapper {
+    min-height: 280px;
+    height: 300px;
+  }
+}
+
 .cash-chart-section .chart-header {
   display: flex;
   justify-content: space-between;
