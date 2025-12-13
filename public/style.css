@@ -987,16 +987,16 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 .metric-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 14px;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid #e5e7eb;
 }
 
 .stat-box {
   background: #f8fafc;
-  border-radius: 6px;
-  padding: 10px 6px;
+  border-radius: 5px;
+  padding: 6px 4px;
   text-align: center;
   transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
@@ -1054,11 +1054,11 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   
   .metric-stats {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
   }
   
   .stat-box {
-    padding: 12px 8px;
+    padding: 8px 6px;
   }
   
   .stat-label {
