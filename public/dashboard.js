@@ -174,6 +174,14 @@ function openPageChartFullscreen(chartId, title) {
         <div class="stat-box"><div class="stat-label">CAGR</div><div class="stat-value">${document.getElementById("acctCagrValue")?.textContent || "-"}</div></div>
       `;
     }
+  } else if (chartId === "cashChart" && cashChartInstance) {
+    sourceChart = cashChartInstance;
+    statsHtml = `
+      <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value">${document.getElementById("cashAvgValue")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value">${document.getElementById("cashMaxValue")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value">${document.getElementById("cashMinValue")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">Growth</div><div class="stat-value">${document.getElementById("cashGrowthValue")?.textContent || "-"}</div></div>
+    `;
   }
   
   if (!sourceChart) return;
