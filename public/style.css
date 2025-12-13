@@ -4096,3 +4096,176 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     padding: 6px 8px;
   }
 }
+
+/* Cash Balances Config */
+.cash-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.account-select-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.btn-small {
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #374151;
+}
+
+.btn-small:hover {
+  background: #d1d5db;
+}
+
+.account-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.account-checkbox-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+}
+
+.account-checkbox-list input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.loading-spinner-small {
+  font-size: 12px;
+  color: #6b7280;
+  padding: 8px;
+}
+
+/* Cash Current Header */
+.cash-current-header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  color: #fff;
+}
+
+.cash-header-title {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.8;
+  margin-bottom: 8px;
+}
+
+.cash-header-total {
+  font-size: 32px;
+  font-weight: 700;
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.cash-header-accounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.cash-header-account {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cash-header-account-name {
+  font-size: 11px;
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+.cash-header-account-value {
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+/* Cash Chart Section */
+.cash-chart-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.cash-chart-section .chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cash-chart-section .chart-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.cash-summary-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.summary-tile {
+  text-align: center;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.summary-tile .tile-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.summary-tile .tile-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e3a5f;
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.summary-tile .tile-subvalue {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+@media (max-width: 768px) {
+  .cash-summary-tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .cash-header-total {
+    font-size: 24px;
+  }
+}

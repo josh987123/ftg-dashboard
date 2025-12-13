@@ -8524,14 +8524,15 @@ if (reportsEl) reportsEl.innerText = "Reports will appear here.";
 ============================================================ */
 let cashReportsInitialized = false;
 let cashData = { accounts: [], transactions: [] };
+let cashChartInstance = null;
+let cashSelectedAccounts = [];
+let cashDailyBalances = {};
 
 async function initCashReports() {
-  const contentEl = document.getElementById("cashBalancesContent");
+  const headerEl = document.getElementById("cashCurrentHeader");
   const dailyTableEl = document.getElementById("dailyBalanceTableContainer");
   
-  if (!contentEl) return;
-  
-  contentEl.innerHTML = '<div class="loading-spinner">Loading account balances...</div>';
+  if (headerEl) headerEl.innerHTML = '<div class="loading-spinner">Loading...</div>';
   if (dailyTableEl) dailyTableEl.innerHTML = '<div class="loading-spinner">Calculating daily balances...</div>';
   
   try {
@@ -8543,144 +8544,331 @@ async function initCashReports() {
     const data = await response.json();
     
     if (!data.success) {
-      contentEl.innerHTML = `<div class="error-message">Error: ${data.error}</div>`;
-      if (dailyTableEl) dailyTableEl.innerHTML = '';
+      if (headerEl) headerEl.innerHTML = `<div class="error-message">Error: ${data.error}</div>`;
       return;
     }
     
     cashData = data;
-    renderCashBalancesTable(data.accounts);
-    renderDailyBalanceTable(data.accounts, data.transactions);
+    
+    // Initialize selected accounts (all selected by default)
+    cashSelectedAccounts = data.accounts.map(a => a.name);
+    
+    // Build account checkboxes
+    renderCashAccountCheckboxes(data.accounts);
+    
+    // Calculate all daily balances
+    cashDailyBalances = calculateDailyBalances(data.accounts, data.transactions);
+    
+    // Setup event listeners
+    setupCashEventListeners();
+    
+    // Initial render
+    updateCashDisplay();
     updateCashDataAsOf(data.accounts);
     cashReportsInitialized = true;
     
   } catch (error) {
     console.error("Cash Balances error:", error);
-    contentEl.innerHTML = `<div class="error-message">Failed to load accounts: ${error.message}</div>`;
-    if (dailyTableEl) dailyTableEl.innerHTML = '';
+    if (headerEl) headerEl.innerHTML = `<div class="error-message">Failed to load: ${error.message}</div>`;
   }
 }
 
-function renderCashBalancesTable(accounts) {
-  const contentEl = document.getElementById("cashBalancesContent");
-  const totalEl = document.getElementById("cashTotalValue");
-  
-  if (!accounts || accounts.length === 0) {
-    contentEl.innerHTML = '<div class="error-message">No accounts found</div>';
-    return;
-  }
+function renderCashAccountCheckboxes(accounts) {
+  const container = document.getElementById("cashAccountCheckboxes");
+  if (!container) return;
   
   const sortedAccounts = [...accounts].sort((a, b) => b.balance - a.balance);
-  const total = sortedAccounts.reduce((sum, acct) => sum + acct.balance, 0);
   
-  let html = `
-    <table class="cash-balances-table">
-      <thead>
-        <tr>
-          <th>Account</th>
-          <th>Balance</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-  
+  let html = '';
   sortedAccounts.forEach(acct => {
-    const balanceClass = acct.balance < 0 ? 'negative' : '';
     html += `
-      <tr>
-        <td class="account-name">${acct.name}</td>
-        <td class="account-balance ${balanceClass}">${formatCurrency(acct.balance)}</td>
-      </tr>
+      <label>
+        <input type="checkbox" class="cash-account-cb" value="${acct.name}" checked>
+        ${acct.name}
+      </label>
     `;
   });
   
-  html += `</tbody></table>`;
-  contentEl.innerHTML = html;
-  
-  if (totalEl) {
-    totalEl.textContent = formatCurrency(total);
-  }
+  container.innerHTML = html;
 }
 
-function renderDailyBalanceTable(accounts, transactions) {
-  const container = document.getElementById("dailyBalanceTableContainer");
-  if (!container) return;
+function setupCashEventListeners() {
+  // Select All / None buttons
+  document.getElementById("cashSelectAll")?.addEventListener("click", () => {
+    document.querySelectorAll(".cash-account-cb").forEach(cb => cb.checked = true);
+    cashSelectedAccounts = cashData.accounts.map(a => a.name);
+    updateCashDisplay();
+  });
   
-  if (!accounts || accounts.length === 0) {
-    container.innerHTML = '<div class="error-message">No accounts found</div>';
-    return;
-  }
+  document.getElementById("cashSelectNone")?.addEventListener("click", () => {
+    document.querySelectorAll(".cash-account-cb").forEach(cb => cb.checked = false);
+    cashSelectedAccounts = [];
+    updateCashDisplay();
+  });
   
-  if (!transactions || transactions.length === 0) {
-    container.innerHTML = '<div class="error-message">No transactions found</div>';
-    return;
-  }
+  // Individual checkboxes
+  document.getElementById("cashAccountCheckboxes")?.addEventListener("change", (e) => {
+    if (e.target.classList.contains("cash-account-cb")) {
+      cashSelectedAccounts = Array.from(document.querySelectorAll(".cash-account-cb:checked")).map(cb => cb.value);
+      updateCashDisplay();
+    }
+  });
   
-  // Get account names in order (sorted by current balance)
-  const accountNames = [...accounts].sort((a, b) => b.balance - a.balance).map(a => a.name);
+  // Date range
+  document.getElementById("cashDaysRange")?.addEventListener("change", updateCashDisplay);
   
-  // Build a map of current balances
+  // Stack bars / Show total
+  document.getElementById("cashStackBars")?.addEventListener("change", updateCashDisplay);
+  document.getElementById("cashShowTotal")?.addEventListener("change", updateCashDisplay);
+}
+
+function calculateDailyBalances(accounts, transactions) {
+  const accountNames = accounts.map(a => a.name);
   const currentBalances = {};
   accounts.forEach(a => { currentBalances[a.name] = a.balance; });
   
-  // Group transactions by date and account
   const txnByDateAccount = {};
   const allDates = new Set();
   
   transactions.forEach(txn => {
-    // Parse date - handle various formats
     let dateKey = '';
     try {
       const d = new Date(txn.date);
       if (!isNaN(d.getTime())) {
-        dateKey = d.toISOString().split('T')[0]; // YYYY-MM-DD
+        dateKey = d.toISOString().split('T')[0];
       }
     } catch (e) {}
     
     if (!dateKey) return;
-    
     allDates.add(dateKey);
     
-    if (!txnByDateAccount[dateKey]) {
-      txnByDateAccount[dateKey] = {};
-    }
-    if (!txnByDateAccount[dateKey][txn.account]) {
-      txnByDateAccount[dateKey][txn.account] = 0;
-    }
+    if (!txnByDateAccount[dateKey]) txnByDateAccount[dateKey] = {};
+    if (!txnByDateAccount[dateKey][txn.account]) txnByDateAccount[dateKey][txn.account] = 0;
     txnByDateAccount[dateKey][txn.account] += txn.amount;
   });
   
-  // Sort dates descending (most recent first)
   const sortedDates = Array.from(allDates).sort((a, b) => b.localeCompare(a));
-  
-  // Calculate daily balances by walking backward from current balance
-  // Current balance is as of today, so we subtract transactions going backward
   const dailyBalances = {};
   const runningBalances = { ...currentBalances };
   
-  // Add today as the first row with current balances
   const today = new Date().toISOString().split('T')[0];
   dailyBalances[today] = { ...currentBalances };
   
-  // Walk through dates from most recent to oldest
   for (const dateKey of sortedDates) {
-    // For each account, subtract today's transactions to get yesterday's ending balance
     const txnsOnDate = txnByDateAccount[dateKey] || {};
-    
     accountNames.forEach(acctName => {
       const txnAmount = txnsOnDate[acctName] || 0;
-      // Subtract the transaction to get the balance BEFORE this transaction
       runningBalances[acctName] = (runningBalances[acctName] || 0) - txnAmount;
     });
-    
-    // Store the balance at end of previous day (before these transactions)
     dailyBalances[dateKey] = { ...runningBalances };
   }
   
-  // Build dates to display (today + all transaction dates, sorted descending)
-  const displayDates = [today, ...sortedDates.filter(d => d !== today)].slice(0, 30); // Limit to 30 days
+  return dailyBalances;
+}
+
+function updateCashDisplay() {
+  renderCashCurrentHeader();
+  renderCashChart();
+  renderCashDailyTable();
+}
+
+function renderCashCurrentHeader() {
+  const container = document.getElementById("cashCurrentHeader");
+  if (!container) return;
   
-  // Build table HTML
+  const selectedAccounts = cashData.accounts.filter(a => cashSelectedAccounts.includes(a.name));
+  
+  if (selectedAccounts.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">Select accounts to view balances</div>';
+    return;
+  }
+  
+  const total = selectedAccounts.reduce((sum, a) => sum + a.balance, 0);
+  
+  let accountsHtml = '';
+  if (selectedAccounts.length > 1) {
+    accountsHtml = `<div class="cash-header-accounts">`;
+    selectedAccounts.forEach(a => {
+      accountsHtml += `
+        <div class="cash-header-account">
+          <div class="cash-header-account-name">${a.name}</div>
+          <div class="cash-header-account-value">${formatCurrency(a.balance)}</div>
+        </div>
+      `;
+    });
+    accountsHtml += `</div>`;
+  }
+  
+  container.innerHTML = `
+    <div class="cash-header-title">Current Total${selectedAccounts.length > 1 ? ' (' + selectedAccounts.length + ' accounts)' : ''}</div>
+    <div class="cash-header-total">${formatCurrency(total)}</div>
+    ${accountsHtml}
+  `;
+}
+
+function renderCashChart() {
+  const canvas = document.getElementById("cashChart");
+  if (!canvas) return;
+  
+  const daysRange = parseInt(document.getElementById("cashDaysRange")?.value || 30);
+  const stackBars = document.getElementById("cashStackBars")?.checked !== false;
+  const showTotal = document.getElementById("cashShowTotal")?.checked !== false;
+  
+  // Get dates to display
+  const today = new Date();
+  const dates = [];
+  for (let i = daysRange - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().split('T')[0]);
+  }
+  
+  // Get selected accounts sorted by balance
+  const selectedAccounts = cashData.accounts
+    .filter(a => cashSelectedAccounts.includes(a.name))
+    .sort((a, b) => b.balance - a.balance);
+  
+  if (selectedAccounts.length === 0) {
+    if (cashChartInstance) cashChartInstance.destroy();
+    return;
+  }
+  
+  // Colors for accounts
+  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+  
+  // Build datasets
+  const datasets = selectedAccounts.map((acct, idx) => {
+    const data = dates.map(dateKey => {
+      const balances = cashDailyBalances[dateKey] || {};
+      return balances[acct.name] || 0;
+    });
+    
+    return {
+      label: acct.name,
+      data: data,
+      backgroundColor: colors[idx % colors.length],
+      borderColor: colors[idx % colors.length],
+      borderWidth: 1,
+      stack: stackBars ? 'stack1' : undefined
+    };
+  });
+  
+  // Add total line if enabled and multiple accounts
+  if (showTotal && selectedAccounts.length > 1) {
+    const totalData = dates.map(dateKey => {
+      const balances = cashDailyBalances[dateKey] || {};
+      return selectedAccounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0);
+    });
+    
+    datasets.push({
+      label: 'Total',
+      data: totalData,
+      type: 'line',
+      borderColor: '#1e3a5f',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.3,
+      order: 0
+    });
+  }
+  
+  // Labels
+  const labels = dates.map(d => {
+    const date = new Date(d + 'T12:00:00');
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
+  
+  if (cashChartInstance) cashChartInstance.destroy();
+  
+  cashChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: selectedAccounts.length > 1, position: 'top' },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
+          }
+        }
+      },
+      scales: {
+        x: { stacked: stackBars },
+        y: {
+          stacked: stackBars,
+          ticks: {
+            callback: v => {
+              if (Math.abs(v) >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
+              if (Math.abs(v) >= 1000) return '$' + (v/1000).toFixed(0) + 'K';
+              return '$' + v;
+            }
+          }
+        }
+      }
+    }
+  });
+  
+  // Update stats tiles
+  updateCashStatsTiles(dates, selectedAccounts);
+}
+
+function updateCashStatsTiles(dates, selectedAccounts) {
+  const totals = dates.map(dateKey => {
+    const balances = cashDailyBalances[dateKey] || {};
+    return {
+      date: dateKey,
+      total: selectedAccounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0)
+    };
+  });
+  
+  if (totals.length === 0) return;
+  
+  const avg = totals.reduce((sum, t) => sum + t.total, 0) / totals.length;
+  const max = totals.reduce((m, t) => t.total > m.total ? t : m, totals[0]);
+  const min = totals.reduce((m, t) => t.total < m.total ? t : m, totals[0]);
+  
+  const firstTotal = totals[0].total;
+  const lastTotal = totals[totals.length - 1].total;
+  const growth = firstTotal !== 0 ? ((lastTotal - firstTotal) / Math.abs(firstTotal)) * 100 : 0;
+  
+  const formatDate = (d) => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  
+  document.getElementById("cashAvgValue").textContent = formatCurrency(avg);
+  document.getElementById("cashMaxValue").textContent = formatCurrency(max.total);
+  document.getElementById("cashMaxDate").textContent = formatDate(max.date);
+  document.getElementById("cashMinValue").textContent = formatCurrency(min.total);
+  document.getElementById("cashMinDate").textContent = formatDate(min.date);
+  document.getElementById("cashGrowthValue").textContent = (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%';
+}
+
+function renderCashDailyTable() {
+  const container = document.getElementById("dailyBalanceTableContainer");
+  if (!container) return;
+  
+  const daysRange = parseInt(document.getElementById("cashDaysRange")?.value || 30);
+  const selectedAccounts = cashData.accounts
+    .filter(a => cashSelectedAccounts.includes(a.name))
+    .sort((a, b) => b.balance - a.balance);
+  
+  if (selectedAccounts.length === 0) {
+    container.innerHTML = '<div class="error-message">Select accounts to view data</div>';
+    return;
+  }
+  
+  const today = new Date();
+  const dates = [];
+  for (let i = 0; i < daysRange; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().split('T')[0]);
+  }
+  
+  const todayStr = today.toISOString().split('T')[0];
+  const accountNames = selectedAccounts.map(a => a.name);
+  
   let html = `
     <div class="daily-balance-table-wrapper">
       <table class="daily-balance-table">
@@ -8694,19 +8882,14 @@ function renderDailyBalanceTable(accounts, transactions) {
         <tbody>
   `;
   
-  displayDates.forEach((dateKey, idx) => {
-    const balances = idx === 0 ? currentBalances : dailyBalances[dateKey] || {};
+  dates.forEach((dateKey, idx) => {
+    const balances = cashDailyBalances[dateKey] || {};
     let rowTotal = 0;
     
-    // Format date for display
     const dateObj = new Date(dateKey + 'T12:00:00');
-    const displayDate = dateObj.toLocaleDateString('en-US', { 
-      weekday: 'short',
-      month: 'short', 
-      day: 'numeric'
-    });
+    const displayDate = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     
-    const isToday = dateKey === today;
+    const isToday = dateKey === todayStr;
     const rowClass = isToday ? 'today-row' : '';
     
     html += `<tr class="${rowClass}">`;

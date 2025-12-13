@@ -1178,27 +1178,108 @@
       ============================================================= -->
       <section id="cashReports" class="dashboard-section">
         <h2>Cash Balances</h2>
-        <p class="data-as-of">Data as of: <span id="cashDataAsOf">-</span></p>
-        
-        <div class="cash-balances-container">
-          <!-- Current Balances Summary -->
-          <div class="cash-summary-section">
-            <h3>Current Balances</h3>
-            <div id="cashBalancesContent" class="cash-balances-content">
-              <div class="loading-spinner">Loading account balances...</div>
+        <div class="data-as-of">Data as of: <span id="cashDataAsOf">-</span></div>
+
+        <!-- Configuration Panel -->
+        <div class="config-panel">
+          <div class="config-header collapsed" data-target="cashConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
+          </div>
+          <div class="config-body collapsed" id="cashConfigBody">
+            <div class="saved-views-row">
+              <select id="cashSavedViews" class="saved-views-select">
+                <option value="">-- Current Settings --</option>
+              </select>
+              <button type="button" id="cashSaveViewBtn" class="save-view-btn">Save View</button>
+              <button type="button" id="cashDeleteViewBtn" class="delete-view-btn" title="Delete selected view">×</button>
             </div>
-            <div class="cash-balances-total">
-              <span class="total-label">Total Cash:</span>
-              <span class="total-value" id="cashTotalValue">-</span>
+            <div class="cash-controls">
+              <div class="overview-config-box">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Accounts:</div>
+                <div class="account-select-buttons">
+                  <button type="button" id="cashSelectAll" class="btn-small">Select All</button>
+                  <button type="button" id="cashSelectNone" class="btn-small">Select None</button>
+                </div>
+                <div id="cashAccountCheckboxes" class="account-checkbox-list">
+                  <div class="loading-spinner-small">Loading...</div>
+                </div>
+              </div>
+
+              <div class="overview-config-box">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Date Range:</div>
+                <div class="dropdown-stack">
+                  <div class="dropdown-row">
+                    <label>Days:</label>
+                    <select id="cashDaysRange">
+                      <option value="7">Last 7 Days</option>
+                      <option value="14">Last 14 Days</option>
+                      <option value="30" selected>Last 30 Days</option>
+                      <option value="60">Last 60 Days</option>
+                      <option value="90">Last 90 Days</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="overview-config-box">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Options:</div>
+                <div class="checkbox-stack">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="cashStackBars" checked>
+                    Stack Bars
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="cashShowTotal" checked>
+                    Show Total Line
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <!-- Daily Balance History Table -->
-          <div class="cash-history-section">
-            <h3>Daily Balance History</h3>
-            <div id="dailyBalanceTableContainer" class="daily-balance-table-container">
-              <div class="loading-spinner">Calculating daily balances...</div>
+        </div>
+
+        <!-- Current Balances Summary Header -->
+        <div id="cashCurrentHeader" class="cash-current-header">
+          <div class="loading-spinner">Loading...</div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-section cash-chart-section">
+          <div class="chart-header">
+            <h3>Daily Cash Balances</h3>
+            <button class="page-chart-expand-btn" data-chart="cashChart" data-title="Daily Cash Balances">⛶</button>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="cashChart"></canvas>
+          </div>
+          <div class="cash-summary-tiles" id="cashSummaryTiles">
+            <div class="summary-tile">
+              <div class="tile-label">Average</div>
+              <div class="tile-value" id="cashAvgValue">-</div>
             </div>
+            <div class="summary-tile">
+              <div class="tile-label">Highest</div>
+              <div class="tile-value" id="cashMaxValue">-</div>
+              <div class="tile-subvalue" id="cashMaxDate">-</div>
+            </div>
+            <div class="summary-tile">
+              <div class="tile-label">Lowest</div>
+              <div class="tile-value" id="cashMinValue">-</div>
+              <div class="tile-subvalue" id="cashMinDate">-</div>
+            </div>
+            <div class="summary-tile">
+              <div class="tile-label">Growth</div>
+              <div class="tile-value" id="cashGrowthValue">-</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="cash-history-section">
+          <h3>Daily Balance History</h3>
+          <div id="dailyBalanceTableContainer" class="daily-balance-table-container">
+            <div class="loading-spinner">Calculating daily balances...</div>
           </div>
         </div>
       </section>
