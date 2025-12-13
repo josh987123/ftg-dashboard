@@ -3,6 +3,69 @@
 ============================================================ */
 
 /* ------------------------------------------------------------
+   SAFE DOM UTILITIES - Prevent null reference errors
+------------------------------------------------------------ */
+function getEl(id) {
+  return document.getElementById(id);
+}
+
+function setElText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function setElValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value;
+}
+
+function getElValue(id, defaultValue = '') {
+  const el = document.getElementById(id);
+  return el ? el.value : defaultValue;
+}
+
+function getElChecked(id, defaultValue = false) {
+  const el = document.getElementById(id);
+  return el ? el.checked : defaultValue;
+}
+
+function setElClass(id, className) {
+  const el = document.getElementById(id);
+  if (el) el.className = className;
+}
+
+/* ------------------------------------------------------------
+   DEBOUNCE UTILITY - Prevent excessive function calls
+------------------------------------------------------------ */
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+/* ------------------------------------------------------------
+   DEBOUNCED CHART UPDATE FUNCTIONS
+   Prevents excessive chart redraws during rapid user interaction
+------------------------------------------------------------ */
+const debouncedUpdateOverviewCharts = debounce(() => {
+  if (typeof updateOverviewCharts === 'function') {
+    updateOverviewCharts();
+  }
+}, 150);
+
+const debouncedRenderCashChart = debounce(() => {
+  if (typeof renderCashChart === 'function') {
+    renderCashChart();
+  }
+}, 150);
+
+/* ------------------------------------------------------------
    ANIMATED NUMBER COUNTER UTILITY
 ------------------------------------------------------------ */
 function animateValue(element, start, end, duration, formatter) {
@@ -476,7 +539,8 @@ function showChangePasswordModal() {
       
       // Close modal after delay
       setTimeout(() => {
-        document.getElementById("changePasswordModal").classList.add("hidden");
+        const modal = getEl("changePasswordModal");
+        if (modal) modal.classList.add("hidden");
       }, 1500);
     };
     
@@ -486,11 +550,11 @@ function showChangePasswordModal() {
   }
   
   // Reset form and show
-  document.getElementById("currentPasswordInput").value = "";
-  document.getElementById("newPasswordInput").value = "";
-  document.getElementById("confirmPasswordInput").value = "";
-  document.getElementById("changePasswordStatus").textContent = "";
-  document.getElementById("changePasswordStatus").className = "email-status";
+  setElValue("currentPasswordInput", "");
+  setElValue("newPasswordInput", "");
+  setElValue("confirmPasswordInput", "");
+  setElText("changePasswordStatus", "");
+  setElClass("changePasswordStatus", "email-status");
   modal.classList.remove("hidden");
 }
 
@@ -2132,14 +2196,14 @@ function setupOverviewUI() {
   rangeStart.oninput = () => {
     if (+rangeStart.value > +rangeEnd.value) rangeStart.value = rangeEnd.value;
     document.getElementById("overviewRangeStartLabel").textContent = rangeStart.value;
-    updateOverviewCharts();
+    debouncedUpdateOverviewCharts();
     saveOverviewConfig();
   };
   
   rangeEnd.oninput = () => {
     if (+rangeEnd.value < +rangeStart.value) rangeEnd.value = rangeStart.value;
     document.getElementById("overviewRangeEndLabel").textContent = rangeEnd.value;
-    updateOverviewCharts();
+    debouncedUpdateOverviewCharts();
     saveOverviewConfig();
   };
   
@@ -3605,14 +3669,16 @@ function openEmailModal() {
   const data = getReportData();
   if (!data) return alert("Please navigate to a report view (Revenue, Account, Income Statement, or Balance Sheet) to email.");
   
-  document.getElementById("emailSubject").value = `FTG Dashboard - ${data.title} - ${new Date().toLocaleDateString()}`;
-  document.getElementById("emailTo").value = "";
-  document.getElementById("emailStatus").textContent = "";
-  document.getElementById("emailModal").classList.remove("hidden");
+  setElValue("emailSubject", `FTG Dashboard - ${data.title} - ${new Date().toLocaleDateString()}`);
+  setElValue("emailTo", "");
+  setElText("emailStatus", "");
+  const modal = getEl("emailModal");
+  if (modal) modal.classList.remove("hidden");
 }
 
 function closeEmailModal() {
-  document.getElementById("emailModal").classList.add("hidden");
+  const modal = getEl("emailModal");
+  if (modal) modal.classList.add("hidden");
 }
 
 // EmailJS Configuration
