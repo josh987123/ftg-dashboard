@@ -612,6 +612,12 @@ def api_get_cash_data():
                         })
         
         # Parse transactions (skip header row)
+        # Log header row to see available columns
+        if len(txn_data) > 0:
+            print(f"Transaction sheet headers: {txn_data[0]}")
+            if len(txn_data) > 1:
+                print(f"Sample transaction row: {txn_data[1]}")
+        
         transactions = []
         if len(txn_data) > 1:
             for row in txn_data[1:]:
@@ -620,6 +626,8 @@ def api_get_cash_data():
                     account = row[1] if len(row) > 1 else ''
                     amount_str = row[2] if len(row) > 2 else '0'
                     description = row[3] if len(row) > 3 else ''
+                    payee = row[4] if len(row) > 4 else ''
+                    category = row[5] if len(row) > 5 else ''
                     
                     amount = 0
                     try:
@@ -632,7 +640,9 @@ def api_get_cash_data():
                             'date': date_str,
                             'account': account,
                             'amount': amount,
-                            'description': description
+                            'description': description,
+                            'payee': payee,
+                            'category': category
                         })
         
         # Store in cache

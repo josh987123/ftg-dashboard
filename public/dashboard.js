@@ -9077,6 +9077,7 @@ function renderCashTransactionTable() {
           <th>Date</th>
           <th>Account</th>
           <th>Description</th>
+          <th>Category</th>
           <th style="text-align:right;">Amount</th>
         </tr>
       </thead>
@@ -9101,11 +9102,16 @@ function renderCashTransactionTable() {
       shortAccount = txn.account.substring(0, 18) + '..(' + acctMatch[1] + ')';
     }
     
+    // Use payee if description is empty, or combine them
+    let descDisplay = txn.description || txn.payee || '-';
+    let categoryDisplay = txn.category || '-';
+    
     html += `
       <tr>
         <td class="txn-date">${displayDate}</td>
         <td class="txn-account" title="${txn.account}">${shortAccount}</td>
-        <td class="txn-description">${txn.description || '-'}</td>
+        <td class="txn-description">${descDisplay}</td>
+        <td class="txn-category">${categoryDisplay}</td>
         <td class="txn-amount ${amountClass}">${amountDisplay}</td>
       </tr>
     `;
