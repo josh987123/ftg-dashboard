@@ -2069,12 +2069,15 @@ function updateOverviewCharts() {
     opMargin: { label: "Operating Profit %", values: [], priorValues: [], isPercent: true },
     cash: { label: "Cash", values: [], priorValues: [], isBalance: true },
     receivables: { label: "Receivables", values: [], priorValues: [], isBalance: true },
-    payables: { label: "Accounts Payable", values: [], priorValues: [], isBalance: true }
+    payables: { label: "Accounts Payable", values: [], priorValues: [], isBalance: true },
+    currentRatio: { label: "Current Ratio", values: [], priorValues: [], isRatio: true }
   };
   
   const cashAccounts = [1001, 1003, 1004, 1005, 1006, 1007, 1040, 1090];
   const receivablesAccounts = [1100, 1105, 1110, 1120, 1130, 1050];
   const payablesAccounts = [2000, 2005, 2010, 2015, 2016, 2017, 2018];
+  const currentAssetAccounts = [1001, 1003, 1004, 1005, 1006, 1007, 1040, 1090, 1100, 1105, 1110, 1120, 1130, 1050, 1030];
+  const currentLiabilityAccounts = [2000, 2005, 2010, 2015, 2016, 2017, 2018, 2021, 2023, 2025, 2028, 2030, 2070, 2100, 2110, 2120, 2130, 2140, 2200, 2250];
   
   periods.forEach((periodMonths, idx) => {
     const rows = buildIncomeStatementRows(periodMonths, groups);
@@ -2104,10 +2107,15 @@ function updateOverviewCharts() {
       metrics.cash.values.push(cashBal);
       metrics.receivables.values.push(recBal);
       metrics.payables.values.push(payBal);
+      
+      const caBal = getCumulativeBalance(currentAssetAccounts, endOfPeriod, true);
+      const clBal = getCumulativeBalance(currentLiabilityAccounts, endOfPeriod, false);
+      metrics.currentRatio.values.push(clBal !== 0 ? caBal / Math.abs(clBal) : 0);
     } else {
       metrics.cash.values.push(0);
       metrics.receivables.values.push(0);
       metrics.payables.values.push(0);
+      metrics.currentRatio.values.push(0);
     }
     
     if ((compare || needPriorForYoY) && priorPeriods[idx]) {
@@ -2137,10 +2145,15 @@ function updateOverviewCharts() {
         metrics.cash.priorValues.push(pCashBal);
         metrics.receivables.priorValues.push(pRecBal);
         metrics.payables.priorValues.push(pPayBal);
+        
+        const pCaBal = getCumulativeBalance(currentAssetAccounts, priorEndOfPeriod, true);
+        const pClBal = getCumulativeBalance(currentLiabilityAccounts, priorEndOfPeriod, false);
+        metrics.currentRatio.priorValues.push(pClBal !== 0 ? pCaBal / Math.abs(pClBal) : 0);
       } else {
         metrics.cash.priorValues.push(0);
         metrics.receivables.priorValues.push(0);
         metrics.payables.priorValues.push(0);
+        metrics.currentRatio.priorValues.push(0);
       }
     }
   });
@@ -2189,7 +2202,8 @@ function updateOverviewCharts() {
     { id: "overviewOpMarginChart", data: metrics.opMargin },
     { id: "overviewCashChart", data: metrics.cash },
     { id: "overviewReceivablesChart", data: metrics.receivables },
-    { id: "overviewPayablesChart", data: metrics.payables }
+    { id: "overviewPayablesChart", data: metrics.payables },
+    { id: "overviewCurrentRatioChart", data: metrics.currentRatio }
   ];
   
   chartConfigs.forEach(cfg => {
@@ -2213,7 +2227,8 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
     { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", highPeriodId: "opMarginHighPeriod", lowPeriodId: "opMarginLowPeriod", growthLabelId: "opMarginGrowthLabel", isPercent: true },
     { key: "cash", avgId: "cashAvg", highId: "cashHigh", lowId: "cashLow", cagrId: "cashCagr", highPeriodId: "cashHighPeriod", lowPeriodId: "cashLowPeriod", growthLabelId: "cashGrowthLabel", isPercent: false },
     { key: "receivables", avgId: "receivablesAvg", highId: "receivablesHigh", lowId: "receivablesLow", cagrId: "receivablesCagr", highPeriodId: "receivablesHighPeriod", lowPeriodId: "receivablesLowPeriod", growthLabelId: "receivablesGrowthLabel", isPercent: false },
-    { key: "payables", avgId: "payablesAvg", highId: "payablesHigh", lowId: "payablesLow", cagrId: "payablesCagr", highPeriodId: "payablesHighPeriod", lowPeriodId: "payablesLowPeriod", growthLabelId: "payablesGrowthLabel", isPercent: false }
+    { key: "payables", avgId: "payablesAvg", highId: "payablesHigh", lowId: "payablesLow", cagrId: "payablesCagr", highPeriodId: "payablesHighPeriod", lowPeriodId: "payablesLowPeriod", growthLabelId: "payablesGrowthLabel", isPercent: false },
+    { key: "currentRatio", avgId: "currentRatioAvg", highId: "currentRatioHigh", lowId: "currentRatioLow", cagrId: "currentRatioCagr", highPeriodId: "currentRatioHighPeriod", lowPeriodId: "currentRatioLowPeriod", growthLabelId: "currentRatioGrowthLabel", isPercent: false, isRatio: true }
   ];
   
   const viewType = document.getElementById("overviewViewType").value;
@@ -2308,7 +2323,10 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
       }
     }
     
-    const formatValue = (val, isPercent) => {
+    const formatValue = (val, isPercent, isRatio) => {
+      if (isRatio) {
+        return val.toFixed(2) + "x";
+      }
       if (isPercent) {
         const formatted = Math.abs(val) >= 1000 
           ? val.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
@@ -2330,19 +2348,19 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
     
     const avgEl = document.getElementById(cfg.avgId);
     if (avgEl) {
-      avgEl.textContent = formatValue(avg, cfg.isPercent);
+      avgEl.textContent = formatValue(avg, cfg.isPercent, cfg.isRatio);
       avgEl.className = avg < 0 ? "stat-value negative" : "stat-value";
     }
     
     const highEl = document.getElementById(cfg.highId);
     if (highEl) {
-      highEl.textContent = formatValue(high, cfg.isPercent);
+      highEl.textContent = formatValue(high, cfg.isPercent, cfg.isRatio);
       highEl.className = high < 0 ? "stat-value negative" : "stat-value";
     }
     
     const lowEl = document.getElementById(cfg.lowId);
     if (lowEl) {
-      lowEl.textContent = formatValue(low, cfg.isPercent);
+      lowEl.textContent = formatValue(low, cfg.isPercent, cfg.isRatio);
       lowEl.className = low < 0 ? "stat-value negative" : "stat-value";
     }
     
@@ -2493,6 +2511,9 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
               if (context.dataset.type === "line") return null;
               const value = context.parsed.y;
               const datasetLabel = context.dataset.label === "Current" ? "" : context.dataset.label + ": ";
+              if (metricData.isRatio) {
+                return datasetLabel + value.toFixed(2) + "x";
+              }
               if (metricData.isPercent) {
                 return datasetLabel + value.toFixed(1) + "%";
               }
@@ -2516,6 +2537,7 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
           color: "#374151",
           formatter: (value) => {
             if (value === 0 || value === null) return "";
+            if (metricData.isRatio) return value.toFixed(2) + "x";
             if (metricData.isPercent) return value.toFixed(1) + "%";
             if (Math.abs(value) >= 1000000) return "$" + (value / 1000000).toFixed(1) + "M";
             if (Math.abs(value) >= 1000) return "$" + (value / 1000).toFixed(0) + "K";
@@ -2528,7 +2550,7 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
         y: {
           ticks: {
             font: { size: 9 },
-            callback: v => metricData.isPercent ? v.toFixed(0) + "%" : (Math.abs(v) >= 1000000 ? "$" + (v / 1000000).toFixed(1) + "M" : "$" + (v / 1000).toFixed(0) + "K")
+            callback: v => metricData.isRatio ? v.toFixed(1) + "x" : (metricData.isPercent ? v.toFixed(0) + "%" : (Math.abs(v) >= 1000000 ? "$" + (v / 1000000).toFixed(1) + "M" : "$" + (v / 1000).toFixed(0) + "K"))
           }
         }
       }
@@ -9307,6 +9329,63 @@ function updateCashDataAsOf(accounts) {
     }
   }
 }
+
+function initTransactionFilter() {
+  const filterInput = document.getElementById("transactionFilterInput");
+  const clearBtn = document.getElementById("transactionFilterClear");
+  
+  if (filterInput) {
+    filterInput.addEventListener("input", function() {
+      filterTransactionTable(this.value);
+    });
+  }
+  
+  if (clearBtn) {
+    clearBtn.addEventListener("click", function() {
+      if (filterInput) {
+        filterInput.value = "";
+        filterTransactionTable("");
+      }
+    });
+  }
+}
+
+function filterTransactionTable(searchTerm) {
+  const container = document.getElementById("transactionTableContainer");
+  if (!container) return;
+  
+  const table = container.querySelector(".transaction-table");
+  if (!table) return;
+  
+  const rows = table.querySelectorAll("tbody tr");
+  const term = searchTerm.toLowerCase().trim();
+  let visibleCount = 0;
+  
+  rows.forEach(row => {
+    if (!term) {
+      row.style.display = "";
+      visibleCount++;
+      return;
+    }
+    
+    const text = row.textContent.toLowerCase();
+    if (text.includes(term)) {
+      row.style.display = "";
+      visibleCount++;
+    } else {
+      row.style.display = "none";
+    }
+  });
+  
+  const countEl = container.querySelector("div[style*='text-align:center']");
+  if (countEl && term) {
+    countEl.textContent = `${visibleCount} matching transaction${visibleCount !== 1 ? 's' : ''} (filtered)`;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  initTransactionFilter();
+});
 
 
 

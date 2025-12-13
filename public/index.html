@@ -286,6 +286,10 @@
                     <input type="checkbox" id="showPayables" checked data-metric="payables">
                     Payables
                   </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="showCurrentRatio" checked data-metric="currentRatio">
+                    Current Ratio
+                  </label>
                 </div>
               </div>
 
@@ -320,7 +324,7 @@
         <div class="overview-tiles-grid">
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title">Revenue</div>
+              <div class="metric-tile-title" title="Total income from sales and services before any deductions">Revenue</div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewRevenueChart" data-title="Revenue" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showRevenue" title="Hide this metric">×</button>
@@ -336,7 +340,7 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title">Gross Profit</div>
+              <div class="metric-tile-title" title="Revenue minus cost of goods sold (direct costs of construction)">Gross Profit</div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewGrossProfitChart" data-title="Gross Profit" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showGrossProfit" title="Hide this metric">×</button>
@@ -352,7 +356,7 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title">Gross Profit Margin %</div>
+              <div class="metric-tile-title" title="Gross Profit as a percentage of Revenue - measures production efficiency">Gross Profit Margin %</div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewGrossMarginChart" data-title="Gross Profit Margin %" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showGrossMargin" title="Hide this metric">×</button>
@@ -368,7 +372,7 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title">Operating Expenses</div>
+              <div class="metric-tile-title" title="Overhead costs like salaries, rent, utilities, and administrative expenses">Operating Expenses</div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewOpexChart" data-title="Operating Expenses" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showOpExpenses" title="Hide this metric">×</button>
@@ -384,7 +388,7 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title">Operating Profit</div>
+              <div class="metric-tile-title" title="Gross Profit minus Operating Expenses - profit from core business operations">Operating Profit</div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewOpProfitChart" data-title="Operating Profit" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showOpProfit" title="Hide this metric">×</button>
@@ -400,7 +404,7 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title">Operating Profit %</div>
+              <div class="metric-tile-title" title="Operating Profit as a percentage of Revenue - measures overall operational efficiency">Operating Profit %</div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewOpMarginChart" data-title="Operating Profit %" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showOpMargin" title="Hide this metric">×</button>
@@ -416,7 +420,7 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title">Cash</div>
+              <div class="metric-tile-title" title="Total cash and cash equivalents including checking, savings, and undeposited funds">Cash</div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewCashChart" data-title="Cash" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showCash" title="Hide this metric">×</button>
@@ -432,7 +436,7 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title">Receivables</div>
+              <div class="metric-tile-title" title="Money owed to the company by customers for completed work">Receivables</div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewReceivablesChart" data-title="Receivables" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showReceivables" title="Hide this metric">×</button>
@@ -448,7 +452,7 @@
           </div>
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
-              <div class="metric-tile-title">Accounts Payable</div>
+              <div class="metric-tile-title" title="Money the company owes to vendors and suppliers">Accounts Payable</div>
               <div class="metric-tile-buttons">
                 <button class="chart-expand-btn" data-chart="overviewPayablesChart" data-title="Accounts Payable" title="Expand chart">⛶</button>
                 <button class="chart-close-btn" data-metric="showPayables" title="Hide this metric">×</button>
@@ -460,6 +464,22 @@
               <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="payablesHigh">-</div><div class="stat-period" id="payablesHighPeriod"></div></div>
               <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="payablesLow">-</div><div class="stat-period" id="payablesLowPeriod"></div></div>
               <div class="stat-box"><div class="stat-label" id="payablesGrowthLabel">CAGR</div><div class="stat-value" id="payablesCagr">-</div></div>
+            </div>
+          </div>
+          <div class="overview-metric-tile">
+            <div class="metric-tile-header">
+              <div class="metric-tile-title" title="Current Assets divided by Current Liabilities - measures ability to pay short-term obligations. Above 1.0 is healthy.">Current Ratio</div>
+              <div class="metric-tile-buttons">
+                <button class="chart-expand-btn" data-chart="overviewCurrentRatioChart" data-title="Current Ratio" title="Expand chart">⛶</button>
+                <button class="chart-close-btn" data-metric="showCurrentRatio" title="Hide this metric">×</button>
+              </div>
+            </div>
+            <canvas id="overviewCurrentRatioChart"></canvas>
+            <div class="metric-stats" id="overviewCurrentRatioStats">
+              <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="currentRatioAvg">-</div></div>
+              <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="currentRatioHigh">-</div><div class="stat-period" id="currentRatioHighPeriod"></div></div>
+              <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="currentRatioLow">-</div><div class="stat-period" id="currentRatioLowPeriod"></div></div>
+              <div class="stat-box"><div class="stat-label" id="currentRatioGrowthLabel">CAGR</div><div class="stat-value" id="currentRatioCagr">-</div></div>
             </div>
           </div>
         </div>
@@ -1298,6 +1318,11 @@
             </div>
           </div>
           <div id="cashTabTransactions" class="cash-tab-content">
+            <div class="transaction-filter-row">
+              <label for="transactionFilterInput">Search:</label>
+              <input type="text" id="transactionFilterInput" placeholder="Filter by description, account, or amount...">
+              <button type="button" class="filter-clear-btn" id="transactionFilterClear">Clear</button>
+            </div>
             <div id="transactionTableContainer" class="transaction-table-container">
               <div class="loading-spinner">Loading transactions...</div>
             </div>
