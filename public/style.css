@@ -4082,7 +4082,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
-  min-width: 200px;
+  table-layout: fixed;
 }
 
 .daily-balance-table .account-col {
@@ -4091,10 +4091,6 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 
 .daily-balance-table.expanded .account-col {
   display: table-cell;
-}
-
-.daily-balance-table.expanded {
-  min-width: 600px;
 }
 
 .daily-balance-table.expanded th.total-col {
@@ -4113,28 +4109,37 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 .daily-balance-table th {
-  padding: 10px 12px;
+  padding: 8px 10px;
   text-align: right;
   font-weight: 600;
-  font-size: 12px;
-  white-space: nowrap;
+  font-size: 11px;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.3;
+  vertical-align: bottom;
 }
 
 .daily-balance-table th.date-col {
   text-align: left;
-  min-width: 100px;
+  width: 80px;
 }
 
 .daily-balance-table th.total-col {
   background: #0f2942;
+  width: 90px;
+}
+
+.daily-balance-table th.account-col {
+  width: 90px;
 }
 
 .daily-balance-table td {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-bottom: 1px solid #e5e7eb;
   text-align: right;
   font-family: 'SF Mono', 'Consolas', monospace;
-  font-size: 13px;
+  font-size: 12px;
+  word-wrap: break-word;
 }
 
 .daily-balance-table td.date-col {
@@ -4142,6 +4147,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   font-family: inherit;
   font-weight: 500;
   color: #374151;
+  white-space: nowrap;
+  font-size: 11px;
 }
 
 .daily-balance-table td.total-col {
