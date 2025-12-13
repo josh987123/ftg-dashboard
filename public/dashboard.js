@@ -1818,6 +1818,31 @@ function loadRevenueConfig() {
       document.getElementById("revRangeEndLabel").textContent = cfg.rangeEnd;
     }
   }
+  
+  // Update UI visibility based on view type
+  const viewType = document.getElementById("revViewType")?.value;
+  const yearWrapper = document.getElementById("revYearWrapper");
+  const rangeWrapper = document.getElementById("revRangeWrapper");
+  const compareCheck = document.getElementById("revCompare");
+  const compareLabel = compareCheck?.closest("label");
+  const excludeLabel = document.getElementById("revExcludeLabel");
+  
+  if (viewType === "annual") {
+    if (yearWrapper) yearWrapper.style.display = "none";
+    if (rangeWrapper) rangeWrapper.classList.remove("hidden");
+    if (compareLabel) compareLabel.style.display = "none";
+    if (excludeLabel) excludeLabel.textContent = "Exclude Current Year";
+  } else if (viewType === "quarterly") {
+    if (yearWrapper) yearWrapper.style.display = "flex";
+    if (rangeWrapper) rangeWrapper.classList.add("hidden");
+    if (compareLabel) compareLabel.style.display = "";
+    if (excludeLabel) excludeLabel.textContent = "Exclude Current Quarter";
+  } else {
+    if (yearWrapper) yearWrapper.style.display = "flex";
+    if (rangeWrapper) rangeWrapper.classList.add("hidden");
+    if (compareLabel) compareLabel.style.display = "";
+    if (excludeLabel) excludeLabel.textContent = "Exclude Current Month";
+  }
 }
 
 function loadAccountConfig() {
@@ -1859,6 +1884,31 @@ function loadAccountConfig() {
       el.value = cfg.rangeEnd;
       document.getElementById("acctRangeEndLabel").textContent = cfg.rangeEnd;
     }
+  }
+  
+  // Update UI visibility based on view type
+  const viewType = document.getElementById("acctViewType")?.value;
+  const yearWrap = document.getElementById("acctYearWrapper");
+  const compareCheckbox = document.getElementById("acctCompare");
+  const compareLabel = compareCheckbox?.closest("label");
+  const rangeWrap = document.getElementById("acctRangeWrapper");
+  const excludeLabel = document.getElementById("acctExcludeLabel");
+  
+  if (viewType === "annual") {
+    if (yearWrap) yearWrap.style.display = "none";
+    if (compareLabel) compareLabel.style.display = "none";
+    if (rangeWrap) rangeWrap.classList.remove("hidden");
+    if (excludeLabel) excludeLabel.textContent = "Exclude Current Year";
+  } else if (viewType === "quarterly") {
+    if (yearWrap) yearWrap.style.display = "flex";
+    if (compareLabel) compareLabel.style.display = "";
+    if (rangeWrap) rangeWrap.classList.add("hidden");
+    if (excludeLabel) excludeLabel.textContent = "Exclude Current Quarter";
+  } else {
+    if (yearWrap) yearWrap.style.display = "flex";
+    if (compareLabel) compareLabel.style.display = "";
+    if (rangeWrap) rangeWrap.classList.add("hidden");
+    if (excludeLabel) excludeLabel.textContent = "Exclude Current Month";
   }
 }
 
@@ -1912,6 +1962,11 @@ function loadIncomeStatementConfig() {
       if (label) label.textContent = cfg.matrixYearEnd;
     }
   }
+  
+  // Update control visibility based on loaded config
+  if (typeof updateMatrixControlsVisibility === 'function') {
+    updateMatrixControlsVisibility();
+  }
 }
 
 function loadBalanceSheetConfig() {
@@ -1963,6 +2018,11 @@ function loadBalanceSheetConfig() {
       const label = document.getElementById("bsMatrixYearEndLabel");
       if (label) label.textContent = cfg.matrixYearEnd;
     }
+  }
+  
+  // Update control visibility based on loaded config
+  if (typeof updateBSControlVisibility === 'function') {
+    updateBSControlVisibility();
   }
 }
 
@@ -2849,6 +2909,7 @@ async function initRevenueModule() {
     }
 
     setupRevenueUI(revenueDataCache);
+    loadRevenueConfig();
     
     spinner.classList.add("hidden");
     updateRevenueView(revenueDataCache);
@@ -4702,6 +4763,7 @@ async function initAccountModule() {
 
     if (!acctUIInitialized) {
       setupAccountUI(acctDataCache);
+      loadAccountConfig();
       acctUIInitialized = true;
     }
     
@@ -5281,6 +5343,7 @@ async function loadIncomeStatement() {
   
   if (!isControlsInitialized) {
     initIncomeStatementControls();
+    loadIncomeStatementConfig();
     isControlsInitialized = true;
   }
   
@@ -6716,9 +6779,15 @@ let bsRowStates = {};
 let bsLastDetailLevel = null;
 let bsInceptionDate = "2015-01";
 
+let bsControlsInitialized = false;
+
 function initBalanceSheet() {
   if (bsData && bsAccountGroups) {
-    initBalanceSheetControls();
+    if (!bsControlsInitialized) {
+      initBalanceSheetControls();
+      loadBalanceSheetConfig();
+      bsControlsInitialized = true;
+    }
     renderBalanceSheet();
     return;
   }
@@ -6730,7 +6799,11 @@ function initBalanceSheet() {
     bsData = financials;
     bsAccountGroups = accountGroups;
     buildBSGLLookup();
-    initBalanceSheetControls();
+    if (!bsControlsInitialized) {
+      initBalanceSheetControls();
+      loadBalanceSheetConfig();
+      bsControlsInitialized = true;
+    }
     renderBalanceSheet();
   }).catch(err => {
     console.error("Balance Sheet data load error:", err);
@@ -7528,6 +7601,7 @@ async function loadCashFlowStatement() {
   
   if (!cfControlsInitialized) {
     initCashFlowControls();
+    loadCashFlowConfig();
     cfControlsInitialized = true;
   }
   
@@ -8579,10 +8653,71 @@ function saveCashFlowConfig() {
     showThousands: document.getElementById("cfShowThousands")?.checked,
     showSubtotal: document.getElementById("cfShowSubtotal")?.checked,
     excludeCurrent: document.getElementById("cfExcludeCurrent")?.checked,
+    excludeSchwab: document.getElementById("cfExcludeSchwab")?.checked,
     matrixYearStart: document.getElementById("cfMatrixYearStart")?.value,
     matrixYearEnd: document.getElementById("cfMatrixYearEnd")?.value
   };
   saveUserPreferences({ cashFlow: config });
+}
+
+function loadCashFlowConfig() {
+  const prefs = getUserPreferences();
+  const cfg = prefs.cashFlow || {};
+  
+  if (cfg.viewMode) {
+    const el = document.getElementById("cfViewMode");
+    if (el) el.value = cfg.viewMode;
+  }
+  if (cfg.periodType) {
+    const el = document.getElementById("cfPeriodType");
+    if (el) el.value = cfg.periodType;
+  }
+  if (cfg.periodValue) {
+    const el = document.getElementById("cfPeriodSelect");
+    if (el && el.querySelector(`option[value="${cfg.periodValue}"]`)) el.value = cfg.periodValue;
+  }
+  if (cfg.compare) {
+    const radio = document.querySelector(`input[name="cfCompareRadio"][value="${cfg.compare}"]`);
+    if (radio) radio.checked = true;
+  }
+  if (cfg.detailLevel) {
+    const radio = document.querySelector(`input[name="cfDetailLevel"][value="${cfg.detailLevel}"]`);
+    if (radio) radio.checked = true;
+  }
+  if (cfg.showThousands !== undefined) {
+    const el = document.getElementById("cfShowThousands");
+    if (el) el.checked = cfg.showThousands;
+  }
+  if (cfg.showSubtotal !== undefined) {
+    const el = document.getElementById("cfShowSubtotal");
+    if (el) el.checked = cfg.showSubtotal;
+  }
+  const excludeEl = document.getElementById("cfExcludeCurrent");
+  if (excludeEl) excludeEl.checked = cfg.excludeCurrent !== false;
+  
+  if (cfg.excludeSchwab !== undefined) {
+    const el = document.getElementById("cfExcludeSchwab");
+    if (el) el.checked = cfg.excludeSchwab;
+  }
+  if (cfg.matrixYearStart) {
+    const el = document.getElementById("cfMatrixYearStart");
+    if (el) {
+      el.value = cfg.matrixYearStart;
+      const label = document.getElementById("cfMatrixYearStartLabel");
+      if (label) label.textContent = cfg.matrixYearStart;
+    }
+  }
+  if (cfg.matrixYearEnd) {
+    const el = document.getElementById("cfMatrixYearEnd");
+    if (el) {
+      el.value = cfg.matrixYearEnd;
+      const label = document.getElementById("cfMatrixYearEndLabel");
+      if (label) label.textContent = cfg.matrixYearEnd;
+    }
+  }
+  
+  // Update control visibility based on loaded config
+  updateCFMatrixControlsVisibility();
 }
 
 function initCFAiAnalysis() {
