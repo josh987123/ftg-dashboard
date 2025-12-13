@@ -8671,9 +8671,44 @@ function setupCashEventListeners() {
     updateCashDisplay();
   });
   
-  // Custom date inputs
-  document.getElementById("cashStartDate")?.addEventListener("change", updateCashDisplay);
-  document.getElementById("cashEndDate")?.addEventListener("change", updateCashDisplay);
+  // Custom date inputs with validation
+  document.getElementById("cashStartDate")?.addEventListener("change", (e) => {
+    const oldestDate = getOldestTransactionDate();
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (oldestDate && e.target.value < oldestDate) {
+      alert(`Cannot select a date before ${formatDateForDisplay(oldestDate)} (oldest transaction date)`);
+      e.target.value = oldestDate;
+    }
+    if (e.target.value > today) {
+      e.target.value = today;
+    }
+    // Ensure start date is not after end date
+    const endDate = document.getElementById("cashEndDate")?.value;
+    if (endDate && e.target.value > endDate) {
+      e.target.value = endDate;
+    }
+    updateCashDisplay();
+  });
+  
+  document.getElementById("cashEndDate")?.addEventListener("change", (e) => {
+    const oldestDate = getOldestTransactionDate();
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (oldestDate && e.target.value < oldestDate) {
+      alert(`Cannot select a date before ${formatDateForDisplay(oldestDate)} (oldest transaction date)`);
+      e.target.value = oldestDate;
+    }
+    if (e.target.value > today) {
+      e.target.value = today;
+    }
+    // Ensure end date is not before start date
+    const startDate = document.getElementById("cashStartDate")?.value;
+    if (startDate && e.target.value < startDate) {
+      e.target.value = startDate;
+    }
+    updateCashDisplay();
+  });
   
   // Stack bars / Show total
   document.getElementById("cashStackBars")?.addEventListener("change", updateCashDisplay);
@@ -8819,6 +8854,21 @@ function renderCashCurrentHeader() {
     <div class="cash-header-total">${formatCurrency(total)}</div>
     ${accountsHtml}
   `;
+}
+
+function getOldestTransactionDate() {
+  if (!cashData.transactions || cashData.transactions.length === 0) return null;
+  const dates = cashData.transactions
+    .map(t => new Date(t.date))
+    .filter(d => !isNaN(d.getTime()));
+  if (dates.length === 0) return null;
+  const oldestDate = new Date(Math.min(...dates));
+  return oldestDate.toISOString().split('T')[0];
+}
+
+function formatDateForDisplay(dateStr) {
+  const date = new Date(dateStr + 'T12:00:00');
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function getCashDateRange() {
