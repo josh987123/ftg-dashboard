@@ -7970,7 +7970,7 @@ function formatCFVariance(current, prior, inThousands = false) {
   return { diff: diffStr, pct: pctStr };
 }
 
-function renderCashFlowStatement() {
+function renderCashFlowStatement(skipDetailLevelReset = false) {
   if (!cfAccountGroups || !cfAccountGroups.cash_flow) {
     console.log("Cash flow groups not loaded yet");
     return;
@@ -7986,11 +7986,13 @@ function renderCashFlowStatement() {
   const showThousands = document.getElementById("cfShowThousands")?.checked || false;
   const detailLevel = document.querySelector('input[name="cfDetailLevel"]:checked')?.value || "summary";
   
-  applyCFDetailLevel(detailLevel);
+  if (!skipDetailLevelReset) {
+    applyCFDetailLevel(detailLevel);
+  }
   updateReportHeader("cf");
   
   if (viewMode === "matrix") {
-    renderCashFlowMatrix();
+    renderCashFlowMatrix(skipDetailLevelReset);
     return;
   }
   
@@ -8194,27 +8196,24 @@ function renderCashFlowStatement() {
 
 function attachCFToggleListeners() {
   const toggles = document.querySelectorAll(".cf-toggle");
-  console.log("Attaching CF toggle listeners to", toggles.length, "toggles");
   toggles.forEach(toggle => {
     toggle.onclick = (e) => {
       e.stopPropagation();
       const rowId = toggle.dataset.row;
-      console.log("Toggle clicked:", rowId, "current state:", cfRowStates[rowId]);
       cfRowStates[rowId] = !cfRowStates[rowId];
-      console.log("New state:", cfRowStates[rowId]);
       
-      // Check if we're in matrix or single view and call the right renderer
+      // Re-render without resetting detail level states
       const viewMode = document.querySelector('input[name="cfViewMode"]:checked')?.value || "single";
       if (viewMode === "matrix") {
-        renderCashFlowMatrix();
+        renderCashFlowMatrix(true);
       } else {
-        renderCashFlowStatement();
+        renderCashFlowStatement(true);
       }
     };
   });
 }
 
-function renderCashFlowMatrix() {
+function renderCashFlowMatrix(skipDetailLevelReset = false) {
   const periodType = document.getElementById("cfPeriodType").value;
   const periodSelect = document.getElementById("cfPeriodSelect");
   const yearStart = document.getElementById("cfMatrixYearStart")?.value;
@@ -8231,7 +8230,9 @@ function renderCashFlowMatrix() {
     return;
   }
   
-  applyCFDetailLevel(detailLevel);
+  if (!skipDetailLevelReset) {
+    applyCFDetailLevel(detailLevel);
+  }
   
   const periods = [];
   const allMonths = getCFAvailableMonths();
