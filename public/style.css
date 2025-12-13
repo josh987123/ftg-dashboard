@@ -3981,3 +3981,118 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     text-align: center;
   }
 }
+
+/* Cash Summary and History Sections */
+.cash-summary-section,
+.cash-history-section {
+  margin-bottom: 24px;
+}
+
+.cash-summary-section h3,
+.cash-history-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Daily Balance Table */
+.daily-balance-table-container {
+  margin-top: 12px;
+}
+
+.daily-balance-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.daily-balance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 600px;
+}
+
+.daily-balance-table thead {
+  background: #1e3a5f;
+  color: #fff;
+  position: sticky;
+  top: 0;
+}
+
+.daily-balance-table th {
+  padding: 10px 12px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.daily-balance-table th.date-col {
+  text-align: left;
+  min-width: 100px;
+}
+
+.daily-balance-table th.total-col {
+  background: #0f2942;
+}
+
+.daily-balance-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: right;
+  font-family: 'SF Mono', 'Consolas', monospace;
+  font-size: 13px;
+}
+
+.daily-balance-table td.date-col {
+  text-align: left;
+  font-family: inherit;
+  font-weight: 500;
+  color: #374151;
+}
+
+.daily-balance-table td.total-col {
+  font-weight: 700;
+  background: #f9fafb;
+  color: #059669;
+}
+
+.daily-balance-table td.balance-col {
+  color: #1f2937;
+}
+
+.daily-balance-table td.negative {
+  color: #dc2626;
+}
+
+.daily-balance-table tbody tr:hover {
+  background: #f3f4f6;
+}
+
+.daily-balance-table tbody tr.today-row {
+  background: #ecfdf5;
+}
+
+.daily-balance-table tbody tr.today-row:hover {
+  background: #d1fae5;
+}
+
+.daily-balance-table tbody tr.today-row td.date-col {
+  font-weight: 700;
+  color: #059669;
+}
+
+@media (max-width: 768px) {
+  .daily-balance-table {
+    font-size: 12px;
+  }
+  
+  .daily-balance-table th,
+  .daily-balance-table td {
+    padding: 6px 8px;
+  }
+}

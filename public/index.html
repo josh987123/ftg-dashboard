@@ -1181,13 +1181,24 @@
         <p class="data-as-of">Data as of: <span id="cashDataAsOf">-</span></p>
         
         <div class="cash-balances-container">
-          <div id="cashBalancesContent" class="cash-balances-content">
-            <div class="loading-spinner">Loading account balances...</div>
+          <!-- Current Balances Summary -->
+          <div class="cash-summary-section">
+            <h3>Current Balances</h3>
+            <div id="cashBalancesContent" class="cash-balances-content">
+              <div class="loading-spinner">Loading account balances...</div>
+            </div>
+            <div class="cash-balances-total">
+              <span class="total-label">Total Cash:</span>
+              <span class="total-value" id="cashTotalValue">-</span>
+            </div>
           </div>
           
-          <div class="cash-balances-total">
-            <span class="total-label">Total Cash:</span>
-            <span class="total-value" id="cashTotalValue">-</span>
+          <!-- Daily Balance History Table -->
+          <div class="cash-history-section">
+            <h3>Daily Balance History</h3>
+            <div id="dailyBalanceTableContainer" class="daily-balance-table-container">
+              <div class="loading-spinner">Calculating daily balances...</div>
+            </div>
           </div>
         </div>
       </section>
