@@ -8635,8 +8635,45 @@ function setupCashEventListeners() {
     }
   });
   
-  // Date range
-  document.getElementById("cashDaysRange")?.addEventListener("change", updateCashDisplay);
+  // Date range dropdown
+  document.getElementById("cashDaysRange")?.addEventListener("change", (e) => {
+    const customRangeDiv = document.getElementById("cashCustomDateRange");
+    if (e.target.value === "custom") {
+      customRangeDiv.style.display = "block";
+      // Set default dates if not set
+      const startInput = document.getElementById("cashStartDate");
+      const endInput = document.getElementById("cashEndDate");
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      if (!endInput.value) {
+        endInput.value = today.toISOString().split('T')[0];
+      }
+      if (!startInput.value) {
+        startInput.value = thirtyDaysAgo.toISOString().split('T')[0];
+      }
+      
+      // Set min date based on oldest transaction
+      if (cashData.transactions && cashData.transactions.length > 0) {
+        const dates = cashData.transactions.map(t => new Date(t.date)).filter(d => !isNaN(d.getTime()));
+        if (dates.length > 0) {
+          const oldestDate = new Date(Math.min(...dates));
+          startInput.min = oldestDate.toISOString().split('T')[0];
+          endInput.min = oldestDate.toISOString().split('T')[0];
+        }
+      }
+      endInput.max = today.toISOString().split('T')[0];
+      startInput.max = today.toISOString().split('T')[0];
+    } else {
+      customRangeDiv.style.display = "none";
+    }
+    updateCashDisplay();
+  });
+  
+  // Custom date inputs
+  document.getElementById("cashStartDate")?.addEventListener("change", updateCashDisplay);
+  document.getElementById("cashEndDate")?.addEventListener("change", updateCashDisplay);
   
   // Stack bars / Show total
   document.getElementById("cashStackBars")?.addEventListener("change", updateCashDisplay);
@@ -8671,12 +8708,16 @@ function calculateDailyBalances(accounts, transactions) {
   
   const txnByDateAccount = {};
   
+  // Find oldest transaction date for dynamic range calculation
+  let oldestDate = new Date();
+  
   transactions.forEach(txn => {
     let dateKey = '';
     try {
       const d = new Date(txn.date);
       if (!isNaN(d.getTime())) {
         dateKey = d.toISOString().split('T')[0];
+        if (d < oldestDate) oldestDate = d;
       }
     } catch (e) {}
     
@@ -8694,9 +8735,13 @@ function calculateDailyBalances(accounts, transactions) {
   const todayStr = today.toISOString().split('T')[0];
   dailyBalances[todayStr] = { ...currentBalances };
   
-  // Generate all dates from 120 days ago to today (covers max range)
+  // Calculate days to go back based on oldest transaction (min 120, max based on data)
+  const daysDiff = Math.ceil((today - oldestDate) / (1000 * 60 * 60 * 24));
+  const daysToGoBack = Math.max(120, daysDiff + 7); // Add buffer of 7 days
+  
+  // Generate all dates from oldest transaction to today
   const allDatesInRange = [];
-  for (let i = 0; i <= 120; i++) {
+  for (let i = 0; i <= daysToGoBack; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
     allDatesInRange.push(d.toISOString().split('T')[0]);
@@ -8776,22 +8821,51 @@ function renderCashCurrentHeader() {
   `;
 }
 
+function getCashDateRange() {
+  const rangeValue = document.getElementById("cashDaysRange")?.value || "30";
+  const today = new Date();
+  let startDate, endDate;
+  
+  if (rangeValue === "custom") {
+    const startInput = document.getElementById("cashStartDate")?.value;
+    const endInput = document.getElementById("cashEndDate")?.value;
+    
+    if (startInput && endInput) {
+      startDate = new Date(startInput + 'T12:00:00');
+      endDate = new Date(endInput + 'T12:00:00');
+    } else {
+      // Fallback to 30 days if custom dates not set
+      endDate = today;
+      startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 30);
+    }
+  } else {
+    const daysRange = parseInt(rangeValue);
+    endDate = today;
+    startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - (daysRange - 1));
+  }
+  
+  // Generate array of date strings
+  const dates = [];
+  const current = new Date(startDate);
+  while (current <= endDate) {
+    dates.push(current.toISOString().split('T')[0]);
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return dates;
+}
+
 function renderCashChart() {
   const canvas = document.getElementById("cashChart");
   if (!canvas) return;
   
-  const daysRange = parseInt(document.getElementById("cashDaysRange")?.value || 30);
   const stackBars = document.getElementById("cashStackBars")?.checked !== false;
   const showTotal = document.getElementById("cashShowTotal")?.checked !== false;
   
-  // Get dates to display
-  const today = new Date();
-  const dates = [];
-  for (let i = daysRange - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    dates.push(d.toISOString().split('T')[0]);
-  }
+  // Get dates to display using the new helper function
+  const dates = getCashDateRange();
   
   // Get selected accounts sorted by balance
   const selectedAccounts = cashData.accounts
@@ -8984,7 +9058,6 @@ function renderCashDailyTable() {
   const container = document.getElementById("dailyBalanceTableContainer");
   if (!container) return;
   
-  const daysRange = parseInt(document.getElementById("cashDaysRange")?.value || 30);
   const selectedAccounts = cashData.accounts
     .filter(a => cashSelectedAccounts.includes(a.name))
     .sort((a, b) => b.balance - a.balance);
@@ -8994,13 +9067,9 @@ function renderCashDailyTable() {
     return;
   }
   
+  // Get dates in reverse order (newest first) for table display
+  const dates = getCashDateRange().reverse();
   const today = new Date();
-  const dates = [];
-  for (let i = 0; i < daysRange; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    dates.push(d.toISOString().split('T')[0]);
-  }
   
   const todayStr = today.toISOString().split('T')[0];
   const accountNames = selectedAccounts.map(a => a.name);
@@ -9051,12 +9120,10 @@ function renderCashTransactionTable() {
   const container = document.getElementById("transactionTableContainer");
   if (!container) return;
   
-  const daysRange = parseInt(document.getElementById("cashDaysRange")?.value || 30);
-  
-  // Filter transactions by selected accounts and date range
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - daysRange);
-  const cutoffStr = cutoffDate.toISOString().split('T')[0];
+  // Get date range from the helper function
+  const dateRange = getCashDateRange();
+  const startDateStr = dateRange[0];
+  const endDateStr = dateRange[dateRange.length - 1];
   
   const filteredTxns = cashData.transactions.filter(txn => {
     // Check if account is selected
@@ -9066,7 +9133,7 @@ function renderCashTransactionTable() {
     try {
       const txnDate = new Date(txn.date);
       const txnDateStr = txnDate.toISOString().split('T')[0];
-      return txnDateStr >= cutoffStr;
+      return txnDateStr >= startDateStr && txnDateStr <= endDateStr;
     } catch (e) {
       return false;
     }

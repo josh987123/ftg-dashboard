@@ -1210,14 +1210,25 @@
                 <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Date Range:</div>
                 <div class="dropdown-stack">
                   <div class="dropdown-row">
-                    <label>Days:</label>
+                    <label>Range:</label>
                     <select id="cashDaysRange">
                       <option value="7">Last 7 Days</option>
                       <option value="14">Last 14 Days</option>
                       <option value="30" selected>Last 30 Days</option>
                       <option value="60">Last 60 Days</option>
                       <option value="90">Last 90 Days</option>
+                      <option value="custom">Custom Range</option>
                     </select>
+                  </div>
+                  <div id="cashCustomDateRange" class="custom-date-range" style="display: none;">
+                    <div class="date-input-row">
+                      <label>From:</label>
+                      <input type="date" id="cashStartDate" class="date-input">
+                    </div>
+                    <div class="date-input-row">
+                      <label>To:</label>
+                      <input type="date" id="cashEndDate" class="date-input">
+                    </div>
                   </div>
                 </div>
               </div>
