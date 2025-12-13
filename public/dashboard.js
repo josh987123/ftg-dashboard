@@ -8193,11 +8193,23 @@ function renderCashFlowStatement() {
 }
 
 function attachCFToggleListeners() {
-  document.querySelectorAll(".cf-toggle").forEach(toggle => {
-    toggle.onclick = () => {
+  const toggles = document.querySelectorAll(".cf-toggle");
+  console.log("Attaching CF toggle listeners to", toggles.length, "toggles");
+  toggles.forEach(toggle => {
+    toggle.onclick = (e) => {
+      e.stopPropagation();
       const rowId = toggle.dataset.row;
+      console.log("Toggle clicked:", rowId, "current state:", cfRowStates[rowId]);
       cfRowStates[rowId] = !cfRowStates[rowId];
-      renderCashFlowStatement();
+      console.log("New state:", cfRowStates[rowId]);
+      
+      // Check if we're in matrix or single view and call the right renderer
+      const viewMode = document.querySelector('input[name="cfViewMode"]:checked')?.value || "single";
+      if (viewMode === "matrix") {
+        renderCashFlowMatrix();
+      } else {
+        renderCashFlowStatement();
+      }
     };
   });
 }
