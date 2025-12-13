@@ -2980,9 +2980,6 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   flex-shrink: 0;
 }
 
-.chart-expand-btn {
-  font-size: 7px;
-}
 
 .chart-expand-btn:hover,
 .chart-close-btn:hover {
