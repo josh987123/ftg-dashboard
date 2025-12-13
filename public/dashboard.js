@@ -8798,14 +8798,69 @@ function renderCashChart() {
   
   if (cashChartInstance) cashChartInstance.destroy();
   
+  // Calculate min/max for Y-axis (start near minimum, not zero)
+  let allValues = [];
+  datasets.forEach(ds => {
+    if (ds.type !== 'line') {
+      allValues = allValues.concat(ds.data.filter(v => v !== null && v !== undefined));
+    }
+  });
+  
+  // For stacked bars, calculate totals per date
+  if (stackBars && selectedAccounts.length > 1) {
+    allValues = dates.map(dateKey => {
+      const balances = cashDailyBalances[dateKey] || {};
+      return selectedAccounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0);
+    });
+  }
+  
+  const dataMin = Math.min(...allValues);
+  const dataMax = Math.max(...allValues);
+  
+  // Round down to nearest million for min, round up for max
+  const yMin = Math.floor(dataMin / 1000000) * 1000000;
+  const yMax = Math.ceil(dataMax / 1000000) * 1000000;
+  
+  // Check if mobile for legend adjustments
+  const isMobile = window.innerWidth <= 768;
+  
   cashChartInstance = new Chart(canvas, {
     type: 'bar',
     data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: { bottom: isMobile ? 10 : 0 }
+      },
       plugins: {
-        legend: { display: selectedAccounts.length > 1, position: 'top' },
+        legend: { 
+          display: selectedAccounts.length > 1, 
+          position: 'bottom',
+          labels: {
+            boxWidth: isMobile ? 10 : 12,
+            boxHeight: isMobile ? 10 : 12,
+            padding: isMobile ? 6 : 10,
+            font: { size: isMobile ? 9 : 11 },
+            generateLabels: (chart) => {
+              const original = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+              if (isMobile) {
+                return original.map(label => {
+                  // Shorten account names on mobile: keep first part and last 4 digits
+                  let text = label.text;
+                  const match = text.match(/\((\d+)\)$/);
+                  if (match && text.length > 20) {
+                    const acctNum = match[1];
+                    const prefix = text.substring(0, 12).trim();
+                    text = prefix + '..(' + acctNum + ')';
+                  }
+                  return { ...label, text };
+                });
+              }
+              return original;
+            }
+          }
+        },
         tooltip: {
           callbacks: {
             label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
@@ -8813,10 +8868,20 @@ function renderCashChart() {
         }
       },
       scales: {
-        x: { stacked: stackBars },
-        y: {
+        x: { 
           stacked: stackBars,
           ticks: {
+            font: { size: isMobile ? 9 : 11 },
+            maxRotation: isMobile ? 45 : 0,
+            minRotation: isMobile ? 45 : 0
+          }
+        },
+        y: {
+          stacked: stackBars,
+          min: yMin > 0 ? yMin : undefined,
+          max: yMax,
+          ticks: {
+            font: { size: isMobile ? 10 : 12 },
             callback: v => {
               if (Math.abs(v) >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
               if (Math.abs(v) >= 1000) return '$' + (v/1000).toFixed(0) + 'K';
