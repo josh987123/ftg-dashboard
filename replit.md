@@ -2,7 +2,7 @@
 
 ## Overview
 
-FTG Dashboard is a client-side financial dashboard application for tracking and visualizing business financial metrics. The application provides password-protected access to financial data including revenue, accounts receivable, and accounts payable across multiple years (2015-2025). It features a responsive design with mobile sidebar navigation and data visualization capabilities.
+FTG Dashboard is a client-side financial dashboard application designed for tracking and visualizing business financial metrics. It provides password-protected access to financial data, including revenue, accounts receivable, and accounts payable across multiple years (2015-2025). The application features a responsive design with mobile sidebar navigation and robust data visualization capabilities, aiming to deliver comprehensive financial insights.
 
 ## User Preferences
 
@@ -10,193 +10,54 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
-- **Pure client-side application**: The dashboard is built entirely with vanilla HTML, CSS, and JavaScript without frameworks
-- **Static file serving**: All assets are served from the `/public` directory
-- **Component structure**:
-  - `index.html` - Main application shell with login screen, header, and sidebar layout
-  - `style.css` - Complete styling using CSS custom properties and responsive design
-  - `dashboard.js` - All application logic including authentication and navigation
+### Frontend
+The application is a pure client-side solution built with vanilla HTML, CSS, and JavaScript. All static assets are served from the `/public` directory.
 
 ### Authentication & User Management
-- **Database-backed authentication**: Users stored in PostgreSQL with bcrypt password hashing
-- **Role-based access control (RBAC)**: Three default roles with different permissions:
-  - **admin**: Full access to all features including user management
-  - **manager**: Access to all dashboard pages but not admin functions
-  - **viewer**: Limited access to specific pages (Overview, Revenue, Account Detail, Cash Balances)
-- **Default users** (password: `Ftgb2025$`):
-  - rodney@ftgbuilders.com (admin)
-  - sergio@ftghbuilders.com (admin)
-  - joshl@ftgbuilders.com (manager)
-  - greg@ftgbuilders.com (manager)
-  - bailey@ftgbuilders.com (viewer)
-- **Session management**: Server-side sessions with tokens, 30-day expiration, IP tracking
-- **Password security**: bcrypt hashing with automatic migration from legacy SHA-256 hashes
-- **Login flow**: Modal requires email + password, validates against database
-- **User display**: Current user's first name shown in header after login
-- **User preferences**: Each user's settings saved to `localStorage` keyed by email (`ftg_prefs_${email}`)
-- **Saved Views**: Users can save and name custom view configurations for each page (`ftg_views_${email}`):
-  - SavedViewManager class manages named views per page per user
-  - Dropdown selector shows "Current Settings" (default) plus any saved named views
-  - Save button prompts for view name and stores current config
-  - Delete button removes selected saved view
-  - PageViewConfigs provides page-specific collect/apply/refresh methods
-  - Both auto-save (ftg_prefs) and named views (SavedViewManager) systems coexist
+The system uses database-backed authentication with bcrypt password hashing and role-based access control (RBAC) for `admin`, `manager`, and `viewer` roles. Session management includes server-side tokens, 30-day expiration, and IP tracking. User preferences and saved views are stored locally per user.
 
 ### Admin Dashboard (Admin role only)
-- **User Management**: Create, edit, disable users with role assignment
-- **Role Permissions**: Configure which pages each role can access
-- **Audit Log**: Track all admin actions with timestamps, user, action details, and IP address
-- **API Endpoints**:
-  - POST /api/login - User authentication
-  - POST /api/logout - End session
-  - GET /api/verify-session - Verify token and get user info with permissions
-  - GET/POST/PUT/DELETE /api/admin/users - User CRUD operations
-  - GET/PUT /api/admin/roles/:id/permissions - Role permission management
-  - GET /api/admin/audit-log - View audit trail
+Admins have access to user management (CRUD operations), role permission configuration, and an audit log to track administrative actions.
 
 ### Data Management
-- **Static JSON files**: Financial data is stored in `/public/data/financials.json` and account hierarchy in `/public/data/account_groups.json`
-- **Data structure**: Organized by metric type (revenue, accounts_receivable, accounts_payable) with yearly arrays containing monthly values
-- **GL History**: `gl_history_all` array contains individual GL account data with monthly columns in "YYYY-MM" format
-- **Accounts**: `accounts` array contains account metadata (account_no, description, debit_credit)
-- **Account Groups**: `income_statement.groups` and `balance_sheet.groups` arrays define hierarchical financial statement structures with accounts, accounts_range, formulas, levels, and row types (header, detail, subtotal, ratio)
-- **Historical range**: Covers 2015-2025 with monthly granularity
+Financial data is stored in static JSON files (`financials.json`, `account_groups.json`) covering the period 2015-2025 with monthly granularity. Data includes detailed GL history, account metadata, and hierarchical financial statement structures.
 
 ### Dashboard Views
-- **Executive Overview**: Ten metric tiles with bar charts showing key financial metrics:
-  - P&L Metrics: Revenue, Gross Profit, Gross Profit %, Operating Expenses, Operating Profit, Operating Profit %
-  - Balance Sheet Metrics: Cash, Receivables, Accounts Payable, Current Ratio (cumulative balances at period end)
-  - Configuration options: View type (monthly/quarterly/annual), year selector, year range slider for annual view
-  - Compare to prior year option adds red bars for prior year comparison
-  - Metric visibility checkboxes allow users to show/hide individual metric tiles
-  - User preferences saved per user (metric visibility, view settings)
-  - Responsive grid layout (3 columns desktop, 2 tablet, 1 mobile)
-  - Mobile info icons: ⓘ buttons appear on mobile (768px and below) next to metric titles - tap to show popup explanation of each metric
-- **Revenue**: Monthly/quarterly/annual revenue charts with year comparison, trendlines, summary KPI tiles (Average, Largest, Smallest, CAGR), and export options (Print/PDF/CSV). Partial periods shown in orange with "Exclude Current Period" option.
-- **Account Detail**: GL account drilldown with dropdown selector (accounts 4000+), monthly/quarterly/annual views, trendlines, and data tables. Income accounts (4000-4999, 8000-8999) display as positive values.
-- **Income Statement**: Full P&L statement with hierarchical account groups from account_groups.json:
-  - Period types: Month, Quarter, Year, YTD, TTM
-  - Comparison modes: None, Prior Period, Prior Year (with $ and % variance)
-  - View modes: Single Period or Matrix (3/6/9/12 months, 4 quarters, 5 years)
-  - Detail level selector: Summary/Medium/Account (stacked radio buttons right of Compare dropdown)
-  - Expand/collapse hierarchy with disclosure icons
-  - Accounting format: Whole dollars with parentheses for negatives, percentages for ratios
-- **Balance Sheet**: Full balance sheet with cumulative balances from inception (2015) to selected date:
-  - View modes: Single Period or Matrix
-  - **Single Period mode**: As of date selector (monthly periods from 2015-2025)
-    - Comparison modes: None, Prior Year, or Prior Month (with $ and % variance)
-  - **Matrix mode**: Multiple periods displayed in columns
-    - Period types: Month (12 columns), Quarter (4 columns), Annual (year range slider)
-    - Year selector for monthly/quarterly views
-    - Year range slider for annual view
-  - Exclude Month in Progress checkbox
-  - Detail level: Summary (totals only) or Detail (all line items)
-  - Show in Thousands option
-  - **Current Assets** (expandable subtotal):
-    - Cash & Cash Equivalents: Checking (1001, 1005, 1040), Savings & Investments (1003, 1004, 1006, 1007), Undeposited Funds (1090)
-    - Receivables: Contracts (1100), Retention (1105), Emp Dependent (1110), Loans (1120-1130), Underbillings (1050)
-    - Other Current Assets: Employee Advances (1030)
-  - **Long-Term Assets** (expandable subtotal):
-    - Fixed Assets: Leasehold Improvements (1300+1305), Equipment & Machinery (1310+1315), Office Furniture (1320+1325), Vehicles (1400+1405)
-    - Intangible Assets: Organization Costs (1750), Client Knowledge (1800+1805)
-    - Prepaid Assets (1500-1600), Other Long-Term Assets (1610, 1700, 1900)
-  - **TOTAL ASSETS** = Current Assets + Long-Term Assets
-  - **Current Liabilities** (expandable subtotal):
-    - Accounts Payable (expandable): Contracts (2000, 2005), Retention (2010), Credit Cards (2015-2018)
-    - Accrued Expenses (2021, 2023, 2025, 2028, 2030, 2070, 2100, 2110)
-    - Overbillings (2120)
-    - Other Current Liabilities (2130, 2140, 2200, 2250)
-  - **Long-Term Liabilities** (expandable subtotal):
-    - Loan - Bridge Bank (2500), Note - Vehicles (2510), Note - Former Shareholder (2515), Deferred Tax Liability (2150)
-  - **TOTAL LIABILITIES** = Current Liabilities + Long-Term Liabilities
-  - **Equity** (expandable subtotal):
-    - Treasury Stock (3010)
-    - Capital Contributions (expandable): 3030, 3031, 3032, 3033, 3034
-    - Distributions (expandable): 3025, 3035, 3036
-    - Retained Earnings (cumulative through prior year-end)
-    - Current Year Net Income (Jan 1 through selected date)
-  - Multi-level expand/collapse with recursive parent visibility checking
-  - Mobile-responsive styling at 768px and 500px breakpoints
-- **Statement of Cash Flows**: Full cash flow statement using the indirect method:
-  - Period types: Month, Quarter, Year, YTD, TTM
-  - Comparison modes: None, Prior Period, Prior Year (with $ and % variance)
-  - View modes: Single Period or Matrix (12 months, 4 quarters, multi-year range)
-  - Detail level selector: Summary (collapsed sections showing only subtotals) / Detailed (expanded sections showing all components)
-  - Expand/collapse hierarchy with disclosure icons
-  - Options: Exclude Schwab (1004) - checked by default, excludes Schwab account from Beginning/Ending Cash Balance
-  - **Operating Activities** (expandable, green highlight):
-    - Net Income (from Income Statement)
-    - Adjustments for Non-Cash Items: Depreciation (6060), Amortization (7220), Gain/Loss on Asset Disposal (8020)
-    - Changes in Working Capital: AR (1100, 1105), Underbillings (1050), Employee Advances, AP (2000, 2005, 2010), Overbillings (2120), Accrued Expenses
-  - **Investing Activities** (expandable, blue highlight):
-    - Capital Expenditures: Equipment (1310), Vehicles (1400), Furniture (1320), Leasehold (1300)
-    - Changes in Intangible Assets (1750, 1800)
-    - Changes in Other Long-Term Assets
-  - **Financing Activities** (expandable, yellow highlight):
-    - Changes in Debt: Credit Cards, Bridge Bank Loan, Vehicle Notes, Other Notes
-    - Capital Contributions (3030-3034)
-    - Distributions to Owners (3025, 3035, 3036)
-    - Treasury Stock (3010)
-  - **NET CHANGE IN CASH**: Operating + Investing + Financing
-  - **Beginning/Ending Cash Balance**: Reconciliation to Balance Sheet
-  - AI Analysis: Claude Sonnet 4 CFO-level insights with 4 sections
-  - Saved views support per user
-- **Over/Under Bill**: Under construction - will track billing variances
-- **Receivables/Payables**: Under construction - will manage AR/AP tracking
-- **Job Analytics**: Under construction - will provide job-level performance metrics
-- **Cash Balances**: Cash position tracking with dual data sources:
-  - **Daily view**: Uses Google Sheets data (Spreadsheet ID: 1Nkcn2Obvipqn30b-QEfKud0d8G9WTuWicUX07b76wXY)
-    - Account selection checkboxes with Select All/None buttons
-    - Balance calculation: Current balance - sum of transactions (walks backward)
-    - Multi-account color coding
-  - **Monthly/Quarterly/Annual views**: Uses Balance Sheet data from financials.json
-    - Shows "Cash & Cash Equivalents" total from accounts [1001, 1005, 1040, 1003, 1004, 1006, 1007, 1090]
-    - Uses getCumulativeBalance() function (same as Balance Sheet)
-    - Year selector for monthly/quarterly views (2015-2025)
-    - Year range sliders for annual view
-  - Options: Exclude Schwab (1004) - checked by default, Show in Thousands, Stack Bars
-  - Bar chart visualization using Chart.js
-  - Summary tiles: Current Total, Average, Highest, Lowest
+The dashboard offers several key views:
+- **Executive Overview**: Displays ten configurable financial metric tiles with comparison options and responsive layout.
+- **Revenue**: Provides monthly/quarterly/annual revenue charts with trendlines, KPIs, and export options.
+- **Account Detail**: Offers GL account drilldown with various views and data tables.
+- **Income Statement**: Presents a full P&L statement with hierarchical account groups, multiple period types, comparison modes, and detail levels.
+- **Balance Sheet**: Shows a full balance sheet with cumulative balances, various view and comparison modes, and detailed asset, liability, and equity breakdowns.
+- **Statement of Cash Flows**: Uses the indirect method, offering period types, comparison modes, detail levels, and AI analysis.
+- **Cash Balances**: Tracks cash position using both Google Sheets for daily data and Balance Sheet data for monthly/quarterly/annual views.
 
 ### Responsive Design
-- **Mobile-first approach**: Sidebar navigation with hamburger menu toggle for mobile devices
-- **Overlay pattern**: Semi-transparent overlay when mobile sidebar is open
-- **Flexible layout**: Uses CSS flexbox for the main layout structure
+The application adopts a mobile-first approach with a responsive sidebar navigation, hamburger menu, and flexible layout using CSS flexbox.
 
 ### Color Standards
-- **Positive/Success (Green)**: `#10b981` - Used for positive values, growth indicators, and successful states
-- **Negative/Error (Red)**: `#dc2626` - Used for negative values, decline indicators, and error states
-- **Primary Blue**: `#3b82f6` - Used for current year data, primary actions, and links
-- **Warning/Partial (Orange)**: `#f59e0b` - Used for partial periods and in-progress indicators
-- **Chart Gradients**: Defined in `gradientColors` object with matching start/end values for blue, red, and orange
+A defined color palette is used for consistency:
+- **Positive/Success**: Green (`#10b981`)
+- **Negative/Error**: Red (`#dc2626`)
+- **Primary Blue**: (`#3b82f6`) for current year data and primary actions.
+- **Warning/Partial**: Orange (`#f59e0b`) for partial periods.
 
 ## External Dependencies
 
 ### Fonts
-- **Google Fonts**: Inter font family (weights: 300, 400, 500, 600, 700) loaded via CDN
+- **Google Fonts**: Inter font family (weights: 300-700) loaded via CDN.
 
 ### Backend Services
-- **Flask Server**: Python Flask application (`public/server.py`) serves static files for local development
+- **Flask Server**: A Python Flask application (`public/server.py`) is used for serving static files during local development.
 
 ### Export & Email Features
-- **Universal Export**: Print, PDF, and CSV export work for all three main views (Revenue, Account, Income Statement)
-- **Smart Page Orientation**: Exports automatically use landscape for wide content (matrix views, annual comparison) and portrait for tall content (single period views)
-- **Email Reports**: Modal dialog to email current report view via EmailJS
-  - Executive Overview emails include visual chart images (captured using Chart.js toBase64Image)
-  - Charts are combined into a 2x3 grid with titles and stats
-  - Sent as PNG attachment via EmailJS variable attachment feature
-  - Requires EmailJS Personal plan for attachment support
-- **Page Formatting**: Exports are sized to fit on a single page with appropriate font scaling
+- **Universal Export**: Print, PDF, and CSV export functionality is available across key dashboard views. Exports feature smart page orientation.
+- **Email Reports**: Current report views can be emailed via EmailJS, including visual chart images for the Executive Overview.
+- **Scheduled Email Reports**: Users can schedule reports (Executive Overview, Revenue, Account Detail, Income Statement, Balance Sheet, Cash Flow, Cash Balances) with configurable frequency and recipients. A background scheduler handles delivery, and schedules are stored in a `scheduled_reports` database table.
 
 ### EmailJS Configuration
-- **Service**: EmailJS client-side email service (no backend required)
-- **Credentials stored in dashboard.js**:
-  - Public Key: `g7M4wCTIOOn2D65le`
-  - Service ID: `service_x8zz5uy`
-  - Template ID: `template_44g2s84`
-- **Template requires**: Variable attachment named `chart_attachment` for Executive Overview charts
+- **Service**: EmailJS client-side service is used for sending emails. Credentials (Public Key, Service ID, Template ID) are configured in `dashboard.js`.
 
 ### Static Assets
-- **Logo**: `logo.png` used in login screen and header
-- **No database**: All data is stored in static JSON files
+- **Logo**: `logo.png` is used for branding.
+- **Data Storage**: All financial data is stored in static JSON files; no separate database is used for core financial data.
