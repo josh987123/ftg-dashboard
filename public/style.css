@@ -3227,16 +3227,22 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     min-width: calc(50% - 6px);
   }
   
-  /* Expand buttons mobile - keep compact */
-  .chart-expand-btn {
-    width: 16px;
-    height: 16px;
-    min-width: 16px;
-    min-height: 16px;
-    max-width: 16px;
-    max-height: 16px;
+  /* Expand/close buttons mobile - identical sizing */
+  .chart-expand-btn,
+  .chart-close-btn {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    max-width: 22px;
+    max-height: 22px;
     padding: 0;
-    font-size: 10px;
+  }
+  
+  .chart-expand-btn svg,
+  .chart-close-btn svg {
+    width: 12px;
+    height: 12px;
   }
   
   /* Income statement mobile - compact */
