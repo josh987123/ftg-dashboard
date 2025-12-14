@@ -10454,8 +10454,10 @@ let adminRoles = [];
 let adminPermissions = [];
 let adminUsers = [];
 
-// getAuthToken is already defined earlier in this file
-// getAuthHeaders is already defined earlier in this file
+function getAuthHeaders() {
+  const token = getAuthToken();
+  return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+}
 
 function initAdminModule() {
   // Tab switching
