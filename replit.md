@@ -16,6 +16,20 @@ The application is a pure client-side solution built with vanilla HTML, CSS, and
 ### Authentication & User Management
 The system uses database-backed authentication with bcrypt password hashing and role-based access control (RBAC) for `admin`, `manager`, and `viewer` roles. Session management includes server-side tokens, 30-day expiration, and IP tracking. User preferences and saved views are stored locally per user.
 
+### Two-Factor Authentication (2FA)
+- **TOTP-based 2FA**: Users can enable 2FA via Security Settings in the user menu
+- **QR Code Setup**: Standard authenticator app support (Google Authenticator, Authy, etc.)
+- **Encrypted Secrets**: TOTP secrets are encrypted using Fernet before database storage
+- **Backup Codes**: 10 recovery codes (SHA-256 hashed) generated when 2FA is enabled
+- **Key Management**: Encryption key derived from `TOTP_ENCRYPTION_KEY` env var or `DATABASE_URL`
+
+### Password Reset
+- **Self-Service Reset**: Users can request password reset via email on the login page
+- **Admin Reset**: Admins can reset user passwords from the Admin dashboard
+- **Token Security**: Reset tokens are SHA-256 hashed before database storage
+- **Session Invalidation**: All existing sessions are terminated when password is changed
+- **Email Delivery**: Uses Google Mail integration for sending reset links
+
 ### Admin Dashboard (Admin role only)
 Admins have access to user management (CRUD operations), role permission configuration, and an audit log to track administrative actions.
 
