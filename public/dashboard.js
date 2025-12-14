@@ -609,12 +609,6 @@ async function showSecuritySettingsModal() {
               <button class="btn-primary" id="twoFASetupConfirmBtn">Enable 2FA</button>
             </div>
           </div>
-          <div id="twoFABackupCodesSection" class="hidden" style="margin-top:20px;">
-            <h4>Backup Codes</h4>
-            <p style="color:#6b7280;font-size:14px;margin:12px 0;">Save these codes in a safe place. Each can only be used once.</p>
-            <div id="backupCodesList" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:monospace;background:#f9fafb;padding:16px;border-radius:8px;"></div>
-            <button class="btn-primary" id="backupCodesDoneBtn" style="margin-top:16px;">Done</button>
-          </div>
           <div id="twoFADisableSection" class="hidden" style="margin-top:20px;">
             <h4>Disable 2FA</h4>
             <p style="color:#6b7280;font-size:14px;margin:12px 0;">Enter your password to confirm:</p>
@@ -650,12 +644,10 @@ async function load2FAStatus() {
     const data = await response.json();
     
     if (data.enabled) {
-      statusText.innerHTML = `<span style="color:#10b981;">✓ 2FA is enabled</span><br><small>Backup codes remaining: ${data.backup_codes_remaining}</small>`;
+      statusText.innerHTML = `<span style="color:#10b981;">✓ 2FA is enabled</span>`;
       actions.innerHTML = `
-        <button class="btn-secondary" id="regenerateBackupBtn" style="margin-right:8px;">Regenerate Backup Codes</button>
         <button class="btn-secondary" id="disable2FABtn" style="background:#fee2e2;color:#dc2626;">Disable 2FA</button>
       `;
-      document.getElementById("regenerateBackupBtn").onclick = () => showRegenerateBackupCodes();
       document.getElementById("disable2FABtn").onclick = () => showDisable2FASection();
     } else {
       statusText.textContent = "2FA is not enabled. Enable it for extra security.";
@@ -703,14 +695,8 @@ async function start2FASetup() {
         
         if (confirmData.success) {
           document.getElementById("twoFASetupSection").classList.add("hidden");
-          document.getElementById("twoFABackupCodesSection").classList.remove("hidden");
-          const codesList = document.getElementById("backupCodesList");
-          codesList.innerHTML = confirmData.backup_codes.map(c => `<span style="padding:4px;background:#fff;border-radius:4px;">${c}</span>`).join("");
-          document.getElementById("backupCodesDoneBtn").onclick = () => {
-            document.getElementById("twoFABackupCodesSection").classList.add("hidden");
-            document.getElementById("twoFAStatusSection").classList.remove("hidden");
-            load2FAStatus();
-          };
+          document.getElementById("twoFAStatusSection").classList.remove("hidden");
+          load2FAStatus();
         } else {
           status.textContent = confirmData.error || "Verification failed";
           status.className = "email-status error";
@@ -756,33 +742,6 @@ function showDisable2FASection() {
       status.className = "email-status error";
     }
   };
-}
-
-async function showRegenerateBackupCodes() {
-  const password = prompt("Enter your password to regenerate backup codes:");
-  if (!password) return;
-  
-  const token = localStorage.getItem("ftg_session_token");
-  const response = await fetch("/api/2fa/regenerate-backup-codes", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ password })
-  });
-  const data = await response.json();
-  
-  if (data.success) {
-    document.getElementById("twoFAStatusSection").classList.add("hidden");
-    document.getElementById("twoFABackupCodesSection").classList.remove("hidden");
-    const codesList = document.getElementById("backupCodesList");
-    codesList.innerHTML = data.backup_codes.map(c => `<span style="padding:4px;background:#fff;border-radius:4px;">${c}</span>`).join("");
-    document.getElementById("backupCodesDoneBtn").onclick = () => {
-      document.getElementById("twoFABackupCodesSection").classList.add("hidden");
-      document.getElementById("twoFAStatusSection").classList.remove("hidden");
-      load2FAStatus();
-    };
-  } else {
-    alert(data.error || "Failed to regenerate backup codes");
-  }
 }
 
 document.addEventListener("DOMContentLoaded", function() {

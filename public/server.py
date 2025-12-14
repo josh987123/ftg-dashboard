@@ -170,17 +170,6 @@ def init_database():
             except:
                 pass
         
-        # Create user_backup_codes table for 2FA recovery
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS user_backup_codes (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                code_hash VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                used_at TIMESTAMP
-            )
-        """)
-        
         # Create sessions table with IP tracking
         cur.execute("""
             CREATE TABLE IF NOT EXISTS sessions (
@@ -1244,24 +1233,6 @@ def api_login_2fa():
         totp = pyotp.TOTP(decrypted_secret)
         is_valid = totp.verify(code, valid_window=1)
         
-        # If TOTP fails, try backup codes
-        if not is_valid:
-            cur.execute("""
-                SELECT id, code_hash FROM user_backup_codes
-                WHERE user_id = %s AND used_at IS NULL
-            """, (session['user_id'],))
-            backup_codes = cur.fetchall()
-            
-            for backup in backup_codes:
-                if hashlib.sha256(code.encode()).hexdigest() == backup['code_hash']:
-                    # Mark backup code as used
-                    cur.execute("""
-                        UPDATE user_backup_codes SET used_at = NOW() WHERE id = %s
-                    """, (backup['id'],))
-                    is_valid = True
-                    log_audit(session['user_id'], '2fa_backup_code_used', 'user', session['user_id'], {})
-                    break
-        
         if not is_valid:
             cur.close()
             conn.close()
@@ -1415,17 +1386,6 @@ def api_2fa_confirm():
             WHERE id = %s
         """, (user['id'],))
         
-        # Generate backup codes
-        backup_codes = []
-        for _ in range(10):
-            code = secrets.token_hex(4).upper()  # 8-character hex codes
-            backup_codes.append(code)
-            code_hash = hashlib.sha256(code.encode()).hexdigest()
-            cur.execute("""
-                INSERT INTO user_backup_codes (user_id, code_hash)
-                VALUES (%s, %s)
-            """, (user['id'], code_hash))
-        
         conn.commit()
         cur.close()
         conn.close()
@@ -1435,8 +1395,7 @@ def api_2fa_confirm():
         
         return jsonify({
             'success': True,
-            'message': '2FA enabled successfully',
-            'backup_codes': backup_codes
+            'message': '2FA enabled successfully'
         })
         
     except Exception as e:
@@ -1484,9 +1443,6 @@ def api_2fa_disable():
             WHERE id = %s
         """, (user['id'],))
         
-        # Delete backup codes
-        cur.execute("DELETE FROM user_backup_codes WHERE user_id = %s", (user['id'],))
-        
         conn.commit()
         cur.close()
         conn.close()
@@ -1524,89 +1480,17 @@ def api_2fa_status():
         """, (user['id'],))
         row = cur.fetchone()
         
-        # Count unused backup codes
-        cur.execute("""
-            SELECT COUNT(*) as count FROM user_backup_codes
-            WHERE user_id = %s AND used_at IS NULL
-        """, (user['id'],))
-        backup_count = cur.fetchone()['count']
-        
         cur.close()
         conn.close()
         
         return jsonify({
             'success': True,
             'enabled': row['two_factor_enabled'] or False,
-            'confirmed_at': row['two_factor_confirmed_at'].isoformat() if row['two_factor_confirmed_at'] else None,
-            'backup_codes_remaining': backup_count
+            'confirmed_at': row['two_factor_confirmed_at'].isoformat() if row['two_factor_confirmed_at'] else None
         })
         
     except Exception as e:
         print(f"2FA status error: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/2fa/regenerate-backup-codes', methods=['POST', 'OPTIONS'])
-@require_auth
-def api_2fa_regenerate_backup_codes():
-    """Regenerate backup codes for 2FA"""
-    if request.method == 'OPTIONS':
-        return jsonify({'status': 'ok'})
-    
-    try:
-        data = request.get_json(force=True, silent=True)
-        if not data:
-            return jsonify({'error': 'Invalid JSON data'}), 400
-        
-        password = data.get('password', '')
-        if not password:
-            return jsonify({'error': 'Password is required'}), 400
-        
-        user = request.current_user
-        
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        # Verify password
-        cur.execute("SELECT password_hash, two_factor_enabled FROM users WHERE id = %s", (user['id'],))
-        row = cur.fetchone()
-        
-        if not row['two_factor_enabled']:
-            cur.close()
-            conn.close()
-            return jsonify({'error': '2FA is not enabled'}), 400
-        
-        if not verify_password(password, row['password_hash']):
-            cur.close()
-            conn.close()
-            return jsonify({'error': 'Incorrect password'}), 401
-        
-        # Delete old backup codes
-        cur.execute("DELETE FROM user_backup_codes WHERE user_id = %s", (user['id'],))
-        
-        # Generate new backup codes
-        backup_codes = []
-        for _ in range(10):
-            code = secrets.token_hex(4).upper()
-            backup_codes.append(code)
-            code_hash = hashlib.sha256(code.encode()).hexdigest()
-            cur.execute("""
-                INSERT INTO user_backup_codes (user_id, code_hash)
-                VALUES (%s, %s)
-            """, (user['id'], code_hash))
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        
-        log_audit(user['id'], '2fa_backup_codes_regenerated', 'user', user['id'], {})
-        
-        return jsonify({
-            'success': True,
-            'backup_codes': backup_codes
-        })
-        
-    except Exception as e:
-        print(f"Regenerate backup codes error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/change-password', methods=['POST', 'OPTIONS'])
