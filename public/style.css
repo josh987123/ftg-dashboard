@@ -3245,6 +3245,23 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     height: 12px;
   }
   
+  /* Reduce chart title spacing on mobile by ~50% */
+  .overview-metric-tile {
+    padding: 4px 14px 14px;
+  }
+  
+  .metric-tile-header {
+    margin-bottom: 1px;
+  }
+  
+  .chart-header-row {
+    margin-bottom: 2px;
+  }
+  
+  .chart-title div {
+    margin-bottom: 1px;
+  }
+  
   /* Income statement mobile - compact */
   .is-controls {
     gap: 4px !important;
