@@ -4699,6 +4699,94 @@ async function captureAccountAsImage() {
   }
 }
 
+async function captureCashAsImage() {
+  try {
+    if (!cashChartInstance) {
+      console.log("No cash chart instance");
+      return null;
+    }
+    
+    // Get chart image
+    const base64 = cashChartInstance.toBase64Image("image/png", 1);
+    
+    // Load as image
+    const img = await new Promise((resolve) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => resolve(null);
+      image.src = base64;
+    });
+    
+    if (!img) return null;
+    
+    // Get stats from the page
+    const stats = {
+      avg: document.getElementById("cashAvgValue")?.textContent || "-",
+      max: document.getElementById("cashMaxValue")?.textContent || "-",
+      min: document.getElementById("cashMinValue")?.textContent || "-",
+      growth: document.getElementById("cashGrowthValue")?.textContent || "-"
+    };
+    
+    // Get title info
+    const title1 = "Cash Balances";
+    const periodSelect = document.getElementById("cashPeriodType");
+    const title2 = periodSelect ? periodSelect.options[periodSelect.selectedIndex]?.text || "" : "";
+    
+    // Create composite canvas
+    const chartWidth = img.width;
+    const chartHeight = img.height;
+    const headerHeight = 60;
+    const statsHeight = 80;
+    const padding = 20;
+    
+    const canvas = document.createElement("canvas");
+    canvas.width = chartWidth + padding * 2;
+    canvas.height = headerHeight + chartHeight + statsHeight + padding * 2;
+    const ctx = canvas.getContext("2d");
+    
+    // Background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Title
+    ctx.fillStyle = "#1f2937";
+    ctx.font = "bold 18px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(title1, canvas.width / 2, padding + 25);
+    ctx.font = "14px Arial";
+    ctx.fillStyle = "#6b7280";
+    ctx.fillText(title2, canvas.width / 2, padding + 45);
+    
+    // Chart
+    ctx.drawImage(img, padding, headerHeight + padding, chartWidth, chartHeight);
+    
+    // Stats row
+    const statsY = headerHeight + chartHeight + padding + 20;
+    const statLabels = ["AVERAGE", "HIGHEST", "LOWEST", "GROWTH"];
+    const statValues = [stats.avg, stats.max, stats.min, stats.growth];
+    const statWidth = chartWidth / 4;
+    
+    ctx.font = "bold 10px Arial";
+    ctx.textAlign = "center";
+    
+    for (let i = 0; i < 4; i++) {
+      const x = padding + i * statWidth + statWidth / 2;
+      ctx.fillStyle = "#6b7280";
+      ctx.fillText(statLabels[i], x, statsY);
+      ctx.fillStyle = "#1f2937";
+      ctx.font = "bold 14px Arial";
+      ctx.fillText(statValues[i], x, statsY + 20);
+      ctx.font = "bold 10px Arial";
+    }
+    
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+    return dataUrl.split(",")[1];
+  } catch (err) {
+    console.error("Cash capture error:", err);
+    return null;
+  }
+}
+
 async function captureOverviewAsImage() {
   try {
     // Chart configurations with their chart instance keys and metric keys
@@ -4853,15 +4941,17 @@ async function sendReportEmail() {
     let chartImage = "";
     
     // Capture chart image based on current view
-    if (view === "overview" || view === "revenue" || view === "account") {
+    if (view === "overview" || view === "revenue" || view === "accounts" || view === "cashReports") {
       statusEl.textContent = "Capturing chart...";
       try {
         if (view === "overview") {
           chartImage = await captureOverviewAsImage();
         } else if (view === "revenue") {
           chartImage = await captureRevenueAsImage();
-        } else if (view === "account") {
+        } else if (view === "accounts") {
           chartImage = await captureAccountAsImage();
+        } else if (view === "cashReports") {
+          chartImage = await captureCashAsImage();
         }
         
         if (chartImage) {

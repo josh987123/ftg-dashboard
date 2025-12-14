@@ -2872,7 +2872,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 
 /* PRINT STYLES */
 @media print {
-  /* Hide non-printable elements */
+  /* Hide non-printable elements - config panels and controls only */
   .header,
   .sidebar,
   .overlay,
@@ -2888,6 +2888,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   .is-toggle,
   .cf-toggle,
   .chart-expand-btn,
+  .page-chart-expand-btn,
   .saved-views-row,
   .modal-overlay,
   #loginScreen,
@@ -2899,7 +2900,13 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   #cashAccountCheckboxes,
   #cashSelectAll,
   #cashSelectNone,
-  .cash-header-toggle {
+  .cash-header-toggle,
+  .is-controls,
+  .bs-controls,
+  .cf-controls,
+  .acct-controls,
+  .chart-close-btn,
+  .metric-info-btn {
     display: none !important;
   }
   
@@ -2913,6 +2920,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     color: #1f2937 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    font-size: 11pt;
   }
   
   .layout {
@@ -2922,10 +2930,11 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   }
   
   .content {
-    padding: 15px;
+    padding: 10px;
     width: 100%;
     max-width: 100%;
     margin: 0;
+    overflow: visible !important;
   }
   
   /* Show only the visible section */
@@ -2936,65 +2945,121 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   .dashboard-section.visible {
     display: block !important;
     page-break-after: avoid;
+    width: 100% !important;
   }
   
-  /* Charts and content boxes */
+  /* Charts and content boxes - preserve appearance */
   .chart-box,
   .rev-table-box,
   .overview-grid,
   .metric-tile,
+  .overview-metric-tile,
   .cash-chart-container,
-  .daily-balance-table-container {
+  .daily-balance-table-container,
+  .chart-with-tiles,
+  .summary-tiles,
+  .summary-tile {
     page-break-inside: avoid;
     box-shadow: none !important;
-    border: 1px solid #d1d5db;
+    border: 1px solid #d1d5db !important;
     background: #fff !important;
   }
   
-  /* Ensure charts render properly */
+  /* Ensure charts render properly and fit page width */
+  .chart-box,
+  .chart-container,
+  .cash-chart-container {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
   .chart-box canvas,
   #cashChart,
   #revenueChart,
-  #accountChart {
+  #accountChart,
+  canvas {
     max-width: 100% !important;
+    width: 100% !important;
     height: auto !important;
-    max-height: 400px !important;
   }
   
   /* Overview tiles grid */
   .overview-grid {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
-    gap: 10px !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
   }
   
+  .overview-metric-tile,
   .metric-tile {
-    padding: 12px !important;
+    padding: 10px !important;
     border: 1px solid #e5e7eb !important;
+    break-inside: avoid;
   }
   
-  /* Tables */
+  .overview-metric-tile canvas {
+    max-height: 120px !important;
+  }
+  
+  /* Chart with tiles layout (Revenue, Account, Cash pages) */
+  .chart-with-tiles {
+    display: flex !important;
+    gap: 15px !important;
+    width: 100% !important;
+  }
+  
+  .summary-tiles {
+    min-width: 100px !important;
+    flex-shrink: 0;
+  }
+  
+  .summary-tile {
+    padding: 8px !important;
+  }
+  
+  /* Tables - fit to page */
   .table-scroll {
     max-height: none !important;
     overflow: visible !important;
+    width: 100% !important;
   }
   
   table {
     width: 100% !important;
-    font-size: 10pt !important;
+    font-size: 9pt !important;
     border-collapse: collapse !important;
+    table-layout: auto !important;
   }
   
   th, td {
-    padding: 4px 6px !important;
+    padding: 3px 5px !important;
     border: 1px solid #e5e7eb !important;
+    word-wrap: break-word;
+  }
+  
+  /* Financial statement tables */
+  #incomeStatementTable,
+  #balanceSheetTable,
+  #cashFlowTable {
+    font-size: 8pt !important;
+  }
+  
+  #incomeStatementTable th,
+  #incomeStatementTable td,
+  #balanceSheetTable th,
+  #balanceSheetTable td,
+  #cashFlowTable th,
+  #cashFlowTable td {
+    padding: 2px 4px !important;
   }
   
   /* Cash balances specific */
   .cash-current-header {
     background: #f3f4f6 !important;
     border: 1px solid #d1d5db !important;
-    margin-bottom: 15px !important;
+    margin-bottom: 10px !important;
+    padding: 10px !important;
   }
   
   .cash-header-accounts {
@@ -3006,23 +3071,47 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     display: block !important;
   }
   
+  /* AI Analysis panel - show content but hide button */
+  .ai-analysis-panel {
+    page-break-inside: avoid;
+    border: 1px solid #d1d5db !important;
+  }
+  
+  .ai-analysis-content {
+    display: block !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
   /* Page title */
   h2 {
     margin-top: 0;
+    margin-bottom: 10px;
     page-break-after: avoid;
-    font-size: 16pt;
+    font-size: 14pt;
   }
   
   .data-as-of {
-    margin-bottom: 10px;
-    font-size: 10pt;
+    margin-bottom: 8px;
+    font-size: 9pt;
     color: #6b7280;
   }
   
-  /* Fit to page width */
+  /* Report headers */
+  .report-header {
+    margin-bottom: 10px !important;
+    padding: 8px 0 !important;
+  }
+  
+  /* Metric stats */
+  .metric-stats {
+    display: flex !important;
+  }
+  
+  /* Fit to page width - landscape for wide tables */
   @page {
     size: auto;
-    margin: 0.5in;
+    margin: 0.4in;
   }
 }
 
