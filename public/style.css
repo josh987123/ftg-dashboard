@@ -4324,6 +4324,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 /* User dropdown menu */
 .user-dropdown {
   position: relative;
+  z-index: 200;
 }
 
 .user-dropdown-btn {
