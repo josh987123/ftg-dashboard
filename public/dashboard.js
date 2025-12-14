@@ -4126,7 +4126,7 @@ function generateReportHtml(data, forEmail = false) {
       ${headerHtml}
       ${data.tableHtml}
       <div class="footer">
-        <span>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</span>
+        <span>Generated on ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${new Date().toLocaleTimeString()}</span>
         <span>FTG Dashboard</span>
       </div>
     </body>
@@ -4253,7 +4253,8 @@ function openEmailModal() {
   const data = getReportData();
   if (!data) return alert("Please navigate to a report view (Revenue, Account, Income Statement, or Balance Sheet) to email.");
   
-  setElValue("emailSubject", `FTG Dashboard - ${data.title} - ${new Date().toLocaleDateString()}`);
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  setElValue("emailSubject", `FTG Dashboard - ${data.title} - ${dateStr}`);
   setElValue("emailTo", "");
   setElText("emailStatus", "");
   const modal = getEl("emailModal");
@@ -4632,7 +4633,7 @@ async function sendReportEmail() {
         <h1 style="color: #1f2937; margin: 0 0 5px 0;">FTG Builders - ${data.title}</h1>
         <p style="color: #6b7280; margin: 0 0 20px 0;">${data.subtitle}</p>
         ${chartImage ? '<p>Please see the attached chart image.</p>' : generateReportHtml(data, true)}
-        <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()} | FTG Dashboard</p>
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">Generated on ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${new Date().toLocaleTimeString()} | FTG Dashboard</p>
       </div>
     `;
     
