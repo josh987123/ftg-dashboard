@@ -345,6 +345,10 @@ def send_gmail(to_email, subject, html_content):
     
     return response.json()
 
+@app.route('/healthz')
+def healthz():
+    return jsonify({'status': 'ok'}), 200
+
 @app.before_request
 def log_request():
     print(f"Incoming request: {request.method} {request.path}")
