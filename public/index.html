@@ -97,7 +97,7 @@
             setTimeout(function() { loadUserPreferences(); }, 100);
           }
           if (typeof checkAdminAccess === 'function') {
-            setTimeout(function() { checkAdminAccess(); }, 200);
+            setTimeout(function() { checkAdminAccess(); }, 500);
           }
         } else {
           err.textContent = data.error || 'Login failed. Please try again.';
@@ -129,7 +129,7 @@
           
           // Check admin access after restoring session
           if (typeof checkAdminAccess === 'function') {
-            setTimeout(function() { checkAdminAccess(); }, 200);
+            setTimeout(function() { checkAdminAccess(); }, 500);
           }
         } else {
           localStorage.removeItem('ftg_session_token');
