@@ -3986,6 +3986,11 @@ function getRevenueSubtitle() {
 }
 
 function getRevenueTableHtml() {
+  const table = document.getElementById("revTable");
+  if (table && table.querySelector("tbody tr")) {
+    return table.outerHTML;
+  }
+  
   const { labels, datasets } = currentTableData;
   if (!labels.length) return "<p>No data available</p>";
   
@@ -4237,6 +4242,26 @@ function getCashBalancesTableHtml() {
   
   html += `<tr style="font-weight:bold;border-top:2px solid #000;"><td>Total</td><td style="text-align:right;">${formatCurrency(total)}</td></tr>`;
   html += `</table>`;
+  
+  const dailyTableContainer = document.getElementById("dailyBalanceTableContainer");
+  if (dailyTableContainer) {
+    const dailyTable = dailyTableContainer.querySelector(".daily-balance-table");
+    if (dailyTable) {
+      const tableClone = dailyTable.cloneNode(true);
+      tableClone.classList.add("expanded");
+      html += `<h3 style="margin-top:25px;margin-bottom:10px;font-size:16px;color:#1f2937;">Daily Balances</h3>`;
+      html += tableClone.outerHTML;
+    }
+  }
+  
+  const transactionContainer = document.getElementById("transactionTableContainer");
+  if (transactionContainer) {
+    const transactionTable = transactionContainer.querySelector(".transaction-table");
+    if (transactionTable && transactionTable.querySelector("tbody tr")) {
+      html += `<h3 style="margin-top:25px;margin-bottom:10px;font-size:16px;color:#1f2937;">Transactions</h3>`;
+      html += transactionTable.outerHTML;
+    }
+  }
   
   return html;
 }
