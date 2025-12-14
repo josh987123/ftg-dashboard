@@ -126,6 +126,11 @@
           document.getElementById('loginScreen').classList.add('hidden');
           var userLabel = document.getElementById('currentUser');
           if (userLabel) userLabel.textContent = data.user.displayName;
+          
+          // Check admin access after restoring session
+          if (typeof checkAdminAccess === 'function') {
+            setTimeout(function() { checkAdminAccess(); }, 200);
+          }
         } else {
           localStorage.removeItem('ftg_session_token');
           localStorage.removeItem('ftg_authenticated');
