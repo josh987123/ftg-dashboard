@@ -1,5 +1,5 @@
 run = "python3 -m http.server 3000 --directory public"
-modules = ["python-3.11"]
+modules = ["python-3.11", "postgresql-16"]
 
 [env]
 PORT = "3000"

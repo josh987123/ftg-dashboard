@@ -4,6 +4,8 @@ import json
 import base64
 import uuid
 import hashlib
+import threading
+import time
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -14,6 +16,8 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__, static_folder=None)
+
+SCHEDULER_INTERVAL = 60
 
 # Database connection
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -2031,6 +2035,219 @@ def serve_static(path):
             response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
             return response
         return jsonify({'error': 'File not found'}), 404
+
+def run_scheduler():
+    """Background thread that processes scheduled reports"""
+    print(f"[{datetime.now().isoformat()}] Starting scheduled reports processor...")
+    time.sleep(15)
+    
+    while True:
+        if not DATABASE_URL:
+            time.sleep(SCHEDULER_INTERVAL)
+            continue
+        
+        conn = None
+        cur = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            
+            cur.execute("""
+                SELECT sr.*, u.email as user_email, u.display_name as user_name
+                FROM scheduled_reports sr
+                JOIN users u ON sr.user_id = u.id
+                WHERE sr.is_active = TRUE 
+                  AND sr.next_send_at <= NOW()
+            """)
+            
+            due_reports = cur.fetchall()
+            
+        except Exception as e:
+            print(f"[{datetime.now().isoformat()}] Scheduler DB query error: {str(e)}")
+            due_reports = []
+        finally:
+            if cur:
+                try:
+                    cur.close()
+                except:
+                    pass
+            if conn:
+                try:
+                    conn.close()
+                except:
+                    pass
+        
+        for report in due_reports:
+            report_conn = None
+            report_cur = None
+            try:
+                subject = f"FTG Dashboard: {report['report_name']}"
+                html_content = generate_report_email(report)
+                
+                email_success = False
+                for recipient in report['recipients']:
+                    try:
+                        send_gmail(recipient, subject, html_content)
+                        print(f"[{datetime.now().isoformat()}] Sent report '{report['report_name']}' to {recipient}")
+                        email_success = True
+                    except Exception as email_err:
+                        print(f"[{datetime.now().isoformat()}] Failed to send to {recipient}: {str(email_err)}")
+                
+                if email_success:
+                    try:
+                        next_send = calculate_next_send(
+                            report['frequency'], 
+                            report['day_of_week'], 
+                            report['day_of_month'], 
+                            report['send_time']
+                        )
+                        
+                        report_conn = get_db_connection()
+                        report_cur = report_conn.cursor()
+                        report_cur.execute("""
+                            UPDATE scheduled_reports 
+                            SET last_sent_at = NOW(), next_send_at = %s
+                            WHERE id = %s
+                        """, (next_send, report['id']))
+                        report_conn.commit()
+                    except Exception as db_err:
+                        print(f"[{datetime.now().isoformat()}] Failed to update report {report['id']}: {str(db_err)}")
+                    finally:
+                        if report_cur:
+                            try:
+                                report_cur.close()
+                            except:
+                                pass
+                        if report_conn:
+                            try:
+                                report_conn.close()
+                            except:
+                                pass
+                    
+            except Exception as report_err:
+                print(f"[{datetime.now().isoformat()}] Report {report['id']} error: {str(report_err)}")
+        
+        time.sleep(SCHEDULER_INTERVAL)
+
+def generate_report_email(report):
+    """Generate HTML email content for a scheduled report"""
+    report_type = report['report_type']
+    view_config = report['view_config'] or {}
+    
+    type_labels = {
+        'executive_overview': 'Executive Overview',
+        'revenue': 'Revenue Analysis',
+        'account_detail': 'Account Detail',
+        'income_statement': 'Income Statement',
+        'balance_sheet': 'Balance Sheet',
+        'cash_flow': 'Statement of Cash Flows',
+        'cash_balances': 'Cash Balances'
+    }
+    
+    report_label = type_labels.get(report_type, report_type.replace('_', ' ').title())
+    
+    config_summary = []
+    if 'viewType' in view_config:
+        config_summary.append(f"View: {view_config['viewType'].title()}")
+    if 'year' in view_config:
+        config_summary.append(f"Year: {view_config['year']}")
+    if 'periodType' in view_config:
+        config_summary.append(f"Period: {view_config['periodType'].title()}")
+    if 'compareMode' in view_config:
+        config_summary.append(f"Compare: {view_config['compareMode'].title()}")
+    
+    config_text = " | ".join(config_summary) if config_summary else "Default settings"
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f7fa;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f7fa; padding: 40px 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <!-- Header -->
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 30px; border-radius: 8px 8px 0 0;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">FTG Dashboard</h1>
+                                <p style="margin: 10px 0 0 0; color: #a3c5e8; font-size: 14px;">Scheduled Report</p>
+                            </td>
+                        </tr>
+                        
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 40px 30px;">
+                                <h2 style="margin: 0 0 20px 0; color: #1e3a5f; font-size: 20px; font-weight: 600;">
+                                    {report['report_name']}
+                                </h2>
+                                
+                                <div style="background-color: #f8fafc; border-radius: 6px; padding: 20px; margin-bottom: 25px;">
+                                    <table width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td style="padding: 8px 0; color: #64748b; font-size: 13px; width: 120px;">Report Type:</td>
+                                            <td style="padding: 8px 0; color: #1e293b; font-size: 13px; font-weight: 500;">{report_label}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Configuration:</td>
+                                            <td style="padding: 8px 0; color: #1e293b; font-size: 13px;">{config_text}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Frequency:</td>
+                                            <td style="padding: 8px 0; color: #1e293b; font-size: 13px;">{report['frequency'].title()}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                
+                                <p style="margin: 0 0 25px 0; color: #475569; font-size: 14px; line-height: 1.6;">
+                                    Click the button below to view the full report with live data in the FTG Dashboard.
+                                </p>
+                                
+                                <table cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 6px;">
+                                            <a href="https://ftg-dashboard.replit.app" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600;">
+                                                View Full Report
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background-color: #f8fafc; padding: 25px 30px; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
+                                <p style="margin: 0; color: #94a3b8; font-size: 12px; line-height: 1.5;">
+                                    This automated report was scheduled by {report['user_name']} ({report['user_email']}).
+                                    <br>
+                                    To manage your scheduled reports, log in to the FTG Dashboard.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+    
+    return html_content
+
+scheduler_thread = None
+
+def start_scheduler():
+    """Start the background scheduler thread"""
+    global scheduler_thread
+    if scheduler_thread is None or not scheduler_thread.is_alive():
+        scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+        scheduler_thread.start()
+
+start_scheduler()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
