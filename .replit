@@ -51,4 +51,4 @@ packages = ["cargo", "freetype", "lcms2", "libiconv", "libimagequant", "libjpeg"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["sh", "-c", "python3 -m http.server 3000 --directory public"]
+run = ["python", "public/server.py"]
