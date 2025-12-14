@@ -2872,55 +2872,157 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 
 /* PRINT STYLES */
 @media print {
+  /* Hide non-printable elements */
   .header,
   .sidebar,
   .overlay,
   .mobile-menu-btn,
   .logout-btn,
   .export-dropdown,
+  .content-export-dropdown,
   .rev-controls,
   .export-bar,
   .config-panel,
-  .is-toggle {
+  .config-header,
+  .config-body,
+  .is-toggle,
+  .cf-toggle,
+  .chart-expand-btn,
+  .saved-views-row,
+  .modal-overlay,
+  #loginScreen,
+  .user-dropdown,
+  .dark-mode-toggle,
+  .ai-analysis-panel .analyze-btn,
+  .cash-controls,
+  .cash-config-box,
+  #cashAccountCheckboxes,
+  #cashSelectAll,
+  #cashSelectNone,
+  .cash-header-toggle {
     display: none !important;
+  }
+  
+  /* Reset layout for printing */
+  html, body {
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    background: #fff !important;
+    color: #1f2937 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   .layout {
     height: auto;
     display: block;
-  }
-  
-  .content {
-    padding: 20px;
     width: 100%;
   }
   
+  .content {
+    padding: 15px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+  
+  /* Show only the visible section */
   .dashboard-section {
+    display: none !important;
+  }
+  
+  .dashboard-section.visible {
+    display: block !important;
     page-break-after: avoid;
   }
   
+  /* Charts and content boxes */
   .chart-box,
-  .rev-table-box {
+  .rev-table-box,
+  .overview-grid,
+  .metric-tile,
+  .cash-chart-container,
+  .daily-balance-table-container {
     page-break-inside: avoid;
-    box-shadow: none;
-    border: 1px solid #e5e7eb;
+    box-shadow: none !important;
+    border: 1px solid #d1d5db;
+    background: #fff !important;
   }
   
-  .chart-box canvas {
-    max-height: 350px;
+  /* Ensure charts render properly */
+  .chart-box canvas,
+  #cashChart,
+  #revenueChart,
+  #accountChart {
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 400px !important;
   }
   
+  /* Overview tiles grid */
+  .overview-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+    gap: 10px !important;
+  }
+  
+  .metric-tile {
+    padding: 12px !important;
+    border: 1px solid #e5e7eb !important;
+  }
+  
+  /* Tables */
   .table-scroll {
-    max-height: none;
+    max-height: none !important;
+    overflow: visible !important;
   }
   
-  body {
-    background: #fff;
+  table {
+    width: 100% !important;
+    font-size: 10pt !important;
+    border-collapse: collapse !important;
   }
   
+  th, td {
+    padding: 4px 6px !important;
+    border: 1px solid #e5e7eb !important;
+  }
+  
+  /* Cash balances specific */
+  .cash-current-header {
+    background: #f3f4f6 !important;
+    border: 1px solid #d1d5db !important;
+    margin-bottom: 15px !important;
+  }
+  
+  .cash-header-accounts {
+    display: block !important;
+    max-height: none !important;
+  }
+  
+  .cash-header-accounts.collapsed {
+    display: block !important;
+  }
+  
+  /* Page title */
   h2 {
     margin-top: 0;
     page-break-after: avoid;
+    font-size: 16pt;
+  }
+  
+  .data-as-of {
+    margin-bottom: 10px;
+    font-size: 10pt;
+    color: #6b7280;
+  }
+  
+  /* Fit to page width */
+  @page {
+    size: auto;
+    margin: 0.5in;
   }
 }
 

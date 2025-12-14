@@ -4438,25 +4438,11 @@ function generateReportHtml(data, forEmail = false) {
 }
 
 function universalPrint() {
-  const data = getReportData();
-  if (!data) return alert("Please navigate to Revenue, Account, or Income Statement view to print.");
-  
-  const html = generateReportHtml(data);
-  const printWindow = window.open("", "_blank");
-  printWindow.document.write(html);
-  printWindow.document.close();
-  setTimeout(() => printWindow.print(), 250);
+  window.print();
 }
 
 function universalExportToPdf() {
-  const data = getReportData();
-  if (!data) return alert("Please navigate to a report view (Revenue, Account, Income Statement, or Balance Sheet) to export.");
-  
-  const html = generateReportHtml(data);
-  const printWindow = window.open("", "_blank");
-  printWindow.document.write(html);
-  printWindow.document.close();
-  setTimeout(() => printWindow.print(), 250);
+  window.print();
 }
 
 function universalExportToCsv() {
