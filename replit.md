@@ -145,6 +145,13 @@ Preferred communication style: Simple, everyday language.
 - **Overlay pattern**: Semi-transparent overlay when mobile sidebar is open
 - **Flexible layout**: Uses CSS flexbox for the main layout structure
 
+### Color Standards
+- **Positive/Success (Green)**: `#10b981` - Used for positive values, growth indicators, and successful states
+- **Negative/Error (Red)**: `#dc2626` - Used for negative values, decline indicators, and error states
+- **Primary Blue**: `#3b82f6` - Used for current year data, primary actions, and links
+- **Warning/Partial (Orange)**: `#f59e0b` - Used for partial periods and in-progress indicators
+- **Chart Gradients**: Defined in `gradientColors` object with matching start/end values for blue, red, and orange
+
 ## External Dependencies
 
 ### Fonts

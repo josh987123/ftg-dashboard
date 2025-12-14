@@ -2914,7 +2914,7 @@ function makeGradient(canvas, base) {
     if (base === "#3b82f6") {
       g.addColorStop(0, "#60a5fa");
       g.addColorStop(1, "#1d4ed8");
-    } else if (base === "#ef4444") {
+    } else if (base === "#dc2626") {
       g.addColorStop(0, "#f87171");
       g.addColorStop(1, "#b91c1c");
     } else {
@@ -4400,7 +4400,7 @@ function updateRevenueView(data) {
       datasets.push({
         label: `${year - 1}`,
         data: prior,
-        backgroundColor: "#ef4444"
+        backgroundColor: "#dc2626"
       });
     }
 
@@ -4457,7 +4457,7 @@ function updateRevenueView(data) {
       datasets.push({
         label: `${year - 1}`,
         data: priorQ,
-        backgroundColor: "#ef4444"
+        backgroundColor: "#dc2626"
       });
     }
 
@@ -4601,13 +4601,13 @@ function applyGradientToDatasets(datasets, chart) {
     if (Array.isArray(origBg)) {
       ds.backgroundColor = origBg.map(color => {
         if (color === "#3b82f6") return createBarGradient(ctx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
-        if (color === "#ef4444") return createBarGradient(ctx, chartArea, gradientColors.red.start, gradientColors.red.end);
+        if (color === "#dc2626") return createBarGradient(ctx, chartArea, gradientColors.red.start, gradientColors.red.end);
         if (color === "#f59e0b") return createBarGradient(ctx, chartArea, gradientColors.orange.start, gradientColors.orange.end);
         return color;
       });
     } else if (typeof origBg === "string") {
       if (origBg === "#3b82f6") ds.backgroundColor = createBarGradient(ctx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
-      else if (origBg === "#ef4444") ds.backgroundColor = createBarGradient(ctx, chartArea, gradientColors.red.start, gradientColors.red.end);
+      else if (origBg === "#dc2626") ds.backgroundColor = createBarGradient(ctx, chartArea, gradientColors.red.start, gradientColors.red.end);
       else if (origBg === "#f59e0b") ds.backgroundColor = createBarGradient(ctx, chartArea, gradientColors.orange.start, gradientColors.orange.end);
     }
   });
@@ -4794,7 +4794,7 @@ function showChartError(msg) {
   if (!errDiv) {
     errDiv = document.createElement("div");
     errDiv.id = "chartErrorMsg";
-    errDiv.style.cssText = "padding:40px;text-align:center;color:#ef4444;font-weight:600;";
+    errDiv.style.cssText = "padding:40px;text-align:center;color:#dc2626;font-weight:600;";
     const chartBox = document.getElementById("revChartBox");
     if (chartBox) chartBox.appendChild(errDiv);
   }
@@ -5114,7 +5114,7 @@ function updateAccountView(data) {
       datasets.push({
         label: `${year - 1}`,
         data: priorValues,
-        backgroundColor: "#ef4444"
+        backgroundColor: "#dc2626"
       });
     }
     
@@ -5154,7 +5154,7 @@ function updateAccountView(data) {
       datasets.push({
         label: `${year - 1}`,
         data: priorValues,
-        backgroundColor: "#ef4444"
+        backgroundColor: "#dc2626"
       });
     }
     
@@ -9429,7 +9429,7 @@ function renderCashChart() {
   }
   
   // Colors for accounts
-  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#dc2626', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
   
   // Build datasets
   const datasets = selectedAccounts.map((acct, idx) => {
