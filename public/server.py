@@ -156,6 +156,27 @@ def init_database():
             )
         """)
         
+        # Create scheduled_reports table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS scheduled_reports (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                report_type VARCHAR(50) NOT NULL,
+                report_name VARCHAR(100) NOT NULL,
+                view_config JSONB NOT NULL,
+                recipients TEXT[] NOT NULL,
+                frequency VARCHAR(20) NOT NULL,
+                day_of_week INTEGER,
+                day_of_month INTEGER,
+                send_time TIME DEFAULT '08:00',
+                is_active BOOLEAN DEFAULT TRUE,
+                last_sent_at TIMESTAMP,
+                next_send_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
         # Seed default roles
         default_roles = [
             ('admin', 'Full access to all features including user management'),
@@ -1591,6 +1612,398 @@ def api_admin_reset_password(user_id):
         return jsonify({'success': True, 'message': 'Password reset successfully'})
     except Exception as e:
         print(f"Admin reset password error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# ============== SCHEDULED REPORTS API ==============
+
+def calculate_next_send(frequency, day_of_week, day_of_month, send_time):
+    """Calculate the next scheduled send time based on frequency"""
+    from datetime import date, time
+    now = datetime.now()
+    send_hour, send_minute = send_time.hour, send_time.minute
+    
+    if frequency == 'daily':
+        next_send = now.replace(hour=send_hour, minute=send_minute, second=0, microsecond=0)
+        if next_send <= now:
+            next_send += timedelta(days=1)
+    elif frequency == 'weekly':
+        days_ahead = day_of_week - now.weekday()
+        if days_ahead < 0 or (days_ahead == 0 and now.hour >= send_hour):
+            days_ahead += 7
+        next_send = now.replace(hour=send_hour, minute=send_minute, second=0, microsecond=0) + timedelta(days=days_ahead)
+    elif frequency == 'monthly':
+        next_send = now.replace(day=min(day_of_month, 28), hour=send_hour, minute=send_minute, second=0, microsecond=0)
+        if next_send <= now:
+            if now.month == 12:
+                next_send = next_send.replace(year=now.year + 1, month=1)
+            else:
+                next_send = next_send.replace(month=now.month + 1)
+    else:
+        next_send = now + timedelta(days=1)
+    
+    return next_send
+
+@app.route('/api/scheduled-reports', methods=['GET', 'OPTIONS'])
+def api_get_scheduled_reports():
+    """Get all scheduled reports for the current user"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not token:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT user_id FROM sessions 
+            WHERE token = %s AND expires_at > NOW()
+        """, (token,))
+        session = cur.fetchone()
+        
+        if not session:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Invalid session'}), 401
+        
+        user_id = session['user_id']
+        
+        cur.execute("""
+            SELECT id, report_type, report_name, view_config, recipients, 
+                   frequency, day_of_week, day_of_month, send_time, 
+                   is_active, last_sent_at, next_send_at, created_at
+            FROM scheduled_reports
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+        """, (user_id,))
+        
+        reports = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'reports': [{
+                'id': r['id'],
+                'reportType': r['report_type'],
+                'reportName': r['report_name'],
+                'viewConfig': r['view_config'],
+                'recipients': r['recipients'],
+                'frequency': r['frequency'],
+                'dayOfWeek': r['day_of_week'],
+                'dayOfMonth': r['day_of_month'],
+                'sendTime': r['send_time'].strftime('%H:%M') if r['send_time'] else '08:00',
+                'isActive': r['is_active'],
+                'lastSentAt': r['last_sent_at'].isoformat() if r['last_sent_at'] else None,
+                'nextSendAt': r['next_send_at'].isoformat() if r['next_send_at'] else None,
+                'createdAt': r['created_at'].isoformat() if r['created_at'] else None
+            } for r in reports]
+        })
+    except Exception as e:
+        print(f"Get scheduled reports error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/scheduled-reports', methods=['POST'])
+def api_create_scheduled_report():
+    """Create a new scheduled report"""
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not token:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT user_id FROM sessions 
+            WHERE token = %s AND expires_at > NOW()
+        """, (token,))
+        session = cur.fetchone()
+        
+        if not session:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Invalid session'}), 401
+        
+        user_id = session['user_id']
+        
+        report_type = data.get('reportType')
+        report_name = data.get('reportName')
+        view_config = data.get('viewConfig', {})
+        recipients = data.get('recipients', [])
+        frequency = data.get('frequency', 'weekly')
+        day_of_week = data.get('dayOfWeek', 1)
+        day_of_month = data.get('dayOfMonth', 1)
+        send_time_str = data.get('sendTime', '08:00')
+        
+        if not report_type or not report_name or not recipients:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Missing required fields: reportType, reportName, recipients'}), 400
+        
+        from datetime import time
+        hour, minute = map(int, send_time_str.split(':'))
+        send_time = time(hour, minute)
+        
+        next_send = calculate_next_send(frequency, day_of_week, day_of_month, send_time)
+        
+        cur.execute("""
+            INSERT INTO scheduled_reports 
+            (user_id, report_type, report_name, view_config, recipients, 
+             frequency, day_of_week, day_of_month, send_time, next_send_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """, (user_id, report_type, report_name, json.dumps(view_config), 
+              recipients, frequency, day_of_week, day_of_month, send_time, next_send))
+        
+        new_id = cur.fetchone()['id']
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'id': new_id,
+            'nextSendAt': next_send.isoformat()
+        })
+    except Exception as e:
+        print(f"Create scheduled report error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/scheduled-reports/<int:report_id>', methods=['PUT', 'OPTIONS'])
+def api_update_scheduled_report(report_id):
+    """Update a scheduled report"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not token:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT user_id FROM sessions 
+            WHERE token = %s AND expires_at > NOW()
+        """, (token,))
+        session = cur.fetchone()
+        
+        if not session:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Invalid session'}), 401
+        
+        user_id = session['user_id']
+        
+        cur.execute("""
+            SELECT id FROM scheduled_reports WHERE id = %s AND user_id = %s
+        """, (report_id, user_id))
+        
+        if not cur.fetchone():
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Report not found'}), 404
+        
+        report_name = data.get('reportName')
+        view_config = data.get('viewConfig')
+        recipients = data.get('recipients')
+        frequency = data.get('frequency')
+        day_of_week = data.get('dayOfWeek')
+        day_of_month = data.get('dayOfMonth')
+        send_time_str = data.get('sendTime')
+        is_active = data.get('isActive')
+        
+        updates = []
+        params = []
+        
+        if report_name is not None:
+            updates.append("report_name = %s")
+            params.append(report_name)
+        if view_config is not None:
+            updates.append("view_config = %s")
+            params.append(json.dumps(view_config))
+        if recipients is not None:
+            updates.append("recipients = %s")
+            params.append(recipients)
+        if frequency is not None:
+            updates.append("frequency = %s")
+            params.append(frequency)
+        if day_of_week is not None:
+            updates.append("day_of_week = %s")
+            params.append(day_of_week)
+        if day_of_month is not None:
+            updates.append("day_of_month = %s")
+            params.append(day_of_month)
+        if send_time_str is not None:
+            from datetime import time
+            hour, minute = map(int, send_time_str.split(':'))
+            updates.append("send_time = %s")
+            params.append(time(hour, minute))
+        if is_active is not None:
+            updates.append("is_active = %s")
+            params.append(is_active)
+        
+        if updates:
+            updates.append("updated_at = NOW()")
+            query = f"UPDATE scheduled_reports SET {', '.join(updates)} WHERE id = %s"
+            params.append(report_id)
+            cur.execute(query, params)
+            
+            if frequency or day_of_week or day_of_month or send_time_str:
+                cur.execute("SELECT frequency, day_of_week, day_of_month, send_time FROM scheduled_reports WHERE id = %s", (report_id,))
+                row = cur.fetchone()
+                from datetime import time
+                next_send = calculate_next_send(row['frequency'], row['day_of_week'], row['day_of_month'], row['send_time'])
+                cur.execute("UPDATE scheduled_reports SET next_send_at = %s WHERE id = %s", (next_send, report_id))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Update scheduled report error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/scheduled-reports/<int:report_id>', methods=['DELETE'])
+def api_delete_scheduled_report(report_id):
+    """Delete a scheduled report"""
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not token:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT user_id FROM sessions 
+            WHERE token = %s AND expires_at > NOW()
+        """, (token,))
+        session = cur.fetchone()
+        
+        if not session:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Invalid session'}), 401
+        
+        user_id = session['user_id']
+        
+        cur.execute("""
+            DELETE FROM scheduled_reports WHERE id = %s AND user_id = %s
+        """, (report_id, user_id))
+        
+        if cur.rowcount == 0:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Report not found'}), 404
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Delete scheduled report error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/process-scheduled-reports', methods=['POST', 'OPTIONS'])
+def api_process_scheduled_reports():
+    """Process and send due scheduled reports (called by cron/scheduler)"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT sr.*, u.email as user_email, u.display_name as user_name
+            FROM scheduled_reports sr
+            JOIN users u ON sr.user_id = u.id
+            WHERE sr.is_active = TRUE 
+              AND sr.next_send_at <= NOW()
+        """)
+        
+        due_reports = cur.fetchall()
+        sent_count = 0
+        errors = []
+        
+        for report in due_reports:
+            try:
+                subject = f"FTG Dashboard: {report['report_name']}"
+                
+                html_content = f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #1e3a5f;">Scheduled Report: {report['report_name']}</h2>
+                    <p>This is your scheduled {report['frequency']} report from FTG Dashboard.</p>
+                    <p><strong>Report Type:</strong> {report['report_type'].replace('_', ' ').title()}</p>
+                    <p><strong>Configuration:</strong></p>
+                    <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px;">{json.dumps(report['view_config'], indent=2)}</pre>
+                    <p style="margin-top: 20px;">
+                        <a href="https://ftg-dashboard.replit.app" style="background: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
+                            View Full Report
+                        </a>
+                    </p>
+                    <p style="color: #666; font-size: 12px; margin-top: 30px;">
+                        This automated report was scheduled by {report['user_name']} ({report['user_email']}).
+                    </p>
+                </div>
+                """
+                
+                for recipient in report['recipients']:
+                    try:
+                        send_gmail(recipient, subject, html_content)
+                    except Exception as email_err:
+                        errors.append(f"Failed to send to {recipient}: {str(email_err)}")
+                
+                from datetime import time
+                next_send = calculate_next_send(
+                    report['frequency'], 
+                    report['day_of_week'], 
+                    report['day_of_month'], 
+                    report['send_time']
+                )
+                
+                cur.execute("""
+                    UPDATE scheduled_reports 
+                    SET last_sent_at = NOW(), next_send_at = %s
+                    WHERE id = %s
+                """, (next_send, report['id']))
+                
+                sent_count += 1
+                
+            except Exception as report_err:
+                errors.append(f"Report {report['id']}: {str(report_err)}")
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'processed': len(due_reports),
+            'sent': sent_count,
+            'errors': errors
+        })
+    except Exception as e:
+        print(f"Process scheduled reports error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/')
