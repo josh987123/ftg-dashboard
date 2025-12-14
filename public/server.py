@@ -316,8 +316,45 @@ def get_connector_access_token(connector_name):
 def get_gmail_access_token():
     return get_connector_access_token('google-mail')
 
+def get_sheets_access_token_via_service_account():
+    """Get access token using Google Service Account credentials (for production)"""
+    from google.oauth2 import service_account
+    from google.auth.transport.requests import Request
+    
+    service_account_email = os.environ.get('GOOGLE_SERVICE_ACCOUNT_EMAIL')
+    private_key = os.environ.get('GOOGLE_PRIVATE_KEY')
+    
+    if not service_account_email or not private_key:
+        raise Exception('Google Service Account credentials not configured.')
+    
+    private_key = private_key.replace('\\n', '\n')
+    
+    credentials_info = {
+        "type": "service_account",
+        "client_email": service_account_email,
+        "private_key": private_key,
+        "token_uri": "https://oauth2.googleapis.com/token"
+    }
+    
+    credentials = service_account.Credentials.from_service_account_info(
+        credentials_info,
+        scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
+    )
+    
+    credentials.refresh(Request())
+    return credentials.token
+
 def get_sheets_access_token():
-    return get_connector_access_token('google-sheet')
+    """Get Google Sheets access token - tries Replit connector first, falls back to service account"""
+    try:
+        return get_connector_access_token('google-sheet')
+    except Exception as connector_error:
+        print(f"Replit connector failed: {connector_error}, trying service account...")
+        try:
+            return get_sheets_access_token_via_service_account()
+        except Exception as sa_error:
+            print(f"Service account also failed: {sa_error}")
+            raise Exception(f"Could not get Google Sheets access. Connector: {connector_error}. Service Account: {sa_error}")
 
 def send_gmail(to_email, subject, html_content):
     access_token = get_gmail_access_token()
