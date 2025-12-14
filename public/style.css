@@ -1141,7 +1141,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 
 /* GROWTH INDICATORS */
 .growth-positive { color:#10b981; font-weight:600; }
-.growth-negative { color:#ef4444; font-weight:600; }
+.growth-negative { color:#dc2626; font-weight:600; }
 .growth-neutral { color:#6b7280; }
 
 /* REVENUE CONTROLS */
@@ -4733,7 +4733,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 .transaction-table .txn-amount.positive {
-  color: #059669;
+  color: #10b981;
 }
 
 .transaction-table .txn-amount.negative {
