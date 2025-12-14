@@ -448,8 +448,13 @@ function initAuth() {
     logoutBtn.onclick = function() {
       localStorage.removeItem("ftg_authenticated");
       localStorage.removeItem("ftg_current_user");
+      localStorage.removeItem("ftg_session_token");
       if (currentUserEl) currentUserEl.textContent = "";
       if (userDropdownMenu) userDropdownMenu.classList.add("hidden");
+      window.userPermissions = [];
+      window.isAdminUser = false;
+      const adminNavItem = document.getElementById('adminNavItem');
+      if (adminNavItem) adminNavItem.classList.add('hidden');
       loginScreen.classList.remove("hidden");
     };
   }

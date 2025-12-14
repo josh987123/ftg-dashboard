@@ -54,69 +54,105 @@
     </div>
   </div>
   <script>
-    var validUsers = {
-      'rodney@ftgbuilders.com': 'Rodney',
-      'sergio@ftghbuilders.com': 'Sergio',
-      'joshl@ftgbuilders.com': 'Josh',
-      'greg@ftgbuilders.com': 'Greg',
-      'bailey@ftgbuilders.com': 'Bailey'
-    };
-    var defaultPassword = 'Ftgb2025$';
-    
-    function getUserPassword(email) {
-      var customPass = localStorage.getItem('ftg_pwd_' + email);
-      return customPass || defaultPassword;
-    }
-    
-    function doLogin(event) {
+    async function doLogin(event) {
       if (event) event.preventDefault();
       var email = document.getElementById('loginUsername').value.toLowerCase().trim();
       var pwd = document.getElementById('loginPassword').value;
       var err = document.getElementById('loginError');
+      var btn = document.getElementById('loginBtn');
       
-      if (!validUsers[email]) {
-        err.textContent = 'Please enter a valid email address.';
+      if (!email) {
+        err.textContent = 'Please enter your email address.';
         return false;
       }
       
-      var correctPassword = getUserPassword(email);
-      if (pwd === correctPassword) {
-        localStorage.setItem('ftg_authenticated', 'true');
-        localStorage.setItem('ftg_current_user', email);
-        document.getElementById('loginScreen').classList.add('hidden');
-        err.textContent = '';
-        var displayName = validUsers[email];
-        var userLabel = document.getElementById('currentUser');
-        if (userLabel) userLabel.textContent = displayName;
-        if (typeof loadUserPreferences === 'function') {
-          setTimeout(function() { loadUserPreferences(); }, 100);
-        }
-      } else {
-        err.textContent = 'Incorrect password. Please try again.';
+      if (!pwd) {
+        err.textContent = 'Please enter your password.';
+        return false;
       }
+      
+      btn.disabled = true;
+      btn.textContent = 'Logging in...';
+      err.textContent = '';
+      
+      try {
+        var response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: pwd })
+        });
+        
+        var data = await response.json();
+        
+        if (data.success) {
+          localStorage.setItem('ftg_authenticated', 'true');
+          localStorage.setItem('ftg_current_user', email);
+          localStorage.setItem('ftg_session_token', data.token);
+          document.getElementById('loginScreen').classList.add('hidden');
+          
+          var userLabel = document.getElementById('currentUser');
+          if (userLabel) userLabel.textContent = data.user.displayName;
+          
+          if (typeof loadUserPreferences === 'function') {
+            setTimeout(function() { loadUserPreferences(); }, 100);
+          }
+          if (typeof checkAdminAccess === 'function') {
+            setTimeout(function() { checkAdminAccess(); }, 200);
+          }
+        } else {
+          err.textContent = data.error || 'Login failed. Please try again.';
+        }
+      } catch (e) {
+        console.error('Login error:', e);
+        err.textContent = 'Connection error. Please try again.';
+      }
+      
+      btn.disabled = false;
+      btn.textContent = 'Login';
       return false;
     }
     
-    if (localStorage.getItem('ftg_authenticated') === 'true' && localStorage.getItem('ftg_current_user')) {
-      document.getElementById('loginScreen').classList.add('hidden');
+    async function checkExistingSession() {
+      var token = localStorage.getItem('ftg_session_token');
+      if (!token) return;
+      
+      try {
+        var response = await fetch('/api/verify-session', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        var data = await response.json();
+        
+        if (data.success && data.user) {
+          document.getElementById('loginScreen').classList.add('hidden');
+          var userLabel = document.getElementById('currentUser');
+          if (userLabel) userLabel.textContent = data.user.displayName;
+        } else {
+          localStorage.removeItem('ftg_session_token');
+          localStorage.removeItem('ftg_authenticated');
+        }
+      } catch (e) {
+        console.error('Session check error:', e);
+      }
     }
     
-    // Forgot password handler
+    if (localStorage.getItem('ftg_session_token')) {
+      checkExistingSession();
+    }
+    
     document.getElementById('forgotPasswordLink').onclick = function(e) {
       e.preventDefault();
       var email = document.getElementById('loginUsername').value.toLowerCase().trim();
       var err = document.getElementById('loginError');
       
-      if (!validUsers[email]) {
+      if (!email) {
         err.textContent = 'Please enter your email address first.';
         return;
       }
       
       var resetCode = prompt('Enter admin reset code to reset password to default:');
       if (resetCode === 'FTG2025Reset') {
-        localStorage.removeItem('ftg_pwd_' + email);
         err.style.color = '#166534';
-        err.textContent = 'Password reset! Use default password: Ftgb2025$';
+        err.textContent = 'Please contact your administrator to reset your password.';
       } else if (resetCode) {
         err.textContent = 'Invalid reset code. Contact administrator.';
       }
