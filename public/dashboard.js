@@ -9760,15 +9760,19 @@ function setupCashEventListeners() {
   });
 }
 
-function calculateDailyBalances(accounts, transactions) {
-  const accountNames = accounts.map(a => a.name);
-  const currentBalances = {};
-  accounts.forEach(a => { currentBalances[a.name] = a.balance; });
+let cashTxnByDateAccount = {};
+let cashCurrentBalances = {};
+let cashAccountNames = [];
+let cashBalanceCache = {};
+let cashOldestDate = null;
+
+function initCashCalculations(accounts, transactions) {
+  cashAccountNames = accounts.map(a => a.name);
+  cashCurrentBalances = {};
+  accounts.forEach(a => { cashCurrentBalances[a.name] = a.balance; });
   
-  const txnByDateAccount = {};
-  
-  // Find oldest transaction date for dynamic range calculation
-  let oldestDate = new Date();
+  cashTxnByDateAccount = {};
+  cashOldestDate = new Date();
   
   transactions.forEach(txn => {
     let dateKey = '';
@@ -9776,49 +9780,72 @@ function calculateDailyBalances(accounts, transactions) {
       const d = new Date(txn.date);
       if (!isNaN(d.getTime())) {
         dateKey = d.toISOString().split('T')[0];
-        if (d < oldestDate) oldestDate = d;
+        if (d < cashOldestDate) cashOldestDate = d;
       }
     } catch (e) {}
     
     if (!dateKey) return;
     
-    if (!txnByDateAccount[dateKey]) txnByDateAccount[dateKey] = {};
-    if (!txnByDateAccount[dateKey][txn.account]) txnByDateAccount[dateKey][txn.account] = 0;
-    txnByDateAccount[dateKey][txn.account] += txn.amount;
+    if (!cashTxnByDateAccount[dateKey]) cashTxnByDateAccount[dateKey] = {};
+    if (!cashTxnByDateAccount[dateKey][txn.account]) cashTxnByDateAccount[dateKey][txn.account] = 0;
+    cashTxnByDateAccount[dateKey][txn.account] += txn.amount;
   });
   
-  const dailyBalances = {};
-  const runningBalances = { ...currentBalances };
+  cashBalanceCache = {};
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  cashBalanceCache[todayStr] = { ...cashCurrentBalances };
+}
+
+function getBalanceForDate(dateKey) {
+  if (cashBalanceCache[dateKey]) {
+    return cashBalanceCache[dateKey];
+  }
   
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
-  dailyBalances[todayStr] = { ...currentBalances };
+  const targetDate = new Date(dateKey + 'T12:00:00');
   
-  // Calculate days to go back based on oldest transaction (min 120, max based on data)
-  const daysDiff = Math.ceil((today - oldestDate) / (1000 * 60 * 60 * 24));
-  const daysToGoBack = Math.max(120, daysDiff + 7); // Add buffer of 7 days
+  let nearestCachedDate = null;
+  let nearestCachedBalances = null;
   
-  // Generate all dates from oldest transaction to today
-  const allDatesInRange = [];
-  for (let i = 0; i <= daysToGoBack; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    allDatesInRange.push(d.toISOString().split('T')[0]);
+  const cachedDates = Object.keys(cashBalanceCache).sort().reverse();
+  for (const cached of cachedDates) {
+    const cachedDateObj = new Date(cached + 'T12:00:00');
+    if (cachedDateObj >= targetDate) {
+      nearestCachedDate = cached;
+      nearestCachedBalances = { ...cashBalanceCache[cached] };
+      break;
+    }
   }
   
-  // Walk backward from today, applying transactions and filling all dates
-  for (const dateKey of allDatesInRange) {
-    if (dateKey === todayStr) continue; // Already set today's balance
+  if (!nearestCachedDate) {
+    nearestCachedDate = todayStr;
+    nearestCachedBalances = { ...cashCurrentBalances };
+  }
+  
+  const runningBalances = nearestCachedBalances;
+  let current = new Date(nearestCachedDate + 'T12:00:00');
+  
+  while (current.toISOString().split('T')[0] > dateKey) {
+    current.setDate(current.getDate() - 1);
+    const currentKey = current.toISOString().split('T')[0];
     
-    const txnsOnDate = txnByDateAccount[dateKey] || {};
-    accountNames.forEach(acctName => {
+    const txnsOnDate = cashTxnByDateAccount[currentKey] || {};
+    cashAccountNames.forEach(acctName => {
       const txnAmount = txnsOnDate[acctName] || 0;
       runningBalances[acctName] = (runningBalances[acctName] || 0) - txnAmount;
     });
-    dailyBalances[dateKey] = { ...runningBalances };
+    
+    cashBalanceCache[currentKey] = { ...runningBalances };
   }
   
-  return dailyBalances;
+  return cashBalanceCache[dateKey] || runningBalances;
+}
+
+function calculateDailyBalances(accounts, transactions) {
+  initCashCalculations(accounts, transactions);
+  return cashBalanceCache;
 }
 
 function updateCashDisplay() {
@@ -9974,7 +10001,7 @@ function renderCashChart() {
   // Build datasets
   const datasets = selectedAccounts.map((acct, idx) => {
     const data = dates.map(dateKey => {
-      const balances = cashDailyBalances[dateKey] || {};
+      const balances = getBalanceForDate(dateKey);
       return balances[acct.name] || 0;
     });
     
@@ -9991,7 +10018,7 @@ function renderCashChart() {
   // Add total line if enabled and multiple accounts
   if (showTotal && selectedAccounts.length > 1) {
     const totalData = dates.map(dateKey => {
-      const balances = cashDailyBalances[dateKey] || {};
+      const balances = getBalanceForDate(dateKey);
       return selectedAccounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0);
     });
     
@@ -10027,7 +10054,7 @@ function renderCashChart() {
   // For stacked bars, calculate totals per date
   if (stackBars && selectedAccounts.length > 1) {
     allValues = dates.map(dateKey => {
-      const balances = cashDailyBalances[dateKey] || {};
+      const balances = getBalanceForDate(dateKey);
       return selectedAccounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0);
     });
   }
@@ -10132,7 +10159,7 @@ function renderCashChart() {
 
 function updateCashStatsTiles(dates, selectedAccounts) {
   const totals = dates.map(dateKey => {
-    const balances = cashDailyBalances[dateKey] || {};
+    const balances = getBalanceForDate(dateKey);
     return {
       date: dateKey,
       total: selectedAccounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0)
@@ -10203,7 +10230,7 @@ function renderCashDailyTable() {
   `;
   
   dates.forEach((dateKey, idx) => {
-    const balances = cashDailyBalances[dateKey] || {};
+    const balances = getBalanceForDate(dateKey);
     let rowTotal = 0;
     
     const dateObj = new Date(dateKey + 'T12:00:00');
