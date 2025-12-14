@@ -49,11 +49,40 @@
         <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
         <button type="submit" id="loginBtn">Login</button>
       </form>
+      
+      <!-- 2FA Verification Form (hidden by default) -->
+      <form id="twoFAForm" class="hidden" onsubmit="return verify2FA(event)">
+        <p style="color:#6b7280;font-size:14px;margin-bottom:12px;">Enter the 6-digit code from your authenticator app</p>
+        <input type="text" id="twoFACode" placeholder="000000" maxlength="8" autocomplete="one-time-code" style="text-align:center;font-size:24px;letter-spacing:8px;">
+        <button type="submit" id="verify2FABtn">Verify</button>
+        <a href="#" id="cancel2FALink" style="display:block;margin-top:10px;font-size:12px;color:#6b7280;">Cancel and go back</a>
+      </form>
+      
+      <!-- Forgot Password Form (hidden by default) -->
+      <form id="forgotPasswordForm" class="hidden" onsubmit="return requestPasswordReset(event)">
+        <p style="color:#6b7280;font-size:14px;margin-bottom:12px;">Enter your email to receive a password reset link</p>
+        <input type="email" id="resetEmail" placeholder="Email address" autocomplete="username">
+        <button type="submit" id="resetPasswordBtn">Send Reset Link</button>
+        <a href="#" id="cancelResetLink" style="display:block;margin-top:10px;font-size:12px;color:#6b7280;">Back to login</a>
+      </form>
+      
+      <!-- Complete Password Reset Form (hidden by default) -->
+      <form id="completeResetForm" class="hidden" onsubmit="return completePasswordReset(event)">
+        <p style="color:#6b7280;font-size:14px;margin-bottom:12px;">Enter your new password</p>
+        <input type="password" id="newResetPassword" placeholder="New password" autocomplete="new-password">
+        <input type="password" id="confirmResetPassword" placeholder="Confirm password" autocomplete="new-password">
+        <button type="submit" id="completeResetBtn">Set New Password</button>
+      </form>
+      
       <p id="loginError" class="login-error"></p>
+      <p id="loginSuccess" class="login-success hidden" style="color:#10b981;font-size:14px;margin-top:10px;"></p>
       <a href="#" id="forgotPasswordLink" style="font-size:12px;color:#6b7280;text-decoration:underline;cursor:pointer;">Forgot password?</a>
     </div>
   </div>
   <script>
+    var pending2FAToken = null;
+    var pending2FAEmail = null;
+    
     async function doLogin(event) {
       if (event) event.preventDefault();
       var email = document.getElementById('loginUsername').value.toLowerCase().trim();
@@ -85,20 +114,20 @@
         var data = await response.json();
         
         if (data.success) {
-          localStorage.setItem('ftg_authenticated', 'true');
-          localStorage.setItem('ftg_current_user', email);
-          localStorage.setItem('ftg_session_token', data.token);
-          document.getElementById('loginScreen').classList.add('hidden');
-          
-          var userLabel = document.getElementById('currentUser');
-          if (userLabel) userLabel.textContent = data.displayName;
-          
-          if (typeof loadUserPreferences === 'function') {
-            setTimeout(function() { loadUserPreferences(); }, 100);
+          if (data.requires_2fa) {
+            // Show 2FA form
+            pending2FAToken = data.twofa_token;
+            pending2FAEmail = data.email;
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('twoFAForm').classList.remove('hidden');
+            document.getElementById('forgotPasswordLink').classList.add('hidden');
+            document.getElementById('twoFACode').focus();
+            btn.disabled = false;
+            btn.textContent = 'Login';
+            return false;
           }
-          if (typeof checkAdminAccess === 'function') {
-            setTimeout(function() { checkAdminAccess(); }, 500);
-          }
+          
+          completeLogin(data);
         } else {
           err.textContent = data.error || 'Login failed. Please try again.';
         }
@@ -111,6 +140,226 @@
       btn.textContent = 'Login';
       return false;
     }
+    
+    function completeLogin(data) {
+      localStorage.setItem('ftg_authenticated', 'true');
+      localStorage.setItem('ftg_current_user', data.email);
+      localStorage.setItem('ftg_session_token', data.token);
+      document.getElementById('loginScreen').classList.add('hidden');
+      
+      var userLabel = document.getElementById('currentUser');
+      if (userLabel) userLabel.textContent = data.displayName;
+      
+      if (typeof loadUserPreferences === 'function') {
+        setTimeout(function() { loadUserPreferences(); }, 100);
+      }
+      if (typeof checkAdminAccess === 'function') {
+        setTimeout(function() { checkAdminAccess(); }, 500);
+      }
+    }
+    
+    async function verify2FA(event) {
+      if (event) event.preventDefault();
+      var code = document.getElementById('twoFACode').value.trim();
+      var err = document.getElementById('loginError');
+      var btn = document.getElementById('verify2FABtn');
+      
+      if (!code) {
+        err.textContent = 'Please enter the verification code.';
+        return false;
+      }
+      
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+      err.textContent = '';
+      
+      try {
+        var response = await fetch('/api/login/2fa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ twofa_token: pending2FAToken, code: code })
+        });
+        
+        var data = await response.json();
+        
+        if (data.success) {
+          completeLogin(data);
+        } else {
+          err.textContent = data.error || 'Verification failed. Please try again.';
+        }
+      } catch (e) {
+        console.error('2FA verification error:', e);
+        err.textContent = 'Connection error. Please try again.';
+      }
+      
+      btn.disabled = false;
+      btn.textContent = 'Verify';
+      return false;
+    }
+    
+    async function requestPasswordReset(event) {
+      if (event) event.preventDefault();
+      var email = document.getElementById('resetEmail').value.toLowerCase().trim();
+      var err = document.getElementById('loginError');
+      var success = document.getElementById('loginSuccess');
+      var btn = document.getElementById('resetPasswordBtn');
+      
+      if (!email) {
+        err.textContent = 'Please enter your email address.';
+        return false;
+      }
+      
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      err.textContent = '';
+      success.textContent = '';
+      success.classList.add('hidden');
+      
+      try {
+        var response = await fetch('/api/request-password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        });
+        
+        var data = await response.json();
+        
+        if (data.success) {
+          success.textContent = data.message;
+          success.classList.remove('hidden');
+          setTimeout(function() {
+            showLoginForm();
+          }, 5000);
+        } else {
+          err.textContent = data.error || 'Request failed. Please try again.';
+        }
+      } catch (e) {
+        console.error('Password reset request error:', e);
+        err.textContent = 'Connection error. Please try again.';
+      }
+      
+      btn.disabled = false;
+      btn.textContent = 'Send Reset Link';
+      return false;
+    }
+    
+    async function completePasswordReset(event) {
+      if (event) event.preventDefault();
+      var newPass = document.getElementById('newResetPassword').value;
+      var confirmPass = document.getElementById('confirmResetPassword').value;
+      var err = document.getElementById('loginError');
+      var success = document.getElementById('loginSuccess');
+      var btn = document.getElementById('completeResetBtn');
+      
+      if (!newPass || newPass.length < 6) {
+        err.textContent = 'Password must be at least 6 characters.';
+        return false;
+      }
+      
+      if (newPass !== confirmPass) {
+        err.textContent = 'Passwords do not match.';
+        return false;
+      }
+      
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      err.textContent = '';
+      
+      try {
+        var urlParams = new URLSearchParams(window.location.search);
+        var resetToken = urlParams.get('reset_token');
+        
+        var response = await fetch('/api/complete-password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reset_token: resetToken, new_password: newPass })
+        });
+        
+        var data = await response.json();
+        
+        if (data.success) {
+          success.textContent = data.message;
+          success.classList.remove('hidden');
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setTimeout(function() {
+            showLoginForm();
+          }, 3000);
+        } else {
+          err.textContent = data.error || 'Password reset failed. Please try again.';
+        }
+      } catch (e) {
+        console.error('Password reset completion error:', e);
+        err.textContent = 'Connection error. Please try again.';
+      }
+      
+      btn.disabled = false;
+      btn.textContent = 'Set New Password';
+      return false;
+    }
+    
+    function showLoginForm() {
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('twoFAForm').classList.add('hidden');
+      document.getElementById('forgotPasswordForm').classList.add('hidden');
+      document.getElementById('completeResetForm').classList.add('hidden');
+      document.getElementById('forgotPasswordLink').classList.remove('hidden');
+      document.getElementById('loginError').textContent = '';
+      document.getElementById('loginSuccess').textContent = '';
+      document.getElementById('loginSuccess').classList.add('hidden');
+      pending2FAToken = null;
+      pending2FAEmail = null;
+    }
+    
+    function showForgotPasswordForm() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('twoFAForm').classList.add('hidden');
+      document.getElementById('forgotPasswordForm').classList.remove('hidden');
+      document.getElementById('completeResetForm').classList.add('hidden');
+      document.getElementById('forgotPasswordLink').classList.add('hidden');
+      document.getElementById('loginError').textContent = '';
+      document.getElementById('loginSuccess').textContent = '';
+      document.getElementById('loginSuccess').classList.add('hidden');
+      document.getElementById('resetEmail').focus();
+    }
+    
+    function checkForResetToken() {
+      var urlParams = new URLSearchParams(window.location.search);
+      var resetToken = urlParams.get('reset_token');
+      if (resetToken) {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('completeResetForm').classList.remove('hidden');
+        document.getElementById('forgotPasswordLink').classList.add('hidden');
+        document.getElementById('newResetPassword').focus();
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      var forgotLink = document.getElementById('forgotPasswordLink');
+      if (forgotLink) {
+        forgotLink.onclick = function(e) {
+          e.preventDefault();
+          showForgotPasswordForm();
+        };
+      }
+      
+      var cancelResetLink = document.getElementById('cancelResetLink');
+      if (cancelResetLink) {
+        cancelResetLink.onclick = function(e) {
+          e.preventDefault();
+          showLoginForm();
+        };
+      }
+      
+      var cancel2FALink = document.getElementById('cancel2FALink');
+      if (cancel2FALink) {
+        cancel2FALink.onclick = function(e) {
+          e.preventDefault();
+          showLoginForm();
+        };
+      }
+      
+      checkForResetToken();
+    });
     
     async function checkExistingSession() {
       var token = localStorage.getItem('ftg_session_token');
@@ -189,6 +438,7 @@
         </button>
         <div id="userDropdownMenu" class="dropdown-menu hidden">
           <button id="changePasswordBtn" class="dropdown-item">🔑 Change Password</button>
+          <button id="securitySettingsBtn" class="dropdown-item">🔐 Security Settings</button>
           <button id="logoutBtn" class="dropdown-item">🚪 Logout</button>
         </div>
       </div>

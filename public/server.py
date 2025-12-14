@@ -14,6 +14,11 @@ import requests
 from anthropic import Anthropic
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import pyotp
+import qrcode
+import io
+import secrets
+from cryptography.fernet import Fernet
 
 app = Flask(__name__, static_folder=None)
 
@@ -21,6 +26,40 @@ SCHEDULER_INTERVAL = 60
 
 # Database connection
 DATABASE_URL = os.environ.get("DATABASE_URL")
+
+# Encryption key for TOTP secrets - derived from a secret or generated
+def get_encryption_key():
+    """Get or generate encryption key for TOTP secrets"""
+    key_env = os.environ.get('TOTP_ENCRYPTION_KEY')
+    if key_env:
+        return key_env.encode()
+    # Derive a key from DATABASE_URL if no explicit key (for backwards compatibility)
+    # In production, set TOTP_ENCRYPTION_KEY as a proper Fernet key
+    if DATABASE_URL:
+        key_material = hashlib.sha256(DATABASE_URL.encode()).digest()
+        return base64.urlsafe_b64encode(key_material)
+    return Fernet.generate_key()
+
+ENCRYPTION_KEY = get_encryption_key()
+_fernet = Fernet(ENCRYPTION_KEY)
+
+def encrypt_totp_secret(secret):
+    """Encrypt TOTP secret for database storage"""
+    if not secret:
+        return None
+    return _fernet.encrypt(secret.encode()).decode()
+
+def decrypt_totp_secret(encrypted_secret):
+    """Decrypt TOTP secret from database"""
+    if not encrypted_secret:
+        return None
+    try:
+        return _fernet.decrypt(encrypted_secret.encode()).decode()
+    except Exception:
+        # Fallback for unencrypted secrets (migration period)
+        if len(encrypted_secret) == 32 and encrypted_secret.isalnum():
+            return encrypted_secret
+        return None
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
@@ -120,13 +159,27 @@ def init_database():
             ("last_login", "TIMESTAMP"),
             ("created_by", "INTEGER REFERENCES users(id)"),
             ("password_reset_token", "VARCHAR(255)"),
-            ("password_reset_expires", "TIMESTAMP")
+            ("password_reset_expires", "TIMESTAMP"),
+            ("two_factor_enabled", "BOOLEAN DEFAULT FALSE"),
+            ("two_factor_secret", "TEXT"),
+            ("two_factor_confirmed_at", "TIMESTAMP")
         ]
         for col_name, col_def in new_columns:
             try:
                 cur.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_def}")
             except:
                 pass
+        
+        # Create user_backup_codes table for 2FA recovery
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS user_backup_codes (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                code_hash VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                used_at TIMESTAMP
+            )
+        """)
         
         # Create sessions table with IP tracking
         cur.execute("""
@@ -987,11 +1040,14 @@ def verify_session(token):
     """Verify session token and return user info or None"""
     if not token:
         return None
+    # Don't accept 2FA challenge tokens as valid sessions
+    if token.startswith('2fa_'):
+        return None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("""
-            SELECT u.id, u.email, u.display_name, u.is_active, r.name as role_name
+            SELECT u.id, u.email, u.display_name, u.is_active, u.two_factor_enabled, r.name as role_name
             FROM sessions s
             JOIN users u ON s.user_id = u.id
             LEFT JOIN roles r ON u.role_id = r.id
@@ -1053,9 +1109,10 @@ def api_login():
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Find user by email with role info
+        # Find user by email with role info and 2FA status
         cur.execute("""
-            SELECT u.id, u.email, u.display_name, u.password_hash, u.is_active, r.name as role_name
+            SELECT u.id, u.email, u.display_name, u.password_hash, u.is_active, 
+                   u.two_factor_enabled, u.two_factor_secret, r.name as role_name
             FROM users u
             LEFT JOIN roles r ON u.role_id = r.id
             WHERE u.email = %s
@@ -1083,6 +1140,29 @@ def api_login():
         if needs_rehash:
             new_hash = hash_password(password)
             cur.execute("UPDATE users SET password_hash = %s WHERE id = %s", (new_hash, user['id']))
+            conn.commit()
+        
+        # Check if 2FA is enabled
+        if user.get('two_factor_enabled'):
+            # Generate a temporary 2FA challenge token
+            twofa_token = str(uuid.uuid4())
+            # Store in sessions with a short expiry (10 minutes) and special marker
+            expires_at = datetime.now() + timedelta(minutes=10)
+            client_ip = get_client_ip()
+            cur.execute("""
+                INSERT INTO sessions (user_id, token, expires_at, ip_address)
+                VALUES (%s, %s, %s, %s)
+            """, (user['id'], f"2fa_{twofa_token}", expires_at, client_ip))
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            return jsonify({
+                'success': True,
+                'requires_2fa': True,
+                'twofa_token': twofa_token,
+                'email': user['email']
+            })
         
         # Create session token with IP
         token = str(uuid.uuid4())
@@ -1118,6 +1198,415 @@ def api_login():
         
     except Exception as e:
         print(f"Login error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/login/2fa', methods=['POST', 'OPTIONS'])
+def api_login_2fa():
+    """Complete 2FA authentication step"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        twofa_token = data.get('twofa_token', '')
+        code = data.get('code', '').strip()
+        
+        if not twofa_token or not code:
+            return jsonify({'error': 'Token and code are required'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Find the 2FA challenge session
+        cur.execute("""
+            SELECT s.id, s.user_id, u.email, u.display_name, u.two_factor_secret, r.name as role_name
+            FROM sessions s
+            JOIN users u ON s.user_id = u.id
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE s.token = %s AND s.expires_at > NOW()
+        """, (f"2fa_{twofa_token}",))
+        session = cur.fetchone()
+        
+        if not session:
+            cur.close()
+            conn.close()
+            return jsonify({'error': '2FA session expired. Please log in again.'}), 401
+        
+        # Verify the TOTP code (decrypt first)
+        decrypted_secret = decrypt_totp_secret(session['two_factor_secret'])
+        if not decrypted_secret:
+            cur.close()
+            conn.close()
+            return jsonify({'error': '2FA configuration error. Please re-enable 2FA.'}), 500
+        totp = pyotp.TOTP(decrypted_secret)
+        is_valid = totp.verify(code, valid_window=1)
+        
+        # If TOTP fails, try backup codes
+        if not is_valid:
+            cur.execute("""
+                SELECT id, code_hash FROM user_backup_codes
+                WHERE user_id = %s AND used_at IS NULL
+            """, (session['user_id'],))
+            backup_codes = cur.fetchall()
+            
+            for backup in backup_codes:
+                if hashlib.sha256(code.encode()).hexdigest() == backup['code_hash']:
+                    # Mark backup code as used
+                    cur.execute("""
+                        UPDATE user_backup_codes SET used_at = NOW() WHERE id = %s
+                    """, (backup['id'],))
+                    is_valid = True
+                    log_audit(session['user_id'], '2fa_backup_code_used', 'user', session['user_id'], {})
+                    break
+        
+        if not is_valid:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Invalid verification code'}), 401
+        
+        # Delete the 2FA challenge session
+        cur.execute("DELETE FROM sessions WHERE id = %s", (session['id'],))
+        
+        # Create a full session
+        token = str(uuid.uuid4())
+        expires_at = datetime.now() + timedelta(days=30)
+        client_ip = get_client_ip()
+        
+        cur.execute("""
+            INSERT INTO sessions (user_id, token, expires_at, ip_address)
+            VALUES (%s, %s, %s, %s)
+        """, (session['user_id'], token, expires_at, client_ip))
+        
+        # Update last_login
+        cur.execute("UPDATE users SET last_login = NOW() WHERE id = %s", (session['user_id'],))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # Get user permissions
+        permissions = get_user_permissions(session['user_id'])
+        
+        # Log successful login
+        log_audit(session['user_id'], 'login_2fa', 'user', session['user_id'], {'email': session['email']})
+        
+        return jsonify({
+            'success': True,
+            'displayName': session['display_name'],
+            'email': session['email'],
+            'role': session['role_name'] or 'viewer',
+            'permissions': permissions,
+            'token': token
+        })
+        
+    except Exception as e:
+        print(f"2FA login error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/2fa/setup', methods=['POST', 'OPTIONS'])
+@require_auth
+def api_2fa_setup():
+    """Generate 2FA secret and QR code for setup"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        user = request.current_user
+        
+        # Check if 2FA is already enabled
+        if user.get('two_factor_enabled'):
+            return jsonify({'error': '2FA is already enabled'}), 400
+        
+        # Generate a new secret
+        secret = pyotp.random_base32()
+        
+        # Encrypt and store the secret (not confirmed yet)
+        encrypted_secret = encrypt_totp_secret(secret)
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE users SET two_factor_secret = %s WHERE id = %s
+        """, (encrypted_secret, user['id']))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # Generate QR code
+        totp = pyotp.TOTP(secret)
+        provisioning_uri = totp.provisioning_uri(
+            name=user['email'],
+            issuer_name='FTG Dashboard'
+        )
+        
+        # Create QR code image
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(provisioning_uri)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Convert to base64
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+        
+        return jsonify({
+            'success': True,
+            'secret': secret,
+            'qr_code': f'data:image/png;base64,{qr_base64}',
+            'provisioning_uri': provisioning_uri
+        })
+        
+    except Exception as e:
+        print(f"2FA setup error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/2fa/confirm', methods=['POST', 'OPTIONS'])
+@require_auth
+def api_2fa_confirm():
+    """Confirm 2FA setup with a verification code"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        code = data.get('code', '').strip()
+        if not code:
+            return jsonify({'error': 'Verification code is required'}), 400
+        
+        user = request.current_user
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Get the pending secret
+        cur.execute("SELECT two_factor_secret FROM users WHERE id = %s", (user['id'],))
+        row = cur.fetchone()
+        
+        if not row or not row['two_factor_secret']:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'No 2FA setup in progress'}), 400
+        
+        # Decrypt and verify the code
+        decrypted_secret = decrypt_totp_secret(row['two_factor_secret'])
+        if not decrypted_secret:
+            cur.close()
+            conn.close()
+            return jsonify({'error': '2FA configuration error'}), 500
+        totp = pyotp.TOTP(decrypted_secret)
+        if not totp.verify(code, valid_window=1):
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Invalid verification code'}), 400
+        
+        # Enable 2FA
+        cur.execute("""
+            UPDATE users SET two_factor_enabled = TRUE, two_factor_confirmed_at = NOW()
+            WHERE id = %s
+        """, (user['id'],))
+        
+        # Generate backup codes
+        backup_codes = []
+        for _ in range(10):
+            code = secrets.token_hex(4).upper()  # 8-character hex codes
+            backup_codes.append(code)
+            code_hash = hashlib.sha256(code.encode()).hexdigest()
+            cur.execute("""
+                INSERT INTO user_backup_codes (user_id, code_hash)
+                VALUES (%s, %s)
+            """, (user['id'], code_hash))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # Log the action
+        log_audit(user['id'], '2fa_enabled', 'user', user['id'], {})
+        
+        return jsonify({
+            'success': True,
+            'message': '2FA enabled successfully',
+            'backup_codes': backup_codes
+        })
+        
+    except Exception as e:
+        print(f"2FA confirm error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/2fa/disable', methods=['POST', 'OPTIONS'])
+@require_auth
+def api_2fa_disable():
+    """Disable 2FA for the current user"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        password = data.get('password', '')
+        if not password:
+            return jsonify({'error': 'Password is required to disable 2FA'}), 400
+        
+        user = request.current_user
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Get current password hash
+        cur.execute("SELECT password_hash FROM users WHERE id = %s", (user['id'],))
+        row = cur.fetchone()
+        
+        if not verify_password(password, row['password_hash']):
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Incorrect password'}), 401
+        
+        # Disable 2FA
+        cur.execute("""
+            UPDATE users SET 
+                two_factor_enabled = FALSE, 
+                two_factor_secret = NULL,
+                two_factor_confirmed_at = NULL
+            WHERE id = %s
+        """, (user['id'],))
+        
+        # Delete backup codes
+        cur.execute("DELETE FROM user_backup_codes WHERE user_id = %s", (user['id'],))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # Log the action
+        log_audit(user['id'], '2fa_disabled', 'user', user['id'], {})
+        
+        return jsonify({
+            'success': True,
+            'message': '2FA disabled successfully'
+        })
+        
+    except Exception as e:
+        print(f"2FA disable error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/2fa/status', methods=['GET', 'OPTIONS'])
+@require_auth
+def api_2fa_status():
+    """Get 2FA status for the current user"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        user = request.current_user
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT two_factor_enabled, two_factor_confirmed_at
+            FROM users WHERE id = %s
+        """, (user['id'],))
+        row = cur.fetchone()
+        
+        # Count unused backup codes
+        cur.execute("""
+            SELECT COUNT(*) as count FROM user_backup_codes
+            WHERE user_id = %s AND used_at IS NULL
+        """, (user['id'],))
+        backup_count = cur.fetchone()['count']
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'enabled': row['two_factor_enabled'] or False,
+            'confirmed_at': row['two_factor_confirmed_at'].isoformat() if row['two_factor_confirmed_at'] else None,
+            'backup_codes_remaining': backup_count
+        })
+        
+    except Exception as e:
+        print(f"2FA status error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/2fa/regenerate-backup-codes', methods=['POST', 'OPTIONS'])
+@require_auth
+def api_2fa_regenerate_backup_codes():
+    """Regenerate backup codes for 2FA"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        password = data.get('password', '')
+        if not password:
+            return jsonify({'error': 'Password is required'}), 400
+        
+        user = request.current_user
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Verify password
+        cur.execute("SELECT password_hash, two_factor_enabled FROM users WHERE id = %s", (user['id'],))
+        row = cur.fetchone()
+        
+        if not row['two_factor_enabled']:
+            cur.close()
+            conn.close()
+            return jsonify({'error': '2FA is not enabled'}), 400
+        
+        if not verify_password(password, row['password_hash']):
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Incorrect password'}), 401
+        
+        # Delete old backup codes
+        cur.execute("DELETE FROM user_backup_codes WHERE user_id = %s", (user['id'],))
+        
+        # Generate new backup codes
+        backup_codes = []
+        for _ in range(10):
+            code = secrets.token_hex(4).upper()
+            backup_codes.append(code)
+            code_hash = hashlib.sha256(code.encode()).hexdigest()
+            cur.execute("""
+                INSERT INTO user_backup_codes (user_id, code_hash)
+                VALUES (%s, %s)
+            """, (user['id'], code_hash))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log_audit(user['id'], '2fa_backup_codes_regenerated', 'user', user['id'], {})
+        
+        return jsonify({
+            'success': True,
+            'backup_codes': backup_codes
+        })
+        
+    except Exception as e:
+        print(f"Regenerate backup codes error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/change-password', methods=['POST', 'OPTIONS'])
@@ -1424,6 +1913,237 @@ def api_delete_user(user_id):
         print(f"Delete user error: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/admin/users/<int:user_id>/reset-password', methods=['POST', 'OPTIONS'])
+@require_admin
+def api_admin_reset_password(user_id):
+    """Admin can reset a user's password"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        admin_id = request.current_user['id']
+        data = request.get_json(force=True, silent=True) or {}
+        
+        # Generate a temporary password or use provided one
+        new_password = data.get('new_password') or secrets.token_urlsafe(12)
+        send_email = data.get('send_email', False)
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Get user email
+        cur.execute("SELECT email, display_name FROM users WHERE id = %s", (user_id,))
+        user = cur.fetchone()
+        
+        if not user:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Update password
+        new_hash = hash_password(new_password)
+        cur.execute("""
+            UPDATE users SET password_hash = %s, updated_at = NOW() WHERE id = %s
+        """, (new_hash, user_id))
+        
+        # Invalidate all sessions for this user
+        cur.execute("DELETE FROM sessions WHERE user_id = %s", (user_id,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # Log the action
+        log_audit(admin_id, 'admin_password_reset', 'user', user_id, {'email': user['email']})
+        
+        # Optionally send email with new password
+        if send_email:
+            try:
+                html_content = f"""
+                <html>
+                <body style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2>Password Reset - FTG Dashboard</h2>
+                    <p>Hello {user['display_name']},</p>
+                    <p>Your password has been reset by an administrator.</p>
+                    <p>Your new temporary password is: <strong>{new_password}</strong></p>
+                    <p>Please log in and change your password immediately.</p>
+                    <br>
+                    <p>If you did not expect this, please contact your administrator.</p>
+                </body>
+                </html>
+                """
+                send_gmail(user['email'], 'Password Reset - FTG Dashboard', html_content)
+            except Exception as e:
+                print(f"Failed to send password reset email: {e}")
+        
+        return jsonify({
+            'success': True,
+            'temporary_password': new_password if not send_email else None,
+            'message': 'Password reset successfully' + (' and email sent' if send_email else '')
+        })
+        
+    except Exception as e:
+        print(f"Admin reset password error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/request-password-reset', methods=['POST', 'OPTIONS'])
+def api_request_password_reset():
+    """Request a password reset email"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        email = data.get('email', '').lower().strip()
+        
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Find user by email
+        cur.execute("SELECT id, email, display_name FROM users WHERE email = %s AND is_active = TRUE", (email,))
+        user = cur.fetchone()
+        
+        # Always return success to prevent email enumeration
+        if not user:
+            cur.close()
+            conn.close()
+            return jsonify({
+                'success': True,
+                'message': 'If this email is registered, you will receive a password reset link.'
+            })
+        
+        # Generate reset token
+        reset_token = secrets.token_urlsafe(32)
+        reset_token_hash = hashlib.sha256(reset_token.encode()).hexdigest()
+        expires_at = datetime.now() + timedelta(hours=1)
+        
+        # Store hashed token
+        cur.execute("""
+            UPDATE users SET 
+                password_reset_token = %s,
+                password_reset_expires = %s
+            WHERE id = %s
+        """, (reset_token_hash, expires_at, user['id']))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # Send email with reset link
+        try:
+            # Get the base URL from environment or request
+            base_url = os.environ.get('REPLIT_DEV_DOMAIN', request.host_url.rstrip('/'))
+            if not base_url.startswith('http'):
+                base_url = f'https://{base_url}'
+            reset_link = f"{base_url}/?reset_token={reset_token}"
+            
+            html_content = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>Password Reset Request - FTG Dashboard</h2>
+                <p>Hello {user['display_name']},</p>
+                <p>You have requested to reset your password. Click the link below to proceed:</p>
+                <p><a href="{reset_link}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a></p>
+                <p>This link will expire in 1 hour.</p>
+                <p>If you did not request this, please ignore this email.</p>
+            </body>
+            </html>
+            """
+            send_gmail(user['email'], 'Password Reset Request - FTG Dashboard', html_content)
+            
+            log_audit(user['id'], 'password_reset_requested', 'user', user['id'], {'email': email})
+        except Exception as e:
+            print(f"Failed to send password reset email: {e}")
+            import traceback
+            traceback.print_exc()
+            # Don't reveal the error to the user
+        
+        return jsonify({
+            'success': True,
+            'message': 'If this email is registered, you will receive a password reset link.'
+        })
+        
+    except Exception as e:
+        print(f"Request password reset error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/complete-password-reset', methods=['POST', 'OPTIONS'])
+def api_complete_password_reset():
+    """Complete password reset with token"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        reset_token = data.get('reset_token', '')
+        new_password = data.get('new_password', '')
+        
+        if not reset_token or not new_password:
+            return jsonify({'error': 'Token and new password are required'}), 400
+        
+        if len(new_password) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters'}), 400
+        
+        # Hash the token to compare with stored hash
+        token_hash = hashlib.sha256(reset_token.encode()).hexdigest()
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Find user with valid token
+        cur.execute("""
+            SELECT id, email FROM users 
+            WHERE password_reset_token = %s 
+            AND password_reset_expires > NOW()
+            AND is_active = TRUE
+        """, (token_hash,))
+        user = cur.fetchone()
+        
+        if not user:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Invalid or expired reset token'}), 400
+        
+        # Update password and clear reset token
+        new_hash = hash_password(new_password)
+        cur.execute("""
+            UPDATE users SET 
+                password_hash = %s,
+                password_reset_token = NULL,
+                password_reset_expires = NULL,
+                updated_at = NOW()
+            WHERE id = %s
+        """, (new_hash, user['id']))
+        
+        # Invalidate all existing sessions
+        cur.execute("DELETE FROM sessions WHERE user_id = %s", (user['id'],))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log_audit(user['id'], 'password_reset_completed', 'user', user['id'], {'email': user['email']})
+        
+        return jsonify({
+            'success': True,
+            'message': 'Password has been reset successfully. Please log in with your new password.'
+        })
+        
+    except Exception as e:
+        print(f"Complete password reset error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/admin/roles', methods=['GET', 'OPTIONS'])
 @require_admin
 def api_get_roles():
@@ -1576,46 +2296,6 @@ def api_get_audit_log():
         })
     except Exception as e:
         print(f"Get audit log error: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/admin/reset-password/<int:user_id>', methods=['POST', 'OPTIONS'])
-@require_admin
-def api_admin_reset_password(user_id):
-    if request.method == 'OPTIONS':
-        return jsonify({'status': 'ok'})
-    
-    try:
-        data = request.get_json(force=True, silent=True)
-        new_password = data.get('password', '') if data else ''
-        
-        if not new_password or len(new_password) < 6:
-            return jsonify({'error': 'Password must be at least 6 characters'}), 400
-        
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        cur.execute("""
-            UPDATE users SET password_hash = %s, updated_at = NOW()
-            WHERE id = %s
-        """, (hash_password(new_password), user_id))
-        
-        if cur.rowcount == 0:
-            cur.close()
-            conn.close()
-            return jsonify({'error': 'User not found'}), 404
-        
-        # Invalidate all sessions for this user
-        cur.execute("DELETE FROM sessions WHERE user_id = %s", (user_id,))
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        
-        log_audit(request.current_user['id'], 'admin_reset_password', 'user', user_id, None)
-        
-        return jsonify({'success': True, 'message': 'Password reset successfully'})
-    except Exception as e:
-        print(f"Admin reset password error: {e}")
         return jsonify({'error': str(e)}), 500
 
 # ============== SCHEDULED REPORTS API ==============

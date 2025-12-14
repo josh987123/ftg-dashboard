@@ -470,6 +470,15 @@ function initAuth() {
       showChangePasswordModal();
     };
   }
+  
+  // Security settings (2FA)
+  const securitySettingsBtn = document.getElementById("securitySettingsBtn");
+  if (securitySettingsBtn) {
+    securitySettingsBtn.onclick = function() {
+      if (userDropdownMenu) userDropdownMenu.classList.add("hidden");
+      showSecuritySettingsModal();
+    };
+  }
 }
 
 function showChangePasswordModal() {
@@ -565,6 +574,215 @@ function showChangePasswordModal() {
   setElText("changePasswordStatus", "");
   setElClass("changePasswordStatus", "email-status");
   modal.classList.remove("hidden");
+}
+
+async function showSecuritySettingsModal() {
+  let modal = document.getElementById("securitySettingsModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "securitySettingsModal";
+    modal.className = "modal-overlay";
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width:500px;">
+        <div class="modal-header">
+          <h3>Security Settings</h3>
+          <button class="modal-close" id="securitySettingsClose">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="twoFAStatusSection">
+            <h4 style="margin-bottom:12px;">Two-Factor Authentication (2FA)</h4>
+            <p id="twoFAStatusText" style="color:#6b7280;margin-bottom:16px;">Loading...</p>
+            <div id="twoFAActions"></div>
+          </div>
+          <div id="twoFASetupSection" class="hidden" style="margin-top:20px;">
+            <h4>Set Up 2FA</h4>
+            <p style="color:#6b7280;font-size:14px;margin:12px 0;">Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)</p>
+            <div style="text-align:center;margin:16px 0;">
+              <img id="twoFAQRCode" src="" alt="2FA QR Code" style="max-width:200px;">
+            </div>
+            <p style="color:#6b7280;font-size:12px;margin:8px 0;">Or enter this code manually: <code id="twoFASecretCode" style="background:#f3f4f6;padding:4px 8px;border-radius:4px;"></code></p>
+            <label style="margin-top:16px;display:block;">Enter verification code:</label>
+            <input type="text" id="twoFASetupCode" placeholder="000000" maxlength="6" style="text-align:center;font-size:18px;">
+            <div id="twoFASetupStatus" class="email-status" style="margin-top:8px;"></div>
+            <div style="margin-top:16px;display:flex;gap:8px;">
+              <button class="btn-secondary" id="twoFASetupCancelBtn">Cancel</button>
+              <button class="btn-primary" id="twoFASetupConfirmBtn">Enable 2FA</button>
+            </div>
+          </div>
+          <div id="twoFABackupCodesSection" class="hidden" style="margin-top:20px;">
+            <h4>Backup Codes</h4>
+            <p style="color:#6b7280;font-size:14px;margin:12px 0;">Save these codes in a safe place. Each can only be used once.</p>
+            <div id="backupCodesList" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:monospace;background:#f9fafb;padding:16px;border-radius:8px;"></div>
+            <button class="btn-primary" id="backupCodesDoneBtn" style="margin-top:16px;">Done</button>
+          </div>
+          <div id="twoFADisableSection" class="hidden" style="margin-top:20px;">
+            <h4>Disable 2FA</h4>
+            <p style="color:#6b7280;font-size:14px;margin:12px 0;">Enter your password to confirm:</p>
+            <input type="password" id="twoFADisablePassword" placeholder="Your password">
+            <div id="twoFADisableStatus" class="email-status" style="margin-top:8px;"></div>
+            <div style="margin-top:16px;display:flex;gap:8px;">
+              <button class="btn-secondary" id="twoFADisableCancelBtn">Cancel</button>
+              <button class="btn-primary" id="twoFADisableConfirmBtn" style="background:#dc2626;">Disable 2FA</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById("securitySettingsClose").onclick = () => modal.classList.add("hidden");
+    modal.onclick = (e) => { if (e.target === modal) modal.classList.add("hidden"); };
+  }
+  
+  modal.classList.remove("hidden");
+  await load2FAStatus();
+}
+
+async function load2FAStatus() {
+  const token = localStorage.getItem("ftg_session_token");
+  const statusText = document.getElementById("twoFAStatusText");
+  const actions = document.getElementById("twoFAActions");
+  
+  try {
+    const response = await fetch("/api/2fa/status", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    const data = await response.json();
+    
+    if (data.enabled) {
+      statusText.innerHTML = `<span style="color:#10b981;">✓ 2FA is enabled</span><br><small>Backup codes remaining: ${data.backup_codes_remaining}</small>`;
+      actions.innerHTML = `
+        <button class="btn-secondary" id="regenerateBackupBtn" style="margin-right:8px;">Regenerate Backup Codes</button>
+        <button class="btn-secondary" id="disable2FABtn" style="background:#fee2e2;color:#dc2626;">Disable 2FA</button>
+      `;
+      document.getElementById("regenerateBackupBtn").onclick = () => showRegenerateBackupCodes();
+      document.getElementById("disable2FABtn").onclick = () => showDisable2FASection();
+    } else {
+      statusText.textContent = "2FA is not enabled. Enable it for extra security.";
+      actions.innerHTML = `<button class="btn-primary" id="enable2FABtn">Enable 2FA</button>`;
+      document.getElementById("enable2FABtn").onclick = () => start2FASetup();
+    }
+  } catch (e) {
+    statusText.textContent = "Error loading 2FA status";
+  }
+}
+
+async function start2FASetup() {
+  const token = localStorage.getItem("ftg_session_token");
+  document.getElementById("twoFAStatusSection").classList.add("hidden");
+  document.getElementById("twoFASetupSection").classList.remove("hidden");
+  
+  try {
+    const response = await fetch("/api/2fa/setup", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
+    });
+    const data = await response.json();
+    
+    if (data.success) {
+      document.getElementById("twoFAQRCode").src = data.qr_code;
+      document.getElementById("twoFASecretCode").textContent = data.secret;
+      
+      document.getElementById("twoFASetupCancelBtn").onclick = () => {
+        document.getElementById("twoFASetupSection").classList.add("hidden");
+        document.getElementById("twoFAStatusSection").classList.remove("hidden");
+      };
+      
+      document.getElementById("twoFASetupConfirmBtn").onclick = async () => {
+        const code = document.getElementById("twoFASetupCode").value.trim();
+        const status = document.getElementById("twoFASetupStatus");
+        
+        if (!code) { status.textContent = "Enter the code"; status.className = "email-status error"; return; }
+        
+        const confirmRes = await fetch("/api/2fa/confirm", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ code })
+        });
+        const confirmData = await confirmRes.json();
+        
+        if (confirmData.success) {
+          document.getElementById("twoFASetupSection").classList.add("hidden");
+          document.getElementById("twoFABackupCodesSection").classList.remove("hidden");
+          const codesList = document.getElementById("backupCodesList");
+          codesList.innerHTML = confirmData.backup_codes.map(c => `<span style="padding:4px;background:#fff;border-radius:4px;">${c}</span>`).join("");
+          document.getElementById("backupCodesDoneBtn").onclick = () => {
+            document.getElementById("twoFABackupCodesSection").classList.add("hidden");
+            document.getElementById("twoFAStatusSection").classList.remove("hidden");
+            load2FAStatus();
+          };
+        } else {
+          status.textContent = confirmData.error || "Verification failed";
+          status.className = "email-status error";
+        }
+      };
+    }
+  } catch (e) {
+    console.error("2FA setup error:", e);
+  }
+}
+
+function showDisable2FASection() {
+  document.getElementById("twoFAStatusSection").classList.add("hidden");
+  document.getElementById("twoFADisableSection").classList.remove("hidden");
+  document.getElementById("twoFADisablePassword").value = "";
+  document.getElementById("twoFADisableStatus").textContent = "";
+  
+  document.getElementById("twoFADisableCancelBtn").onclick = () => {
+    document.getElementById("twoFADisableSection").classList.add("hidden");
+    document.getElementById("twoFAStatusSection").classList.remove("hidden");
+  };
+  
+  document.getElementById("twoFADisableConfirmBtn").onclick = async () => {
+    const password = document.getElementById("twoFADisablePassword").value;
+    const status = document.getElementById("twoFADisableStatus");
+    const token = localStorage.getItem("ftg_session_token");
+    
+    if (!password) { status.textContent = "Enter your password"; status.className = "email-status error"; return; }
+    
+    const response = await fetch("/api/2fa/disable", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+    const data = await response.json();
+    
+    if (data.success) {
+      document.getElementById("twoFADisableSection").classList.add("hidden");
+      document.getElementById("twoFAStatusSection").classList.remove("hidden");
+      load2FAStatus();
+    } else {
+      status.textContent = data.error || "Failed to disable 2FA";
+      status.className = "email-status error";
+    }
+  };
+}
+
+async function showRegenerateBackupCodes() {
+  const password = prompt("Enter your password to regenerate backup codes:");
+  if (!password) return;
+  
+  const token = localStorage.getItem("ftg_session_token");
+  const response = await fetch("/api/2fa/regenerate-backup-codes", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ password })
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    document.getElementById("twoFAStatusSection").classList.add("hidden");
+    document.getElementById("twoFABackupCodesSection").classList.remove("hidden");
+    const codesList = document.getElementById("backupCodesList");
+    codesList.innerHTML = data.backup_codes.map(c => `<span style="padding:4px;background:#fff;border-radius:4px;">${c}</span>`).join("");
+    document.getElementById("backupCodesDoneBtn").onclick = () => {
+      document.getElementById("twoFABackupCodesSection").classList.add("hidden");
+      document.getElementById("twoFAStatusSection").classList.remove("hidden");
+      load2FAStatus();
+    };
+  } else {
+    alert(data.error || "Failed to regenerate backup codes");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", function() {
