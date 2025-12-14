@@ -10190,7 +10190,11 @@ function updateCashStatsTiles(dates, selectedAccounts) {
   document.getElementById("cashMaxDate").textContent = formatDate(max.date);
   animateCurrency(document.getElementById("cashMinValue"), min.total, 600);
   document.getElementById("cashMinDate").textContent = formatDate(min.date);
-  animatePercent(document.getElementById("cashGrowthValue"), growth, 600);
+  const growthEl = document.getElementById("cashGrowthValue");
+  if (growthEl) {
+    growthEl.className = growth < 0 ? "stat-value negative" : "stat-value";
+  }
+  animatePercent(growthEl, growth, 600);
 }
 
 function renderCashDailyTable() {
