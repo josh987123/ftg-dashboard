@@ -50,6 +50,6 @@ channel = "stable-25_05"
 packages = ["cargo", "freetype", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "rustc", "tcl", "tk", "zlib"]
 
 [deployment]
-deploymentTarget = "autoscale"
+deploymentTarget = "vm"
 run = ["bash", "-c", "cd public && gunicorn --bind=0.0.0.0:5000 --workers=2 server:app"]
 build = ["cd", "public"]
