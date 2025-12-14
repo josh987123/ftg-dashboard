@@ -3759,7 +3759,7 @@ async function deleteScheduledReport(id) {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -3820,6 +3820,14 @@ function getReportData() {
       csvData: getCashFlowCsvData(),
       isWide: isCashFlowWide(),
       aiAnalysis: getCashFlowAiAnalysis()
+    };
+  } else if (view === "cashReports") {
+    return {
+      title: "Cash Balances",
+      subtitle: getCashBalancesSubtitle(),
+      tableHtml: getCashBalancesTableHtml(),
+      csvData: getCashBalancesCsvData(),
+      isWide: true
     };
   }
   return null;
@@ -4226,6 +4234,74 @@ function getCashFlowAiAnalysis() {
   const content = document.getElementById("cfAiAnalysisContent");
   if (!content || !content.innerHTML.trim()) return null;
   return content.innerHTML;
+}
+
+function getCashBalancesSubtitle() {
+  const rangeValue = document.getElementById("cashDaysRange")?.value || "30";
+  const selectedCount = cashSelectedAccounts?.length || 0;
+  const totalAccounts = cashData?.accounts?.length || 0;
+  
+  let rangeText = "";
+  if (rangeValue === "custom") {
+    const startDate = document.getElementById("cashStartDate")?.value;
+    const endDate = document.getElementById("cashEndDate")?.value;
+    if (startDate && endDate) {
+      rangeText = `${formatDateForDisplay(startDate)} - ${formatDateForDisplay(endDate)}`;
+    } else {
+      rangeText = "Custom Range";
+    }
+  } else {
+    rangeText = `Last ${rangeValue} Days`;
+  }
+  
+  return `${rangeText} | ${selectedCount} of ${totalAccounts} accounts selected`;
+}
+
+function getCashBalancesTableHtml() {
+  if (!cashData?.accounts || cashSelectedAccounts?.length === 0) {
+    return "<p>No accounts selected</p>";
+  }
+  
+  const selectedAccounts = cashData.accounts
+    .filter(a => cashSelectedAccounts.includes(a.name))
+    .sort((a, b) => b.balance - a.balance);
+  
+  const dates = getCashDateRange();
+  const total = selectedAccounts.reduce((sum, a) => sum + a.balance, 0);
+  
+  let html = `<div style="margin-bottom:15px;"><strong>Current Total Balance: ${formatCurrency(total)}</strong></div>`;
+  html += `<table><tr><th>Account</th><th style="text-align:right;">Current Balance</th></tr>`;
+  
+  selectedAccounts.forEach(acct => {
+    html += `<tr><td>${acct.name}</td><td style="text-align:right;">${formatCurrency(acct.balance)}</td></tr>`;
+  });
+  
+  html += `<tr style="font-weight:bold;border-top:2px solid #000;"><td>Total</td><td style="text-align:right;">${formatCurrency(total)}</td></tr>`;
+  html += `</table>`;
+  
+  return html;
+}
+
+function getCashBalancesCsvData() {
+  if (!cashData?.accounts || cashSelectedAccounts?.length === 0) {
+    return "";
+  }
+  
+  const selectedAccounts = cashData.accounts
+    .filter(a => cashSelectedAccounts.includes(a.name))
+    .sort((a, b) => b.balance - a.balance);
+  
+  const dates = getCashDateRange();
+  let csv = "Account,Current Balance\n";
+  
+  selectedAccounts.forEach(acct => {
+    csv += `"${acct.name}",${acct.balance}\n`;
+  });
+  
+  const total = selectedAccounts.reduce((sum, a) => sum + a.balance, 0);
+  csv += `"TOTAL",${total}\n`;
+  
+  return csv;
 }
 
 function getIncomeStatementAiAnalysis() {
