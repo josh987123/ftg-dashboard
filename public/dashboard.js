@@ -3141,6 +3141,394 @@ function setupExportButtons() {
     dropdown.classList.add("hidden");
     openEmailModal();
   };
+  
+  const scheduleEmailBtn = document.getElementById("scheduleEmailBtn");
+  if (scheduleEmailBtn) {
+    scheduleEmailBtn.onclick = () => {
+      dropdown.classList.add("hidden");
+      openScheduleEmailModal();
+    };
+  }
+}
+
+/* ------------------------------------------------------------
+   SCHEDULE EMAIL FUNCTIONS
+------------------------------------------------------------ */
+function openScheduleEmailModal() {
+  const modal = getEl("scheduleEmailModal");
+  if (!modal) return;
+  
+  resetScheduleForm();
+  setupScheduleTabs();
+  updateFrequencyFields();
+  loadScheduledReports();
+  modal.classList.remove("hidden");
+}
+
+function closeScheduleEmailModal() {
+  const modal = getEl("scheduleEmailModal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function setupScheduleTabs() {
+  const tabs = document.querySelectorAll(".schedule-tab");
+  const createTab = getEl("createScheduleTab");
+  const manageTab = getEl("manageSchedulesTab");
+  const saveBtn = getEl("saveScheduleBtn");
+  
+  tabs.forEach(tab => {
+    tab.onclick = () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      
+      const tabName = tab.dataset.tab;
+      if (tabName === "create") {
+        createTab.classList.remove("hidden");
+        manageTab.classList.add("hidden");
+        saveBtn.style.display = "";
+      } else {
+        createTab.classList.add("hidden");
+        manageTab.classList.remove("hidden");
+        saveBtn.style.display = "none";
+      }
+    };
+  });
+  
+  const frequencySelect = getEl("scheduleFrequency");
+  if (frequencySelect) {
+    frequencySelect.onchange = updateFrequencyFields;
+  }
+}
+
+function updateFrequencyFields() {
+  const frequency = getElValue("scheduleFrequency", "weekly");
+  const dayOfWeekRow = getEl("scheduleDayOfWeekRow");
+  const dayOfMonthRow = getEl("scheduleDayOfMonthRow");
+  
+  if (frequency === "daily") {
+    if (dayOfWeekRow) dayOfWeekRow.classList.add("hidden");
+    if (dayOfMonthRow) dayOfMonthRow.classList.add("hidden");
+  } else if (frequency === "weekly") {
+    if (dayOfWeekRow) dayOfWeekRow.classList.remove("hidden");
+    if (dayOfMonthRow) dayOfMonthRow.classList.add("hidden");
+  } else if (frequency === "monthly") {
+    if (dayOfWeekRow) dayOfWeekRow.classList.add("hidden");
+    if (dayOfMonthRow) dayOfMonthRow.classList.remove("hidden");
+  }
+}
+
+function resetScheduleForm() {
+  setElValue("scheduleReportName", "");
+  setElValue("scheduleRecipients", "");
+  setElValue("scheduleFrequency", "weekly");
+  setElValue("scheduleDayOfWeek", "1");
+  setElValue("scheduleDayOfMonth", "1");
+  setElValue("scheduleSendTime", "08:00");
+  setElValue("scheduleEditId", "");
+  
+  const activeCheckbox = getEl("scheduleActive");
+  if (activeCheckbox) activeCheckbox.checked = true;
+  
+  setElText("scheduleStatus", "");
+  if (getEl("scheduleStatus")) getEl("scheduleStatus").className = "email-status";
+  
+  const tabs = document.querySelectorAll(".schedule-tab");
+  tabs.forEach((t, i) => {
+    if (i === 0) t.classList.add("active");
+    else t.classList.remove("active");
+  });
+  
+  const createTab = getEl("createScheduleTab");
+  const manageTab = getEl("manageSchedulesTab");
+  const saveBtn = getEl("saveScheduleBtn");
+  
+  if (createTab) createTab.classList.remove("hidden");
+  if (manageTab) manageTab.classList.add("hidden");
+  if (saveBtn) saveBtn.style.display = "";
+  
+  setElText("scheduleModalTitle", "Schedule Email Report");
+}
+
+function getAuthToken() {
+  return localStorage.getItem("ftg_session_token") || "";
+}
+
+async function loadScheduledReports() {
+  const listEl = getEl("scheduledReportsList");
+  if (!listEl) return;
+  
+  listEl.innerHTML = '<p class="loading-message">Loading scheduled reports...</p>';
+  
+  try {
+    const token = getAuthToken();
+    const response = await fetch("/api/scheduled-reports", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      throw new Error("Failed to load scheduled reports");
+    }
+    
+    const data = await response.json();
+    const reports = data.reports || [];
+    
+    if (reports.length === 0) {
+      listEl.innerHTML = '<p class="empty-message">No scheduled reports yet. Create one using the form above.</p>';
+      return;
+    }
+    
+    let html = "";
+    for (const report of reports) {
+      const frequencyText = formatFrequency(report);
+      const recipientCount = report.recipients ? report.recipients.length : 0;
+      
+      html += `
+        <div class="scheduled-report-item ${report.is_active ? '' : 'inactive'}" data-id="${report.id}">
+          <div class="scheduled-report-info">
+            <div class="scheduled-report-name">${escapeHtml(report.report_name)}</div>
+            <div class="scheduled-report-details">
+              ${escapeHtml(report.report_type)} | ${frequencyText} | ${recipientCount} recipient(s)
+            </div>
+          </div>
+          <div class="scheduled-report-actions">
+            <button class="btn-edit" onclick="editScheduledReport(${report.id})">Edit</button>
+            <button class="btn-delete" onclick="deleteScheduledReport(${report.id})">Delete</button>
+          </div>
+        </div>
+      `;
+    }
+    
+    listEl.innerHTML = html;
+  } catch (error) {
+    console.error("Error loading scheduled reports:", error);
+    listEl.innerHTML = '<p class="empty-message">Error loading scheduled reports. Please try again.</p>';
+  }
+}
+
+function formatFrequency(report) {
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const time = report.send_time ? report.send_time.slice(0, 5) : "08:00";
+  
+  if (report.frequency === "daily") {
+    return `Daily at ${time}`;
+  } else if (report.frequency === "weekly") {
+    const dayName = days[report.day_of_week] || "Mon";
+    return `Weekly on ${dayName} at ${time}`;
+  } else if (report.frequency === "monthly") {
+    const dayNum = report.day_of_month || 1;
+    const suffix = dayNum === 1 ? "st" : dayNum === 15 ? "th" : "th";
+    return `Monthly on ${dayNum}${suffix} at ${time}`;
+  }
+  return report.frequency;
+}
+
+function escapeHtml(text) {
+  if (!text) return "";
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function getCurrentViewConfig() {
+  const view = getCurrentView();
+  const config = { view };
+  
+  if (view === "overview") {
+    config.viewType = getElValue("overviewViewType", "monthly");
+    config.year = getElValue("overviewYear", new Date().getFullYear());
+    config.compare = getElChecked("overviewCompare");
+    config.trendline = getElChecked("overviewTrend");
+    config.dataLabels = getElChecked("overviewDataLabels");
+    config.exclude = getElChecked("overviewExclude");
+  } else if (view === "revenue") {
+    config.viewType = getElValue("revViewType", "monthly");
+    config.year = getElValue("revYear", new Date().getFullYear());
+    config.compare = getElChecked("revCompare");
+    config.trendline = getElChecked("revTrend");
+  } else if (view === "incomeStatement") {
+    config.periodType = getElValue("isPeriodType", "month");
+    config.year = getElValue("isYear", new Date().getFullYear());
+    config.month = getElValue("isMonth", 12);
+    config.compareMode = getElValue("isCompareMode", "none");
+  } else if (view === "balanceSheet") {
+    config.viewMode = getElValue("bsViewMode", "single");
+    config.year = getElValue("bsYear", new Date().getFullYear());
+    config.month = getElValue("bsMonth", 12);
+  } else if (view === "cashFlows") {
+    config.periodType = getElValue("cfPeriodType", "month");
+    config.year = getElValue("cfYear", new Date().getFullYear());
+    config.month = getElValue("cfMonth", 12);
+  }
+  
+  return config;
+}
+
+async function saveScheduledReport() {
+  const status = getEl("scheduleStatus");
+  const reportName = getElValue("scheduleReportName", "").trim();
+  const recipientsStr = getElValue("scheduleRecipients", "").trim();
+  const frequency = getElValue("scheduleFrequency", "weekly");
+  const dayOfWeek = parseInt(getElValue("scheduleDayOfWeek", "1"));
+  const dayOfMonth = parseInt(getElValue("scheduleDayOfMonth", "1"));
+  const sendTime = getElValue("scheduleSendTime", "08:00");
+  const isActive = getElChecked("scheduleActive", true);
+  const editId = getElValue("scheduleEditId", "");
+  
+  if (!reportName) {
+    if (status) {
+      status.textContent = "Please enter a report name.";
+      status.className = "email-status error";
+    }
+    return;
+  }
+  
+  if (!recipientsStr) {
+    if (status) {
+      status.textContent = "Please enter at least one recipient email.";
+      status.className = "email-status error";
+    }
+    return;
+  }
+  
+  const recipients = recipientsStr.split(",").map(e => e.trim()).filter(e => e);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  for (const email of recipients) {
+    if (!emailRegex.test(email)) {
+      if (status) {
+        status.textContent = `Invalid email address: ${email}`;
+        status.className = "email-status error";
+      }
+      return;
+    }
+  }
+  
+  const view = getCurrentView();
+  const viewConfig = getCurrentViewConfig();
+  
+  const payload = {
+    report_type: view,
+    report_name: reportName,
+    view_config: viewConfig,
+    recipients: recipients,
+    frequency: frequency,
+    day_of_week: frequency === "weekly" ? dayOfWeek : null,
+    day_of_month: frequency === "monthly" ? dayOfMonth : null,
+    send_time: sendTime,
+    is_active: isActive
+  };
+  
+  try {
+    if (status) {
+      status.textContent = "Saving...";
+      status.className = "email-status";
+    }
+    
+    const token = getAuthToken();
+    const url = editId ? `/api/scheduled-reports/${editId}` : "/api/scheduled-reports";
+    const method = editId ? "PUT" : "POST";
+    
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to save scheduled report");
+    }
+    
+    if (status) {
+      status.textContent = editId ? "Schedule updated successfully!" : "Schedule created successfully!";
+      status.className = "email-status success";
+    }
+    
+    setTimeout(() => {
+      loadScheduledReports();
+      
+      const tabs = document.querySelectorAll(".schedule-tab");
+      tabs.forEach(t => {
+        if (t.dataset.tab === "manage") t.click();
+      });
+    }, 1000);
+    
+  } catch (error) {
+    console.error("Error saving scheduled report:", error);
+    if (status) {
+      status.textContent = error.message || "Failed to save scheduled report.";
+      status.className = "email-status error";
+    }
+  }
+}
+
+async function editScheduledReport(id) {
+  try {
+    const token = getAuthToken();
+    const response = await fetch("/api/scheduled-reports", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    
+    if (!response.ok) throw new Error("Failed to load report");
+    
+    const data = await response.json();
+    const report = (data.reports || []).find(r => r.id === id);
+    
+    if (!report) {
+      alert("Report not found.");
+      return;
+    }
+    
+    setElValue("scheduleReportName", report.report_name || "");
+    setElValue("scheduleRecipients", (report.recipients || []).join(", "));
+    setElValue("scheduleFrequency", report.frequency || "weekly");
+    setElValue("scheduleDayOfWeek", String(report.day_of_week || 1));
+    setElValue("scheduleDayOfMonth", String(report.day_of_month || 1));
+    setElValue("scheduleSendTime", (report.send_time || "08:00:00").slice(0, 5));
+    setElValue("scheduleEditId", String(id));
+    
+    const activeCheckbox = getEl("scheduleActive");
+    if (activeCheckbox) activeCheckbox.checked = report.is_active !== false;
+    
+    updateFrequencyFields();
+    
+    setElText("scheduleModalTitle", "Edit Scheduled Report");
+    
+    const tabs = document.querySelectorAll(".schedule-tab");
+    tabs.forEach(t => {
+      if (t.dataset.tab === "create") t.click();
+    });
+    
+  } catch (error) {
+    console.error("Error loading report for edit:", error);
+    alert("Failed to load report for editing.");
+  }
+}
+
+async function deleteScheduledReport(id) {
+  if (!confirm("Are you sure you want to delete this scheduled report?")) {
+    return;
+  }
+  
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`/api/scheduled-reports/${id}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      throw new Error("Failed to delete scheduled report");
+    }
+    
+    loadScheduledReports();
+  } catch (error) {
+    console.error("Error deleting scheduled report:", error);
+    alert("Failed to delete scheduled report.");
+  }
 }
 
 function getCurrentView() {

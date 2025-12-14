@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
-  <link rel="stylesheet" href="style.css?v=20251213c" />
+  <link rel="stylesheet" href="style.css?v=20251214a" />
 
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -195,6 +195,7 @@
             <button id="exportCsvBtn" class="dropdown-item">📊 CSV</button>
             <button id="exportExcelBtn" class="dropdown-item">📗 Excel</button>
             <button id="exportEmailBtn" class="dropdown-item">📧 Email</button>
+            <button id="scheduleEmailBtn" class="dropdown-item">📅 Schedule Email</button>
           </div>
         </div>
       </div>
@@ -1519,12 +1520,91 @@
     </div>
   </div>
 
+  <!-- Schedule Email Modal -->
+  <div id="scheduleEmailModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 id="scheduleModalTitle">Schedule Email Report</h3>
+        <button class="modal-close" onclick="closeScheduleEmailModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="schedule-tabs">
+          <button class="schedule-tab active" data-tab="create">Create Schedule</button>
+          <button class="schedule-tab" data-tab="manage">Manage Schedules</button>
+        </div>
+        
+        <!-- Create Schedule Tab -->
+        <div id="createScheduleTab" class="schedule-tab-content">
+          <div class="form-row">
+            <label for="scheduleReportName">Report Name:</label>
+            <input type="text" id="scheduleReportName" placeholder="e.g., Weekly Revenue Report" />
+          </div>
+          <div class="form-row">
+            <label for="scheduleRecipients">Recipients (comma-separated):</label>
+            <input type="text" id="scheduleRecipients" placeholder="email1@example.com, email2@example.com" />
+          </div>
+          <div class="form-row">
+            <label for="scheduleFrequency">Frequency:</label>
+            <select id="scheduleFrequency">
+              <option value="daily">Daily</option>
+              <option value="weekly" selected>Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+          <div class="form-row" id="scheduleDayOfWeekRow">
+            <label for="scheduleDayOfWeek">Day of Week:</label>
+            <select id="scheduleDayOfWeek">
+              <option value="0">Sunday</option>
+              <option value="1" selected>Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+            </select>
+          </div>
+          <div class="form-row hidden" id="scheduleDayOfMonthRow">
+            <label for="scheduleDayOfMonth">Day of Month:</label>
+            <select id="scheduleDayOfMonth">
+              <option value="1">1st</option>
+              <option value="15">15th</option>
+              <option value="28">28th (last safe day)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="scheduleSendTime">Send Time:</label>
+            <input type="time" id="scheduleSendTime" value="08:00" />
+          </div>
+          <div class="form-row">
+            <label class="checkbox-label">
+              <input type="checkbox" id="scheduleActive" checked />
+              Active (schedule is enabled)
+            </label>
+          </div>
+          <input type="hidden" id="scheduleEditId" value="" />
+          <div id="scheduleStatus" class="email-status"></div>
+        </div>
+        
+        <!-- Manage Schedules Tab -->
+        <div id="manageSchedulesTab" class="schedule-tab-content hidden">
+          <div id="scheduledReportsList" class="scheduled-reports-list">
+            <p class="loading-message">Loading scheduled reports...</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeScheduleEmailModal()">Cancel</button>
+        <button class="btn-primary" id="saveScheduleBtn" onclick="saveScheduledReport()">Save Schedule</button>
+      </div>
+    </div>
+  </div>
+
   <!-- JS LIBRARIES -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251213a"></script>
+  <script src="dashboard.js?v=20251214a"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>

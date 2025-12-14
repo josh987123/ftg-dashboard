@@ -3105,6 +3105,186 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 /* ============================================================
+   SCHEDULE EMAIL MODAL
+============================================================ */
+.schedule-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.schedule-tab {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.schedule-tab:hover {
+  color: #374151;
+  background: #f9fafb;
+}
+
+.schedule-tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+.schedule-tab-content {
+  display: block;
+}
+
+.schedule-tab-content.hidden {
+  display: none;
+}
+
+.modal-body .form-row {
+  margin-bottom: 16px;
+}
+
+.modal-body .form-row label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+.modal-body .form-row select,
+.modal-body .form-row input[type="time"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.modal-body .form-row select:focus,
+.modal-body .form-row input[type="time"]:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.scheduled-reports-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.scheduled-report-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.scheduled-report-item:last-child {
+  margin-bottom: 0;
+}
+
+.scheduled-report-info {
+  flex: 1;
+}
+
+.scheduled-report-name {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.scheduled-report-details {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.scheduled-report-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.scheduled-report-actions button {
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+}
+
+.scheduled-report-actions .btn-edit {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.scheduled-report-actions .btn-edit:hover {
+  background: #c7d2fe;
+}
+
+.scheduled-report-actions .btn-delete {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.scheduled-report-actions .btn-delete:hover {
+  background: #fecaca;
+}
+
+.scheduled-report-item.inactive {
+  opacity: 0.6;
+}
+
+.scheduled-report-item.inactive .scheduled-report-name::after {
+  content: " (Paused)";
+  font-weight: 400;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.loading-message,
+.empty-message {
+  text-align: center;
+  color: #6b7280;
+  padding: 20px;
+}
+
+[data-theme="dark"] .schedule-tab {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .schedule-tab:hover {
+  color: #e2e8f0;
+  background: #334155;
+}
+
+[data-theme="dark"] .schedule-tab.active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+[data-theme="dark"] .scheduled-report-item {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .scheduled-report-name {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .scheduled-report-details {
+  color: #94a3b8;
+}
+
+/* ============================================================
    CHART FULLSCREEN MODAL
 ============================================================ */
 .metric-tile-header {
