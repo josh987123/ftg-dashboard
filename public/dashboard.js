@@ -4445,20 +4445,17 @@ function universalExportToCsv() {
   URL.revokeObjectURL(url);
 }
 
-function universalExportToExcel() {
+async function universalExportToExcel() {
   const data = getReportData();
   if (!data) return alert("Please navigate to a report view to export to Excel.");
   
-  if (typeof XLSX === "undefined") {
+  if (typeof ExcelJS === "undefined") {
     return alert("Excel export library not loaded. Please refresh the page and try again.");
   }
   
   const view = getCurrentView();
   const filename = `ftg_${view}_${new Date().toISOString().split("T")[0]}.xlsx`;
   
-  // Try to get the actual DOM table for better formatting preservation
-  let ws;
-  let tableFound = false;
   const tableSelectors = {
     "revenue": "#revTable",
     "accounts": "#accounts .acct-table",
@@ -4468,106 +4465,134 @@ function universalExportToExcel() {
     "cashReports": ".daily-balance-table"
   };
   
+  let rows = [];
+  let headerRowCount = 1;
   const tableSelector = tableSelectors[view];
+  
   if (tableSelector) {
     const tableEl = document.querySelector(tableSelector);
-    if (tableEl && tableEl.querySelector("tr")) {
-      ws = XLSX.utils.table_to_sheet(tableEl, { raw: false });
-      tableFound = true;
+    if (tableEl) {
+      const headerRows = tableEl.querySelectorAll("thead tr");
+      const bodyRows = tableEl.querySelectorAll("tbody tr");
+      headerRowCount = headerRows.length || 1;
+      
+      headerRows.forEach(tr => {
+        const cells = [];
+        tr.querySelectorAll("th").forEach(th => cells.push(th.textContent.trim()));
+        if (cells.length > 0) rows.push({ cells, isHeader: true });
+      });
+      
+      bodyRows.forEach(tr => {
+        const cells = [];
+        const isGroupHeader = tr.classList.contains("is-group-header") || 
+                              tr.classList.contains("bs-group-header") ||
+                              tr.classList.contains("cf-group-header");
+        const isTotalRow = tr.classList.contains("is-total") || 
+                           tr.classList.contains("bs-total") ||
+                           tr.classList.contains("cf-total") ||
+                           tr.classList.contains("grand-total");
+        tr.querySelectorAll("td").forEach(td => cells.push(td.textContent.trim()));
+        if (cells.length > 0) rows.push({ cells, isHeader: false, isGroupHeader, isTotalRow });
+      });
     }
   }
   
-  // Fall back to CSV parsing if no DOM table found
-  if (!tableFound) {
-    const rows = data.csvData.split("\n").map(row => {
+  if (rows.length === 0) {
+    const csvRows = data.csvData.split("\n").map(row => {
       const result = [];
       let current = "";
       let inQuotes = false;
-      
       for (let i = 0; i < row.length; i++) {
         const char = row[i];
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === "," && !inQuotes) {
-          result.push(current.trim());
-          current = "";
-        } else {
-          current += char;
-        }
+        if (char === '"') inQuotes = !inQuotes;
+        else if (char === "," && !inQuotes) { result.push(current.trim()); current = ""; }
+        else current += char;
       }
       result.push(current.trim());
       return result;
-    }).filter(row => row.length > 0 && row.some(cell => cell !== ""));
+    }).filter(r => r.length > 0 && r.some(c => c !== ""));
     
-    // Track which columns had currency values in the original CSV
-    const currencyColumns = new Set();
-    rows.forEach((row, rowIndex) => {
-      if (rowIndex === 0) return;
-      row.forEach((cell, colIndex) => {
-        if (cell.includes("$")) currencyColumns.add(colIndex);
-      });
-    });
-    
-    const processedRows = rows.map((row, rowIndex) => {
-      return row.map((cell, colIndex) => {
-        if (rowIndex === 0) return cell;
-        
-        const cleanValue = cell.replace(/[$,]/g, "").replace(/[()]/g, match => match === "(" ? "-" : "");
-        const numValue = parseFloat(cleanValue);
-        
-        if (!isNaN(numValue) && !cell.includes("%") && cleanValue !== "") {
-          return { v: numValue, isCurrency: currencyColumns.has(colIndex) };
-        }
-        return cell;
-      });
-    });
-    
-    // Build worksheet from processed rows
-    ws = {};
-    const colCount = processedRows[0]?.length || 0;
-    const rowCount = processedRows.length;
-    
-    for (let R = 0; R < rowCount; R++) {
-      for (let C = 0; C < processedRows[R].length; C++) {
-        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-        const cellData = processedRows[R][C];
-        
-        if (typeof cellData === "object" && cellData.v !== undefined) {
-          ws[cellRef] = { t: "n", v: cellData.v };
-          if (cellData.isCurrency) {
-            ws[cellRef].z = '"$"#,##0';
-          }
-        } else if (typeof cellData === "number") {
-          ws[cellRef] = { t: "n", v: cellData };
-        } else {
-          ws[cellRef] = { t: "s", v: String(cellData) };
-        }
-      }
-    }
-    ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rowCount - 1, c: colCount - 1 } });
+    rows = csvRows.map((cells, idx) => ({ cells, isHeader: idx === 0 }));
   }
   
-  // Set column widths
-  const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
-  const colWidths = [];
-  for (let C = 0; C <= range.e.c; C++) {
-    let maxWidth = 12;
-    for (let R = 0; R <= Math.min(range.e.r, 100); R++) {
-      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-      if (ws[cellRef]) {
-        const cellLength = String(ws[cellRef].v || "").length;
-        maxWidth = Math.max(maxWidth, cellLength + 2);
-      }
-    }
-    colWidths.push({ wch: Math.min(maxWidth, 45) });
-  }
-  ws["!cols"] = colWidths;
+  if (rows.length === 0) return alert("No data to export.");
   
-  const wb = XLSX.utils.book_new();
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "FTG Dashboard";
+  workbook.created = new Date();
+  
   const sheetName = data.title.substring(0, 31);
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  const worksheet = workbook.addWorksheet(sheetName);
   
-  XLSX.writeFile(wb, filename);
+  const headerFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F2937" } };
+  const headerFont = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+  const groupHeaderFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE5E7EB" } };
+  const groupHeaderFont = { bold: true, color: { argb: "FF374151" }, size: 11 };
+  const totalFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F4F6" } };
+  const totalFont = { bold: true, color: { argb: "FF111827" }, size: 11 };
+  const borderStyle = { style: "thin", color: { argb: "FFD1D5DB" } };
+  const allBorders = { top: borderStyle, left: borderStyle, bottom: borderStyle, right: borderStyle };
+  
+  const currencyColumns = new Set();
+  rows.forEach((row, idx) => {
+    if (row.isHeader) return;
+    row.cells.forEach((cell, colIdx) => {
+      if (cell.includes("$")) currencyColumns.add(colIdx);
+    });
+  });
+  
+  rows.forEach((row, rowIdx) => {
+    const excelRow = worksheet.addRow(row.cells.map((cell, colIdx) => {
+      if (row.isHeader) return cell;
+      const cleanValue = cell.replace(/[$,]/g, "").replace(/\(([^)]+)\)/g, "-$1");
+      const numValue = parseFloat(cleanValue);
+      if (!isNaN(numValue) && cleanValue !== "" && !cell.includes("%")) return numValue;
+      return cell;
+    }));
+    
+    excelRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      cell.border = allBorders;
+      cell.alignment = { vertical: "middle" };
+      
+      if (row.isHeader) {
+        cell.fill = headerFill;
+        cell.font = headerFont;
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+      } else if (row.isGroupHeader) {
+        cell.fill = groupHeaderFill;
+        cell.font = groupHeaderFont;
+      } else if (row.isTotalRow) {
+        cell.fill = totalFill;
+        cell.font = totalFont;
+      }
+      
+      if (!row.isHeader && currencyColumns.has(colNumber - 1) && typeof cell.value === "number") {
+        cell.numFmt = '"$"#,##0';
+        cell.alignment = { horizontal: "right", vertical: "middle" };
+      }
+    });
+  });
+  
+  const colCount = rows[0]?.cells.length || 0;
+  for (let i = 1; i <= colCount; i++) {
+    let maxWidth = 12;
+    worksheet.getColumn(i).eachCell({ includeEmpty: false }, cell => {
+      const len = String(cell.value || "").length;
+      maxWidth = Math.max(maxWidth, len + 2);
+    });
+    worksheet.getColumn(i).width = Math.min(maxWidth, 45);
+  }
+  
+  worksheet.views = [{ state: "frozen", ySplit: headerRowCount }];
+  
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function openEmailModal() {
