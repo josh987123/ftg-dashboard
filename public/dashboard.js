@@ -4965,12 +4965,14 @@ async function sendReportEmail() {
       }
     }
     
-    // Generate simple text message for email body
+    // Generate email body with both chart reference AND data table
+    const tableContent = generateReportHtml(data, true);
     messageHtml = `
       <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h1 style="color: #1f2937; margin: 0 0 5px 0;">FTG Builders - ${data.title}</h1>
         <p style="color: #6b7280; margin: 0 0 20px 0;">${data.subtitle}</p>
-        ${chartImage ? '<p>Please see the attached chart image.</p>' : generateReportHtml(data, true)}
+        ${chartImage ? '<p style="margin-bottom: 20px;"><strong>Chart:</strong> Please see the attached chart image.</p>' : ''}
+        ${tableContent}
         <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">Generated on ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${new Date().toLocaleTimeString()} | FTG Dashboard</p>
       </div>
     `;
