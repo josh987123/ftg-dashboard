@@ -91,7 +91,7 @@
           document.getElementById('loginScreen').classList.add('hidden');
           
           var userLabel = document.getElementById('currentUser');
-          if (userLabel) userLabel.textContent = data.user.displayName;
+          if (userLabel) userLabel.textContent = data.displayName;
           
           if (typeof loadUserPreferences === 'function') {
             setTimeout(function() { loadUserPreferences(); }, 100);
