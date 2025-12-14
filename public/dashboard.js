@@ -411,69 +411,6 @@ function openPageChartFullscreen(chartId, title) {
 /* ------------------------------------------------------------
    USER SESSION MANAGEMENT
 ------------------------------------------------------------ */
-async function doLogin(event) {
-  event.preventDefault();
-  
-  const email = document.getElementById("loginUsername").value.trim();
-  const password = document.getElementById("loginPassword").value;
-  const errorEl = document.getElementById("loginError");
-  const loginBtn = document.getElementById("loginBtn");
-  
-  if (!email || !password) {
-    errorEl.textContent = "Please enter email and password";
-    return false;
-  }
-  
-  loginBtn.disabled = true;
-  loginBtn.textContent = "Logging in...";
-  errorEl.textContent = "";
-  
-  try {
-    const resp = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    
-    const data = await resp.json();
-    
-    if (!data.success) {
-      errorEl.textContent = data.error || "Login failed";
-      loginBtn.disabled = false;
-      loginBtn.textContent = "Login";
-      return false;
-    }
-    
-    // Store session data
-    localStorage.setItem("ftg_session_token", data.token);
-    localStorage.setItem("ftg_authenticated", "true");
-    localStorage.setItem("ftg_current_user", data.displayName);
-    localStorage.setItem("ftg_user_role", data.role);
-    localStorage.setItem("ftg_user_permissions", JSON.stringify(data.permissions));
-    
-    // Update UI
-    const loginScreen = document.getElementById("loginScreen");
-    const currentUserEl = document.getElementById("currentUser");
-    
-    loginScreen.classList.add("hidden");
-    if (currentUserEl) currentUserEl.textContent = data.displayName;
-    
-    // Check permissions and show/hide nav items
-    checkAdminAccess();
-    
-    loginBtn.disabled = false;
-    loginBtn.textContent = "Login";
-    
-  } catch (err) {
-    console.error("Login error:", err);
-    errorEl.textContent = "Network error. Please try again.";
-    loginBtn.disabled = false;
-    loginBtn.textContent = "Login";
-  }
-  
-  return false;
-}
-
 function initAuth() {
   const loginScreen = document.getElementById("loginScreen");
   const logoutBtn = document.getElementById("logoutBtn");
@@ -511,17 +448,9 @@ function initAuth() {
     logoutBtn.onclick = function() {
       localStorage.removeItem("ftg_authenticated");
       localStorage.removeItem("ftg_current_user");
-      localStorage.removeItem("ftg_session_token");
-      localStorage.removeItem("ftg_user_role");
-      localStorage.removeItem("ftg_user_permissions");
-      window.userPermissions = [];
-      window.isAdminUser = false;
       if (currentUserEl) currentUserEl.textContent = "";
       if (userDropdownMenu) userDropdownMenu.classList.add("hidden");
       loginScreen.classList.remove("hidden");
-      // Hide admin nav on logout
-      const adminNav = document.getElementById('adminNavItem');
-      if (adminNav) adminNav.classList.add('hidden');
     };
   }
   
