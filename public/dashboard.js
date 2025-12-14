@@ -171,7 +171,11 @@ function setupChartExpandButtons() {
 
 function openChartFullscreen(chartId, title) {
   const sourceChart = overviewChartInstances[chartId];
-  if (!sourceChart) return;
+  if (!sourceChart) {
+    // Fall back to page charts (revChart, acctChart, cashChart)
+    openPageChartFullscreen(chartId, title);
+    return;
+  }
   
   const modal = document.getElementById("chartFullscreenModal");
   const titleEl = document.getElementById("chartFullscreenTitle");

@@ -1244,6 +1244,13 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   max-height: 70vh;
   overflow: hidden;
   flex: 1;
+  position: relative;
+}
+
+.chart-box .chart-expand-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
 }
 
 #revChart, #acctChart {
@@ -4896,6 +4903,29 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+}
+
+.cash-chart-section .chart-header .chart-expand-btn {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+}
+
+.cash-chart-section .chart-header .chart-expand-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+  border-color: #9ca3af;
+}
+
+[data-theme="dark"] .cash-chart-section .chart-header .chart-expand-btn {
+  background: #374151;
+  border-color: #4b5563;
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .cash-chart-section .chart-header .chart-expand-btn:hover {
+  background: #4b5563;
+  color: #e5e7eb;
 }
 
 .cash-chart-section .chart-header h3 {
