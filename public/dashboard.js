@@ -10822,15 +10822,18 @@ const sectionToPermission = {
 // Check permissions and show/hide nav items based on user role
 async function checkAdminAccess() {
   const token = getAuthToken();
+  console.log('checkAdminAccess called, token:', token ? 'exists' : 'missing');
   if (!token) return;
   
   try {
     const resp = await fetch('/api/verify-session', { headers: getAuthHeaders() });
     const data = await resp.json();
+    console.log('verify-session response:', data);
     
     if (data.success && data.user) {
       const userPerms = data.user.permissions || [];
       const isAdmin = data.user.role === 'admin';
+      console.log('isAdmin:', isAdmin, 'role:', data.user.role, 'permissions:', userPerms);
       
       // Get all nav items
       const navItems = document.querySelectorAll('.nav-item[data-section]');
