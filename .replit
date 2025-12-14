@@ -1,19 +1,16 @@
-run = "python3 -m http.server 3000 --directory public"
+run = "python3 -m http.server 5000 --directory public"
 modules = ["python-3.11"]
 
 
 [web]
   assets = "public"
-  port = 3000
-  start = "python3 -m http.server 3000 --directory public"
+  port = 5000
+  start = "python3 -m http.server 5000 --directory public"
 
 [agent]
 expertMode = true
 integrations = ["google-mail:1.0.0", "google-sheet:1.0.0"]
 
-[[ports]]
-localPort = 3000
-externalPort = 80
 
 [[ports]]
 localPort = 5000
@@ -50,4 +47,3 @@ packages = ["cargo", "freetype", "lcms2", "libiconv", "libimagequant", "libjpeg"
 [deployment]
 deploymentTarget = "vm"
 run = ["bash", "-c", "cd public && gunicorn server:app --bind 0.0.0.0:${PORT:-5000} --workers=2 --timeout 60"]
-build = ["cd", "public"]
