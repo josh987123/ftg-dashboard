@@ -5571,6 +5571,198 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   }
 }
 
+/* Income Statement table rows */
+[data-theme="dark"] .is-row-header td {
+  background: var(--bg-tertiary) !important;
+  border-top-color: var(--border-secondary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .is-major-total td {
+  background: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .is-blue-subtotal td,
+[data-theme="dark"] .is-blue-subtotal td:first-child {
+  background: #1e3a5f !important;
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .is-profit-row td {
+  background: #1e3a5f !important;
+}
+
+[data-theme="dark"] .is-expense-section-expanded td {
+  background: #422006 !important;
+  color: #fde68a;
+}
+
+[data-theme="dark"] .is-gray-section-expanded td,
+[data-theme="dark"] .is-opexp-gray-expanded td {
+  background: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .is-tan-section-expanded td {
+  background: #451a03 !important;
+  color: #fed7aa;
+}
+
+[data-theme="dark"] .is-spacer-row td {
+  background: var(--card-bg) !important;
+}
+
+[data-theme="dark"] #incomeStatementTable tbody tr:nth-child(odd) {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] #incomeStatementTable tbody tr:nth-child(even) {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] #incomeStatementTable tbody tr.is-spacer-row {
+  background: var(--card-bg) !important;
+}
+
+/* Cash Flow Statement table */
+[data-theme="dark"] .cf-operating td,
+[data-theme="dark"] .cf-investing td,
+[data-theme="dark"] .cf-financing td {
+  background: #422006 !important;
+  color: #fde68a;
+}
+
+[data-theme="dark"] .cf-toggle,
+[data-theme="dark"] .bs-toggle {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .cf-toggle:hover,
+[data-theme="dark"] .bs-toggle:hover {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] #cashFlowTable th,
+[data-theme="dark"] #cashFlowTable td {
+  border-bottom-color: var(--table-border);
+}
+
+[data-theme="dark"] #cashFlowTable th:first-child,
+[data-theme="dark"] #cashFlowTable td:first-child {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] #cashFlowTable th:first-child {
+  background: var(--table-header-bg);
+}
+
+[data-theme="dark"] #cashFlowTable th {
+  background: var(--table-header-bg);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] #cashFlowTable tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] #cashFlowTable tbody tr:nth-child(odd) {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] #cashFlowTable tbody tr:nth-child(even) {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] #cashFlowTable tbody tr.is-spacer-row {
+  background: var(--card-bg) !important;
+}
+
+/* BS Table box and toggles */
+[data-theme="dark"] .bs-table-box {
+  background: var(--card-bg);
+  border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .bs-table-title {
+  color: var(--text-primary);
+  border-bottom-color: var(--border-primary);
+}
+
+/* Nav expand icon */
+[data-theme="dark"] .nav-expand-icon {
+  color: var(--text-tertiary);
+}
+
+/* Range slider styling */
+[data-theme="dark"] .range-container input[type="range"] {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .range-labels span {
+  color: var(--text-secondary);
+}
+
+/* Loading spinner */
+[data-theme="dark"] .loading-spinner-small {
+  color: var(--text-secondary);
+}
+
+/* Stat box */
+[data-theme="dark"] .stat-box {
+  background: var(--stat-bg);
+}
+
+[data-theme="dark"] .stat-label {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .stat-value {
+  color: var(--text-primary);
+}
+
+/* Revenue table box */
+[data-theme="dark"] .rev-table-box {
+  background: var(--card-bg);
+  border-color: var(--border-primary);
+}
+
+[data-theme="dark"] #revTable th,
+[data-theme="dark"] #acctTable th {
+  background: var(--table-header-bg);
+  color: var(--text-primary);
+  border-bottom-color: var(--border-primary);
+}
+
+[data-theme="dark"] #revTable td,
+[data-theme="dark"] #acctTable td {
+  border-bottom-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] #revTable tbody tr:hover,
+[data-theme="dark"] #acctTable tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+/* Chart box */
+[data-theme="dark"] .chart-box {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .chart-title div {
+  color: var(--text-primary);
+}
+
+/* Email status */
+[data-theme="dark"] .email-status.success {
+  background: #064e3b;
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .email-status.error {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
 /* Print styles - force light mode */
 @media print {
   [data-theme="dark"] body {
