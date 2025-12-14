@@ -567,9 +567,69 @@ document.addEventListener("DOMContentLoaded", function() {
   setupChartExpandButtons();
   setupPageChartExpandButtons();
   setupMetricInfoButtons();
+  setupDarkModeToggle();
   updateDataAsOfDates();
   initAllSavedViewsHandlers();
 });
+
+/* ------------------------------------------------------------
+   DARK MODE TOGGLE FUNCTIONALITY
+------------------------------------------------------------ */
+function setupDarkModeToggle() {
+  const toggle = document.getElementById("darkModeToggle");
+  if (!toggle) return;
+  
+  // Load saved theme preference and apply immediately
+  const savedTheme = localStorage.getItem("ftg_theme");
+  if (savedTheme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+    // Update chart colors immediately after a short delay to ensure charts are initialized
+    setTimeout(() => updateChartColorsForTheme("dark"), 100);
+  }
+  
+  toggle.addEventListener("click", () => {
+    const currentTheme = document.documentElement.getAttribute("data-theme");
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    
+    if (newTheme === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+      localStorage.setItem("ftg_theme", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      localStorage.setItem("ftg_theme", "light");
+    }
+    
+    // Update Chart.js colors if charts exist
+    updateChartColorsForTheme(newTheme);
+  });
+}
+
+function updateChartColorsForTheme(theme) {
+  const isDark = theme === "dark";
+  const gridColor = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
+  const textColor = isDark ? "#94a3b8" : "#6b7280";
+  
+  // Update all Chart.js instances if they exist
+  if (typeof Chart !== "undefined" && Chart.instances) {
+    Object.values(Chart.instances).forEach(chart => {
+      if (chart.options && chart.options.scales) {
+        if (chart.options.scales.x) {
+          chart.options.scales.x.grid = chart.options.scales.x.grid || {};
+          chart.options.scales.x.grid.color = gridColor;
+          chart.options.scales.x.ticks = chart.options.scales.x.ticks || {};
+          chart.options.scales.x.ticks.color = textColor;
+        }
+        if (chart.options.scales.y) {
+          chart.options.scales.y.grid = chart.options.scales.y.grid || {};
+          chart.options.scales.y.grid.color = gridColor;
+          chart.options.scales.y.ticks = chart.options.scales.y.ticks || {};
+          chart.options.scales.y.ticks.color = textColor;
+        }
+      }
+      chart.update("none");
+    });
+  }
+}
 
 function setupMetricInfoButtons() {
   document.querySelectorAll(".metric-info-btn").forEach(btn => {
@@ -3062,6 +3122,11 @@ function setupExportButtons() {
     universalExportToCsv();
   };
   
+  document.getElementById("exportExcelBtn").onclick = () => {
+    dropdown.classList.add("hidden");
+    universalExportToExcel();
+  };
+  
   document.getElementById("exportEmailBtn").onclick = () => {
     dropdown.classList.add("hidden");
     openEmailModal();
@@ -3707,6 +3772,83 @@ function universalExportToCsv() {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function universalExportToExcel() {
+  const data = getReportData();
+  if (!data) return alert("Please navigate to a report view to export to Excel.");
+  
+  if (typeof XLSX === "undefined") {
+    return alert("Excel export library not loaded. Please refresh the page and try again.");
+  }
+  
+  const view = getCurrentView();
+  const filename = `ftg_${view}_${new Date().toISOString().split("T")[0]}.xlsx`;
+  
+  // Parse CSV data into rows
+  const rows = data.csvData.split("\n").map(row => {
+    // Handle CSV parsing with quoted fields
+    const result = [];
+    let current = "";
+    let inQuotes = false;
+    
+    for (let i = 0; i < row.length; i++) {
+      const char = row[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === "," && !inQuotes) {
+        result.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  }).filter(row => row.length > 0 && row.some(cell => cell !== ""));
+  
+  // Convert string numbers to actual numbers for Excel
+  const processedRows = rows.map((row, rowIndex) => {
+    return row.map(cell => {
+      if (rowIndex === 0) return cell; // Keep header as text
+      
+      // Remove currency formatting and convert to number
+      const cleanValue = cell.replace(/[$,]/g, "").replace(/[()]/g, match => match === "(" ? "-" : "");
+      const numValue = parseFloat(cleanValue);
+      
+      // Check if it's a valid number (but not a percentage string)
+      if (!isNaN(numValue) && !cell.includes("%") && cleanValue !== "") {
+        return numValue;
+      }
+      return cell;
+    });
+  });
+  
+  // Create workbook and worksheet
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(processedRows);
+  
+  // Set column widths based on content
+  const colWidths = [];
+  if (processedRows.length > 0) {
+    for (let col = 0; col < processedRows[0].length; col++) {
+      let maxWidth = 10;
+      for (let row = 0; row < Math.min(processedRows.length, 100); row++) {
+        const cellValue = processedRows[row][col];
+        const cellLength = cellValue ? String(cellValue).length : 0;
+        maxWidth = Math.max(maxWidth, cellLength + 2);
+      }
+      colWidths.push({ wch: Math.min(maxWidth, 40) });
+    }
+    ws["!cols"] = colWidths;
+  }
+  
+  // Add worksheet to workbook with report name
+  const sheetName = data.title.substring(0, 31); // Excel sheet names max 31 chars
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  
+  // Export the file
+  XLSX.writeFile(wb, filename);
 }
 
 function openEmailModal() {

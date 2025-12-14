@@ -28,6 +28,9 @@
   <!-- html2canvas for chart screenshots -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -131,6 +134,12 @@
     </div>
 
     <div class="header-right">
+      <!-- Dark Mode Toggle -->
+      <button id="darkModeToggle" class="dark-mode-toggle" title="Toggle dark mode">
+        <span class="dark-mode-icon-light">☀️</span>
+        <span class="dark-mode-icon-dark">🌙</span>
+      </button>
+      
       <!-- User Menu Dropdown -->
       <div class="user-dropdown">
         <button id="userDropdownBtn" class="user-dropdown-btn">
@@ -183,6 +192,7 @@
             <button id="exportPrintBtn" class="dropdown-item">🖨️ Print</button>
             <button id="exportPdfBtn" class="dropdown-item">📄 PDF</button>
             <button id="exportCsvBtn" class="dropdown-item">📊 CSV</button>
+            <button id="exportExcelBtn" class="dropdown-item">📗 Excel</button>
             <button id="exportEmailBtn" class="dropdown-item">📧 Email</button>
           </div>
         </div>
