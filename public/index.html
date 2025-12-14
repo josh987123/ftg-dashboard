@@ -176,6 +176,7 @@
           <li class="nav-item placeholder" data-section="receivablesPayables">Receivables/Payables</li>
           <li class="nav-item placeholder" data-section="jobAnalytics">Job Analytics</li>
           <li class="nav-item" data-section="cashReports">Cash Balances</li>
+          <li class="nav-item admin-nav-item hidden" data-section="admin" id="adminNavItem">Admin</li>
         </ul>
       </nav>
     </aside>
@@ -1370,7 +1371,119 @@
         </div>
       </section>
 
+      <!-- ADMIN SECTION -->
+      <section id="admin" class="dashboard-section">
+        <h2>User Administration</h2>
+        <p class="admin-description">Manage users, roles, and permissions for the FTG Dashboard.</p>
+        
+        <div class="admin-tabs">
+          <button class="admin-tab active" data-tab="users">Users</button>
+          <button class="admin-tab" data-tab="roles">Roles</button>
+          <button class="admin-tab" data-tab="audit">Audit Log</button>
+        </div>
+        
+        <!-- Users Tab -->
+        <div id="adminUsersTab" class="admin-tab-content active">
+          <div class="admin-toolbar">
+            <button id="addUserBtn" class="btn-primary">+ Add User</button>
+            <input type="text" id="userSearchInput" placeholder="Search users..." class="admin-search">
+          </div>
+          <div id="usersTableContainer" class="admin-table-container">
+            <table class="admin-table" id="usersTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Last Login</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <tr><td colspan="6" class="loading-cell">Loading users...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Roles Tab -->
+        <div id="adminRolesTab" class="admin-tab-content">
+          <div id="rolesContainer" class="roles-container">
+            <div class="loading-spinner">Loading roles...</div>
+          </div>
+        </div>
+        
+        <!-- Audit Log Tab -->
+        <div id="adminAuditTab" class="admin-tab-content">
+          <div class="admin-toolbar">
+            <button id="refreshAuditBtn" class="btn-secondary">Refresh</button>
+          </div>
+          <div id="auditLogContainer" class="admin-table-container">
+            <table class="admin-table" id="auditLogTable">
+              <thead>
+                <tr>
+                  <th>Date/Time</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Details</th>
+                  <th>IP Address</th>
+                </tr>
+              </thead>
+              <tbody id="auditLogBody">
+                <tr><td colspan="5" class="loading-cell">Loading audit log...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
     </main>
+  </div>
+
+  <!-- User Edit Modal -->
+  <div id="userModal" class="modal-overlay hidden">
+    <div class="modal-content modal-wide">
+      <div class="modal-header">
+        <h3 id="userModalTitle">Add User</h3>
+        <button class="modal-close" onclick="closeUserModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editUserId" value="">
+        <div class="form-row">
+          <label for="userDisplayName">Display Name:</label>
+          <input type="text" id="userDisplayName" placeholder="John Smith" />
+        </div>
+        <div class="form-row">
+          <label for="userEmail">Email:</label>
+          <input type="email" id="userEmail" placeholder="user@ftgbuilders.com" />
+        </div>
+        <div class="form-row">
+          <label for="userRole">Role:</label>
+          <select id="userRole">
+            <option value="">Select Role...</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="userPassword">Password:</label>
+          <input type="password" id="userPassword" placeholder="Min 6 characters" />
+          <small id="passwordHint" class="form-hint">Leave blank to keep existing password</small>
+        </div>
+        <div class="form-row">
+          <label for="userActive">Status:</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="userActive" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">Active</span>
+          </label>
+        </div>
+        <div id="userModalError" class="form-error"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeUserModal()">Cancel</button>
+        <button class="btn-primary" id="saveUserBtn" onclick="saveUser()">Save User</button>
+      </div>
+    </div>
   </div>
 
   <!-- Chart Fullscreen Modal -->

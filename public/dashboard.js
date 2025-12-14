@@ -743,13 +743,23 @@ function initNavigation() {
 
   navItems.forEach(item => {
     item.addEventListener("click", () => {
+      const id = item.dataset.section;
+      
+      // Check permission before allowing navigation
+      if (typeof sectionToPermission !== 'undefined' && typeof window.userPermissions !== 'undefined') {
+        const permKey = sectionToPermission[id];
+        if (permKey && !window.isAdminUser && !window.userPermissions.includes(permKey)) {
+          console.warn('Access denied to section:', id);
+          return; // Block navigation
+        }
+      }
+      
       // Remove old states
       navItems.forEach(i => i.classList.remove("active"));
       sections.forEach(s => s.classList.remove("visible"));
 
       // Activate clicked
       item.classList.add("active");
-      const id = item.dataset.section;
       const section = document.getElementById(id);
       if (section) section.classList.add("visible");
 
@@ -10006,3 +10016,432 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
+
+// ========================================
+// ADMIN MODULE
+// ========================================
+
+let adminRoles = [];
+let adminPermissions = [];
+let adminUsers = [];
+
+function getAuthToken() {
+  return localStorage.getItem('ftg_session_token');
+}
+
+function getAuthHeaders() {
+  const token = getAuthToken();
+  return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+}
+
+function initAdminModule() {
+  // Tab switching
+  document.querySelectorAll('.admin-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      const tabId = tab.dataset.tab;
+      document.getElementById(`admin${tabId.charAt(0).toUpperCase() + tabId.slice(1)}Tab`).classList.add('active');
+      
+      if (tabId === 'users') loadUsers();
+      if (tabId === 'roles') loadRoles();
+      if (tabId === 'audit') loadAuditLog();
+    });
+  });
+  
+  // Add user button
+  document.getElementById('addUserBtn')?.addEventListener('click', () => openUserModal());
+  
+  // User search
+  document.getElementById('userSearchInput')?.addEventListener('input', filterUsers);
+  
+  // Refresh audit button
+  document.getElementById('refreshAuditBtn')?.addEventListener('click', loadAuditLog);
+  
+  // Load initial data
+  loadRolesForSelect();
+  loadUsers();
+}
+
+async function loadUsers() {
+  const tbody = document.getElementById('usersTableBody');
+  tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">Loading users...</td></tr>';
+  
+  try {
+    const resp = await fetch('/api/admin/users', { headers: getAuthHeaders() });
+    const data = await resp.json();
+    
+    if (!data.success) throw new Error(data.error);
+    
+    adminUsers = data.users;
+    renderUsersTable();
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" class="loading-cell">Error: ${err.message}</td></tr>`;
+  }
+}
+
+function renderUsersTable() {
+  const tbody = document.getElementById('usersTableBody');
+  const search = document.getElementById('userSearchInput')?.value.toLowerCase() || '';
+  
+  const filtered = adminUsers.filter(u => 
+    u.displayName.toLowerCase().includes(search) || 
+    u.email.toLowerCase().includes(search)
+  );
+  
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">No users found</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = filtered.map(u => `
+    <tr>
+      <td>${escapeHtml(u.displayName)}</td>
+      <td>${escapeHtml(u.email)}</td>
+      <td><span class="role-badge ${u.roleName || ''}">${u.roleName || 'None'}</span></td>
+      <td><span class="status-badge ${u.isActive ? 'active' : 'inactive'}">${u.isActive ? 'Active' : 'Inactive'}</span></td>
+      <td>${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString() : 'Never'}</td>
+      <td>
+        <button class="action-btn edit" onclick="openUserModal(${u.id})">Edit</button>
+        <button class="action-btn reset" onclick="resetUserPassword(${u.id})">Reset</button>
+        ${u.isActive ? `<button class="action-btn delete" onclick="disableUser(${u.id})">Disable</button>` : ''}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterUsers() {
+  renderUsersTable();
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function loadRolesForSelect() {
+  try {
+    const resp = await fetch('/api/admin/roles', { headers: getAuthHeaders() });
+    const data = await resp.json();
+    if (data.success) {
+      adminRoles = data.roles;
+      const select = document.getElementById('userRole');
+      if (select) {
+        select.innerHTML = '<option value="">Select Role...</option>' + 
+          adminRoles.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load roles:', err);
+  }
+}
+
+function openUserModal(userId = null) {
+  const modal = document.getElementById('userModal');
+  const title = document.getElementById('userModalTitle');
+  const hint = document.getElementById('passwordHint');
+  const error = document.getElementById('userModalError');
+  
+  error.textContent = '';
+  document.getElementById('editUserId').value = userId || '';
+  document.getElementById('userDisplayName').value = '';
+  document.getElementById('userEmail').value = '';
+  document.getElementById('userRole').value = '';
+  document.getElementById('userPassword').value = '';
+  document.getElementById('userActive').checked = true;
+  
+  if (userId) {
+    title.textContent = 'Edit User';
+    hint.style.display = 'block';
+    const user = adminUsers.find(u => u.id === userId);
+    if (user) {
+      document.getElementById('userDisplayName').value = user.displayName;
+      document.getElementById('userEmail').value = user.email;
+      document.getElementById('userRole').value = user.roleId || '';
+      document.getElementById('userActive').checked = user.isActive;
+    }
+  } else {
+    title.textContent = 'Add User';
+    hint.style.display = 'none';
+  }
+  
+  modal.classList.remove('hidden');
+}
+
+function closeUserModal() {
+  document.getElementById('userModal').classList.add('hidden');
+}
+
+async function saveUser() {
+  const userId = document.getElementById('editUserId').value;
+  const error = document.getElementById('userModalError');
+  const btn = document.getElementById('saveUserBtn');
+  
+  const data = {
+    displayName: document.getElementById('userDisplayName').value.trim(),
+    email: document.getElementById('userEmail').value.trim(),
+    roleId: document.getElementById('userRole').value || null,
+    isActive: document.getElementById('userActive').checked
+  };
+  
+  const password = document.getElementById('userPassword').value;
+  if (password) data.password = password;
+  
+  if (!data.displayName || !data.email) {
+    error.textContent = 'Display name and email are required';
+    return;
+  }
+  
+  if (!userId && !password) {
+    error.textContent = 'Password is required for new users';
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  error.textContent = '';
+  
+  try {
+    const url = userId ? `/api/admin/users/${userId}` : '/api/admin/users';
+    const method = userId ? 'PUT' : 'POST';
+    
+    const resp = await fetch(url, {
+      method,
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.error);
+    
+    closeUserModal();
+    loadUsers();
+  } catch (err) {
+    error.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save User';
+  }
+}
+
+async function resetUserPassword(userId) {
+  const newPassword = prompt('Enter new password (min 6 characters):');
+  if (!newPassword) return;
+  
+  if (newPassword.length < 6) {
+    alert('Password must be at least 6 characters');
+    return;
+  }
+  
+  try {
+    const resp = await fetch(`/api/admin/reset-password/${userId}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ password: newPassword })
+    });
+    
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.error);
+    
+    alert('Password reset successfully');
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function disableUser(userId) {
+  if (!confirm('Are you sure you want to disable this user?')) return;
+  
+  try {
+    const resp = await fetch(`/api/admin/users/${userId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.error);
+    
+    loadUsers();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function loadRoles() {
+  const container = document.getElementById('rolesContainer');
+  container.innerHTML = '<div class="loading-spinner">Loading roles...</div>';
+  
+  try {
+    const [rolesResp, permsResp] = await Promise.all([
+      fetch('/api/admin/roles', { headers: getAuthHeaders() }),
+      fetch('/api/admin/permissions', { headers: getAuthHeaders() })
+    ]);
+    
+    const rolesData = await rolesResp.json();
+    const permsData = await permsResp.json();
+    
+    if (!rolesData.success || !permsData.success) throw new Error('Failed to load data');
+    
+    adminRoles = rolesData.roles;
+    adminPermissions = permsData.permissions;
+    
+    let html = '';
+    for (const role of adminRoles) {
+      const rolePermsResp = await fetch(`/api/admin/roles/${role.id}/permissions`, { headers: getAuthHeaders() });
+      const rolePermsData = await rolePermsResp.json();
+      const rolePerms = rolePermsData.permissions || [];
+      
+      html += `
+        <div class="role-card" data-role-id="${role.id}">
+          <div class="role-card-header">
+            <div class="role-card-title">${escapeHtml(role.name)}</div>
+            <button class="btn-primary" onclick="saveRolePermissions(${role.id})">Save</button>
+          </div>
+          <div class="role-card-description">${escapeHtml(role.description || '')}</div>
+          <div class="permissions-grid">
+            ${adminPermissions.map(p => `
+              <div class="permission-item">
+                <input type="checkbox" id="perm_${role.id}_${p.pageKey}" 
+                  ${rolePerms.includes(p.pageKey) ? 'checked' : ''}>
+                <label for="perm_${role.id}_${p.pageKey}">${escapeHtml(p.pageName)}</label>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+    
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<div class="loading-cell">Error: ${err.message}</div>`;
+  }
+}
+
+async function saveRolePermissions(roleId) {
+  const card = document.querySelector(`.role-card[data-role-id="${roleId}"]`);
+  const checkboxes = card.querySelectorAll('input[type="checkbox"]');
+  const permissions = [];
+  
+  checkboxes.forEach(cb => {
+    if (cb.checked) {
+      const pageKey = cb.id.replace(`perm_${roleId}_`, '');
+      permissions.push(pageKey);
+    }
+  });
+  
+  try {
+    const resp = await fetch(`/api/admin/roles/${roleId}/permissions`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ permissions })
+    });
+    
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.error);
+    
+    alert('Permissions saved successfully');
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function loadAuditLog() {
+  const tbody = document.getElementById('auditLogBody');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Loading audit log...</td></tr>';
+  
+  try {
+    const resp = await fetch('/api/admin/audit-log?limit=100', { headers: getAuthHeaders() });
+    const data = await resp.json();
+    
+    if (!data.success) throw new Error(data.error);
+    
+    if (data.logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">No audit logs found</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = data.logs.map(log => `
+      <tr>
+        <td>${log.createdAt ? new Date(log.createdAt).toLocaleString() : ''}</td>
+        <td>${escapeHtml(log.userName || 'Unknown')}</td>
+        <td>${escapeHtml(log.action)}</td>
+        <td>${log.details ? escapeHtml(JSON.stringify(log.details).substring(0, 50)) : ''}</td>
+        <td>${escapeHtml(log.ipAddress || '')}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" class="loading-cell">Error: ${err.message}</td></tr>`;
+  }
+}
+
+// Map data-section attributes to permission page_keys
+const sectionToPermission = {
+  'overview': 'overview',
+  'revenue': 'revenue',
+  'accounts': 'account',
+  'incomeStatement': 'income_statement',
+  'balanceSheet': 'balance_sheet',
+  'cashFlows': 'cash_flow',
+  'overUnderBill': 'over_under',
+  'receivablesPayables': 'receivables',
+  'jobAnalytics': 'job_analytics',
+  'cashReports': 'cash_balances',
+  'admin': 'admin'
+};
+
+// Check permissions and show/hide nav items based on user role
+async function checkAdminAccess() {
+  const token = getAuthToken();
+  if (!token) return;
+  
+  try {
+    const resp = await fetch('/api/verify-session', { headers: getAuthHeaders() });
+    const data = await resp.json();
+    
+    if (data.success && data.user) {
+      const userPerms = data.user.permissions || [];
+      const isAdmin = data.user.role === 'admin';
+      
+      // Get all nav items
+      const navItems = document.querySelectorAll('.nav-item[data-section]');
+      
+      navItems.forEach(navItem => {
+        const section = navItem.getAttribute('data-section');
+        const permKey = sectionToPermission[section];
+        
+        if (permKey) {
+          // Admin role has all permissions, otherwise check specific permission
+          if (isAdmin || userPerms.includes(permKey)) {
+            navItem.classList.remove('hidden');
+          } else {
+            navItem.classList.add('hidden');
+          }
+        }
+      });
+      
+      // Store permissions for later use
+      window.userPermissions = userPerms;
+      window.isAdminUser = isAdmin;
+    }
+  } catch (err) {
+    console.error('Failed to check permissions:', err);
+  }
+}
+
+// Update initNavigation to handle admin section
+const originalInitNav = initNavigation;
+initNavigation = function() {
+  originalInitNav();
+  
+  // Add admin section handler
+  const adminNavItem = document.getElementById('adminNavItem');
+  if (adminNavItem) {
+    adminNavItem.addEventListener('click', () => {
+      initAdminModule();
+    });
+  }
+  
+  // Check admin access on load
+  checkAdminAccess();
+};

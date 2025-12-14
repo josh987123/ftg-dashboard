@@ -22,11 +22,38 @@ def get_db_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 def hash_password(password):
-    """Simple SHA-256 hash for password storage"""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Hash password using bcrypt for secure storage"""
+    import bcrypt
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+def verify_password(password, password_hash):
+    """Verify password against bcrypt hash, with fallback for SHA-256"""
+    import bcrypt
+    try:
+        # Try bcrypt first
+        return bcrypt.checkpw(password.encode(), password_hash.encode())
+    except (ValueError, AttributeError):
+        # Fallback to SHA-256 for legacy hashes
+        legacy_hash = hashlib.sha256(password.encode()).hexdigest()
+        return password_hash == legacy_hash
+
+def verify_password_with_rehash(password, password_hash):
+    """Verify password and indicate if rehash is needed for legacy hashes"""
+    import bcrypt
+    try:
+        # Try bcrypt first
+        if bcrypt.checkpw(password.encode(), password_hash.encode()):
+            return True, False  # Valid, no rehash needed
+        return False, False  # Invalid
+    except (ValueError, AttributeError):
+        # Fallback to SHA-256 for legacy hashes
+        legacy_hash = hashlib.sha256(password.encode()).hexdigest()
+        if password_hash == legacy_hash:
+            return True, True  # Valid, needs rehash to bcrypt
+        return False, False  # Invalid
 
 def init_database():
-    """Initialize database tables and seed default users"""
+    """Initialize database tables and seed default users, roles, and permissions"""
     if not DATABASE_URL:
         print("No DATABASE_URL found, skipping database initialization")
         return
@@ -35,53 +62,199 @@ def init_database():
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Create users table
+        # Create roles table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS roles (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(50) UNIQUE NOT NULL,
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Create permissions table (page-level access)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS permissions (
+                id SERIAL PRIMARY KEY,
+                page_key VARCHAR(50) UNIQUE NOT NULL,
+                page_name VARCHAR(100) NOT NULL,
+                description TEXT
+            )
+        """)
+        
+        # Create role_permissions junction table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS role_permissions (
+                role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
+                permission_id INTEGER REFERENCES permissions(id) ON DELETE CASCADE,
+                PRIMARY KEY (role_id, permission_id)
+            )
+        """)
+        
+        # Create users table with role and status fields
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 email VARCHAR(255) UNIQUE NOT NULL,
                 display_name VARCHAR(100) NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
+                role_id INTEGER REFERENCES roles(id),
+                is_active BOOLEAN DEFAULT TRUE,
+                last_login TIMESTAMP,
+                created_by INTEGER REFERENCES users(id),
+                password_reset_token VARCHAR(255),
+                password_reset_expires TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         
-        # Create sessions table
+        # Add new columns to users if they don't exist (for existing installations)
+        new_columns = [
+            ("role_id", "INTEGER REFERENCES roles(id)"),
+            ("is_active", "BOOLEAN DEFAULT TRUE"),
+            ("last_login", "TIMESTAMP"),
+            ("created_by", "INTEGER REFERENCES users(id)"),
+            ("password_reset_token", "VARCHAR(255)"),
+            ("password_reset_expires", "TIMESTAMP")
+        ]
+        for col_name, col_def in new_columns:
+            try:
+                cur.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_def}")
+            except:
+                pass
+        
+        # Create sessions table with IP tracking
         cur.execute("""
             CREATE TABLE IF NOT EXISTS sessions (
                 id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                 token VARCHAR(255) UNIQUE NOT NULL,
                 expires_at TIMESTAMP NOT NULL,
+                ip_address VARCHAR(45),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         
+        # Add ip_address column if it doesn't exist
+        try:
+            cur.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45)")
+        except:
+            pass
+        
+        # Create audit_log table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS audit_log (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                action VARCHAR(100) NOT NULL,
+                target_type VARCHAR(50),
+                target_id INTEGER,
+                details JSONB,
+                ip_address VARCHAR(45),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Seed default roles
+        default_roles = [
+            ('admin', 'Full access to all features including user management'),
+            ('manager', 'Access to all dashboard pages but not admin functions'),
+            ('viewer', 'Limited access to specific pages based on permissions')
+        ]
+        for role_name, description in default_roles:
+            cur.execute("""
+                INSERT INTO roles (name, description)
+                VALUES (%s, %s)
+                ON CONFLICT (name) DO NOTHING
+            """, (role_name, description))
+        
+        # Seed default permissions (one per dashboard page)
+        default_permissions = [
+            ('overview', 'Executive Overview', 'View executive summary and key metrics'),
+            ('revenue', 'Revenue', 'View revenue charts and analysis'),
+            ('account', 'Account Detail', 'View GL account details'),
+            ('income_statement', 'Income Statement', 'View income statement'),
+            ('balance_sheet', 'Balance Sheet', 'View balance sheet'),
+            ('cash_flow', 'Cash Flow', 'View statement of cash flows'),
+            ('over_under', 'Over/Under Bill', 'View billing variances'),
+            ('receivables', 'Receivables/Payables', 'View AR/AP tracking'),
+            ('job_analytics', 'Job Analytics', 'View job performance metrics'),
+            ('cash_balances', 'Cash Balances', 'View cash position'),
+            ('admin', 'Admin', 'Access user management and settings')
+        ]
+        for page_key, page_name, description in default_permissions:
+            cur.execute("""
+                INSERT INTO permissions (page_key, page_name, description)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (page_key) DO NOTHING
+            """, (page_key, page_name, description))
+        
+        # Get role IDs
+        cur.execute("SELECT id, name FROM roles")
+        roles = {row['name']: row['id'] for row in cur.fetchall()}
+        
+        # Get permission IDs
+        cur.execute("SELECT id, page_key FROM permissions")
+        perms = {row['page_key']: row['id'] for row in cur.fetchall()}
+        
+        # Admin role gets all permissions
+        if 'admin' in roles:
+            for perm_id in perms.values():
+                cur.execute("""
+                    INSERT INTO role_permissions (role_id, permission_id)
+                    VALUES (%s, %s)
+                    ON CONFLICT DO NOTHING
+                """, (roles['admin'], perm_id))
+        
+        # Manager role gets all except admin
+        if 'manager' in roles:
+            for page_key, perm_id in perms.items():
+                if page_key != 'admin':
+                    cur.execute("""
+                        INSERT INTO role_permissions (role_id, permission_id)
+                        VALUES (%s, %s)
+                        ON CONFLICT DO NOTHING
+                    """, (roles['manager'], perm_id))
+        
+        # Viewer role gets basic pages (overview, revenue, account, cash_balances)
+        if 'viewer' in roles:
+            viewer_pages = ['overview', 'revenue', 'account', 'cash_balances']
+            for page_key in viewer_pages:
+                if page_key in perms:
+                    cur.execute("""
+                        INSERT INTO role_permissions (role_id, permission_id)
+                        VALUES (%s, %s)
+                        ON CONFLICT DO NOTHING
+                    """, (roles['viewer'], perms[page_key]))
+        
         # Seed default users if they don't exist
         default_users = [
-            ('rodney@ftgbuilders.com', 'Rodney'),
-            ('sergio@ftghbuilders.com', 'Sergio'),
-            ('joshl@ftgbuilders.com', 'Josh'),
-            ('greg@ftgbuilders.com', 'Greg'),
-            ('bailey@ftgbuilders.com', 'Bailey')
+            ('rodney@ftgbuilders.com', 'Rodney', 'admin'),
+            ('sergio@ftghbuilders.com', 'Sergio', 'admin'),
+            ('joshl@ftgbuilders.com', 'Josh', 'manager'),
+            ('greg@ftgbuilders.com', 'Greg', 'manager'),
+            ('bailey@ftgbuilders.com', 'Bailey', 'viewer')
         ]
         
         default_password_hash = hash_password('Ftgb2025$')
         
-        for email, display_name in default_users:
+        for email, display_name, role_name in default_users:
+            role_id = roles.get(role_name)
             cur.execute("""
-                INSERT INTO users (email, display_name, password_hash)
-                VALUES (%s, %s, %s)
-                ON CONFLICT (email) DO NOTHING
-            """, (email, display_name, default_password_hash))
+                INSERT INTO users (email, display_name, password_hash, role_id, is_active)
+                VALUES (%s, %s, %s, %s, TRUE)
+                ON CONFLICT (email) DO UPDATE SET role_id = COALESCE(users.role_id, EXCLUDED.role_id)
+            """, (email, display_name, default_password_hash, role_id))
         
         conn.commit()
         cur.close()
         conn.close()
-        print("Database initialized successfully")
+        print("Database initialized successfully with roles and permissions")
     except Exception as e:
         print(f"Database initialization error: {e}")
+        import traceback
+        traceback.print_exc()
 
 # Initialize database on startup
 init_database()
@@ -178,15 +351,15 @@ def log_request():
     if request.method == 'OPTIONS':
         response = Response()
         response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
         return response
 
 @app.after_request
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
     return response
 
 @app.route('/api/send-email', methods=['POST', 'OPTIONS'])
@@ -709,6 +882,96 @@ def api_get_sheet_info(spreadsheet_id):
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+def get_client_ip():
+    """Get client IP address from request"""
+    if request.headers.get('X-Forwarded-For'):
+        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    return request.remote_addr or 'unknown'
+
+def log_audit(user_id, action, target_type=None, target_id=None, details=None):
+    """Log an audit event"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO audit_log (user_id, action, target_type, target_id, details, ip_address)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (user_id, action, target_type, target_id, json.dumps(details) if details else None, get_client_ip()))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Audit log error: {e}")
+
+def get_user_permissions(user_id):
+    """Get list of page_keys the user has access to"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT p.page_key FROM permissions p
+            JOIN role_permissions rp ON p.id = rp.permission_id
+            JOIN users u ON u.role_id = rp.role_id
+            WHERE u.id = %s
+        """, (user_id,))
+        perms = [row['page_key'] for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return perms
+    except:
+        return []
+
+def verify_session(token):
+    """Verify session token and return user info or None"""
+    if not token:
+        return None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT u.id, u.email, u.display_name, u.is_active, r.name as role_name
+            FROM sessions s
+            JOIN users u ON s.user_id = u.id
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE s.token = %s AND s.expires_at > NOW()
+        """, (token,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+        if user and user['is_active']:
+            return user
+        return None
+    except:
+        return None
+
+def require_auth(f):
+    """Decorator to require authentication"""
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        user = verify_session(token)
+        if not user:
+            return jsonify({'error': 'Authentication required'}), 401
+        request.current_user = user
+        return f(*args, **kwargs)
+    return decorated
+
+def require_admin(f):
+    """Decorator to require admin role"""
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        user = verify_session(token)
+        if not user:
+            return jsonify({'error': 'Authentication required'}), 401
+        if user['role_name'] != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        request.current_user = user
+        return f(*args, **kwargs)
+    return decorated
+
 @app.route('/api/login', methods=['POST', 'OPTIONS'])
 def api_login():
     if request.method == 'OPTIONS':
@@ -728,8 +991,13 @@ def api_login():
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Find user by email
-        cur.execute("SELECT id, email, display_name, password_hash FROM users WHERE email = %s", (email,))
+        # Find user by email with role info
+        cur.execute("""
+            SELECT u.id, u.email, u.display_name, u.password_hash, u.is_active, r.name as role_name
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE u.email = %s
+        """, (email,))
         user = cur.fetchone()
         
         if not user:
@@ -737,29 +1005,52 @@ def api_login():
             conn.close()
             return jsonify({'error': 'Invalid email address'}), 401
         
-        # Check password
-        if user['password_hash'] != hash_password(password):
+        if not user['is_active']:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Account is disabled. Contact your administrator.'}), 401
+        
+        # Check password using bcrypt (with SHA-256 fallback for legacy)
+        password_valid, needs_rehash = verify_password_with_rehash(password, user['password_hash'])
+        if not password_valid:
             cur.close()
             conn.close()
             return jsonify({'error': 'Incorrect password'}), 401
         
-        # Create session token
+        # Upgrade legacy SHA-256 hash to bcrypt if needed
+        if needs_rehash:
+            new_hash = hash_password(password)
+            cur.execute("UPDATE users SET password_hash = %s WHERE id = %s", (new_hash, user['id']))
+        
+        # Create session token with IP
         token = str(uuid.uuid4())
         expires_at = datetime.now() + timedelta(days=30)
+        client_ip = get_client_ip()
         
         cur.execute("""
-            INSERT INTO sessions (user_id, token, expires_at)
-            VALUES (%s, %s, %s)
-        """, (user['id'], token, expires_at))
+            INSERT INTO sessions (user_id, token, expires_at, ip_address)
+            VALUES (%s, %s, %s, %s)
+        """, (user['id'], token, expires_at, client_ip))
+        
+        # Update last_login
+        cur.execute("UPDATE users SET last_login = NOW() WHERE id = %s", (user['id'],))
         
         conn.commit()
         cur.close()
         conn.close()
         
+        # Get user permissions
+        permissions = get_user_permissions(user['id'])
+        
+        # Log successful login
+        log_audit(user['id'], 'login', 'user', user['id'], {'email': email})
+        
         return jsonify({
             'success': True,
             'displayName': user['display_name'],
             'email': user['email'],
+            'role': user['role_name'] or 'viewer',
+            'permissions': permissions,
             'token': token
         })
         
@@ -805,7 +1096,7 @@ def api_change_password():
             return jsonify({'error': 'Invalid or expired session. Please log in again.'}), 401
         
         # Verify current password
-        if session['password_hash'] != hash_password(current_password):
+        if not verify_password(current_password, session['password_hash']):
             cur.close()
             conn.close()
             return jsonify({'error': 'Current password is incorrect'}), 401
@@ -839,6 +1130,430 @@ def api_change_password():
         
     except Exception as e:
         print(f"Change password error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/logout', methods=['POST', 'OPTIONS'])
+def api_logout():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        if token:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM sessions WHERE token = %s", (token,))
+            conn.commit()
+            cur.close()
+            conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/verify-session', methods=['GET', 'OPTIONS'])
+def api_verify_session():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    user = verify_session(token)
+    if user:
+        permissions = get_user_permissions(user['id'])
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user['id'],
+                'email': user['email'],
+                'displayName': user['display_name'],
+                'role': user['role_name'] or 'viewer',
+                'permissions': permissions
+            }
+        })
+    return jsonify({'error': 'Invalid or expired session'}), 401
+
+@app.route('/api/admin/users', methods=['GET', 'OPTIONS'])
+@require_admin
+def api_get_users():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT u.id, u.email, u.display_name, u.is_active, u.last_login, u.created_at,
+                   r.id as role_id, r.name as role_name,
+                   creator.display_name as created_by_name
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            LEFT JOIN users creator ON u.created_by = creator.id
+            ORDER BY u.display_name
+        """)
+        users = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'users': [{
+                'id': u['id'],
+                'email': u['email'],
+                'displayName': u['display_name'],
+                'isActive': u['is_active'],
+                'lastLogin': u['last_login'].isoformat() if u['last_login'] else None,
+                'createdAt': u['created_at'].isoformat() if u['created_at'] else None,
+                'roleId': u['role_id'],
+                'roleName': u['role_name'],
+                'createdBy': u['created_by_name']
+            } for u in users]
+        })
+    except Exception as e:
+        print(f"Get users error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/users', methods=['POST'])
+@require_admin
+def api_create_user():
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        email = data.get('email', '').lower().strip()
+        display_name = data.get('displayName', '').strip()
+        role_id = data.get('roleId')
+        password = data.get('password', '')
+        
+        if not email or not display_name:
+            return jsonify({'error': 'Email and display name are required'}), 400
+        
+        if not password or len(password) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Check if email already exists
+        cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+        if cur.fetchone():
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Email already exists'}), 400
+        
+        password_hash = hash_password(password)
+        admin_id = request.current_user['id']
+        
+        cur.execute("""
+            INSERT INTO users (email, display_name, password_hash, role_id, is_active, created_by)
+            VALUES (%s, %s, %s, %s, TRUE, %s)
+            RETURNING id
+        """, (email, display_name, password_hash, role_id, admin_id))
+        
+        new_user_id = cur.fetchone()['id']
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log_audit(admin_id, 'create_user', 'user', new_user_id, {'email': email, 'displayName': display_name})
+        
+        return jsonify({'success': True, 'userId': new_user_id})
+    except Exception as e:
+        print(f"Create user error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/users/<int:user_id>', methods=['PUT', 'OPTIONS'])
+@require_admin
+def api_update_user(user_id):
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        updates = []
+        params = []
+        
+        if 'displayName' in data:
+            updates.append("display_name = %s")
+            params.append(data['displayName'])
+        
+        if 'email' in data:
+            updates.append("email = %s")
+            params.append(data['email'].lower().strip())
+        
+        if 'roleId' in data:
+            updates.append("role_id = %s")
+            params.append(data['roleId'])
+        
+        if 'isActive' in data:
+            updates.append("is_active = %s")
+            params.append(data['isActive'])
+        
+        if 'password' in data and data['password']:
+            if len(data['password']) < 6:
+                cur.close()
+                conn.close()
+                return jsonify({'error': 'Password must be at least 6 characters'}), 400
+            updates.append("password_hash = %s")
+            params.append(hash_password(data['password']))
+        
+        if not updates:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'No fields to update'}), 400
+        
+        updates.append("updated_at = NOW()")
+        params.append(user_id)
+        
+        cur.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = %s", params)
+        
+        if cur.rowcount == 0:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'User not found'}), 404
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log_audit(request.current_user['id'], 'update_user', 'user', user_id, data)
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Update user error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+@require_admin
+def api_delete_user(user_id):
+    try:
+        admin_id = request.current_user['id']
+        
+        if user_id == admin_id:
+            return jsonify({'error': 'Cannot delete your own account'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Soft delete - just disable the account
+        cur.execute("UPDATE users SET is_active = FALSE, updated_at = NOW() WHERE id = %s", (user_id,))
+        
+        if cur.rowcount == 0:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Delete all sessions for this user
+        cur.execute("DELETE FROM sessions WHERE user_id = %s", (user_id,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log_audit(admin_id, 'disable_user', 'user', user_id, None)
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Delete user error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/roles', methods=['GET', 'OPTIONS'])
+@require_admin
+def api_get_roles():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT id, name, description FROM roles ORDER BY id")
+        roles = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'roles': [{
+                'id': r['id'],
+                'name': r['name'],
+                'description': r['description']
+            } for r in roles]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/permissions', methods=['GET', 'OPTIONS'])
+@require_admin
+def api_get_permissions():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT id, page_key, page_name, description FROM permissions ORDER BY id")
+        permissions = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'permissions': [{
+                'id': p['id'],
+                'pageKey': p['page_key'],
+                'pageName': p['page_name'],
+                'description': p['description']
+            } for p in permissions]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/roles/<int:role_id>/permissions', methods=['GET', 'OPTIONS'])
+@require_admin
+def api_get_role_permissions(role_id):
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT p.page_key FROM permissions p
+            JOIN role_permissions rp ON p.id = rp.permission_id
+            WHERE rp.role_id = %s
+        """, (role_id,))
+        perms = [row['page_key'] for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'permissions': perms})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/roles/<int:role_id>/permissions', methods=['PUT'])
+@require_admin
+def api_update_role_permissions(role_id):
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        page_keys = data.get('permissions', [])
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Delete existing permissions for this role
+        cur.execute("DELETE FROM role_permissions WHERE role_id = %s", (role_id,))
+        
+        # Add new permissions
+        for page_key in page_keys:
+            cur.execute("""
+                INSERT INTO role_permissions (role_id, permission_id)
+                SELECT %s, id FROM permissions WHERE page_key = %s
+            """, (role_id, page_key))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log_audit(request.current_user['id'], 'update_role_permissions', 'role', role_id, {'permissions': page_keys})
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Update role permissions error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/audit-log', methods=['GET', 'OPTIONS'])
+@require_admin
+def api_get_audit_log():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        limit = request.args.get('limit', 100, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT a.id, a.action, a.target_type, a.target_id, a.details, a.ip_address, a.created_at,
+                   u.display_name as user_name, u.email as user_email
+            FROM audit_log a
+            LEFT JOIN users u ON a.user_id = u.id
+            ORDER BY a.created_at DESC
+            LIMIT %s OFFSET %s
+        """, (limit, offset))
+        logs = cur.fetchall()
+        
+        cur.execute("SELECT COUNT(*) as count FROM audit_log")
+        total = cur.fetchone()['count']
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'total': total,
+            'logs': [{
+                'id': log['id'],
+                'action': log['action'],
+                'targetType': log['target_type'],
+                'targetId': log['target_id'],
+                'details': log['details'],
+                'ipAddress': log['ip_address'],
+                'createdAt': log['created_at'].isoformat() if log['created_at'] else None,
+                'userName': log['user_name'],
+                'userEmail': log['user_email']
+            } for log in logs]
+        })
+    except Exception as e:
+        print(f"Get audit log error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/reset-password/<int:user_id>', methods=['POST', 'OPTIONS'])
+@require_admin
+def api_admin_reset_password(user_id):
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        new_password = data.get('password', '') if data else ''
+        
+        if not new_password or len(new_password) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            UPDATE users SET password_hash = %s, updated_at = NOW()
+            WHERE id = %s
+        """, (hash_password(new_password), user_id))
+        
+        if cur.rowcount == 0:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Invalidate all sessions for this user
+        cur.execute("DELETE FROM sessions WHERE user_id = %s", (user_id,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log_audit(request.current_user['id'], 'admin_reset_password', 'user', user_id, None)
+        
+        return jsonify({'success': True, 'message': 'Password reset successfully'})
+    except Exception as e:
+        print(f"Admin reset password error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/')
