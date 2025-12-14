@@ -4456,69 +4456,117 @@ function universalExportToExcel() {
   const view = getCurrentView();
   const filename = `ftg_${view}_${new Date().toISOString().split("T")[0]}.xlsx`;
   
-  // Parse CSV data into rows
-  const rows = data.csvData.split("\n").map(row => {
-    // Handle CSV parsing with quoted fields
-    const result = [];
-    let current = "";
-    let inQuotes = false;
-    
-    for (let i = 0; i < row.length; i++) {
-      const char = row[i];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === "," && !inQuotes) {
-        result.push(current.trim());
-        current = "";
-      } else {
-        current += char;
-      }
+  // Try to get the actual DOM table for better formatting preservation
+  let ws;
+  let tableFound = false;
+  const tableSelectors = {
+    "revenue": "#revTable",
+    "accounts": "#accounts .acct-table",
+    "incomeStatement": "#incomeStatement .is-table",
+    "balanceSheet": "#balanceSheet .bs-table",
+    "cashFlows": "#cashFlowTable",
+    "cashReports": ".daily-balance-table"
+  };
+  
+  const tableSelector = tableSelectors[view];
+  if (tableSelector) {
+    const tableEl = document.querySelector(tableSelector);
+    if (tableEl && tableEl.querySelector("tr")) {
+      ws = XLSX.utils.table_to_sheet(tableEl, { raw: false });
+      tableFound = true;
     }
-    result.push(current.trim());
-    return result;
-  }).filter(row => row.length > 0 && row.some(cell => cell !== ""));
-  
-  // Convert string numbers to actual numbers for Excel
-  const processedRows = rows.map((row, rowIndex) => {
-    return row.map(cell => {
-      if (rowIndex === 0) return cell; // Keep header as text
-      
-      // Remove currency formatting and convert to number
-      const cleanValue = cell.replace(/[$,]/g, "").replace(/[()]/g, match => match === "(" ? "-" : "");
-      const numValue = parseFloat(cleanValue);
-      
-      // Check if it's a valid number (but not a percentage string)
-      if (!isNaN(numValue) && !cell.includes("%") && cleanValue !== "") {
-        return numValue;
-      }
-      return cell;
-    });
-  });
-  
-  // Create workbook and worksheet
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(processedRows);
-  
-  // Set column widths based on content
-  const colWidths = [];
-  if (processedRows.length > 0) {
-    for (let col = 0; col < processedRows[0].length; col++) {
-      let maxWidth = 10;
-      for (let row = 0; row < Math.min(processedRows.length, 100); row++) {
-        const cellValue = processedRows[row][col];
-        const cellLength = cellValue ? String(cellValue).length : 0;
-        maxWidth = Math.max(maxWidth, cellLength + 2);
-      }
-      colWidths.push({ wch: Math.min(maxWidth, 40) });
-    }
-    ws["!cols"] = colWidths;
   }
   
-  // Add worksheet to workbook with report name
-  const sheetName = data.title.substring(0, 31); // Excel sheet names max 31 chars
+  // Fall back to CSV parsing if no DOM table found
+  if (!tableFound) {
+    const rows = data.csvData.split("\n").map(row => {
+      const result = [];
+      let current = "";
+      let inQuotes = false;
+      
+      for (let i = 0; i < row.length; i++) {
+        const char = row[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === "," && !inQuotes) {
+          result.push(current.trim());
+          current = "";
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    }).filter(row => row.length > 0 && row.some(cell => cell !== ""));
+    
+    // Track which columns had currency values in the original CSV
+    const currencyColumns = new Set();
+    rows.forEach((row, rowIndex) => {
+      if (rowIndex === 0) return;
+      row.forEach((cell, colIndex) => {
+        if (cell.includes("$")) currencyColumns.add(colIndex);
+      });
+    });
+    
+    const processedRows = rows.map((row, rowIndex) => {
+      return row.map((cell, colIndex) => {
+        if (rowIndex === 0) return cell;
+        
+        const cleanValue = cell.replace(/[$,]/g, "").replace(/[()]/g, match => match === "(" ? "-" : "");
+        const numValue = parseFloat(cleanValue);
+        
+        if (!isNaN(numValue) && !cell.includes("%") && cleanValue !== "") {
+          return { v: numValue, isCurrency: currencyColumns.has(colIndex) };
+        }
+        return cell;
+      });
+    });
+    
+    // Build worksheet from processed rows
+    ws = {};
+    const colCount = processedRows[0]?.length || 0;
+    const rowCount = processedRows.length;
+    
+    for (let R = 0; R < rowCount; R++) {
+      for (let C = 0; C < processedRows[R].length; C++) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+        const cellData = processedRows[R][C];
+        
+        if (typeof cellData === "object" && cellData.v !== undefined) {
+          ws[cellRef] = { t: "n", v: cellData.v };
+          if (cellData.isCurrency) {
+            ws[cellRef].z = '"$"#,##0';
+          }
+        } else if (typeof cellData === "number") {
+          ws[cellRef] = { t: "n", v: cellData };
+        } else {
+          ws[cellRef] = { t: "s", v: String(cellData) };
+        }
+      }
+    }
+    ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rowCount - 1, c: colCount - 1 } });
+  }
+  
+  // Set column widths
+  const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+  const colWidths = [];
+  for (let C = 0; C <= range.e.c; C++) {
+    let maxWidth = 12;
+    for (let R = 0; R <= Math.min(range.e.r, 100); R++) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+      if (ws[cellRef]) {
+        const cellLength = String(ws[cellRef].v || "").length;
+        maxWidth = Math.max(maxWidth, cellLength + 2);
+      }
+    }
+    colWidths.push({ wch: Math.min(maxWidth, 45) });
+  }
+  ws["!cols"] = colWidths;
+  
+  const wb = XLSX.utils.book_new();
+  const sheetName = data.title.substring(0, 31);
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
   
-  // Export the file
   XLSX.writeFile(wb, filename);
 }
 
@@ -4814,14 +4862,18 @@ async function captureCashAsImage() {
 
 async function captureOverviewAsImage() {
   try {
-    // Chart configurations with their chart instance keys and metric keys
+    // Chart configurations with their chart instance keys and metric keys (all 10 metrics)
     const allChartConfigs = [
       { id: "overviewRevenueChart", title: "Revenue", metric: "revenue" },
       { id: "overviewGrossProfitChart", title: "Gross Profit", metric: "grossProfit" },
       { id: "overviewGrossMarginChart", title: "Gross Margin %", metric: "grossMargin" },
       { id: "overviewOpexChart", title: "Operating Expenses", metric: "opExpenses" },
       { id: "overviewOpProfitChart", title: "Operating Profit", metric: "opProfit" },
-      { id: "overviewOpMarginChart", title: "Operating Margin %", metric: "opMargin" }
+      { id: "overviewOpMarginChart", title: "Operating Margin %", metric: "opMargin" },
+      { id: "overviewCashChart", title: "Cash", metric: "cash" },
+      { id: "overviewReceivablesChart", title: "Receivables", metric: "receivables" },
+      { id: "overviewPayablesChart", title: "Payables", metric: "payables" },
+      { id: "overviewCurrentRatioChart", title: "Current Ratio", metric: "currentRatio" }
     ];
     
     // Filter to only visible metrics based on checkbox state
@@ -4871,19 +4923,21 @@ async function captureOverviewAsImage() {
     const padding = 12;
     const tileHeight = titleHeight + chartHeight;
     
-    // Determine grid layout based on number of visible charts
+    // Determine grid layout based on number of visible charts (supports up to 10)
     let cols, rows;
     const count = chartImages.length;
     if (count <= 1) {
       cols = 1; rows = 1;
     } else if (count <= 2) {
       cols = 2; rows = 1;
-    } else if (count <= 3) {
-      cols = 3; rows = 1;
     } else if (count <= 4) {
       cols = 2; rows = 2;
+    } else if (count <= 6) {
+      cols = 3; rows = 2;
+    } else if (count <= 8) {
+      cols = 4; rows = 2;
     } else {
-      cols = 3; rows = Math.ceil(count / 3);
+      cols = 5; rows = 2;
     }
     
     const compositeCanvas = document.createElement("canvas");
@@ -4895,8 +4949,8 @@ async function captureOverviewAsImage() {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
     
-    // Draw each chart with title
-    for (let i = 0; i < chartImages.length && i < 6; i++) {
+    // Draw all visible charts with title (no limit)
+    for (let i = 0; i < chartImages.length; i++) {
       const { img, title } = chartImages[i];
       const col = i % cols;
       const row = Math.floor(i / cols);
