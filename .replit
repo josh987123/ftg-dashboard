@@ -51,4 +51,4 @@ packages = ["cargo", "freetype", "lcms2", "libiconv", "libimagequant", "libjpeg"
 
 [deployment]
 deploymentTarget = "vm"
-run = ["python", "public/server.py"]
+run = ["gunicorn", "--bind", "0.0.0.0:5000", "--chdir", "public", "server:app"]
