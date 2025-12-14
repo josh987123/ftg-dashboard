@@ -18,14 +18,21 @@ Preferred communication style: Simple, everyday language.
   - `style.css` - Complete styling using CSS custom properties and responsive design
   - `dashboard.js` - All application logic including authentication and navigation
 
-### Authentication
-- **User-specific logins**: Four authorized email addresses with shared password (`Ftgb2025$`):
-  - rodney@ftgbuilders.com (displays as "Rodney")
-  - sergio@ftghbuilders.com (displays as "Sergio")
-  - joshl@ftgbuilders.com (displays as "Josh")
-  - greg@ftgbuilders.com (displays as "Greg")
-- **Login flow**: Modal requires email + password, validates against authorized email list
-- **Session persistence**: Uses `localStorage` to remember authentication state and current user email (`ftg_current_user`)
+### Authentication & User Management
+- **Database-backed authentication**: Users stored in PostgreSQL with bcrypt password hashing
+- **Role-based access control (RBAC)**: Three default roles with different permissions:
+  - **admin**: Full access to all features including user management
+  - **manager**: Access to all dashboard pages but not admin functions
+  - **viewer**: Limited access to specific pages (Overview, Revenue, Account Detail, Cash Balances)
+- **Default users** (password: `Ftgb2025$`):
+  - rodney@ftgbuilders.com (admin)
+  - sergio@ftghbuilders.com (admin)
+  - joshl@ftgbuilders.com (manager)
+  - greg@ftgbuilders.com (manager)
+  - bailey@ftgbuilders.com (viewer)
+- **Session management**: Server-side sessions with tokens, 30-day expiration, IP tracking
+- **Password security**: bcrypt hashing with automatic migration from legacy SHA-256 hashes
+- **Login flow**: Modal requires email + password, validates against database
 - **User display**: Current user's first name shown in header after login
 - **User preferences**: Each user's settings saved to `localStorage` keyed by email (`ftg_prefs_${email}`)
 - **Saved Views**: Users can save and name custom view configurations for each page (`ftg_views_${email}`):
@@ -35,6 +42,18 @@ Preferred communication style: Simple, everyday language.
   - Delete button removes selected saved view
   - PageViewConfigs provides page-specific collect/apply/refresh methods
   - Both auto-save (ftg_prefs) and named views (SavedViewManager) systems coexist
+
+### Admin Dashboard (Admin role only)
+- **User Management**: Create, edit, disable users with role assignment
+- **Role Permissions**: Configure which pages each role can access
+- **Audit Log**: Track all admin actions with timestamps, user, action details, and IP address
+- **API Endpoints**:
+  - POST /api/login - User authentication
+  - POST /api/logout - End session
+  - GET /api/verify-session - Verify token and get user info with permissions
+  - GET/POST/PUT/DELETE /api/admin/users - User CRUD operations
+  - GET/PUT /api/admin/roles/:id/permissions - Role permission management
+  - GET /api/admin/audit-log - View audit trail
 
 ### Data Management
 - **Static JSON files**: Financial data is stored in `/public/data/financials.json` and account hierarchy in `/public/data/account_groups.json`
