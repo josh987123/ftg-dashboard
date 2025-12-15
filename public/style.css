@@ -5529,6 +5529,55 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 /* ============================================================
+   TABLE EXPORT BUTTONS
+============================================================ */
+.table-export-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.btn-export-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #10b981;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-export-small:hover {
+  background: #059669;
+}
+
+.btn-export-small svg {
+  flex-shrink: 0;
+}
+
+.transaction-filter-row .btn-export-small {
+  margin-left: auto;
+}
+
+[data-theme="dark"] .table-export-header {
+  background: transparent;
+}
+
+[data-theme="dark"] .btn-export-small {
+  background: #059669;
+}
+
+[data-theme="dark"] .btn-export-small:hover {
+  background: #047857;
+}
+
+/* ============================================================
    DARK MODE COMPREHENSIVE OVERRIDES
 ============================================================ */
 
@@ -5725,11 +5774,11 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 [data-theme="dark"] .chart-fullscreen-stats .stat-label {
-  color: var(--text-secondary) !important;
+  color: #e5e7eb !important;
 }
 
 [data-theme="dark"] .chart-fullscreen-stats .stat-value {
-  color: var(--text-primary) !important;
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] .chart-fullscreen-stats .stat-period {
@@ -5892,15 +5941,15 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 [data-theme="dark"] .summary-tile .tile-label {
-  color: var(--text-secondary);
+  color: #e5e7eb;
 }
 
 [data-theme="dark"] .summary-tile .tile-value {
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 [data-theme="dark"] .summary-tile .tile-subvalue {
-  color: var(--text-tertiary);
+  color: #cbd5e1;
 }
 
 /* Cash tabs */
@@ -6148,11 +6197,11 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 [data-theme="dark"] .stat-label {
-  color: var(--text-secondary);
+  color: #e5e7eb;
 }
 
 [data-theme="dark"] .stat-value {
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 /* Revenue table box */

@@ -1649,6 +1649,12 @@
             <button class="cash-tab" data-tab="transactions">Transactions</button>
           </div>
           <div id="cashTabBalances" class="cash-tab-content active">
+            <div class="table-export-header">
+              <button class="btn-export-small" id="exportDailyBalancesBtn" title="Export to Excel">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12.9,14.5L15.8,19H14L12,15.6L10,19H8.2L11.1,14.5L8.2,10H10L12,13.4L14,10H15.8L12.9,14.5Z"/></svg>
+                Export Excel
+              </button>
+            </div>
             <div id="dailyBalanceTableContainer" class="daily-balance-table-container">
               <div class="loading-spinner">Calculating daily balances...</div>
             </div>
@@ -1658,6 +1664,10 @@
               <label for="transactionFilterInput">Search:</label>
               <input type="text" id="transactionFilterInput" placeholder="Filter by description, account, or amount...">
               <button type="button" class="filter-clear-btn" id="transactionFilterClear">Clear</button>
+              <button class="btn-export-small" id="exportTransactionsBtn" title="Export to Excel">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12.9,14.5L15.8,19H14L12,15.6L10,19H8.2L11.1,14.5L8.2,10H10L12,13.4L14,10H15.8L12.9,14.5Z"/></svg>
+                Export Excel
+              </button>
             </div>
             <div id="transactionTableContainer" class="transaction-table-container">
               <div class="loading-spinner">Loading transactions...</div>

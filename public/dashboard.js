@@ -828,10 +828,19 @@ function setupDarkModeToggle() {
   });
 }
 
+function getChartThemeColors() {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  return {
+    gridColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
+    textColor: isDark ? "#ffffff" : "#374151",
+    legendColor: isDark ? "#ffffff" : "#374151"
+  };
+}
+
 function updateChartColorsForTheme(theme) {
   const isDark = theme === "dark";
-  const gridColor = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
-  const textColor = isDark ? "#94a3b8" : "#6b7280";
+  const gridColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)";
+  const textColor = isDark ? "#ffffff" : "#374151";
   
   // Update all Chart.js instances if they exist
   if (typeof Chart !== "undefined" && Chart.instances) {
@@ -849,6 +858,11 @@ function updateChartColorsForTheme(theme) {
           chart.options.scales.y.ticks = chart.options.scales.y.ticks || {};
           chart.options.scales.y.ticks.color = textColor;
         }
+      }
+      // Update legend colors
+      if (chart.options && chart.options.plugins && chart.options.plugins.legend) {
+        chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
+        chart.options.plugins.legend.labels.color = textColor;
       }
       chart.update("none");
     });
@@ -3062,6 +3076,8 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
     }
   }
   
+  const themeColors = getChartThemeColors();
+  
   overviewChartInstances[canvasId] = new Chart(canvas, {
     type: "bar",
     data: { labels, datasets },
@@ -3091,7 +3107,7 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
         padding: { top: showDataLabels ? 20 : 0 }
       },
       plugins: {
-        legend: { display: showPrior || showTrend, position: "bottom", labels: { boxWidth: 12, font: { size: 10 } } },
+        legend: { display: showPrior || showTrend, position: "bottom", labels: { boxWidth: 12, font: { size: 10 }, color: themeColors.legendColor } },
         tooltip: {
           backgroundColor: "rgba(31, 41, 55, 0.95)",
           titleFont: { size: 13 },
@@ -3128,7 +3144,7 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
           align: "top",
           offset: 2,
           font: { size: 8, weight: "500" },
-          color: "#374151",
+          color: themeColors.textColor,
           formatter: (value) => {
             if (value === 0 || value === null) return "";
             if (metricData.isRatio) return value.toFixed(2) + "x";
@@ -3140,11 +3156,13 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
         }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+        x: { grid: { display: false, color: themeColors.gridColor }, ticks: { font: { size: 9 }, color: themeColors.textColor } },
         y: {
           min: yMin,
+          grid: { color: themeColors.gridColor },
           ticks: {
             font: { size: 9 },
+            color: themeColors.textColor,
             callback: v => metricData.isRatio ? v.toFixed(1) + "x" : (metricData.isPercent ? v.toFixed(0) + "%" : (Math.abs(v) >= 1000000 ? "$" + (v / 1000000).toFixed(1) + "M" : "$" + (v / 1000).toFixed(0) + "K"))
           }
         }
@@ -5713,6 +5731,8 @@ function renderRevenueChart(labels, datasets) {
       if (yMin < 0) yMin = 0;
     }
 
+    const themeColors = getChartThemeColors();
+    
     revChartInstance = new Chart(ctx, {
       type: "bar",
       data: { labels, datasets },
@@ -5738,7 +5758,7 @@ function renderRevenueChart(labels, datasets) {
           padding: { top: showDataLabels ? 30 : 0 }
         },
         plugins: {
-          legend: { position: "bottom" },
+          legend: { position: "bottom", labels: { color: themeColors.legendColor } },
           tooltip: {
             backgroundColor: "rgba(31, 41, 55, 0.95)",
             titleFont: { size: 14 },
@@ -5770,7 +5790,7 @@ function renderRevenueChart(labels, datasets) {
               weight: "600"
             },
             color: function(context) {
-              return context.dataset.borderColor || "#374151";
+              return context.dataset.borderColor || themeColors.textColor;
             },
             formatter: function(value) {
               if (value === 0 || value === null) return "";
@@ -5787,16 +5807,20 @@ function renderRevenueChart(labels, datasets) {
           x: {
             ticks: {
               padding: 10,
-              font: { size: 12 }
+              font: { size: 12 },
+              color: themeColors.textColor
             },
             grid: {
-              drawOnChartArea: false
+              drawOnChartArea: false,
+              color: themeColors.gridColor
             }
           },
           y: {
             min: yMin,
+            grid: { color: themeColors.gridColor },
             ticks: {
               font: { size: 11 },
+              color: themeColors.textColor,
               callback: v => "$" + (v / 1000000).toFixed(1) + "M"
             }
           }
@@ -6330,6 +6354,8 @@ function renderAccountChart(labels, datasets) {
     if (yMin < 0) yMin = 0;
   }
   
+  const themeColors = getChartThemeColors();
+  
   acctChartInstance = new Chart(ctx, {
     type: "bar",
     data: { labels, datasets },
@@ -6355,7 +6381,7 @@ function renderAccountChart(labels, datasets) {
         padding: { top: showDataLabels ? 30 : 0 }
       },
       plugins: {
-        legend: { position: "bottom" },
+        legend: { position: "bottom", labels: { color: themeColors.legendColor } },
         tooltip: {
           backgroundColor: "rgba(31, 41, 55, 0.95)",
           titleFont: { size: 13 },
@@ -6387,7 +6413,7 @@ function renderAccountChart(labels, datasets) {
             weight: "600"
           },
           color: function(context) {
-            return context.dataset.borderColor || "#374151";
+            return context.dataset.borderColor || themeColors.textColor;
           },
           formatter: function(value) {
             if (value === 0 || value === null) return "";
@@ -6402,11 +6428,14 @@ function renderAccountChart(labels, datasets) {
       },
       scales: {
         x: {
-          grid: { drawOnChartArea: false }
+          grid: { drawOnChartArea: false, color: themeColors.gridColor },
+          ticks: { color: themeColors.textColor }
         },
         y: {
           min: yMin,
+          grid: { color: themeColors.gridColor },
           ticks: {
+            color: themeColors.textColor,
             callback: v => {
               if (Math.abs(v) >= 1000000) {
                 return "$" + (v / 1000000).toFixed(1) + "M";
@@ -10059,6 +10088,7 @@ let cashChartInstance = null;
 let cashSelectedAccounts = [];
 let cashDailyBalances = {};
 let cashTableExpanded = false;
+let cashTransactionsNeedRefresh = true;
 
 async function initCashReports() {
   const headerEl = document.getElementById("cashCurrentHeader");
@@ -10242,6 +10272,7 @@ function setupCashEventListeners() {
       // Render transaction table if switching to transactions tab
       if (tabName === "transactions") {
         renderCashTransactionTable();
+        cashTransactionsNeedRefresh = false;
       }
     });
   });
@@ -10339,6 +10370,14 @@ function updateCashDisplay() {
   renderCashCurrentHeader();
   renderCashChart();
   renderCashDailyTable();
+  // Mark transactions as needing refresh
+  cashTransactionsNeedRefresh = true;
+  // If transactions tab is active, refresh immediately
+  const transactionsTab = document.querySelector('.cash-tab[data-tab="transactions"]');
+  if (transactionsTab && transactionsTab.classList.contains('active')) {
+    renderCashTransactionTable();
+    cashTransactionsNeedRefresh = false;
+  }
 }
 
 let cashHeaderExpanded = false;
@@ -10555,6 +10594,7 @@ function renderCashChart() {
   
   // Check if mobile for legend adjustments
   const isMobile = window.innerWidth <= 768;
+  const themeColors = getChartThemeColors();
   
   cashChartInstance = new Chart(canvas, {
     type: 'bar',
@@ -10584,6 +10624,7 @@ function renderCashChart() {
           display: selectedAccounts.length > 1, 
           position: 'bottom',
           labels: {
+            color: themeColors.legendColor,
             boxWidth: isMobile ? 10 : 12,
             boxHeight: isMobile ? 10 : 12,
             padding: isMobile ? 6 : 10,
@@ -10617,7 +10658,9 @@ function renderCashChart() {
       scales: {
         x: { 
           stacked: stackBars,
+          grid: { color: themeColors.gridColor },
           ticks: {
+            color: themeColors.textColor,
             font: { size: isMobile ? 9 : 11 },
             maxRotation: isMobile ? 45 : 0,
             minRotation: isMobile ? 45 : 0
@@ -10627,7 +10670,9 @@ function renderCashChart() {
           stacked: stackBars,
           min: yMin > 0 ? yMin : undefined,
           max: yMax,
+          grid: { color: themeColors.gridColor },
           ticks: {
+            color: themeColors.textColor,
             font: { size: isMobile ? 10 : 12 },
             callback: v => {
               if (Math.abs(v) >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
@@ -10918,10 +10963,217 @@ function filterTransactionTable(searchTerm) {
 
 document.addEventListener("DOMContentLoaded", function() {
   initTransactionFilter();
+  initCashExportButtons();
 });
 
+function initCashExportButtons() {
+  document.getElementById("exportDailyBalancesBtn")?.addEventListener("click", exportDailyBalancesToExcel);
+  document.getElementById("exportTransactionsBtn")?.addEventListener("click", exportTransactionsToExcel);
+}
 
+async function exportDailyBalancesToExcel() {
+  if (typeof ExcelJS === "undefined") {
+    alert("ExcelJS library not loaded. Please refresh the page and try again.");
+    return;
+  }
+  
+  const container = document.getElementById("dailyBalanceTableContainer");
+  if (!container) {
+    alert("Daily balances container not found.");
+    return;
+  }
+  
+  const table = container.querySelector(".daily-balance-table");
+  if (!table) {
+    alert("No data to export. Please wait for data to load.");
+    return;
+  }
+  
+  const tbody = table.querySelector("tbody");
+  if (!tbody || tbody.querySelectorAll("tr").length === 0) {
+    alert("No balance data available to export.");
+    return;
+  }
+  
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Daily Balances");
+  
+  // Get headers
+  const headers = [];
+  table.querySelectorAll("thead th").forEach(th => {
+    headers.push(th.textContent.trim());
+  });
+  
+  // Add header row with styling
+  const headerRow = worksheet.addRow(headers);
+  headerRow.eachCell(cell => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3B82F6" } };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.border = {
+      top: { style: "thin" },
+      bottom: { style: "thin" },
+      left: { style: "thin" },
+      right: { style: "thin" }
+    };
+  });
+  
+  // Add data rows
+  table.querySelectorAll("tbody tr").forEach(tr => {
+    const rowData = [];
+    tr.querySelectorAll("td").forEach((td, idx) => {
+      let value = td.textContent.trim();
+      if (idx > 0) {
+        // Parse currency values
+        const numMatch = value.replace(/[$,()]/g, '').trim();
+        const num = parseFloat(numMatch);
+        if (!isNaN(num)) {
+          value = value.includes('(') ? -Math.abs(num) : num;
+        }
+      }
+      rowData.push(value);
+    });
+    const dataRow = worksheet.addRow(rowData);
+    
+    // Style data cells
+    dataRow.eachCell((cell, colNumber) => {
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFE5E7EB" } },
+        bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
+        left: { style: "thin", color: { argb: "FFE5E7EB" } },
+        right: { style: "thin", color: { argb: "FFE5E7EB" } }
+      };
+      if (colNumber > 1 && typeof cell.value === "number") {
+        cell.numFmt = '"$"#,##0.00_);[Red]("$"#,##0.00)';
+        if (cell.value < 0) {
+          cell.font = { color: { argb: "FFDC2626" } };
+        }
+      }
+    });
+  });
+  
+  // Auto-fit columns
+  worksheet.columns.forEach((column, idx) => {
+    column.width = idx === 0 ? 15 : 18;
+  });
+  
+  // Generate and download
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const dateRange = document.getElementById("cashDaysRange")?.value || "30";
+  a.download = `Daily_Cash_Balances_${dateRange}_days_${new Date().toISOString().split('T')[0]}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
+async function exportTransactionsToExcel() {
+  if (typeof ExcelJS === "undefined") {
+    alert("ExcelJS library not loaded. Please refresh the page and try again.");
+    return;
+  }
+  
+  const container = document.getElementById("transactionTableContainer");
+  if (!container) {
+    alert("Transactions container not found.");
+    return;
+  }
+  
+  const table = container.querySelector(".transaction-table");
+  if (!table) {
+    alert("No transactions to export. Please select accounts and a date range.");
+    return;
+  }
+  
+  const tbody = table.querySelector("tbody");
+  const visibleRows = tbody ? Array.from(tbody.querySelectorAll("tr")).filter(tr => tr.style.display !== "none") : [];
+  if (visibleRows.length === 0) {
+    alert("No transactions match your current filter.");
+    return;
+  }
+  
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Transactions");
+  
+  // Get headers
+  const headers = [];
+  table.querySelectorAll("thead th").forEach(th => {
+    headers.push(th.textContent.trim());
+  });
+  
+  // Add header row with styling
+  const headerRow = worksheet.addRow(headers);
+  headerRow.eachCell(cell => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF10B981" } };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.border = {
+      top: { style: "thin" },
+      bottom: { style: "thin" },
+      left: { style: "thin" },
+      right: { style: "thin" }
+    };
+  });
+  
+  // Add data rows (only visible ones if filtered)
+  table.querySelectorAll("tbody tr").forEach(tr => {
+    if (tr.style.display === "none") return; // Skip hidden rows
+    
+    const rowData = [];
+    tr.querySelectorAll("td").forEach((td, idx) => {
+      let value = td.textContent.trim();
+      // Amount column (last column)
+      if (idx === 3) {
+        const numMatch = value.replace(/[$,()]/g, '').trim();
+        const num = parseFloat(numMatch);
+        if (!isNaN(num)) {
+          value = value.includes('(') || td.classList.contains('negative') ? -Math.abs(num) : num;
+        }
+      }
+      rowData.push(value);
+    });
+    const dataRow = worksheet.addRow(rowData);
+    
+    // Style data cells
+    dataRow.eachCell((cell, colNumber) => {
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFE5E7EB" } },
+        bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
+        left: { style: "thin", color: { argb: "FFE5E7EB" } },
+        right: { style: "thin", color: { argb: "FFE5E7EB" } }
+      };
+      // Format amount column
+      if (colNumber === 4 && typeof cell.value === "number") {
+        cell.numFmt = '"$"#,##0.00_);[Red]("$"#,##0.00)';
+        if (cell.value < 0) {
+          cell.font = { color: { argb: "FFDC2626" } };
+        } else {
+          cell.font = { color: { argb: "FF10B981" } };
+        }
+      }
+    });
+  });
+  
+  // Auto-fit columns
+  worksheet.columns = [
+    { width: 15 },  // Date
+    { width: 30 },  // Account
+    { width: 45 },  // Description
+    { width: 15 }   // Amount
+  ];
+  
+  // Generate and download
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Cash_Transactions_${new Date().toISOString().split('T')[0]}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 // ========================================
 // ADMIN MODULE
