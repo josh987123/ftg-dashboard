@@ -8243,3 +8243,255 @@ body.dark-mode .job-budgets-table td.margin-cell {
 body.dark-mode .breakdown-card > .chart-subtitle {
   color: #e2e8f0;
 }
+
+/* ============================================================
+   JOB BUDGETS - COMPREHENSIVE MOBILE STYLES
+   ============================================================ */
+
+@media (max-width: 768px) {
+  /* Stacked breakdown cards full width on mobile */
+  .breakdown-container.stacked .breakdown-card {
+    min-width: auto;
+    max-width: 100%;
+  }
+  
+  /* Chart wrapper smaller on mobile */
+  .breakdown-chart-wrapper {
+    height: 160px;
+    padding: 8px;
+  }
+  
+  /* Chart subtitle styling on mobile */
+  .breakdown-card > .chart-subtitle {
+    font-size: 12px;
+    padding: 10px 12px 6px;
+  }
+  
+  /* Pagination mobile layout */
+  .job-pagination {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .pagination-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .pagination-btn {
+    padding: 10px 14px;
+    font-size: 14px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .page-size-select {
+    padding: 10px 12px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+  
+  /* Config panel improvements */
+  .overview-config-box {
+    padding: 12px;
+  }
+  
+  .overview-config-box .config-header {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  
+  .overview-config-box .config-content {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .filter-group label {
+    font-size: 12px;
+  }
+  
+  .filter-select {
+    padding: 10px 12px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+  
+  /* Checkbox groups on mobile */
+  .checkbox-group {
+    gap: 8px;
+  }
+  
+  .checkbox-item {
+    padding: 8px 0;
+  }
+  
+  .checkbox-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* Table cell padding for touch */
+  .job-budgets-table th,
+  .job-budgets-table td {
+    padding: 12px 10px;
+  }
+  
+  /* Expand icons larger for touch */
+  .job-budgets-table .expand-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  /* Status badges */
+  .job-status-badge {
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+  
+  /* Key metrics - 2 per row */
+  .job-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .job-metric-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 12px 10px;
+    gap: 8px;
+  }
+  
+  .job-metric-card .metric-icon {
+    margin: 0 auto;
+  }
+  
+  .job-metric-card .metric-content {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Single column metrics on small phones */
+  .job-metrics-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  
+  .job-metric-card {
+    padding: 10px 8px;
+  }
+  
+  .job-metric-card .metric-value {
+    font-size: 15px;
+  }
+  
+  .job-metric-card .metric-label {
+    font-size: 9px;
+  }
+  
+  .metric-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  
+  /* Table text smaller */
+  .job-budgets-table {
+    font-size: 11px;
+    min-width: 700px;
+  }
+  
+  .job-budgets-table th,
+  .job-budgets-table td {
+    padding: 10px 8px;
+  }
+  
+  /* Breakdown table smaller */
+  .breakdown-table {
+    font-size: 11px;
+    min-width: 450px;
+  }
+  
+  /* Chart even smaller */
+  .breakdown-chart-wrapper {
+    height: 140px;
+  }
+  
+  /* Pagination compact */
+  .pagination-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+  
+  /* Search input */
+  .job-search-input {
+    font-size: 16px; /* Prevents iOS zoom */
+    padding: 12px 40px 12px 14px;
+  }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .job-budgets-table .expand-icon {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .pagination-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .filter-select,
+  .page-size-select {
+    min-height: 44px;
+  }
+  
+  /* Remove hover effects on touch */
+  .job-budgets-table tbody tr:hover {
+    background: transparent;
+  }
+  
+  body.dark-mode .job-budgets-table tbody tr:hover {
+    background: transparent;
+  }
+  
+  /* Active state for touch feedback */
+  .job-budgets-table tbody tr:active {
+    background: #f1f5f9;
+  }
+  
+  body.dark-mode .job-budgets-table tbody tr:active {
+    background: #334155;
+  }
+  
+  .pagination-btn:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Landscape phone adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  .job-metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .breakdown-container.stacked {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .breakdown-container.stacked .breakdown-card {
+    flex: 1 1 45%;
+    min-width: 280px;
+  }
+}
