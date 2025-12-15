@@ -11758,7 +11758,7 @@ async function loadAuditLog() {
     
     tbody.innerHTML = data.logs.map(log => `
       <tr>
-        <td>${log.createdAt ? new Date(log.createdAt).toLocaleString() : ''}</td>
+        <td>${log.createdAt ? new Date(log.createdAt).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : ''}</td>
         <td>${escapeHtml(log.userName || 'Unknown')}</td>
         <td>${escapeHtml(log.action)}</td>
         <td>${log.details ? escapeHtml(JSON.stringify(log.details).substring(0, 50)) : ''}</td>
