@@ -7674,7 +7674,12 @@ body.dark-mode .breakdown-table tbody tr:hover {
 
 @media (max-width: 900px) {
   .breakdown-container {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+  
+  .breakdown-card {
+    max-width: 100%;
+    width: 100%;
   }
 }
 
@@ -7828,13 +7833,6 @@ body.dark-mode .pagination-btn:disabled {
 
 body.dark-mode .page-info {
   color: #d1d5db;
-}
-
-/* Mobile responsive for breakdown section */
-@media (max-width: 900px) {
-  .breakdown-container {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 768px) {
@@ -8470,8 +8468,9 @@ body.dark-mode .job-budgets-table td.margin-cell {
   }
   
   .breakdown-container.stacked .breakdown-card {
-    flex: 1 1 45%;
+    flex: 0 1 auto;
     min-width: 280px;
+    max-width: 400px;
   }
 }
 
