@@ -6695,17 +6695,13 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 .role-card-actions .action-btn.edit {
-  background: var(--color-primary);
+  background: var(--primary-color);
   color: white;
 }
 
 .role-card-actions .action-btn.delete {
-  background: #dc2626;
+  background: var(--danger-color);
   color: white;
-}
-
-.role-card-actions .action-btn.delete:hover {
-  background: #b91c1c;
 }
 
 .roles-header {
