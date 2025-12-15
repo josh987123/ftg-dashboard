@@ -1071,6 +1071,12 @@ function initNavigation() {
       item.classList.add("active");
       const section = document.getElementById(id);
       if (section) section.classList.add("visible");
+      
+      // Hide export ribbon on admin page
+      const exportArea = document.querySelector('.content-export-area');
+      if (exportArea) {
+        exportArea.style.display = id === 'admin' ? 'none' : '';
+      }
 
       // Auto-expand Financials if child is clicked
       if (item.classList.contains("nav-child") && finStatementsParent && finStatementsChildren) {
