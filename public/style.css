@@ -5259,12 +5259,29 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   background: #1e3a5f;
   color: #fff;
   font-weight: 600;
-  text-align: left;
-  padding: 8px 10px;
-  white-space: normal;
-  word-wrap: break-word;
-  line-height: 1.3;
-  vertical-align: bottom;
+  position: relative;
+}
+
+/* Resizable column handle */
+.transaction-table th .resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 10;
+}
+
+.transaction-table th .resize-handle:hover,
+.transaction-table th .resize-handle.resizing {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.transaction-table.resizing {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .transaction-table td {

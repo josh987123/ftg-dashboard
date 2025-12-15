@@ -10835,12 +10835,12 @@ function renderCashTransactionTable() {
   }
   
   let html = `
-    <table class="transaction-table">
+    <table class="transaction-table resizable-table">
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Account</th>
-          <th>Description</th>
+          <th>Date<span class="resize-handle"></span></th>
+          <th>Account<span class="resize-handle"></span></th>
+          <th>Description<span class="resize-handle"></span></th>
           <th style="text-align:right;">Amount</th>
         </tr>
       </thead>
@@ -10882,6 +10882,12 @@ function renderCashTransactionTable() {
   html += `<div style="padding:10px;text-align:center;color:#6b7280;font-size:12px;">${filteredTxns.length} transaction${filteredTxns.length !== 1 ? 's' : ''}</div>`;
   
   container.innerHTML = html;
+  
+  // Enable column resizing
+  const table = container.querySelector('.resizable-table');
+  if (table) {
+    initTableColumnResize(table);
+  }
 }
 
 function updateCashDataAsOf(accounts) {
@@ -11067,6 +11073,52 @@ async function exportDailyBalancesToExcel() {
   a.download = `Daily_Cash_Balances_${dateRange}_days_${new Date().toISOString().split('T')[0]}.xlsx`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/* --------------------------------------------------------
+   RESIZABLE TABLE COLUMNS
+-------------------------------------------------------- */
+function initTableColumnResize(table) {
+  if (!table) return;
+  
+  const headers = table.querySelectorAll('th');
+  
+  headers.forEach(th => {
+    const handle = th.querySelector('.resize-handle');
+    if (!handle) return;
+    
+    let startX, startWidth, column;
+    
+    handle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      startX = e.pageX;
+      column = th;
+      startWidth = column.offsetWidth;
+      
+      handle.classList.add('resizing');
+      table.classList.add('resizing');
+      
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+    
+    function onMouseMove(e) {
+      if (!column) return;
+      const diff = e.pageX - startX;
+      const newWidth = Math.max(50, startWidth + diff);
+      column.style.width = newWidth + 'px';
+      column.style.minWidth = newWidth + 'px';
+      column.style.maxWidth = newWidth + 'px';
+    }
+    
+    function onMouseUp() {
+      handle.classList.remove('resizing');
+      table.classList.remove('resizing');
+      column = null;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+  });
 }
 
 async function exportTransactionsToExcel() {
