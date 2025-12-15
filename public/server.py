@@ -1786,6 +1786,59 @@ def api_delete_user(user_id):
         print(f"Delete user error: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/admin/users/<int:user_id>/permanent', methods=['DELETE'])
+@require_admin
+def api_permanent_delete_user(user_id):
+    """Permanently delete a user and all their data"""
+    try:
+        admin_id = request.current_user['id']
+        
+        if user_id == admin_id:
+            return jsonify({'error': 'Cannot delete your own account'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Get user info for audit log
+        cur.execute("SELECT email, display_name FROM users WHERE id = %s", (user_id,))
+        user = cur.fetchone()
+        
+        if not user:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'User not found'}), 404
+        
+        user_email = user['email']
+        user_name = user['display_name']
+        
+        # Delete related records first (foreign key constraints)
+        cur.execute("DELETE FROM sessions WHERE user_id = %s", (user_id,))
+        cur.execute("DELETE FROM backup_codes WHERE user_id = %s", (user_id,))
+        cur.execute("DELETE FROM password_reset_tokens WHERE user_id = %s", (user_id,))
+        
+        # Update audit logs to remove user reference (keep for history)
+        cur.execute("UPDATE audit_log SET user_id = NULL WHERE user_id = %s", (user_id,))
+        
+        # Update scheduled reports created by this user
+        cur.execute("UPDATE scheduled_reports SET created_by = NULL WHERE created_by = %s", (user_id,))
+        
+        # Update users created by this user
+        cur.execute("UPDATE users SET created_by = NULL WHERE created_by = %s", (user_id,))
+        
+        # Finally delete the user
+        cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log_audit(admin_id, 'permanent_delete_user', 'user', None, {'deleted_email': user_email, 'deleted_name': user_name})
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Permanent delete user error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/admin/users/<int:user_id>/reset-password', methods=['POST', 'OPTIONS'])
 @require_admin
 def api_admin_reset_password(user_id):

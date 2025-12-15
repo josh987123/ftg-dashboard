@@ -12282,7 +12282,10 @@ function renderUsersTable() {
       <td>
         <button class="action-btn edit" onclick="openUserModal(${u.id})">Edit</button>
         <button class="action-btn reset" onclick="resetUserPassword(${u.id})">Reset</button>
-        ${u.isActive ? `<button class="action-btn delete" onclick="disableUser(${u.id})">Disable</button>` : ''}
+        ${u.isActive 
+          ? `<button class="action-btn warning" onclick="disableUser(${u.id})">Disable</button>` 
+          : `<button class="action-btn success" onclick="enableUser(${u.id})">Enable</button>`}
+        <button class="action-btn delete" onclick="deleteUser(${u.id}, '${u.displayName.replace(/'/g, "\\'")}')">Delete</button>
       </td>
     </tr>
   `).join('');
@@ -12428,10 +12431,47 @@ async function resetUserPassword(userId) {
 }
 
 async function disableUser(userId) {
-  if (!confirm('Are you sure you want to disable this user?')) return;
+  if (!confirm('Are you sure you want to disable this user? They will not be able to log in.')) return;
   
   try {
     const resp = await fetch(`/api/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ isActive: false })
+    });
+    
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.error);
+    
+    loadUsers();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function enableUser(userId) {
+  try {
+    const resp = await fetch(`/api/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ isActive: true })
+    });
+    
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.error);
+    
+    loadUsers();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function deleteUser(userId, displayName) {
+  if (!confirm(`Are you sure you want to permanently delete "${displayName}"? This action cannot be undone.`)) return;
+  if (!confirm('This will delete all user data including sessions, preferences, and audit history. Continue?')) return;
+  
+  try {
+    const resp = await fetch(`/api/admin/users/${userId}/permanent`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
@@ -12439,6 +12479,7 @@ async function disableUser(userId) {
     const result = await resp.json();
     if (!result.success) throw new Error(result.error);
     
+    alert('User deleted successfully');
     loadUsers();
   } catch (err) {
     alert('Error: ' + err.message);

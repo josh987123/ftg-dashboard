@@ -8737,3 +8737,30 @@ body.dark-mode .checkbox-label,
 body.dark-mode .job-budgets-controls .checkbox-label {
   color: #e2e8f0 !important;
 }
+
+/* Action button variants */
+.action-btn.warning {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.action-btn.warning:hover {
+  background: #d97706;
+}
+
+.action-btn.success {
+  background: #10b981;
+  color: #fff;
+}
+
+.action-btn.success:hover {
+  background: #059669;
+}
+
+body.dark-mode .action-btn.warning {
+  background: #f59e0b;
+}
+
+body.dark-mode .action-btn.success {
+  background: #10b981;
+}
