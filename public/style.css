@@ -7015,8 +7015,9 @@ body.dark-mode .config-label {
   color: #e5e7eb;
 }
 
-/* Job Budgets Config Panel - Not full width */
+/* Job Budgets Config Panel - 70% width */
 #jobBudgets .config-panel {
+  width: 70%;
   max-width: 70%;
 }
 
