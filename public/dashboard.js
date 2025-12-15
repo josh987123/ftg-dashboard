@@ -4473,58 +4473,82 @@ function getJobBudgetsTableHtml() {
     return "<p>No job data available</p>";
   }
   
-  let html = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+  // Calculate totals first
+  let totalContract = 0, totalCost = 0, totalProfit = 0;
+  jobBudgetsFiltered.forEach(job => {
+    totalContract += job.revised_contract || 0;
+    totalCost += job.revised_cost || 0;
+    totalProfit += job.estimated_profit || 0;
+  });
+  const totalMargin = totalContract ? (totalProfit / totalContract) * 100 : 0;
+  const totalProfitColor = totalProfit >= 0 ? '#10b981' : '#dc2626';
+  
+  // Summary metrics section
+  let html = `<div style="margin-bottom:20px;">
+    <h3 style="margin:0 0 12px 0;font-size:14px;color:#374151;">Summary</h3>
+    <table style="border-collapse:collapse;font-size:12px;">
+      <tr>
+        <td style="padding:6px 16px 6px 0;color:#6b7280;">Total Jobs:</td>
+        <td style="padding:6px 0;font-weight:600;">${jobBudgetsFiltered.length}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 16px 6px 0;color:#6b7280;">Total Contract:</td>
+        <td style="padding:6px 0;font-weight:600;">${formatCurrency(totalContract)}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 16px 6px 0;color:#6b7280;">Total Cost:</td>
+        <td style="padding:6px 0;font-weight:600;">${formatCurrency(totalCost)}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 16px 6px 0;color:#6b7280;">Total Est. Profit:</td>
+        <td style="padding:6px 0;font-weight:600;color:${totalProfitColor};">${formatCurrency(totalProfit)}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 16px 6px 0;color:#6b7280;">Avg Margin:</td>
+        <td style="padding:6px 0;font-weight:600;">${totalMargin.toFixed(1)}%</td>
+      </tr>
+    </table>
+  </div>`;
+  
+  // Top 10 jobs by contract value
+  const topJobs = [...jobBudgetsFiltered]
+    .sort((a, b) => (b.revised_contract || 0) - (a.revised_contract || 0))
+    .slice(0, 10);
+  
+  html += `<h3 style="margin:20px 0 12px 0;font-size:14px;color:#374151;">Top ${Math.min(10, jobBudgetsFiltered.length)} Jobs by Contract Value</h3>`;
+  html += `<table style="width:100%;border-collapse:collapse;font-size:11px;">
     <thead>
       <tr style="background:#f3f4f6;">
         <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Job #</th>
         <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Description</th>
         <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Customer</th>
-        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Status</th>
-        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">PM</th>
-        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Revised Contract</th>
-        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Revised Cost</th>
+        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Contract</th>
         <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Est. Profit</th>
-        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Margin %</th>
+        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Margin</th>
       </tr>
     </thead>
     <tbody>`;
   
-  let totalContract = 0, totalCost = 0, totalProfit = 0;
-  
-  jobBudgetsFiltered.forEach(job => {
-    const status = getJobStatusLabel(job.job_status);
+  topJobs.forEach(job => {
     const margin = job.revised_contract ? (job.estimated_profit / job.revised_contract) * 100 : 0;
     const profitColor = job.estimated_profit >= 0 ? '#10b981' : '#dc2626';
-    
-    totalContract += job.revised_contract || 0;
-    totalCost += job.revised_cost || 0;
-    totalProfit += job.estimated_profit || 0;
+    const desc = (job.job_description || '').substring(0, 40) + ((job.job_description || '').length > 40 ? '...' : '');
     
     html += `<tr>
       <td style="padding:6px 8px;border:1px solid #e5e7eb;">${job.job_no}</td>
-      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${job.job_description || ''}</td>
-      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${job.customer_name || ''}</td>
-      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${status.label}</td>
-      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${job.project_manager_name || ''}</td>
+      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${desc}</td>
+      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${(job.customer_name || '').substring(0, 25)}</td>
       <td style="padding:6px 8px;text-align:right;border:1px solid #e5e7eb;">${formatCurrency(job.revised_contract)}</td>
-      <td style="padding:6px 8px;text-align:right;border:1px solid #e5e7eb;">${formatCurrency(job.revised_cost)}</td>
       <td style="padding:6px 8px;text-align:right;border:1px solid #e5e7eb;color:${profitColor};">${formatCurrency(job.estimated_profit)}</td>
       <td style="padding:6px 8px;text-align:right;border:1px solid #e5e7eb;">${margin.toFixed(1)}%</td>
     </tr>`;
   });
   
-  const totalMargin = totalContract ? (totalProfit / totalContract) * 100 : 0;
-  const totalProfitColor = totalProfit >= 0 ? '#10b981' : '#dc2626';
-  
-  html += `<tr style="font-weight:bold;background:#f3f4f6;border-top:2px solid #374151;">
-    <td colspan="5" style="padding:8px;border:1px solid #e5e7eb;">TOTAL (${jobBudgetsFiltered.length} jobs)</td>
-    <td style="padding:8px;text-align:right;border:1px solid #e5e7eb;">${formatCurrency(totalContract)}</td>
-    <td style="padding:8px;text-align:right;border:1px solid #e5e7eb;">${formatCurrency(totalCost)}</td>
-    <td style="padding:8px;text-align:right;border:1px solid #e5e7eb;color:${totalProfitColor};">${formatCurrency(totalProfit)}</td>
-    <td style="padding:8px;text-align:right;border:1px solid #e5e7eb;">${totalMargin.toFixed(1)}%</td>
-  </tr>`;
-  
   html += `</tbody></table>`;
+  
+  if (jobBudgetsFiltered.length > 10) {
+    html += `<p style="margin-top:12px;font-size:11px;color:#6b7280;font-style:italic;">Showing top 10 of ${jobBudgetsFiltered.length} jobs. Use CSV or Excel export for complete data.</p>`;
+  }
   
   return html;
 }
