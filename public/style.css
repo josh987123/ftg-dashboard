@@ -8217,3 +8217,29 @@ body.dark-mode .job-table-container::-webkit-scrollbar-track {
 body.dark-mode .job-budgets-table td.margin-cell {
   font-weight: 600;
 }
+
+/* Stacked breakdown container - vertical layout */
+.breakdown-container.stacked {
+  flex-direction: column;
+  gap: 16px;
+}
+
+.breakdown-container.stacked .breakdown-card {
+  min-width: auto;
+  max-width: 600px;
+  width: 100%;
+}
+
+/* Chart subtitle as the main header now */
+.breakdown-card > .chart-subtitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  text-align: left;
+  padding: 12px 16px 8px;
+  border-bottom: none;
+}
+
+body.dark-mode .breakdown-card > .chart-subtitle {
+  color: #e2e8f0;
+}
