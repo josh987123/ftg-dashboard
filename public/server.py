@@ -226,8 +226,7 @@ def init_database():
         # Seed default roles
         default_roles = [
             ('admin', 'Full access to all features including user management'),
-            ('manager', 'Access to all dashboard pages but not admin functions'),
-            ('viewer', 'Limited access to specific pages based on permissions')
+            ('manager', 'Access to all dashboard pages but not admin functions')
         ]
         for role_name, description in default_roles:
             cur.execute("""
@@ -284,16 +283,6 @@ def init_database():
                         ON CONFLICT DO NOTHING
                     """, (roles['manager'], perm_id))
         
-        # Viewer role gets basic pages (overview, revenue, account, cash_balances)
-        if 'viewer' in roles:
-            viewer_pages = ['overview', 'revenue', 'account', 'cash_balances']
-            for page_key in viewer_pages:
-                if page_key in perms:
-                    cur.execute("""
-                        INSERT INTO role_permissions (role_id, permission_id)
-                        VALUES (%s, %s)
-                        ON CONFLICT DO NOTHING
-                    """, (roles['viewer'], perms[page_key]))
         
         # Seed default users if they don't exist
         default_users = [
@@ -301,7 +290,7 @@ def init_database():
             ('sergio@ftghbuilders.com', 'Sergio', 'admin'),
             ('joshl@ftgbuilders.com', 'Josh', 'manager'),
             ('greg@ftgbuilders.com', 'Greg', 'manager'),
-            ('bailey@ftgbuilders.com', 'Bailey', 'viewer')
+            ('bailey@ftgbuilders.com', 'Bailey', 'manager')
         ]
         
         default_password_hash = hash_password('Ftgb2025$')

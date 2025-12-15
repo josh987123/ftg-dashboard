@@ -1795,6 +1795,37 @@
     </div>
   </div>
 
+  <!-- Role Modal -->
+  <div id="roleModal" class="modal-overlay hidden">
+    <div class="modal-content modal-wide">
+      <div class="modal-header">
+        <h3 id="roleModalTitle">Add Role</h3>
+        <button class="modal-close" onclick="closeRoleModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editRoleId" value="">
+        <div class="form-row">
+          <label for="roleName">Role Name:</label>
+          <input type="text" id="roleName" placeholder="e.g., Accountant" />
+        </div>
+        <div class="form-row">
+          <label for="roleDescription">Description:</label>
+          <input type="text" id="roleDescription" placeholder="Brief description of this role" />
+        </div>
+        <div class="form-row">
+          <label>Page Access:</label>
+          <div id="rolePermissionsGrid" class="permissions-grid-modal">
+          </div>
+        </div>
+        <div id="roleModalError" class="form-error"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeRoleModal()">Cancel</button>
+        <button class="btn-primary" id="saveRoleBtn" onclick="saveRole()">Save Role</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Chart Fullscreen Modal -->
   <div id="chartFullscreenModal" class="chart-fullscreen-modal hidden">
     <div class="chart-fullscreen-header">

@@ -11540,24 +11540,39 @@ async function loadRoles() {
     adminRoles = rolesData.roles;
     adminPermissions = permsData.permissions;
     
-    let html = '';
+    let html = `
+      <div class="roles-header">
+        <h3>Manage Roles</h3>
+        <button class="btn-primary" onclick="openRoleModal()">+ Add Role</button>
+      </div>
+    `;
+    
     for (const role of adminRoles) {
       const rolePermsResp = await fetch(`/api/admin/roles/${role.id}/permissions`, { headers: getAuthHeaders() });
       const rolePermsData = await rolePermsResp.json();
       const rolePerms = rolePermsData.permissions || [];
       
+      const isProtected = role.name.toLowerCase() === 'admin';
+      
       html += `
         <div class="role-card" data-role-id="${role.id}">
           <div class="role-card-header">
-            <div class="role-card-title">${escapeHtml(role.name)}</div>
-            <button class="btn-primary" onclick="saveRolePermissions(${role.id})">Save</button>
+            <div>
+              <span class="role-card-title">${escapeHtml(role.name)}</span>
+              ${isProtected ? '<span class="role-protected-badge">System Role</span>' : ''}
+            </div>
+            <div class="role-card-actions">
+              <button class="action-btn edit" onclick="openRoleModal(${role.id})">Edit</button>
+              ${!isProtected ? `<button class="action-btn delete" onclick="deleteRole(${role.id}, '${escapeHtml(role.name)}')">Delete</button>` : ''}
+            </div>
           </div>
           <div class="role-card-description">${escapeHtml(role.description || '')}</div>
           <div class="permissions-grid">
             ${adminPermissions.map(p => `
               <div class="permission-item">
                 <input type="checkbox" id="perm_${role.id}_${p.pageKey}" 
-                  ${rolePerms.includes(p.pageKey) ? 'checked' : ''}>
+                  ${rolePerms.includes(p.pageKey) ? 'checked' : ''}
+                  onchange="saveRolePermissions(${role.id})">
                 <label for="perm_${role.id}_${p.pageKey}">${escapeHtml(p.pageName)}</label>
               </div>
             `).join('')}
@@ -11569,6 +11584,132 @@ async function loadRoles() {
     container.innerHTML = html;
   } catch (err) {
     container.innerHTML = `<div class="loading-cell">Error: ${err.message}</div>`;
+  }
+}
+
+async function openRoleModal(roleId = null) {
+  const modal = document.getElementById('roleModal');
+  const title = document.getElementById('roleModalTitle');
+  const error = document.getElementById('roleModalError');
+  const grid = document.getElementById('rolePermissionsGrid');
+  
+  error.textContent = '';
+  document.getElementById('editRoleId').value = roleId || '';
+  document.getElementById('roleName').value = '';
+  document.getElementById('roleDescription').value = '';
+  
+  // Load permissions if not already loaded
+  if (!adminPermissions || adminPermissions.length === 0) {
+    try {
+      const resp = await fetch('/api/admin/permissions', { headers: getAuthHeaders() });
+      const data = await resp.json();
+      if (data.success) adminPermissions = data.permissions;
+    } catch (err) {
+      console.error('Failed to load permissions:', err);
+    }
+  }
+  
+  let rolePerms = [];
+  
+  if (roleId) {
+    title.textContent = 'Edit Role';
+    const role = adminRoles.find(r => r.id === roleId);
+    if (role) {
+      document.getElementById('roleName').value = role.name;
+      document.getElementById('roleDescription').value = role.description || '';
+    }
+    
+    try {
+      const resp = await fetch(`/api/admin/roles/${roleId}/permissions`, { headers: getAuthHeaders() });
+      const data = await resp.json();
+      if (data.success) rolePerms = data.permissions;
+    } catch (err) {
+      console.error('Failed to load role permissions:', err);
+    }
+  } else {
+    title.textContent = 'Add Role';
+  }
+  
+  // Render permissions grid
+  grid.innerHTML = adminPermissions.map(p => `
+    <div class="permission-item">
+      <input type="checkbox" id="modal_perm_${p.pageKey}" ${rolePerms.includes(p.pageKey) ? 'checked' : ''}>
+      <label for="modal_perm_${p.pageKey}">${escapeHtml(p.pageName)}</label>
+    </div>
+  `).join('');
+  
+  modal.classList.remove('hidden');
+}
+
+function closeRoleModal() {
+  document.getElementById('roleModal').classList.add('hidden');
+}
+
+async function saveRole() {
+  const roleId = document.getElementById('editRoleId').value;
+  const error = document.getElementById('roleModalError');
+  const btn = document.getElementById('saveRoleBtn');
+  
+  const name = document.getElementById('roleName').value.trim();
+  const description = document.getElementById('roleDescription').value.trim();
+  
+  if (!name) {
+    error.textContent = 'Role name is required';
+    return;
+  }
+  
+  // Collect selected permissions
+  const permissions = [];
+  adminPermissions.forEach(p => {
+    const cb = document.getElementById(`modal_perm_${p.pageKey}`);
+    if (cb && cb.checked) {
+      permissions.push(p.pageKey);
+    }
+  });
+  
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  
+  try {
+    const url = roleId ? `/api/admin/roles/${roleId}` : '/api/admin/roles';
+    const method = roleId ? 'PUT' : 'POST';
+    
+    const resp = await fetch(url, {
+      method,
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name, description, permissions })
+    });
+    
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.error);
+    
+    closeRoleModal();
+    loadRoles();
+    loadRolesForSelect();
+  } catch (err) {
+    error.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Role';
+  }
+}
+
+async function deleteRole(roleId, roleName) {
+  if (!confirm(`Are you sure you want to delete the "${roleName}" role? Any users with this role will need to be reassigned first.`)) return;
+  
+  try {
+    const resp = await fetch(`/api/admin/roles/${roleId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.error);
+    
+    loadRoles();
+    loadRolesForSelect();
+  } catch (err) {
+    alert('Error: ' + err.message);
   }
 }
 
