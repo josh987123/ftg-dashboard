@@ -12793,8 +12793,8 @@ async function openRoleModal(roleId = null) {
 function renderGroupedPermissions(permissions, selectedPerms, roleId, prefix) {
   const permissionGroups = {
     'Executive Overview': ['overview'],
-    'Financials': ['revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances'],
-    'Job Reports': ['job_budgets', 'job_analytics', 'over_under', 'receivables'],
+    'Financials': ['revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'receivables'],
+    'Job Reports': ['job_budgets', 'job_analytics', 'over_under'],
     'Admin': ['admin']
   };
   
