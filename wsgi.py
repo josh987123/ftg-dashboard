@@ -1,8 +1,15 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'public'))
-os.chdir(os.path.join(os.path.dirname(__file__), 'public'))
+# Get absolute path to this file's directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PUBLIC_DIR = os.path.join(BASE_DIR, 'public')
+
+# Add public directory to Python path
+sys.path.insert(0, PUBLIC_DIR)
+
+# Change working directory to public so static files work correctly
+os.chdir(PUBLIC_DIR)
 
 from server import app
 
