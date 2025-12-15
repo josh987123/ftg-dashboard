@@ -202,6 +202,24 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   transition: max-height 0.3s ease, padding 0.3s ease, background-color 0.3s ease;
   overflow: hidden;
   background: var(--bg-secondary);
+  font-size: 11px;
+}
+
+.config-body * {
+  font-size: inherit;
+}
+
+.config-body label,
+.config-body select,
+.config-body input,
+.config-body button,
+.config-body span,
+.config-body div {
+  font-size: 11px;
+}
+
+.config-body .overview-config-box > div[style*="font-weight"] {
+  font-size: 11px !important;
 }
 
 .config-body.collapsed {
