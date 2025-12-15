@@ -8515,8 +8515,8 @@ body.dark-mode .job-budgets-table .margin-cell {
 }
 
 .breakdown-container.stacked .breakdown-card {
-  min-width: 350px;
-  max-width: 450px;
+  min-width: 420px;
+  max-width: 520px;
   width: auto;
   flex: 0 1 auto;
 }
