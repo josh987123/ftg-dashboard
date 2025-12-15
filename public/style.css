@@ -8505,22 +8505,38 @@ body.dark-mode .job-budgets-table .margin-cell {
   width: 200px;
 }
 
-/* 2. BREAKDOWN CONTAINER - Side by side on desktop, NOT full width */
+/* 2. BREAKDOWN CONTAINER - 70% screen width total, side by side */
 .breakdown-container.stacked {
   display: flex !important;
   flex-wrap: nowrap;
   gap: 20px;
   justify-content: flex-start;
-  width: fit-content;
-  max-width: 100%;
+  width: 70%;
+  max-width: 70%;
 }
 
 .breakdown-container.stacked .breakdown-card {
-  min-width: 420px;
-  max-width: 520px;
-  width: 420px;
-  flex: 0 0 auto;
+  flex: 1 1 calc(50% - 10px);
+  min-width: 0;
+  max-width: calc(50% - 10px);
   overflow-x: hidden;
+}
+
+/* Donut chart legend text colors */
+.breakdown-card .chart-legend,
+.breakdown-card .legend-text,
+.breakdown-card canvas + div,
+.donut-legend,
+.chart-legend-item {
+  color: #1f2937;
+}
+
+body.dark-mode .breakdown-card .chart-legend,
+body.dark-mode .breakdown-card .legend-text,
+body.dark-mode .breakdown-card canvas + div,
+body.dark-mode .donut-legend,
+body.dark-mode .chart-legend-item {
+  color: #ffffff !important;
 }
 
 /* Stack on mobile only */
@@ -8640,13 +8656,22 @@ body.dark-mode .job-metric-card.profit .metric-value.negative {
   color: #f87171 !important;
 }
 
-/* Margin card - blue background needs dark text */
+/* Margin card - dark gray background in dark mode with white text */
 body.dark-mode .job-metric-card.margin {
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+  background: #374151 !important;
+}
+
+body.dark-mode .job-metric-card.margin .metric-value {
+  color: #ffffff !important;
 }
 
 body.dark-mode .job-metric-card.margin .metric-label {
-  color: rgba(0, 0, 0, 0.7) !important;
+  color: #ffffff !important;
+}
+
+body.dark-mode .job-metric-card.margin .metric-icon {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* 9. Margin cells in tables - dark text on colored background */
