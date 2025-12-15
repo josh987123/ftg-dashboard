@@ -6600,10 +6600,14 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 
 /* Toggle switch */
 .toggle-switch {
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   cursor: pointer;
   gap: 10px;
+}
+
+.form-row .toggle-switch {
+  display: inline-flex !important;
 }
 
 .toggle-switch input {
@@ -6617,6 +6621,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   border-radius: 12px;
   position: relative;
   transition: background 0.2s;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .toggle-slider::after {
