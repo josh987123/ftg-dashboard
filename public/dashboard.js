@@ -11105,21 +11105,96 @@ async function exportDailyBalancesToExcel() {
 /* --------------------------------------------------------
    RESIZABLE TABLE COLUMNS
 -------------------------------------------------------- */
+function saveColumnWidths(tableId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  
+  const headers = table.querySelectorAll('thead th');
+  const widths = [];
+  headers.forEach(th => {
+    widths.push(th.offsetWidth);
+  });
+  
+  localStorage.setItem(`ftg_colWidths_${tableId}`, JSON.stringify(widths));
+}
+
+function loadColumnWidths(tableId) {
+  const saved = localStorage.getItem(`ftg_colWidths_${tableId}`);
+  if (!saved) return null;
+  
+  try {
+    return JSON.parse(saved);
+  } catch (e) {
+    return null;
+  }
+}
+
+function autoSizeColumns(tableId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  
+  const headers = table.querySelectorAll('thead th');
+  const tbody = table.querySelector('tbody');
+  if (!tbody) return;
+  
+  const tempSpan = document.createElement('span');
+  tempSpan.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:inherit;padding:0;';
+  document.body.appendChild(tempSpan);
+  
+  headers.forEach((th, idx) => {
+    let maxWidth = 0;
+    
+    // Measure header text
+    const headerText = th.textContent.replace(/[\u2195\u2194]/g, '').trim();
+    tempSpan.style.font = window.getComputedStyle(th).font;
+    tempSpan.style.fontWeight = 'bold';
+    tempSpan.textContent = headerText;
+    maxWidth = Math.max(maxWidth, tempSpan.offsetWidth + 40);
+    
+    // Measure first 50 body cells for this column
+    const cells = tbody.querySelectorAll(`tr td:nth-child(${idx + 1})`);
+    const sampleSize = Math.min(cells.length, 50);
+    for (let i = 0; i < sampleSize; i++) {
+      const cell = cells[i];
+      const text = cell.textContent.trim();
+      const indent = cell.style.paddingLeft ? parseInt(cell.style.paddingLeft) : 0;
+      tempSpan.style.font = window.getComputedStyle(cell).font;
+      tempSpan.style.fontWeight = window.getComputedStyle(cell).fontWeight;
+      tempSpan.textContent = text;
+      const cellWidth = tempSpan.offsetWidth + indent + 24;
+      maxWidth = Math.max(maxWidth, cellWidth);
+    }
+    
+    // Apply constraints
+    const minWidth = idx === 0 ? 120 : 60;
+    const maxAllowed = idx === 0 ? 350 : 200;
+    const finalWidth = Math.min(Math.max(maxWidth, minWidth), maxAllowed);
+    
+    th.style.width = finalWidth + 'px';
+    th.style.minWidth = finalWidth + 'px';
+    th.style.maxWidth = finalWidth + 'px';
+  });
+  
+  document.body.removeChild(tempSpan);
+}
+
 function initTableColumnResize(table) {
   if (!table) return;
   
+  const tableId = table.id;
   const headers = table.querySelectorAll('th');
   
-  headers.forEach(th => {
+  headers.forEach((th, idx) => {
     const handle = th.querySelector('.resize-handle');
     if (!handle) return;
     
-    let startX, startWidth, column;
+    let startX, startWidth, column, colIndex;
     
     handle.addEventListener('mousedown', (e) => {
       e.preventDefault();
       startX = e.pageX;
       column = th;
+      colIndex = idx;
       startWidth = column.offsetWidth;
       
       handle.classList.add('resizing');
@@ -11144,6 +11219,9 @@ function initTableColumnResize(table) {
       column = null;
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
+      
+      // Save column widths to localStorage
+      saveColumnWidths(tableId);
     }
   });
 }
@@ -11153,6 +11231,23 @@ function addResizeHandlesToTable(tableId) {
   if (!table) return;
   
   const headers = table.querySelectorAll('thead th');
+  
+  // Try to load saved widths first
+  const savedWidths = loadColumnWidths(tableId);
+  
+  if (savedWidths && savedWidths.length === headers.length) {
+    // Apply saved widths
+    headers.forEach((th, idx) => {
+      th.style.width = savedWidths[idx] + 'px';
+      th.style.minWidth = savedWidths[idx] + 'px';
+      th.style.maxWidth = savedWidths[idx] + 'px';
+    });
+  } else {
+    // Auto-size columns based on content
+    autoSizeColumns(tableId);
+  }
+  
+  // Add resize handles
   headers.forEach((th, idx) => {
     // Don't add to last column
     if (idx < headers.length - 1) {
@@ -11160,6 +11255,7 @@ function addResizeHandlesToTable(tableId) {
       if (!th.querySelector('.resize-handle')) {
         const handle = document.createElement('span');
         handle.className = 'resize-handle';
+        handle.title = 'Drag to resize column';
         th.style.position = 'relative';
         th.appendChild(handle);
       }

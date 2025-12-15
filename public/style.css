@@ -1938,15 +1938,19 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 .is-table th .resize-handle,
 #incomeStatementTable th .resize-handle,
 #balanceSheetTable th .resize-handle,
-#cashFlowTable th .resize-handle {
+#cashFlowTable th .resize-handle,
+.transaction-table th .resize-handle {
   position: absolute;
   right: 0;
-  top: 0;
-  bottom: 0;
-  width: 5px;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
   cursor: col-resize;
-  background: transparent;
+  background: var(--border-primary);
+  border-radius: 2px;
   z-index: 10;
+  opacity: 0.4;
+  transition: opacity 0.2s, background 0.2s, width 0.15s;
 }
 
 .is-table th .resize-handle:hover,
@@ -1956,16 +1960,46 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 #balanceSheetTable th .resize-handle:hover,
 #balanceSheetTable th .resize-handle.resizing,
 #cashFlowTable th .resize-handle:hover,
-#cashFlowTable th .resize-handle.resizing {
-  background: rgba(59, 130, 246, 0.4);
+#cashFlowTable th .resize-handle.resizing,
+.transaction-table th .resize-handle:hover,
+.transaction-table th .resize-handle.resizing {
+  background: var(--primary-color);
+  opacity: 1;
+  width: 5px;
 }
 
 .is-table.resizing,
 #incomeStatementTable.resizing,
 #balanceSheetTable.resizing,
-#cashFlowTable.resizing {
+#cashFlowTable.resizing,
+.transaction-table.resizing {
   cursor: col-resize;
   user-select: none;
+}
+
+/* Column resize indicator on header hover */
+.is-table th,
+#incomeStatementTable th,
+#balanceSheetTable th,
+#cashFlowTable th,
+.transaction-table th {
+  cursor: default;
+}
+
+.is-table th:not(:last-child):hover,
+#incomeStatementTable th:not(:last-child):hover,
+#balanceSheetTable th:not(:last-child):hover,
+#cashFlowTable th:not(:last-child):hover,
+.transaction-table th:not(:last-child):hover {
+  cursor: default;
+}
+
+.is-table th:not(:last-child):hover .resize-handle,
+#incomeStatementTable th:not(:last-child):hover .resize-handle,
+#balanceSheetTable th:not(:last-child):hover .resize-handle,
+#cashFlowTable th:not(:last-child):hover .resize-handle,
+.transaction-table th:not(:last-child):hover .resize-handle {
+  opacity: 0.7;
 }
 
 #incomeStatementTable td:first-child,
