@@ -466,9 +466,16 @@
             <li class="nav-item nav-child" data-section="cashFlows">Statement of Cash Flows</li>
           </ul>
           <li class="nav-item" data-section="accounts">Account Detail</li>
-          <li class="nav-item placeholder" data-section="overUnderBill">Over/Under Bill</li>
+          <li class="nav-item nav-parent" id="navJobs">
+            <span class="nav-parent-label">Jobs</span>
+            <span class="nav-expand-icon">▶</span>
+          </li>
+          <ul class="nav-children" id="navJobsChildren">
+            <li class="nav-item nav-child" data-section="jobBudgets">Job Budgets</li>
+            <li class="nav-item nav-child placeholder" data-section="jobAnalytics">Job Analytics</li>
+            <li class="nav-item nav-child placeholder" data-section="overUnderBill">Over/Under Bill</li>
+          </ul>
           <li class="nav-item placeholder" data-section="receivablesPayables">Receivables/Payables</li>
-          <li class="nav-item placeholder" data-section="jobAnalytics">Job Analytics</li>
           <li class="nav-item" data-section="cashReports">Cash Balances</li>
           <li class="nav-item admin-nav-item hidden" data-section="admin" id="adminNavItem">Admin</li>
         </ul>
@@ -1499,6 +1506,133 @@
           <div id="cfPartialFootnote" class="partial-footnote hidden">
             <span class="is-partial-indicator">*</span> Partial period
           </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           JOB BUDGETS
+      ============================================================= -->
+      <section id="jobBudgets" class="dashboard-section">
+        <h2>Job Budgets</h2>
+        <div class="data-as-of">Data as of: <span id="jobBudgetsDataAsOf">-</span></div>
+
+        <!-- Configuration Panel -->
+        <div class="config-panel">
+          <div class="config-header collapsed" data-target="jobBudgetsConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
+          </div>
+          <div class="config-body collapsed" id="jobBudgetsConfigBody">
+            <div class="job-budgets-controls">
+              <div class="overview-config-box">
+                <div class="config-label">Job Status:</div>
+                <div class="checkbox-stack">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusActive" checked>
+                    Active
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusInactive">
+                    Inactive
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusClosed">
+                    Closed
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusOverhead">
+                    Overhead
+                  </label>
+                </div>
+              </div>
+
+              <div class="overview-config-box">
+                <div class="config-label">Project Manager:</div>
+                <select id="jobPmFilter" class="filter-select">
+                  <option value="">All Project Managers</option>
+                </select>
+              </div>
+
+              <div class="overview-config-box">
+                <div class="config-label">Customer:</div>
+                <select id="jobCustomerFilter" class="filter-select">
+                  <option value="">All Customers</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="job-search-bar">
+          <input type="text" id="jobSearchInput" placeholder="Search by job number, description, or customer..." class="job-search-input">
+          <span class="job-search-icon">🔍</span>
+        </div>
+
+        <!-- Summary Metrics -->
+        <div class="job-summary-metrics" id="jobSummaryMetrics">
+          <div class="summary-metric">
+            <div class="metric-label">Total Jobs</div>
+            <div class="metric-value" id="jobTotalCount">-</div>
+          </div>
+          <div class="summary-metric">
+            <div class="metric-label">Total Revised Contract</div>
+            <div class="metric-value" id="jobTotalContract">-</div>
+          </div>
+          <div class="summary-metric">
+            <div class="metric-label">Total Revised Cost</div>
+            <div class="metric-value" id="jobTotalCost">-</div>
+          </div>
+          <div class="summary-metric">
+            <div class="metric-label">Total Estimated Profit</div>
+            <div class="metric-value" id="jobTotalProfit">-</div>
+          </div>
+          <div class="summary-metric">
+            <div class="metric-label">Avg Profit Margin</div>
+            <div class="metric-value" id="jobAvgMargin">-</div>
+          </div>
+        </div>
+
+        <!-- Jobs Table -->
+        <div class="job-table-container">
+          <div class="loading-overlay hidden" id="jobBudgetsLoadingOverlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading...</div>
+          </div>
+          <table class="job-budgets-table" id="jobBudgetsTable">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="job_no">Job #</th>
+                <th class="sortable" data-sort="job_description">Description</th>
+                <th class="sortable" data-sort="customer_name">Customer</th>
+                <th class="sortable" data-sort="job_status">Status</th>
+                <th class="sortable" data-sort="project_manager_name">Project Manager</th>
+                <th class="sortable number-col" data-sort="original_contract">Original Contract</th>
+                <th class="sortable number-col" data-sort="tot_income_adj">Change Orders</th>
+                <th class="sortable number-col revised-contract-col" data-sort="revised_contract">Revised Contract</th>
+                <th class="sortable number-col" data-sort="original_cost">Original Cost</th>
+                <th class="sortable number-col" data-sort="tot_cost_adj">Cost Adjustments</th>
+                <th class="sortable number-col" data-sort="revised_cost">Revised Cost</th>
+                <th class="sortable number-col" data-sort="estimated_profit">Estimated Profit</th>
+              </tr>
+            </thead>
+            <tbody id="jobBudgetsTableBody">
+              <tr><td colspan="12" class="loading-cell">Loading job data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="job-pagination" id="jobPagination">
+          <button id="jobPrevPage" class="pagination-btn" disabled>← Previous</button>
+          <span id="jobPageInfo" class="page-info">Page 1 of 1</span>
+          <button id="jobNextPage" class="pagination-btn" disabled>Next →</button>
+          <select id="jobPageSize" class="page-size-select">
+            <option value="25">25 per page</option>
+            <option value="50" selected>50 per page</option>
+            <option value="100">100 per page</option>
+            <option value="250">250 per page</option>
+          </select>
         </div>
       </section>
 
