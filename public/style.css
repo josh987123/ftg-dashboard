@@ -7446,9 +7446,18 @@ body.dark-mode .job-key-metrics-section .section-title {
 }
 
 .job-metrics-grid {
-  display: inline-flex;
+  display: flex;
   flex-wrap: wrap;
   gap: 16px;
+  width: 70%;
+  max-width: 70%;
+}
+
+@media (max-width: 900px) {
+  .job-metrics-grid {
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 .job-metric-card {
