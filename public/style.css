@@ -6831,4 +6831,42 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   .permissions-grid {
     grid-template-columns: 1fr;
   }
+  
+  .roles-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .roles-header .btn-primary {
+    width: 100%;
+  }
+  
+  .role-card {
+    padding: 16px;
+  }
+  
+  .role-card-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .role-card-actions {
+    width: 100%;
+  }
+  
+  .role-card-actions .action-btn {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .permissions-grid-modal {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-wide {
+    max-width: 95%;
+    margin: 10px;
+  }
 }
