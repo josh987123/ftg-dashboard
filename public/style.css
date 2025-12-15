@@ -7923,19 +7923,16 @@ body.dark-mode .page-info {
   }
 }
 
-/* Ensure profit/margin colors work in dark mode */
+/* Profit card color in dark mode - green text */
 body.dark-mode .job-metric-card.profit .metric-value {
   color: #34d399;
 }
 
-body.dark-mode .job-metric-card.margin .metric-value {
-  color: #60a5fa;
-}
-
-body.dark-mode .job-metric-card.profit .metric-value.negative,
-body.dark-mode .job-metric-card.margin .metric-value.negative {
+body.dark-mode .job-metric-card.profit .metric-value.negative {
   color: #f87171;
 }
+
+/* Margin card styles defined in comprehensive fix section below */
 
 /* Breakdown table positive/negative colors in dark mode */
 body.dark-mode .breakdown-table td.positive {
@@ -8049,17 +8046,12 @@ body.dark-mode #jobBudgetsView .metric-value {
   color: #f1f5f9 !important;
 }
 
-/* Keep profit/margin colors */
+/* Keep profit colors - margin styles defined in comprehensive fix section */
 body.dark-mode .job-metric-card.profit .metric-value:not(.negative) {
   color: #34d399 !important;
 }
 
-body.dark-mode .job-metric-card.margin .metric-value:not(.negative) {
-  color: #60a5fa !important;
-}
-
-body.dark-mode .job-metric-card.profit .metric-value.negative,
-body.dark-mode .job-metric-card.margin .metric-value.negative {
+body.dark-mode .job-metric-card.profit .metric-value.negative {
   color: #f87171 !important;
 }
 
@@ -8218,22 +8210,7 @@ body.dark-mode .job-budgets-table td.margin-cell {
   font-weight: 600;
 }
 
-/* Breakdown container - stacked vertically */
-.breakdown-container.stacked {
-  flex-direction: column;
-  gap: 16px;
-}
-
-.breakdown-container.stacked .breakdown-card {
-  min-width: auto;
-  max-width: 600px;
-  width: 100%;
-}
-
-/* Chart subtitle - no separate title header */
-.breakdown-card > .chart-subtitle {
-  display: none;
-}
+/* Breakdown container and chart subtitle styles defined in comprehensive fix section below */
 
 /* ============================================================
    JOB BUDGETS - COMPREHENSIVE MOBILE STYLES
@@ -8501,10 +8478,7 @@ body.dark-mode .job-budgets-table .margin-cell {
   color: #1f2937 !important;
 }
 
-/* Avg Profit Margin metric card in dark mode */
-body.dark-mode .job-metric-card.margin .metric-value {
-  color: #60a5fa !important;
-}
+/* Avg Profit Margin - styles defined in comprehensive fix section below */
 
 /* ============================================================
    JOB BUDGETS - COMPREHENSIVE FIX FOR ALL ISSUES
