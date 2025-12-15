@@ -8717,3 +8717,49 @@ body.dark-mode .page-size-select {
   background: #334155 !important;
   border-color: #475569 !important;
 }
+
+/* Subtotal row styling */
+.subtotal-row {
+  background: #f1f5f9 !important;
+  border-top: 2px solid #cbd5e1;
+}
+
+.subtotal-row td {
+  font-weight: 600;
+  color: #1e293b !important;
+}
+
+body.dark-mode .subtotal-row {
+  background: #334155 !important;
+  border-top-color: #64748b;
+}
+
+body.dark-mode .subtotal-row td {
+  color: #f1f5f9 !important;
+}
+
+body.dark-mode .subtotal-row td.positive {
+  color: #34d399 !important;
+}
+
+body.dark-mode .subtotal-row td.negative {
+  color: #f87171 !important;
+}
+
+/* Ensure "Key Metrics" title is white in dark mode */
+body.dark-mode .section-title,
+body.dark-mode .job-key-metrics-section .section-title {
+  color: #f1f5f9 !important;
+}
+
+/* Ensure "Job Status:" label is white in dark mode */
+body.dark-mode .config-label,
+body.dark-mode .job-budgets-controls .config-label {
+  color: #f1f5f9 !important;
+}
+
+/* Checkbox labels in dark mode */
+body.dark-mode .checkbox-label,
+body.dark-mode .job-budgets-controls .checkbox-label {
+  color: #e2e8f0 !important;
+}

@@ -11747,6 +11747,13 @@ function sortJobBudgets() {
     let aVal = a[col];
     let bVal = b[col];
     
+    // Handle profit_margin (calculated field)
+    if (col === 'profit_margin') {
+      const aMargin = a.revised_contract ? (a.estimated_profit / a.revised_contract) * 100 : 0;
+      const bMargin = b.revised_contract ? (b.estimated_profit / b.revised_contract) * 100 : 0;
+      return (aMargin - bMargin) * dir;
+    }
+    
     // Numeric columns
     if (['original_contract', 'tot_income_adj', 'revised_contract', 'original_cost', 
          'tot_cost_adj', 'revised_cost', 'estimated_profit'].includes(col)) {
@@ -11996,7 +12003,16 @@ function renderJobBreakdownByPm() {
     displayRows.push(otherData);
   }
   
-  tbody.innerHTML = displayRows.map(row => {
+  // Calculate totals for subtotal row
+  const totals = displayRows.reduce((acc, row) => ({
+    jobs: acc.jobs + row.jobs,
+    contract: acc.contract + row.contract,
+    cost: acc.cost + row.cost,
+    profit: acc.profit + row.profit
+  }), { jobs: 0, contract: 0, cost: 0, profit: 0 });
+  totals.margin = totals.contract > 0 ? (totals.profit / totals.contract) * 100 : 0;
+  
+  const rowsHtml = displayRows.map(row => {
     const profitClass = row.profit >= 0 ? 'positive' : 'negative';
     const marginColor = getMarginColor(row.margin);
     return `<tr>
@@ -12008,6 +12024,19 @@ function renderJobBreakdownByPm() {
       <td class="number-col margin-cell" style="background-color: ${marginColor}">${row.margin.toFixed(1)}%</td>
     </tr>`;
   }).join('');
+  
+  const totalProfitClass = totals.profit >= 0 ? 'positive' : 'negative';
+  const totalMarginColor = getMarginColor(totals.margin);
+  const subtotalHtml = `<tr class="subtotal-row">
+    <td><strong>Total</strong></td>
+    <td class="number-col"><strong>${totals.jobs}</strong></td>
+    <td class="number-col"><strong>${formatCurrencyCompact(totals.contract)}</strong></td>
+    <td class="number-col"><strong>${formatCurrencyCompact(totals.cost)}</strong></td>
+    <td class="number-col ${totalProfitClass}"><strong>${formatCurrencyCompact(totals.profit)}</strong></td>
+    <td class="number-col margin-cell" style="background-color: ${totalMarginColor}"><strong>${totals.margin.toFixed(1)}%</strong></td>
+  </tr>`;
+  
+  tbody.innerHTML = rowsHtml + subtotalHtml;
 }
 
 function renderJobBreakdownByCustomer() {
@@ -12059,7 +12088,16 @@ function renderJobBreakdownByCustomer() {
     displayRows.push(otherData);
   }
   
-  tbody.innerHTML = displayRows.map(row => {
+  // Calculate totals for subtotal row
+  const totals = displayRows.reduce((acc, row) => ({
+    jobs: acc.jobs + row.jobs,
+    contract: acc.contract + row.contract,
+    cost: acc.cost + row.cost,
+    profit: acc.profit + row.profit
+  }), { jobs: 0, contract: 0, cost: 0, profit: 0 });
+  totals.margin = totals.contract > 0 ? (totals.profit / totals.contract) * 100 : 0;
+  
+  const rowsHtml = displayRows.map(row => {
     const profitClass = row.profit >= 0 ? 'positive' : 'negative';
     const marginColor = getMarginColor(row.margin);
     return `<tr>
@@ -12071,6 +12109,19 @@ function renderJobBreakdownByCustomer() {
       <td class="number-col margin-cell" style="background-color: ${marginColor}">${row.margin.toFixed(1)}%</td>
     </tr>`;
   }).join('');
+  
+  const totalProfitClass = totals.profit >= 0 ? 'positive' : 'negative';
+  const totalMarginColor = getMarginColor(totals.margin);
+  const subtotalHtml = `<tr class="subtotal-row">
+    <td><strong>Total</strong></td>
+    <td class="number-col"><strong>${totals.jobs}</strong></td>
+    <td class="number-col"><strong>${formatCurrencyCompact(totals.contract)}</strong></td>
+    <td class="number-col"><strong>${formatCurrencyCompact(totals.cost)}</strong></td>
+    <td class="number-col ${totalProfitClass}"><strong>${formatCurrencyCompact(totals.profit)}</strong></td>
+    <td class="number-col margin-cell" style="background-color: ${totalMarginColor}"><strong>${totals.margin.toFixed(1)}%</strong></td>
+  </tr>`;
+  
+  tbody.innerHTML = rowsHtml + subtotalHtml;
 }
 
 function formatCurrencyCompact(value) {
