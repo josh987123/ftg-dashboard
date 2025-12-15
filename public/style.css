@@ -195,6 +195,26 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  flex: 1;
+}
+
+.config-expand-btn {
+  margin-left: auto;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.config-expand-btn:hover {
+  background: var(--border-primary);
+  color: var(--text-primary);
 }
 
 .config-body {

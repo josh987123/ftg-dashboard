@@ -991,15 +991,42 @@ function updateDataAsOfDates() {
 
 function initConfigPanels() {
   document.querySelectorAll(".config-header").forEach(header => {
-    header.addEventListener("click", () => {
+    header.addEventListener("click", (e) => {
+      // Ignore clicks on the expand button itself - it will handle its own click
+      if (e.target.classList.contains('config-expand-btn')) return;
+      
       const targetId = header.dataset.target;
       const body = document.getElementById(targetId);
       if (body) {
         body.classList.toggle("collapsed");
         header.classList.toggle("collapsed");
+        updateConfigExpandBtn(header);
       }
     });
+    
+    // Handle expand button click
+    const expandBtn = header.querySelector('.config-expand-btn');
+    if (expandBtn) {
+      expandBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const targetId = header.dataset.target;
+        const body = document.getElementById(targetId);
+        if (body) {
+          body.classList.toggle("collapsed");
+          header.classList.toggle("collapsed");
+          updateConfigExpandBtn(header);
+        }
+      });
+    }
   });
+}
+
+function updateConfigExpandBtn(header) {
+  const expandBtn = header.querySelector('.config-expand-btn');
+  if (expandBtn) {
+    const isCollapsed = header.classList.contains('collapsed');
+    expandBtn.textContent = isCollapsed ? 'Expand ▼' : 'Collapse ▲';
+  }
 }
 
 function initSidebar() {
