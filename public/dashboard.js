@@ -11631,6 +11631,25 @@ function setupJobBudgetsEventListeners() {
       });
     });
   });
+  
+  // Breakdown table expand/collapse buttons
+  document.querySelectorAll('.breakdown-expand-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.dataset.target;
+      const tableWrapper = document.getElementById(targetId);
+      const textSpan = btn.querySelector('.expand-text');
+      
+      if (tableWrapper) {
+        const isCollapsed = tableWrapper.classList.contains('collapsed');
+        tableWrapper.classList.toggle('collapsed');
+        btn.classList.toggle('expanded');
+        
+        if (textSpan) {
+          textSpan.textContent = isCollapsed ? 'Collapse' : 'Expand';
+        }
+      }
+    });
+  });
 }
 
 async function loadJobBudgetsData() {

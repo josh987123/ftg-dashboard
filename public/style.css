@@ -8603,6 +8603,55 @@ body.dark-mode .breakdown-card > .chart-subtitle {
   overflow-x: auto;
   overflow-y: visible;
   -webkit-overflow-scrolling: touch;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.breakdown-table-wrapper.collapsed {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.breakdown-expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 16px;
+  margin: 8px 0;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.breakdown-expand-btn:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.breakdown-expand-btn .expand-arrow {
+  transition: transform 0.3s ease;
+}
+
+.breakdown-expand-btn.expanded .expand-arrow {
+  transform: rotate(180deg);
+}
+
+body.dark-mode .breakdown-expand-btn {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+body.dark-mode .breakdown-expand-btn:hover {
+  background: #475569;
+  color: #f1f5f9;
 }
 
 /* Mobile: ensure table wrapper scrolls */

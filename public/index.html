@@ -1608,7 +1608,11 @@
               <div class="breakdown-chart-wrapper">
                 <canvas id="pmDonutChart"></canvas>
               </div>
-              <div class="breakdown-table-wrapper">
+              <button class="breakdown-expand-btn" data-target="pmTableWrapper">
+                <span class="expand-text">Expand</span>
+                <span class="expand-arrow">▼</span>
+              </button>
+              <div class="breakdown-table-wrapper collapsed" id="pmTableWrapper">
                 <table class="breakdown-table" id="jobPmBreakdownTable">
                   <thead>
                     <tr>
@@ -1631,7 +1635,11 @@
               <div class="breakdown-chart-wrapper">
                 <canvas id="customerDonutChart"></canvas>
               </div>
-              <div class="breakdown-table-wrapper">
+              <button class="breakdown-expand-btn" data-target="customerTableWrapper">
+                <span class="expand-text">Expand</span>
+                <span class="expand-arrow">▼</span>
+              </button>
+              <div class="breakdown-table-wrapper collapsed" id="customerTableWrapper">
                 <table class="breakdown-table" id="jobCustomerBreakdownTable">
                   <thead>
                     <tr>
