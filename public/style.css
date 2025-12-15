@@ -8029,3 +8029,191 @@ body.dark-mode #navJobsChildren .nav-child.active {
 body.dark-mode .chart-subtitle {
   color: #94a3b8;
 }
+
+/* ============================================================
+   JOB BUDGETS - COMPREHENSIVE DARK MODE FIXES
+   ============================================================ */
+
+/* Key Metrics Section Title - ensure white text */
+body.dark-mode .job-key-metrics-section .section-title,
+body.dark-mode .job-key-metrics .section-title,
+body.dark-mode #jobBudgetsView .section-title,
+body.dark-mode .job-budgets-view .section-title {
+  color: #f1f5f9 !important;
+}
+
+/* All metric values in dark mode */
+body.dark-mode .job-metric-card .metric-value,
+body.dark-mode .job-metrics-grid .metric-value,
+body.dark-mode #jobBudgetsView .metric-value {
+  color: #f1f5f9 !important;
+}
+
+/* Keep profit/margin colors */
+body.dark-mode .job-metric-card.profit .metric-value:not(.negative) {
+  color: #34d399 !important;
+}
+
+body.dark-mode .job-metric-card.margin .metric-value:not(.negative) {
+  color: #60a5fa !important;
+}
+
+body.dark-mode .job-metric-card.profit .metric-value.negative,
+body.dark-mode .job-metric-card.margin .metric-value.negative {
+  color: #f87171 !important;
+}
+
+/* Metric labels */
+body.dark-mode .job-metric-card .metric-label,
+body.dark-mode .job-metrics-grid .metric-label {
+  color: #94a3b8 !important;
+}
+
+/* Primary card text stays white */
+body.dark-mode .job-metric-card.primary .metric-value,
+body.dark-mode .job-metric-card.primary .metric-label {
+  color: #ffffff !important;
+}
+
+/* Job Budgets Table - all text white/light in dark mode */
+body.dark-mode .job-budgets-table th {
+  color: #e2e8f0 !important;
+  background: #334155 !important;
+}
+
+body.dark-mode .job-budgets-table td {
+  color: #e5e7eb !important;
+}
+
+/* Table positive/negative values */
+body.dark-mode .job-budgets-table td.positive {
+  color: #34d399 !important;
+}
+
+body.dark-mode .job-budgets-table td.negative {
+  color: #f87171 !important;
+}
+
+/* Breakdown table headers and cells */
+body.dark-mode .breakdown-table th {
+  color: #cbd5e1 !important;
+  background: #334155 !important;
+}
+
+body.dark-mode .breakdown-table td {
+  color: #e5e7eb !important;
+}
+
+body.dark-mode .breakdown-table td.positive {
+  color: #34d399 !important;
+}
+
+body.dark-mode .breakdown-table td.negative {
+  color: #f87171 !important;
+}
+
+/* Breakdown card titles */
+body.dark-mode .breakdown-title {
+  color: #f1f5f9 !important;
+  background: #334155 !important;
+}
+
+/* Chart subtitle in dark mode */
+body.dark-mode .chart-subtitle {
+  color: #94a3b8 !important;
+}
+
+/* Configuration panel labels and text */
+body.dark-mode .overview-config-box label,
+body.dark-mode .overview-config-box .checkbox-group label {
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode .overview-config-box .checkbox-item label {
+  color: #cbd5e1 !important;
+}
+
+/* Pagination controls */
+body.dark-mode .job-pagination,
+body.dark-mode .pagination-info {
+  color: #cbd5e1 !important;
+}
+
+body.dark-mode .pagination-btn {
+  color: #e2e8f0 !important;
+  background: #334155 !important;
+  border-color: #475569 !important;
+}
+
+body.dark-mode .pagination-btn:hover:not(:disabled) {
+  background: #475569 !important;
+}
+
+body.dark-mode .pagination-btn:disabled {
+  color: #64748b !important;
+  background: #1e293b !important;
+}
+
+body.dark-mode .page-size-select {
+  color: #e2e8f0 !important;
+  background: #334155 !important;
+  border-color: #475569 !important;
+}
+
+/* Search input */
+body.dark-mode .job-search-input {
+  color: #e2e8f0 !important;
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+body.dark-mode .job-search-input::placeholder {
+  color: #64748b !important;
+}
+
+body.dark-mode .job-search-icon {
+  color: #94a3b8 !important;
+}
+
+/* Select dropdowns in config */
+body.dark-mode .filter-select,
+body.dark-mode .overview-config-box select {
+  color: #e2e8f0 !important;
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+/* Expand icons */
+body.dark-mode .job-budgets-table .expand-icon {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode .job-budgets-table .expand-icon:hover {
+  color: #e2e8f0 !important;
+  background: #475569 !important;
+}
+
+/* Hidden columns text (sub-values) */
+body.dark-mode .job-budgets-table .sub-value {
+  color: #94a3b8 !important;
+}
+
+/* Loading cell text */
+body.dark-mode .job-budgets-table td.loading-cell,
+body.dark-mode .breakdown-table td.loading-cell {
+  color: #94a3b8 !important;
+}
+
+/* Job table container scrollbar */
+body.dark-mode .job-table-container::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+body.dark-mode .job-table-container::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+/* Margin column with gradient formatting */
+body.dark-mode .job-budgets-table td.margin-cell {
+  font-weight: 600;
+}
