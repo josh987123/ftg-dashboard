@@ -8218,44 +8218,21 @@ body.dark-mode .job-budgets-table td.margin-cell {
   font-weight: 600;
 }
 
-/* Breakdown container - side by side on desktop */
+/* Breakdown container - stacked vertically */
 .breakdown-container.stacked {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 20px;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .breakdown-container.stacked .breakdown-card {
-  flex: 1 1 400px;
-  min-width: 380px;
-  max-width: 550px;
+  min-width: auto;
+  max-width: 600px;
+  width: 100%;
 }
 
-/* Stack on mobile */
-@media (max-width: 900px) {
-  .breakdown-container.stacked {
-    flex-direction: column;
-  }
-  
-  .breakdown-container.stacked .breakdown-card {
-    min-width: auto;
-    max-width: 100%;
-    width: 100%;
-  }
-}
-
-/* Chart subtitle as the main header now */
+/* Chart subtitle - no separate title header */
 .breakdown-card > .chart-subtitle {
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-  text-align: left;
-  padding: 12px 16px 8px;
-  border-bottom: none;
-}
-
-body.dark-mode .breakdown-card > .chart-subtitle {
-  color: #e2e8f0;
+  display: none;
 }
 
 /* ============================================================
