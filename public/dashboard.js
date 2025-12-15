@@ -11775,9 +11775,168 @@ function updateJobSummaryMetrics() {
   renderJobBreakdowns();
 }
 
+let pmDonutChart = null;
+let customerDonutChart = null;
+
+const chartColors = [
+  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+  '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1',
+  '#94a3b8' // Gray for "Other"
+];
+
 function renderJobBreakdowns() {
   renderJobBreakdownByPm();
   renderJobBreakdownByCustomer();
+  renderPmDonutChart();
+  renderCustomerDonutChart();
+}
+
+function renderPmDonutChart() {
+  const canvas = document.getElementById('pmDonutChart');
+  if (!canvas) return;
+  
+  // Aggregate by Project Manager
+  const pmMap = new Map();
+  jobBudgetsFiltered.forEach(job => {
+    const pm = job.project_manager_name || 'Unassigned';
+    if (!pmMap.has(pm)) {
+      pmMap.set(pm, 0);
+    }
+    pmMap.set(pm, pmMap.get(pm) + job.revised_contract);
+  });
+  
+  // Sort by contract value and get top 10
+  const sorted = [...pmMap.entries()]
+    .sort((a, b) => b[1] - a[1]);
+  
+  const top10 = sorted.slice(0, 10);
+  const otherTotal = sorted.slice(10).reduce((sum, [, val]) => sum + val, 0);
+  
+  const labels = top10.map(([name]) => name);
+  const data = top10.map(([, val]) => val);
+  
+  if (otherTotal > 0) {
+    labels.push('Other');
+    data.push(otherTotal);
+  }
+  
+  const isDarkMode = document.body.classList.contains('dark-mode');
+  
+  if (pmDonutChart) {
+    pmDonutChart.destroy();
+  }
+  
+  pmDonutChart = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: chartColors.slice(0, labels.length),
+        borderWidth: 2,
+        borderColor: isDarkMode ? '#1e293b' : '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            color: isDarkMode ? '#e2e8f0' : '#374151',
+            font: { size: 11 },
+            boxWidth: 12,
+            padding: 8
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const value = context.raw;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = ((value / total) * 100).toFixed(1);
+              return `${formatCurrencyCompact(value)} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderCustomerDonutChart() {
+  const canvas = document.getElementById('customerDonutChart');
+  if (!canvas) return;
+  
+  // Aggregate by Customer
+  const custMap = new Map();
+  jobBudgetsFiltered.forEach(job => {
+    const cust = job.customer_name || 'Unknown';
+    if (!custMap.has(cust)) {
+      custMap.set(cust, 0);
+    }
+    custMap.set(cust, custMap.get(cust) + job.revised_contract);
+  });
+  
+  // Sort by contract value and get top 10
+  const sorted = [...custMap.entries()]
+    .sort((a, b) => b[1] - a[1]);
+  
+  const top10 = sorted.slice(0, 10);
+  const otherTotal = sorted.slice(10).reduce((sum, [, val]) => sum + val, 0);
+  
+  const labels = top10.map(([name]) => name);
+  const data = top10.map(([, val]) => val);
+  
+  if (otherTotal > 0) {
+    labels.push('Other');
+    data.push(otherTotal);
+  }
+  
+  const isDarkMode = document.body.classList.contains('dark-mode');
+  
+  if (customerDonutChart) {
+    customerDonutChart.destroy();
+  }
+  
+  customerDonutChart = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: chartColors.slice(0, labels.length),
+        borderWidth: 2,
+        borderColor: isDarkMode ? '#1e293b' : '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            color: isDarkMode ? '#e2e8f0' : '#374151',
+            font: { size: 11 },
+            boxWidth: 12,
+            padding: 8
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const value = context.raw;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = ((value / total) * 100).toFixed(1);
+              return `${formatCurrencyCompact(value)} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 function renderJobBreakdownByPm() {

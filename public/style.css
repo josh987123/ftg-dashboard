@@ -7962,3 +7962,16 @@ body.dark-mode .job-status-badge.overhead {
   background: rgba(59, 130, 246, 0.2);
   color: #60a5fa;
 }
+
+/* Breakdown Chart Wrapper */
+.breakdown-chart-wrapper {
+  height: 200px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.breakdown-chart-wrapper canvas {
+  max-height: 200px;
+}
