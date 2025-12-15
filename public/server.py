@@ -2791,11 +2791,30 @@ def api_process_scheduled_reports():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for debugging"""
+    import os
+    return jsonify({
+        'status': 'ok',
+        'cwd': os.getcwd(),
+        'files': os.listdir('.') if os.path.exists('.') else [],
+        'index_exists': os.path.exists('index.html')
+    })
+
 @app.route('/')
 def serve_index():
-    response = send_from_directory('.', 'index.html')
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    return response
+    try:
+        response = send_from_directory('.', 'index.html')
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        return response
+    except Exception as e:
+        import os
+        return jsonify({
+            'error': str(e),
+            'cwd': os.getcwd(),
+            'files': os.listdir('.') if os.path.exists('.') else []
+        }), 500
 
 @app.route('/<path:path>')
 def serve_static(path):
