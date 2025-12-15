@@ -8592,16 +8592,33 @@ body.dark-mode .breakdown-card > .chart-subtitle {
   color: #e2e8f0 !important;
 }
 
-/* 4. BREAKDOWN CARD - Vertical scroll only */
+/* 4. BREAKDOWN CARD - Allow horizontal scroll for table */
 .breakdown-card {
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-  max-height: 480px;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 600px;
 }
 
 .breakdown-table-wrapper {
   overflow-x: auto;
   overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile: ensure table wrapper scrolls */
+@media (max-width: 768px) {
+  .breakdown-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .breakdown-table-wrapper {
+    min-width: 100%;
+  }
+  
+  .breakdown-table {
+    min-width: 450px;
+  }
 }
 
 /* 5. DARK MODE TEXT FIXES - Force white/light text */
