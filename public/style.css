@@ -8016,3 +8016,16 @@ body.dark-mode #navJobsChildren .nav-child.active {
   background: rgba(59, 130, 246, 0.5);
   border-left-color: #60a5fa;
 }
+
+/* Chart subtitle */
+.chart-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  padding: 4px 16px 0;
+  font-weight: 500;
+}
+
+body.dark-mode .chart-subtitle {
+  color: #94a3b8;
+}
