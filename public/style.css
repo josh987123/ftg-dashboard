@@ -8525,7 +8525,12 @@ body.dark-mode .job-budgets-table .margin-cell {
 /* Stack on mobile only */
 @media (max-width: 900px) {
   .breakdown-container.stacked {
-    grid-template-columns: 1fr !important;
+    flex-direction: column;
+  }
+  
+  .breakdown-container.stacked .breakdown-card {
+    max-width: 100%;
+    width: 100%;
   }
 }
 
