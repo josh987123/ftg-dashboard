@@ -3873,7 +3873,7 @@ async function deleteScheduledReport(id) {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobBudgets", "receivablesPayables", "jobAnalytics", "overUnderBill", "admin"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -3941,6 +3941,14 @@ function getReportData() {
       subtitle: getCashBalancesSubtitle(),
       tableHtml: getCashBalancesTableHtml(),
       csvData: getCashBalancesCsvData(),
+      isWide: true
+    };
+  } else if (view === "jobBudgets") {
+    return {
+      title: "Job Budgets Report",
+      subtitle: getJobBudgetsSubtitle(),
+      tableHtml: getJobBudgetsTableHtml(),
+      csvData: getJobBudgetsCsvData(),
       isWide: true
     };
   }
@@ -4439,6 +4447,101 @@ function getCashBalancesCsvData() {
   
   const total = selectedAccounts.reduce((sum, a) => sum + a.balance, 0);
   csv += `"TOTAL",${total}\n`;
+  
+  return csv;
+}
+
+function getJobBudgetsSubtitle() {
+  const filters = [];
+  const statusFilters = Array.from(document.querySelectorAll('.status-checkbox:checked')).map(cb => cb.value);
+  if (statusFilters.length > 0 && statusFilters.length < 4) {
+    filters.push(`Status: ${statusFilters.join(', ')}`);
+  }
+  const pm = document.getElementById('pmFilter')?.value;
+  if (pm) filters.push(`PM: ${pm}`);
+  const customer = document.getElementById('customerFilter')?.value;
+  if (customer) filters.push(`Customer: ${customer}`);
+  
+  const total = jobBudgetsFiltered?.length || 0;
+  let subtitle = `${total} Job${total !== 1 ? 's' : ''}`;
+  if (filters.length > 0) subtitle += ` | ${filters.join(' | ')}`;
+  return subtitle;
+}
+
+function getJobBudgetsTableHtml() {
+  if (!jobBudgetsFiltered || jobBudgetsFiltered.length === 0) {
+    return "<p>No job data available</p>";
+  }
+  
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+    <thead>
+      <tr style="background:#f3f4f6;">
+        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Job #</th>
+        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Description</th>
+        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Customer</th>
+        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Status</th>
+        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">PM</th>
+        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Revised Contract</th>
+        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Revised Cost</th>
+        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Est. Profit</th>
+        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Margin %</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  
+  let totalContract = 0, totalCost = 0, totalProfit = 0;
+  
+  jobBudgetsFiltered.forEach(job => {
+    const status = getJobStatusLabel(job.job_status);
+    const margin = job.revised_contract ? (job.estimated_profit / job.revised_contract) * 100 : 0;
+    const profitColor = job.estimated_profit >= 0 ? '#10b981' : '#dc2626';
+    
+    totalContract += job.revised_contract || 0;
+    totalCost += job.revised_cost || 0;
+    totalProfit += job.estimated_profit || 0;
+    
+    html += `<tr>
+      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${job.job_no}</td>
+      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${job.job_description || ''}</td>
+      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${job.customer_name || ''}</td>
+      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${status.label}</td>
+      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${job.project_manager_name || ''}</td>
+      <td style="padding:6px 8px;text-align:right;border:1px solid #e5e7eb;">${formatCurrency(job.revised_contract)}</td>
+      <td style="padding:6px 8px;text-align:right;border:1px solid #e5e7eb;">${formatCurrency(job.revised_cost)}</td>
+      <td style="padding:6px 8px;text-align:right;border:1px solid #e5e7eb;color:${profitColor};">${formatCurrency(job.estimated_profit)}</td>
+      <td style="padding:6px 8px;text-align:right;border:1px solid #e5e7eb;">${margin.toFixed(1)}%</td>
+    </tr>`;
+  });
+  
+  const totalMargin = totalContract ? (totalProfit / totalContract) * 100 : 0;
+  const totalProfitColor = totalProfit >= 0 ? '#10b981' : '#dc2626';
+  
+  html += `<tr style="font-weight:bold;background:#f3f4f6;border-top:2px solid #374151;">
+    <td colspan="5" style="padding:8px;border:1px solid #e5e7eb;">TOTAL (${jobBudgetsFiltered.length} jobs)</td>
+    <td style="padding:8px;text-align:right;border:1px solid #e5e7eb;">${formatCurrency(totalContract)}</td>
+    <td style="padding:8px;text-align:right;border:1px solid #e5e7eb;">${formatCurrency(totalCost)}</td>
+    <td style="padding:8px;text-align:right;border:1px solid #e5e7eb;color:${totalProfitColor};">${formatCurrency(totalProfit)}</td>
+    <td style="padding:8px;text-align:right;border:1px solid #e5e7eb;">${totalMargin.toFixed(1)}%</td>
+  </tr>`;
+  
+  html += `</tbody></table>`;
+  
+  return html;
+}
+
+function getJobBudgetsCsvData() {
+  if (!jobBudgetsFiltered || jobBudgetsFiltered.length === 0) {
+    return "";
+  }
+  
+  let csv = "Job #,Description,Customer,Status,Project Manager,Original Contract,Change Orders,Revised Contract,Original Cost,Cost Adjustments,Revised Cost,Estimated Profit,Margin %\n";
+  
+  jobBudgetsFiltered.forEach(job => {
+    const status = getJobStatusLabel(job.job_status);
+    const margin = job.revised_contract ? (job.estimated_profit / job.revised_contract) * 100 : 0;
+    
+    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.original_contract || 0},${job.tot_income_adj || 0},${job.revised_contract || 0},${job.original_cost || 0},${job.tot_cost_adj || 0},${job.revised_cost || 0},${job.estimated_profit || 0},${margin.toFixed(1)}\n`;
+  });
   
   return csv;
 }
