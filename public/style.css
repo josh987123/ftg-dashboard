@@ -6670,6 +6670,66 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   border: 1px solid var(--border-primary);
 }
 
+.permissions-grouped {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.permission-group {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 180px;
+  flex: 1;
+}
+
+.permission-group-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.permission-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.permission-group .permission-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.permission-group .permission-item label {
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.permission-group .permission-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .permissions-grouped {
+    flex-direction: column;
+  }
+  
+  .permission-group {
+    min-width: 100%;
+  }
+}
+
 .role-card-actions {
   display: flex;
   gap: 8px;

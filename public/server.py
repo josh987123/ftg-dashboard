@@ -243,10 +243,11 @@ def init_database():
             ('income_statement', 'Income Statement', 'View income statement'),
             ('balance_sheet', 'Balance Sheet', 'View balance sheet'),
             ('cash_flow', 'Cash Flow', 'View statement of cash flows'),
+            ('cash_balances', 'Cash Balances', 'View cash position'),
+            ('job_budgets', 'Job Budgets', 'View job budget tracking'),
+            ('job_analytics', 'Job Analytics', 'View job performance metrics'),
             ('over_under', 'Over/Under Bill', 'View billing variances'),
             ('receivables', 'Receivables/Payables', 'View AR/AP tracking'),
-            ('job_analytics', 'Job Analytics', 'View job performance metrics'),
-            ('cash_balances', 'Cash Balances', 'View cash position'),
             ('admin', 'Admin', 'Access user management and settings')
         ]
         for page_key, page_name, description in default_permissions:

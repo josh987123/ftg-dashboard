@@ -12580,15 +12580,8 @@ async function loadRoles() {
             </div>
           </div>
           <div class="role-card-description">${escapeHtml(role.description || '')}</div>
-          <div class="permissions-grid">
-            ${adminPermissions.map(p => `
-              <div class="permission-item">
-                <input type="checkbox" id="perm_${role.id}_${p.pageKey}" 
-                  ${rolePerms.includes(p.pageKey) ? 'checked' : ''}
-                  onchange="saveRolePermissions(${role.id})">
-                <label for="perm_${role.id}_${p.pageKey}">${escapeHtml(p.pageName)}</label>
-              </div>
-            `).join('')}
+          <div class="permissions-grouped">
+            ${renderGroupedPermissions(adminPermissions, rolePerms, role.id, 'perm')}
           </div>
         </div>
       `;
@@ -12643,15 +12636,46 @@ async function openRoleModal(roleId = null) {
     title.textContent = 'Add Role';
   }
   
-  // Render permissions grid
-  grid.innerHTML = adminPermissions.map(p => `
-    <div class="permission-item">
-      <input type="checkbox" id="modal_perm_${p.pageKey}" ${rolePerms.includes(p.pageKey) ? 'checked' : ''}>
-      <label for="modal_perm_${p.pageKey}">${escapeHtml(p.pageName)}</label>
-    </div>
-  `).join('');
+  // Render permissions grid with grouping
+  grid.innerHTML = renderGroupedPermissions(adminPermissions, rolePerms, null, 'modal_perm');
   
   modal.classList.remove('hidden');
+}
+
+function renderGroupedPermissions(permissions, selectedPerms, roleId, prefix) {
+  const permissionGroups = {
+    'Executive Overview': ['overview'],
+    'Financials': ['revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances'],
+    'Job Reports': ['job_budgets', 'job_analytics', 'over_under', 'receivables'],
+    'Admin': ['admin']
+  };
+  
+  let html = '';
+  
+  for (const [groupName, groupKeys] of Object.entries(permissionGroups)) {
+    const groupPerms = permissions.filter(p => groupKeys.includes(p.pageKey));
+    if (groupPerms.length === 0) continue;
+    
+    html += `<div class="permission-group">
+      <div class="permission-group-title">${escapeHtml(groupName)}</div>
+      <div class="permission-group-items">`;
+    
+    for (const p of groupPerms) {
+      const inputId = roleId ? `${prefix}_${roleId}_${p.pageKey}` : `${prefix}_${p.pageKey}`;
+      const isChecked = selectedPerms.includes(p.pageKey) ? 'checked' : '';
+      const onChangeAttr = roleId ? `onchange="saveRolePermissions(${roleId})"` : '';
+      
+      html += `
+        <div class="permission-item">
+          <input type="checkbox" id="${inputId}" ${isChecked} ${onChangeAttr}>
+          <label for="${inputId}">${escapeHtml(p.pageName)}</label>
+        </div>`;
+    }
+    
+    html += `</div></div>`;
+  }
+  
+  return html;
 }
 
 function closeRoleModal() {
