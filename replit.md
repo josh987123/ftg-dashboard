@@ -14,7 +14,7 @@ Preferred communication style: Simple, everyday language.
 The application is a pure client-side solution built with vanilla HTML, CSS, and JavaScript. All static assets are served from the `/public` directory.
 
 ### Authentication & User Management
-The system uses database-backed authentication with bcrypt password hashing and role-based access control (RBAC) for `admin`, `manager`, and `viewer` roles. Session management includes server-side tokens, 30-day expiration, and IP tracking. User preferences and saved views are stored locally per user.
+The system uses database-backed authentication with bcrypt password hashing and flexible role-based access control (RBAC). Default roles include `admin` and `manager`, but admins can create, modify, and delete custom roles with page-level permissions. Session management includes server-side tokens, 30-day expiration, and IP tracking. User preferences and saved views are stored locally per user.
 
 ### Two-Factor Authentication (2FA)
 - **TOTP-based 2FA**: Users can enable 2FA via Security Settings in the user menu
@@ -31,7 +31,10 @@ The system uses database-backed authentication with bcrypt password hashing and 
 - **Email Delivery**: Uses Google Mail integration for sending reset links
 
 ### Admin Dashboard (Admin role only)
-Admins have access to user management (CRUD operations), role permission configuration, and an audit log to track administrative actions.
+Admins have access to:
+- **User Management**: CRUD operations for users, including role assignment
+- **Role Management**: Full CRUD for custom roles with page-level permission controls. Admins can create new roles, name them, and select which pages each role can access
+- **Audit Log**: Track administrative actions for security and compliance
 
 ### Data Management
 Financial data is stored in static JSON files (`financials.json`, `account_groups.json`) covering the period 2015-2025 with monthly granularity. Data includes detailed GL history, account metadata, and hierarchical financial statement structures.
