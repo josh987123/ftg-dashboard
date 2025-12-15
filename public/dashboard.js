@@ -807,11 +807,10 @@ function setupDarkModeToggle() {
   const savedTheme = localStorage.getItem("ftg_theme");
   if (savedTheme === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
-    // Set Chart.js defaults for dark mode immediately
+    document.body.classList.add("dark-mode");
     initChartJsThemeDefaults("dark");
-    // Apply dark mode styles after a short delay to ensure elements exist
-    setTimeout(() => applyJobBudgetsDarkModeStyles("dark"), 100);
   } else {
+    document.body.classList.remove("dark-mode");
     initChartJsThemeDefaults("light");
   }
   
@@ -821,17 +820,16 @@ function setupDarkModeToggle() {
     
     if (newTheme === "dark") {
       document.documentElement.setAttribute("data-theme", "dark");
+      document.body.classList.add("dark-mode");
       localStorage.setItem("ftg_theme", "dark");
     } else {
       document.documentElement.removeAttribute("data-theme");
+      document.body.classList.remove("dark-mode");
       localStorage.setItem("ftg_theme", "light");
     }
     
     // Update Chart.js colors if charts exist
     updateChartColorsForTheme(newTheme);
-    
-    // Apply Job Budgets dark mode styles
-    applyJobBudgetsDarkModeStyles(newTheme);
   });
 }
 
