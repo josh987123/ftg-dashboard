@@ -2053,6 +2053,160 @@ def api_get_roles():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/admin/roles', methods=['POST'])
+@require_admin
+def api_create_role():
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        name = data.get('name', '').strip()
+        description = data.get('description', '').strip()
+        permissions = data.get('permissions', [])
+        
+        if not name:
+            return jsonify({'error': 'Role name is required'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Check for duplicate name
+        cur.execute("SELECT id FROM roles WHERE LOWER(name) = LOWER(%s)", (name,))
+        if cur.fetchone():
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'A role with this name already exists'}), 400
+        
+        # Create the role
+        cur.execute("""
+            INSERT INTO roles (name, description, created_at)
+            VALUES (%s, %s, NOW())
+            RETURNING id
+        """, (name, description))
+        role_id = cur.fetchone()['id']
+        
+        # Add permissions
+        for page_key in permissions:
+            cur.execute("""
+                INSERT INTO role_permissions (role_id, permission_id)
+                SELECT %s, id FROM permissions WHERE page_key = %s
+            """, (role_id, page_key))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log_audit(request.current_user['id'], 'create_role', 'role', role_id, {'name': name, 'permissions': permissions})
+        
+        return jsonify({'success': True, 'roleId': role_id})
+    except Exception as e:
+        print(f"Create role error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/roles/<int:role_id>', methods=['PUT'])
+@require_admin
+def api_update_role(role_id):
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        name = data.get('name', '').strip()
+        description = data.get('description', '').strip()
+        permissions = data.get('permissions', [])
+        
+        if not name:
+            return jsonify({'error': 'Role name is required'}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Check if role exists
+        cur.execute("SELECT id, name FROM roles WHERE id = %s", (role_id,))
+        role = cur.fetchone()
+        if not role:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Role not found'}), 404
+        
+        # Check for duplicate name (excluding current role)
+        cur.execute("SELECT id FROM roles WHERE LOWER(name) = LOWER(%s) AND id != %s", (name, role_id))
+        if cur.fetchone():
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'A role with this name already exists'}), 400
+        
+        # Update role details
+        cur.execute("""
+            UPDATE roles SET name = %s, description = %s WHERE id = %s
+        """, (name, description, role_id))
+        
+        # Update permissions
+        cur.execute("DELETE FROM role_permissions WHERE role_id = %s", (role_id,))
+        for page_key in permissions:
+            cur.execute("""
+                INSERT INTO role_permissions (role_id, permission_id)
+                SELECT %s, id FROM permissions WHERE page_key = %s
+            """, (role_id, page_key))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log_audit(request.current_user['id'], 'update_role', 'role', role_id, {'name': name, 'permissions': permissions})
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Update role error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/roles/<int:role_id>', methods=['DELETE'])
+@require_admin
+def api_delete_role(role_id):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Check if role exists
+        cur.execute("SELECT id, name FROM roles WHERE id = %s", (role_id,))
+        role = cur.fetchone()
+        if not role:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Role not found'}), 404
+        
+        # Prevent deleting admin role
+        if role['name'].lower() == 'admin':
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Cannot delete the admin role'}), 400
+        
+        # Check if any users are assigned to this role
+        cur.execute("SELECT COUNT(*) as count FROM users WHERE role_id = %s", (role_id,))
+        user_count = cur.fetchone()['count']
+        if user_count > 0:
+            cur.close()
+            conn.close()
+            return jsonify({'error': f'Cannot delete role: {user_count} user(s) are assigned to it. Reassign them first.'}), 400
+        
+        # Delete role permissions first
+        cur.execute("DELETE FROM role_permissions WHERE role_id = %s", (role_id,))
+        
+        # Delete the role
+        cur.execute("DELETE FROM roles WHERE id = %s", (role_id,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log_audit(request.current_user['id'], 'delete_role', 'role', role_id, {'name': role['name']})
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Delete role error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/admin/permissions', methods=['GET', 'OPTIONS'])
 @require_admin
 def api_get_permissions():
