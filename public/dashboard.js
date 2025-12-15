@@ -13040,9 +13040,16 @@ const sectionToPermission = {
   'overUnderBill': 'over_under',
   'receivablesPayables': 'receivables',
   'jobAnalytics': 'job_analytics',
+  'jobBudgets': 'job_budgets',
   'cashReports': 'cash_balances',
   'admin': 'admin'
 };
+
+// Order of sections for default page selection
+const sectionOrder = [
+  'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
+  'cashReports', 'accounts', 'receivablesPayables', 'jobBudgets', 'jobAnalytics', 'overUnderBill'
+];
 
 // Check permissions and show/hide nav items based on user role
 async function checkAdminAccess() {
@@ -13056,6 +13063,7 @@ async function checkAdminAccess() {
     if (data.success && data.user) {
       const userPerms = data.user.permissions || [];
       const isAdmin = data.user.role === 'admin';
+      const userRole = data.user.role || '';
       
       // Get all nav items
       const navItems = document.querySelectorAll('.nav-item[data-section]');
@@ -13077,9 +13085,86 @@ async function checkAdminAccess() {
       // Store permissions for later use
       window.userPermissions = userPerms;
       window.isAdminUser = isAdmin;
+      window.userRole = userRole;
+      
+      // Navigate to the appropriate default page based on permissions
+      navigateToDefaultPage(userRole, userPerms, isAdmin);
     }
   } catch (err) {
     console.error('Failed to check permissions:', err);
+  }
+}
+
+function navigateToDefaultPage(userRole, userPerms, isAdmin) {
+  // Determine which section to show
+  let targetSection = null;
+  
+  // For Project Managers (manager role), default to Job Budgets if they have access
+  if (userRole === 'manager' && (isAdmin || userPerms.includes('job_budgets'))) {
+    targetSection = 'jobBudgets';
+  } else if (isAdmin) {
+    // Admins default to overview
+    targetSection = 'overview';
+  } else {
+    // For everyone else, find the first permitted section
+    for (const section of sectionOrder) {
+      const permKey = sectionToPermission[section];
+      if (permKey && userPerms.includes(permKey)) {
+        targetSection = section;
+        break;
+      }
+    }
+  }
+  
+  if (targetSection) {
+    // Navigate to the target section
+    const sections = document.querySelectorAll('.dashboard-section');
+    const navItems = document.querySelectorAll('.nav-item[data-section]');
+    
+    // Remove visible from all sections
+    sections.forEach(s => s.classList.remove('visible'));
+    navItems.forEach(i => i.classList.remove('active'));
+    
+    // Activate target section
+    const targetEl = document.getElementById(targetSection);
+    const targetNav = document.querySelector(`.nav-item[data-section="${targetSection}"]`);
+    
+    if (targetEl) targetEl.classList.add('visible');
+    if (targetNav) targetNav.classList.add('active');
+    
+    // Hide export ribbon on admin page
+    const exportArea = document.querySelector('.content-export-area');
+    if (exportArea) {
+      exportArea.style.display = targetSection === 'admin' ? 'none' : '';
+    }
+    
+    // Expand parent nav if needed
+    const finStatementsParent = document.getElementById("navFinancialStatements");
+    const finStatementsChildren = document.getElementById("navFinancialStatementsChildren");
+    const jobsParent = document.getElementById("navJobs");
+    const jobsChildren = document.getElementById("navJobsChildren");
+    
+    const fsChildren = ['revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
+    const jobsChildItems = ['jobBudgets', 'jobAnalytics', 'overUnderBill'];
+    
+    if (fsChildren.includes(targetSection) && finStatementsParent && finStatementsChildren) {
+      finStatementsParent.classList.add("expanded");
+      finStatementsChildren.classList.add("expanded");
+    }
+    
+    if (jobsChildItems.includes(targetSection) && jobsParent && jobsChildren) {
+      jobsParent.classList.add("expanded");
+      jobsChildren.classList.add("expanded");
+    }
+    
+    // Initialize the section if needed
+    if (targetSection === "jobBudgets") initJobBudgets();
+    if (targetSection === "revenue") initRevenueModule();
+    if (targetSection === "accounts") initAccountModule();
+    if (targetSection === "incomeStatement") loadIncomeStatement();
+    if (targetSection === "balanceSheet") initBalanceSheet();
+    if (targetSection === "cashFlows") loadCashFlowStatement();
+    if (targetSection === "cashReports") initCashReports();
   }
 }
 
