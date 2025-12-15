@@ -7224,18 +7224,18 @@ body.dark-mode .job-budgets-table th:hover {
   text-align: right;
 }
 
-/* Revised Contract & Revised Cost Columns - Yellow Shading */
-.job-budgets-table th.revised-contract-col,
-.job-budgets-table td.revised-contract-col,
-.job-budgets-table th.revised-cost-col,
-.job-budgets-table td.revised-cost-col {
+/* Original Contract, Change Orders, Original Cost, Cost Adjustments - Yellow Shading */
+.job-budgets-table th.contract-detail-col,
+.job-budgets-table td.contract-detail-col,
+.job-budgets-table th.cost-detail-col,
+.job-budgets-table td.cost-detail-col {
   background: rgba(251, 191, 36, 0.15);
 }
 
-body.dark-mode .job-budgets-table th.revised-contract-col,
-body.dark-mode .job-budgets-table td.revised-contract-col,
-body.dark-mode .job-budgets-table th.revised-cost-col,
-body.dark-mode .job-budgets-table td.revised-cost-col {
+body.dark-mode .job-budgets-table th.contract-detail-col,
+body.dark-mode .job-budgets-table td.contract-detail-col,
+body.dark-mode .job-budgets-table th.cost-detail-col,
+body.dark-mode .job-budgets-table td.cost-detail-col {
   background: rgba(251, 191, 36, 0.2);
 }
 

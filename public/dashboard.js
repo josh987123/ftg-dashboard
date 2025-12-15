@@ -919,6 +919,14 @@ function updateChartColorsForTheme(theme) {
   if (typeof renderCashChart === 'function' && cashChartInstance) {
     renderCashChart();
   }
+  
+  // Re-render job budgets donut charts if they exist
+  if (typeof renderPmDonutChart === 'function' && typeof pmDonutChart !== 'undefined' && pmDonutChart) {
+    renderPmDonutChart();
+  }
+  if (typeof renderCustomerDonutChart === 'function' && typeof customerDonutChart !== 'undefined' && customerDonutChart) {
+    renderCustomerDonutChart();
+  }
 }
 
 function setupMetricInfoButtons() {
