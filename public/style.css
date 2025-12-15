@@ -1923,8 +1923,13 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   background: var(--card-bg);
   z-index: 1;
   width: auto;
+  min-width: 180px;
   max-width: 280px;
   padding-right: 40px;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.3;
 }
 
 #incomeStatementTable th:first-child {
@@ -2043,8 +2048,12 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   padding-right: 12px;
   position: sticky;
   left: 0;
-  width: 1%;
-  white-space: nowrap;
+  min-width: 180px;
+  max-width: 280px;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.3;
 }
 
 #cashFlowTable th:first-child {
@@ -2316,8 +2325,12 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   position: sticky;
   left: 0;
   background: #fff;
-  width: 1%;
-  white-space: nowrap;
+  min-width: 180px;
+  max-width: 280px;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.3;
 }
 
 #balanceSheetTable th:first-child {
@@ -5279,9 +5292,14 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 .transaction-table .txn-account {
   font-weight: 500;
   color: #374151;
-  width: 100px;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
   line-height: 1.3;
   font-size: 12px;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .transaction-table .txn-description {
@@ -5299,7 +5317,11 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 .transaction-table .txn-category {
   color: #6b7280;
   font-size: 12px;
-  max-width: 120px;
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .transaction-table .txn-amount {
