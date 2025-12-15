@@ -11518,8 +11518,8 @@ let jobBudgetsData = [];
 let jobBudgetsFiltered = [];
 let jobBudgetsCurrentPage = 1;
 let jobBudgetsPageSize = 50;
-let jobBudgetsSortColumn = 'job_no';
-let jobBudgetsSortDirection = 'asc';
+let jobBudgetsSortColumn = 'revised_contract';
+let jobBudgetsSortDirection = 'desc';
 let jobBudgetsInitialized = false;
 
 function initJobBudgets() {

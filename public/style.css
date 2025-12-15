@@ -7150,7 +7150,7 @@ body.dark-mode .job-table-container {
 
 /* Job Budgets Table */
 .job-budgets-table {
-  width: 100%;
+  width: auto;
   border-collapse: collapse;
   font-size: 13px;
   table-layout: auto;
