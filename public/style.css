@@ -1913,6 +1913,41 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   color: var(--text-secondary);
   position: sticky;
   top: 0;
+  position: relative;
+}
+
+/* Resizable columns for financial tables */
+.is-table th .resize-handle,
+#incomeStatementTable th .resize-handle,
+#balanceSheetTable th .resize-handle,
+#cashFlowTable th .resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 10;
+}
+
+.is-table th .resize-handle:hover,
+.is-table th .resize-handle.resizing,
+#incomeStatementTable th .resize-handle:hover,
+#incomeStatementTable th .resize-handle.resizing,
+#balanceSheetTable th .resize-handle:hover,
+#balanceSheetTable th .resize-handle.resizing,
+#cashFlowTable th .resize-handle:hover,
+#cashFlowTable th .resize-handle.resizing {
+  background: rgba(59, 130, 246, 0.4);
+}
+
+.is-table.resizing,
+#incomeStatementTable.resizing,
+#balanceSheetTable.resizing,
+#cashFlowTable.resizing {
+  cursor: col-resize;
+  user-select: none;
 }
 
 #incomeStatementTable td:first-child,

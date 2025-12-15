@@ -7601,7 +7601,10 @@ function renderIncomeStatement() {
     }
   }
   
-  setTimeout(() => autoSizeFirstColumn("incomeStatementTable"), 50);
+  setTimeout(() => {
+    autoSizeFirstColumn("incomeStatementTable");
+    addResizeHandlesToTable("incomeStatementTable");
+  }, 50);
 }
 
 function renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody) {
@@ -8576,7 +8579,10 @@ function renderBalanceSheet() {
   
   tbody.innerHTML = bodyHtml;
   attachBSToggleListeners();
-  setTimeout(() => autoSizeFirstColumn("balanceSheetTable"), 50);
+  setTimeout(() => {
+    autoSizeFirstColumn("balanceSheetTable");
+    addResizeHandlesToTable("balanceSheetTable");
+  }, 50);
 }
 
 function formatBSNumber(value) {
@@ -8803,6 +8809,7 @@ function renderBalanceSheetMatrix() {
   
   tbody.innerHTML = bodyHtml;
   attachBSToggleListeners();
+  setTimeout(() => addResizeHandlesToTable("balanceSheetTable"), 50);
 }
 
 /* ============================================================
@@ -9691,7 +9698,10 @@ function renderCashFlowStatement(skipDetailLevelReset = false) {
   
   tbody.innerHTML = bodyHtml;
   attachCFToggleListeners();
-  setTimeout(() => autoSizeFirstColumn("cashFlowTable"), 50);
+  setTimeout(() => {
+    autoSizeFirstColumn("cashFlowTable");
+    addResizeHandlesToTable("cashFlowTable");
+  }, 50);
   
   const now = new Date();
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -9876,6 +9886,7 @@ function renderCashFlowMatrix(skipDetailLevelReset = false) {
   
   tbody.innerHTML = bodyHtml;
   attachCFToggleListeners();
+  setTimeout(() => addResizeHandlesToTable("cashFlowTable"), 50);
 }
 
 function saveCashFlowConfig() {
@@ -11119,6 +11130,27 @@ function initTableColumnResize(table) {
       document.removeEventListener('mouseup', onMouseUp);
     }
   });
+}
+
+function addResizeHandlesToTable(tableId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  
+  const headers = table.querySelectorAll('thead th');
+  headers.forEach((th, idx) => {
+    // Don't add to last column
+    if (idx < headers.length - 1) {
+      // Only add if not already present
+      if (!th.querySelector('.resize-handle')) {
+        const handle = document.createElement('span');
+        handle.className = 'resize-handle';
+        th.style.position = 'relative';
+        th.appendChild(handle);
+      }
+    }
+  });
+  
+  initTableColumnResize(table);
 }
 
 async function exportTransactionsToExcel() {
