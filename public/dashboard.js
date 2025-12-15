@@ -807,8 +807,10 @@ function setupDarkModeToggle() {
   const savedTheme = localStorage.getItem("ftg_theme");
   if (savedTheme === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
-    // Update chart colors immediately after a short delay to ensure charts are initialized
-    setTimeout(() => updateChartColorsForTheme("dark"), 100);
+    // Set Chart.js defaults for dark mode immediately
+    initChartJsThemeDefaults("dark");
+  } else {
+    initChartJsThemeDefaults("light");
   }
   
   toggle.addEventListener("click", () => {
@@ -837,10 +839,47 @@ function getChartThemeColors() {
   };
 }
 
+function initChartJsThemeDefaults(theme) {
+  if (typeof Chart === "undefined") return;
+  
+  const isDark = theme === "dark";
+  const textColor = isDark ? "#ffffff" : "#374151";
+  const gridColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)";
+  
+  // Set global Chart.js defaults
+  Chart.defaults.color = textColor;
+  Chart.defaults.borderColor = gridColor;
+  
+  // Set scale defaults
+  if (Chart.defaults.scales) {
+    if (Chart.defaults.scales.linear) {
+      Chart.defaults.scales.linear.ticks = Chart.defaults.scales.linear.ticks || {};
+      Chart.defaults.scales.linear.ticks.color = textColor;
+      Chart.defaults.scales.linear.grid = Chart.defaults.scales.linear.grid || {};
+      Chart.defaults.scales.linear.grid.color = gridColor;
+    }
+    if (Chart.defaults.scales.category) {
+      Chart.defaults.scales.category.ticks = Chart.defaults.scales.category.ticks || {};
+      Chart.defaults.scales.category.ticks.color = textColor;
+      Chart.defaults.scales.category.grid = Chart.defaults.scales.category.grid || {};
+      Chart.defaults.scales.category.grid.color = gridColor;
+    }
+  }
+  
+  // Set legend defaults
+  if (Chart.defaults.plugins && Chart.defaults.plugins.legend) {
+    Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
+    Chart.defaults.plugins.legend.labels.color = textColor;
+  }
+}
+
 function updateChartColorsForTheme(theme) {
   const isDark = theme === "dark";
   const gridColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)";
   const textColor = isDark ? "#ffffff" : "#374151";
+  
+  // Set Chart.js global defaults for future charts
+  initChartJsThemeDefaults(theme);
   
   // Update all Chart.js instances if they exist
   if (typeof Chart !== "undefined" && Chart.instances) {
