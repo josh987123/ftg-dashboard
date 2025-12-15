@@ -8508,17 +8508,19 @@ body.dark-mode .job-budgets-table .margin-cell {
 /* 2. BREAKDOWN CONTAINER - Side by side on desktop, NOT full width */
 .breakdown-container.stacked {
   display: flex !important;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 20px;
   justify-content: flex-start;
-  max-width: fit-content;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .breakdown-container.stacked .breakdown-card {
   min-width: 420px;
   max-width: 520px;
-  width: auto;
-  flex: 0 1 auto;
+  width: 420px;
+  flex: 0 0 auto;
+  overflow-x: hidden;
 }
 
 /* Stack on mobile only */
