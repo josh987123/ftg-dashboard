@@ -809,6 +809,8 @@ function setupDarkModeToggle() {
     document.documentElement.setAttribute("data-theme", "dark");
     // Set Chart.js defaults for dark mode immediately
     initChartJsThemeDefaults("dark");
+    // Apply dark mode styles after a short delay to ensure elements exist
+    setTimeout(() => applyJobBudgetsDarkModeStyles("dark"), 100);
   } else {
     initChartJsThemeDefaults("light");
   }
@@ -827,6 +829,49 @@ function setupDarkModeToggle() {
     
     // Update Chart.js colors if charts exist
     updateChartColorsForTheme(newTheme);
+    
+    // Apply Job Budgets dark mode styles
+    applyJobBudgetsDarkModeStyles(newTheme);
+  });
+}
+
+function applyJobBudgetsDarkModeStyles(theme) {
+  const isDark = theme === "dark";
+  const textColor = isDark ? "#ffffff" : "#374151";
+  const labelColor = isDark ? "#d1d5db" : "#6b7280";
+  
+  // Fix "Job Status:" label
+  const configLabels = document.querySelectorAll(".config-label");
+  configLabels.forEach(el => {
+    el.style.color = textColor;
+  });
+  
+  // Fix "Key Metrics" section title
+  const sectionTitles = document.querySelectorAll(".job-key-metrics-section .section-title");
+  sectionTitles.forEach(el => {
+    el.style.color = textColor;
+  });
+  
+  // Fix metric icon (%) in Avg Profit Margin
+  const marginCard = document.querySelector(".job-metric-card.margin .metric-icon");
+  if (marginCard) {
+    marginCard.style.color = isDark ? "#1e3a5f" : "#1e3a5f";
+  }
+  
+  // Fix breakdown table values
+  const breakdownCells = document.querySelectorAll(".breakdown-table td");
+  breakdownCells.forEach(el => {
+    if (!el.classList.contains("margin-cell")) {
+      el.style.color = textColor;
+    }
+  });
+  
+  // Fix job table cells
+  const jobTableCells = document.querySelectorAll("#jobBudgetsTable td");
+  jobTableCells.forEach(el => {
+    if (!el.classList.contains("margin-cell") && !el.classList.contains("profit-cell")) {
+      el.style.color = textColor;
+    }
   });
 }
 
@@ -12037,6 +12082,10 @@ function renderJobBreakdownByPm() {
   </tr>`;
   
   tbody.innerHTML = rowsHtml + subtotalHtml;
+  
+  // Apply dark mode styles after PM breakdown renders
+  const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+  applyJobBudgetsDarkModeStyles(currentTheme);
 }
 
 function renderJobBreakdownByCustomer() {
@@ -12122,6 +12171,10 @@ function renderJobBreakdownByCustomer() {
   </tr>`;
   
   tbody.innerHTML = rowsHtml + subtotalHtml;
+  
+  // Apply dark mode styles after Customer breakdown renders
+  const currentTheme2 = document.documentElement.getAttribute("data-theme") || "light";
+  applyJobBudgetsDarkModeStyles(currentTheme2);
 }
 
 function formatCurrencyCompact(value) {
@@ -12188,6 +12241,10 @@ function renderJobBudgetsTable() {
   }).join('');
   
   updateJobPagination(jobBudgetsFiltered.length);
+  
+  // Apply dark mode styles after rendering
+  const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+  applyJobBudgetsDarkModeStyles(currentTheme);
 }
 
 function updateJobPagination(total) {

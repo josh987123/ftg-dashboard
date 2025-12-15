@@ -8495,17 +8495,20 @@ body.dark-mode .job-budgets-table .margin-cell {
   width: 200px;
 }
 
-/* 2. BREAKDOWN CONTAINER - Side by side on desktop */
+/* 2. BREAKDOWN CONTAINER - Side by side on desktop, NOT full width */
 .breakdown-container.stacked {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(350px, 1fr));
+  display: flex !important;
+  flex-wrap: wrap;
   gap: 20px;
+  justify-content: flex-start;
+  max-width: fit-content;
 }
 
 .breakdown-container.stacked .breakdown-card {
-  min-width: 0;
-  max-width: none;
+  min-width: 350px;
+  max-width: 450px;
   width: auto;
+  flex: 0 1 auto;
 }
 
 /* Stack on mobile only */
