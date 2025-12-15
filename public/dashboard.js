@@ -11814,14 +11814,14 @@ function renderJobBreakdownByPm() {
   
   tbody.innerHTML = sorted.map(row => {
     const profitClass = row.profit >= 0 ? 'positive' : 'negative';
-    const marginClass = row.margin >= 0 ? 'positive' : 'negative';
+    const marginColor = getMarginColor(row.margin);
     return `<tr>
       <td>${row.name}</td>
       <td class="number-col">${row.jobs}</td>
       <td class="number-col">${formatCurrencyCompact(row.contract)}</td>
       <td class="number-col">${formatCurrencyCompact(row.cost)}</td>
       <td class="number-col ${profitClass}">${formatCurrencyCompact(row.profit)}</td>
-      <td class="number-col ${marginClass}">${row.margin.toFixed(1)}%</td>
+      <td class="number-col" style="background-color: ${marginColor}">${row.margin.toFixed(1)}%</td>
     </tr>`;
   }).join('');
 }
@@ -11860,14 +11860,14 @@ function renderJobBreakdownByCustomer() {
   
   tbody.innerHTML = sorted.map(row => {
     const profitClass = row.profit >= 0 ? 'positive' : 'negative';
-    const marginClass = row.margin >= 0 ? 'positive' : 'negative';
+    const marginColor = getMarginColor(row.margin);
     return `<tr>
       <td>${row.name}</td>
       <td class="number-col">${row.jobs}</td>
       <td class="number-col">${formatCurrencyCompact(row.contract)}</td>
       <td class="number-col">${formatCurrencyCompact(row.cost)}</td>
       <td class="number-col ${profitClass}">${formatCurrencyCompact(row.profit)}</td>
-      <td class="number-col ${marginClass}">${row.margin.toFixed(1)}%</td>
+      <td class="number-col" style="background-color: ${marginColor}">${row.margin.toFixed(1)}%</td>
     </tr>`;
   }).join('');
 }

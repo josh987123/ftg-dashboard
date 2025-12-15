@@ -7727,3 +7727,29 @@ body.dark-mode .job-budgets-table .expand-icon:hover {
 .expandable-col {
   cursor: pointer;
 }
+
+/* Compact breakdown tables */
+.job-breakdown-section table {
+  width: auto;
+  table-layout: auto;
+}
+
+.job-breakdown-section th,
+.job-breakdown-section td {
+  white-space: nowrap;
+  padding: 6px 12px;
+}
+
+/* Compact key metrics */
+.job-key-metrics {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: auto;
+}
+
+.job-key-metrics .metric-card {
+  flex: 0 0 auto;
+  min-width: auto;
+  padding: 12px 16px;
+}
