@@ -223,6 +223,29 @@ def init_database():
             )
         """)
         
+        # Create backup_codes table for 2FA recovery
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS backup_codes (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                code_hash VARCHAR(255) NOT NULL,
+                used BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Create password_reset_tokens table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                token_hash VARCHAR(255) NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                used BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
         # Seed default roles
         default_roles = [
             ('admin', 'Full access to all features including user management'),
@@ -1814,14 +1837,23 @@ def api_permanent_delete_user(user_id):
         
         # Delete related records first (foreign key constraints)
         cur.execute("DELETE FROM sessions WHERE user_id = %s", (user_id,))
-        cur.execute("DELETE FROM backup_codes WHERE user_id = %s", (user_id,))
-        cur.execute("DELETE FROM password_reset_tokens WHERE user_id = %s", (user_id,))
+        
+        # Try to delete from tables that may not exist in older installations
+        try:
+            cur.execute("DELETE FROM backup_codes WHERE user_id = %s", (user_id,))
+        except Exception:
+            pass
+        
+        try:
+            cur.execute("DELETE FROM password_reset_tokens WHERE user_id = %s", (user_id,))
+        except Exception:
+            pass
+        
+        # Delete scheduled reports for this user
+        cur.execute("DELETE FROM scheduled_reports WHERE user_id = %s", (user_id,))
         
         # Update audit logs to remove user reference (keep for history)
         cur.execute("UPDATE audit_log SET user_id = NULL WHERE user_id = %s", (user_id,))
-        
-        # Update scheduled reports created by this user
-        cur.execute("UPDATE scheduled_reports SET created_by = NULL WHERE created_by = %s", (user_id,))
         
         # Update users created by this user
         cur.execute("UPDATE users SET created_by = NULL WHERE created_by = %s", (user_id,))
