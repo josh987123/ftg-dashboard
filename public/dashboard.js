@@ -10262,9 +10262,10 @@ function setupCashEventListeners() {
     updateCashDisplay();
   });
   
-  // Stack bars / Show total
+  // Stack bars / Show total / Data labels
   document.getElementById("cashStackBars")?.addEventListener("change", updateCashDisplay);
   document.getElementById("cashShowTotal")?.addEventListener("change", updateCashDisplay);
+  document.getElementById("cashDataLabels")?.addEventListener("change", updateCashDisplay);
   
   // Tab switching
   document.querySelectorAll(".cash-tab").forEach(tab => {
@@ -10518,6 +10519,7 @@ function renderCashChart() {
   
   const stackBars = document.getElementById("cashStackBars")?.checked !== false;
   const showTotal = document.getElementById("cashShowTotal")?.checked !== false;
+  const showDataLabels = document.getElementById("cashDataLabels")?.checked === true;
   
   // Get dates to display using the new helper function
   const dates = getCashDateRange();
@@ -10548,7 +10550,8 @@ function renderCashChart() {
       backgroundColor: colors[idx % colors.length],
       borderColor: colors[idx % colors.length],
       borderWidth: 1,
-      stack: stackBars ? 'stack1' : undefined
+      stack: stackBars ? 'stack1' : undefined,
+      datalabels: { display: false }
     };
   });
   
@@ -10566,9 +10569,22 @@ function renderCashChart() {
       borderColor: '#1e3a5f',
       backgroundColor: 'transparent',
       borderWidth: 2,
-      pointRadius: 0,
+      pointRadius: showDataLabels ? 3 : 0,
       tension: 0.3,
-      order: 0
+      order: 0,
+      datalabels: showDataLabels ? {
+        display: true,
+        align: 'top',
+        anchor: 'end',
+        offset: 4,
+        color: '#1e3a5f',
+        font: { weight: 'bold', size: 10 },
+        formatter: (value) => {
+          if (value === null || value === undefined) return '';
+          const millions = value / 1000000;
+          return '$' + millions.toFixed(1) + 'M';
+        }
+      } : { display: false }
     });
   }
   
