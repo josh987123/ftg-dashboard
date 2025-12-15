@@ -8505,3 +8505,215 @@ body.dark-mode .job-budgets-table .margin-cell {
 body.dark-mode .job-metric-card.margin .metric-value {
   color: #60a5fa !important;
 }
+
+/* ============================================================
+   JOB BUDGETS - COMPREHENSIVE FIX FOR ALL ISSUES
+   ============================================================ */
+
+/* 1. FILTER DROPDOWNS - Stack vertically with no titles */
+.job-filter-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.job-filter-stack .filter-select {
+  width: 200px;
+}
+
+/* 2. BREAKDOWN CONTAINER - Side by side on desktop */
+.breakdown-container.stacked {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.breakdown-container.stacked .breakdown-card {
+  min-width: 0;
+  max-width: none;
+  width: auto;
+}
+
+/* Stack on mobile only */
+@media (max-width: 900px) {
+  .breakdown-container.stacked {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* 3. SHOW CHART TITLES */
+.breakdown-card > .chart-subtitle {
+  display: block !important;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  padding: 12px 16px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+body.dark-mode .breakdown-card > .chart-subtitle {
+  color: #e2e8f0 !important;
+}
+
+/* 4. BREAKDOWN CARD - Vertical scroll only */
+.breakdown-card {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  max-height: 480px;
+}
+
+.breakdown-table-wrapper {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* 5. DARK MODE TEXT FIXES - Force white/light text */
+body.dark-mode .job-budgets-table th {
+  color: #e2e8f0 !important;
+  background: #334155 !important;
+}
+
+body.dark-mode .job-budgets-table td {
+  color: #e2e8f0 !important;
+  border-bottom-color: #475569 !important;
+}
+
+body.dark-mode .job-budgets-table td.positive {
+  color: #34d399 !important;
+}
+
+body.dark-mode .job-budgets-table td.negative {
+  color: #f87171 !important;
+}
+
+/* Breakdown table dark mode */
+body.dark-mode .breakdown-table th {
+  color: #cbd5e1 !important;
+  background: #334155 !important;
+}
+
+body.dark-mode .breakdown-table td {
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode .breakdown-table td.positive {
+  color: #34d399 !important;
+}
+
+body.dark-mode .breakdown-table td.negative {
+  color: #f87171 !important;
+}
+
+/* 6. AVG PROFIT MARGIN - Fix % visibility in dark mode */
+body.dark-mode .job-metric-card.margin .metric-value {
+  color: #1e293b !important;
+}
+
+/* Also fix the margin icon to be visible */
+body.dark-mode .job-metric-card.margin .metric-icon {
+  color: #1e293b !important;
+}
+
+/* 7. Key Metrics section title dark mode */
+body.dark-mode .job-key-metrics-section .section-title,
+body.dark-mode #jobBudgetsView .section-title {
+  color: #f1f5f9 !important;
+}
+
+/* 8. All metric values in dark mode */
+body.dark-mode .job-metric-card .metric-value {
+  color: #f1f5f9 !important;
+}
+
+body.dark-mode .job-metric-card .metric-label {
+  color: #94a3b8 !important;
+}
+
+/* Primary card stays white */
+body.dark-mode .job-metric-card.primary .metric-value,
+body.dark-mode .job-metric-card.primary .metric-label {
+  color: #ffffff !important;
+}
+
+/* Profit card green */
+body.dark-mode .job-metric-card.profit .metric-value:not(.negative) {
+  color: #34d399 !important;
+}
+
+body.dark-mode .job-metric-card.profit .metric-value.negative {
+  color: #f87171 !important;
+}
+
+/* Margin card - blue background needs dark text */
+body.dark-mode .job-metric-card.margin {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+}
+
+body.dark-mode .job-metric-card.margin .metric-label {
+  color: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* 9. Margin cells in tables - dark text on colored background */
+.margin-cell {
+  color: #1f2937 !important;
+  font-weight: 600;
+}
+
+body.dark-mode .margin-cell {
+  color: #1f2937 !important;
+}
+
+/* 10. Config panel elements in dark mode */
+body.dark-mode .job-budgets-controls .config-label {
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode .job-budgets-controls .checkbox-label {
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode .job-budgets-controls .filter-select {
+  color: #e2e8f0 !important;
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+/* 11. Search bar dark mode */
+body.dark-mode .job-search-input {
+  color: #e2e8f0 !important;
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+body.dark-mode .job-search-input::placeholder {
+  color: #64748b !important;
+}
+
+/* 12. Pagination dark mode */
+body.dark-mode .job-pagination .pagination-info,
+body.dark-mode .job-pagination .page-info {
+  color: #cbd5e1 !important;
+}
+
+body.dark-mode .pagination-btn {
+  color: #e2e8f0 !important;
+  background: #334155 !important;
+  border-color: #475569 !important;
+}
+
+body.dark-mode .pagination-btn:hover:not(:disabled) {
+  background: #475569 !important;
+}
+
+body.dark-mode .pagination-btn:disabled {
+  color: #64748b !important;
+  background: #1e293b !important;
+}
+
+body.dark-mode .page-size-select {
+  color: #e2e8f0 !important;
+  background: #334155 !important;
+  border-color: #475569 !important;
+}
