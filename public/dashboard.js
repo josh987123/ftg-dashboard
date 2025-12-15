@@ -11667,6 +11667,19 @@ function populateJobFilters() {
   }
 }
 
+function getMarginColor(margin) {
+  // Returns background color based on profit margin
+  // High margins (30%+) = green, 0% = yellow, negative = pinkish red
+  if (margin >= 30) return 'rgba(16, 185, 129, 0.4)'; // Strong green
+  if (margin >= 20) return 'rgba(16, 185, 129, 0.3)'; // Medium green
+  if (margin >= 10) return 'rgba(16, 185, 129, 0.2)'; // Light green
+  if (margin >= 5) return 'rgba(234, 179, 8, 0.2)'; // Light yellow-green
+  if (margin >= 0) return 'rgba(234, 179, 8, 0.3)'; // Yellow
+  if (margin >= -10) return 'rgba(239, 68, 68, 0.2)'; // Light pinkish red
+  if (margin >= -20) return 'rgba(239, 68, 68, 0.3)'; // Medium pinkish red
+  return 'rgba(239, 68, 68, 0.4)'; // Strong pinkish red
+}
+
 function getJobStatusLabel(status) {
   const statusMap = {
     'A': { label: 'Active', class: 'active' },
@@ -11902,6 +11915,8 @@ function renderJobBudgetsTable() {
   tbody.innerHTML = pageData.map(job => {
     const status = getJobStatusLabel(job.job_status);
     const profitClass = job.estimated_profit >= 0 ? 'positive' : 'negative';
+    const margin = job.revised_contract ? (job.estimated_profit / job.revised_contract) * 100 : 0;
+    const marginColor = getMarginColor(margin);
     
     return `<tr>
       <td>${job.job_no}</td>
@@ -11916,6 +11931,7 @@ function renderJobBudgetsTable() {
       <td class="number-col cost-detail-col ${costHidden}">${formatCurrency(job.tot_cost_adj)}</td>
       <td class="number-col revised-cost-col">${formatCurrency(job.revised_cost)}</td>
       <td class="number-col ${profitClass}">${formatCurrency(job.estimated_profit)}</td>
+      <td class="number-col" style="background-color: ${marginColor}">${margin.toFixed(1)}%</td>
     </tr>`;
   }).join('');
   
