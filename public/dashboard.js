@@ -11576,7 +11576,10 @@ function setupJobBudgetsEventListeners() {
   
   // Table header sorting
   document.querySelectorAll('.job-budgets-table th.sortable').forEach(th => {
-    th.addEventListener('click', () => {
+    th.addEventListener('click', (e) => {
+      // Don't sort if clicking on expand icon
+      if (e.target.classList.contains('expand-icon')) return;
+      
       const col = th.dataset.sort;
       if (jobBudgetsSortColumn === col) {
         jobBudgetsSortDirection = jobBudgetsSortDirection === 'asc' ? 'desc' : 'asc';
@@ -11586,6 +11589,22 @@ function setupJobBudgetsEventListeners() {
       }
       sortJobBudgets();
       renderJobBudgetsTable();
+    });
+  });
+  
+  // Expandable column toggles
+  document.querySelectorAll('.job-budgets-table .expand-icon').forEach(icon => {
+    icon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const type = icon.dataset.expand;
+      const detailClass = type === 'contract' ? 'contract-detail-col' : 'cost-detail-col';
+      
+      icon.classList.toggle('expanded');
+      
+      // Toggle visibility of detail columns
+      document.querySelectorAll(`.job-budgets-table .${detailClass}`).forEach(el => {
+        el.classList.toggle('hidden');
+      });
     });
   });
 }
@@ -11874,6 +11893,12 @@ function renderJobBudgetsTable() {
     return;
   }
   
+  // Check if columns are expanded
+  const contractExpanded = document.querySelector('.expand-icon[data-expand="contract"]')?.classList.contains('expanded');
+  const costExpanded = document.querySelector('.expand-icon[data-expand="cost"]')?.classList.contains('expanded');
+  const contractHidden = contractExpanded ? '' : 'hidden';
+  const costHidden = costExpanded ? '' : 'hidden';
+  
   tbody.innerHTML = pageData.map(job => {
     const status = getJobStatusLabel(job.job_status);
     const profitClass = job.estimated_profit >= 0 ? 'positive' : 'negative';
@@ -11884,11 +11909,11 @@ function renderJobBudgetsTable() {
       <td>${job.customer_name || ''}</td>
       <td><span class="job-status-badge ${status.class}">${status.label}</span></td>
       <td>${job.project_manager_name || ''}</td>
-      <td class="number-col">${formatCurrency(job.original_contract)}</td>
-      <td class="number-col">${formatCurrency(job.tot_income_adj)}</td>
+      <td class="number-col contract-detail-col ${contractHidden}">${formatCurrency(job.original_contract)}</td>
+      <td class="number-col contract-detail-col ${contractHidden}">${formatCurrency(job.tot_income_adj)}</td>
       <td class="number-col revised-contract-col">${formatCurrency(job.revised_contract)}</td>
-      <td class="number-col">${formatCurrency(job.original_cost)}</td>
-      <td class="number-col">${formatCurrency(job.tot_cost_adj)}</td>
+      <td class="number-col cost-detail-col ${costHidden}">${formatCurrency(job.original_cost)}</td>
+      <td class="number-col cost-detail-col ${costHidden}">${formatCurrency(job.tot_cost_adj)}</td>
       <td class="number-col revised-cost-col">${formatCurrency(job.revised_cost)}</td>
       <td class="number-col ${profitClass}">${formatCurrency(job.estimated_profit)}</td>
     </tr>`;

@@ -7693,3 +7693,37 @@ body.dark-mode .breakdown-table tbody tr:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* Expandable Columns */
+.job-budgets-table .hidden {
+  display: none;
+}
+
+.job-budgets-table .expand-icon {
+  cursor: pointer;
+  font-size: 10px;
+  color: #6b7280;
+  margin-right: 4px;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.job-budgets-table .expand-icon:hover {
+  color: #3b82f6;
+}
+
+.job-budgets-table .expand-icon.expanded {
+  transform: rotate(90deg);
+}
+
+body.dark-mode .job-budgets-table .expand-icon {
+  color: #9ca3af;
+}
+
+body.dark-mode .job-budgets-table .expand-icon:hover {
+  color: #60a5fa;
+}
+
+.expandable-col {
+  cursor: pointer;
+}
