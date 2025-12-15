@@ -66,6 +66,44 @@ const debouncedRenderCashChart = debounce(() => {
 }, 150);
 
 /* ------------------------------------------------------------
+   AUTO-SIZE FIRST COLUMN ON MOBILE
+   Dynamically sizes sticky first column based on content width
+------------------------------------------------------------ */
+function autoSizeFirstColumn(tableId) {
+  if (window.innerWidth > 768) return;
+  
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  
+  const firstCells = table.querySelectorAll("tbody tr td:first-child");
+  if (firstCells.length === 0) return;
+  
+  let maxWidth = 0;
+  const tempSpan = document.createElement("span");
+  tempSpan.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;font:inherit;padding:0;";
+  document.body.appendChild(tempSpan);
+  
+  firstCells.forEach(cell => {
+    const text = cell.textContent.trim();
+    const indent = cell.style.paddingLeft ? parseInt(cell.style.paddingLeft) : 0;
+    tempSpan.style.font = window.getComputedStyle(cell).font;
+    tempSpan.textContent = text;
+    const textWidth = tempSpan.offsetWidth + indent + 24;
+    maxWidth = Math.max(maxWidth, textWidth);
+  });
+  
+  document.body.removeChild(tempSpan);
+  
+  const finalWidth = Math.min(Math.max(maxWidth, 100), 200);
+  
+  table.querySelectorAll("th:first-child, td:first-child").forEach(cell => {
+    cell.style.minWidth = finalWidth + "px";
+    cell.style.maxWidth = finalWidth + "px";
+    cell.style.width = finalWidth + "px";
+  });
+}
+
+/* ------------------------------------------------------------
    ANIMATED NUMBER COUNTER UTILITY
 ------------------------------------------------------------ */
 function animateValue(element, start, end, duration, formatter) {
@@ -7533,6 +7571,8 @@ function renderIncomeStatement() {
       footnote.classList.add("hidden");
     }
   }
+  
+  setTimeout(() => autoSizeFirstColumn("incomeStatementTable"), 50);
 }
 
 function renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody) {
@@ -8507,6 +8547,7 @@ function renderBalanceSheet() {
   
   tbody.innerHTML = bodyHtml;
   attachBSToggleListeners();
+  setTimeout(() => autoSizeFirstColumn("balanceSheetTable"), 50);
 }
 
 function formatBSNumber(value) {
@@ -9621,6 +9662,7 @@ function renderCashFlowStatement(skipDetailLevelReset = false) {
   
   tbody.innerHTML = bodyHtml;
   attachCFToggleListeners();
+  setTimeout(() => autoSizeFirstColumn("cashFlowTable"), 50);
   
   const now = new Date();
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
