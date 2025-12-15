@@ -11889,7 +11889,7 @@ function renderJobBudgetsTable() {
       <td class="number-col revised-contract-col">${formatCurrency(job.revised_contract)}</td>
       <td class="number-col">${formatCurrency(job.original_cost)}</td>
       <td class="number-col">${formatCurrency(job.tot_cost_adj)}</td>
-      <td class="number-col">${formatCurrency(job.revised_cost)}</td>
+      <td class="number-col revised-cost-col">${formatCurrency(job.revised_cost)}</td>
       <td class="number-col ${profitClass}">${formatCurrency(job.estimated_profit)}</td>
     </tr>`;
   }).join('');
