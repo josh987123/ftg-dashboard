@@ -3475,6 +3475,21 @@ function setupExportButtons() {
       openScheduleEmailModal();
     };
   }
+  
+  // Desktop ribbon buttons
+  const ribbonPrint = document.getElementById("exportPrintBtnRibbon");
+  const ribbonPdf = document.getElementById("exportPdfBtnRibbon");
+  const ribbonCsv = document.getElementById("exportCsvBtnRibbon");
+  const ribbonExcel = document.getElementById("exportExcelBtnRibbon");
+  const ribbonEmail = document.getElementById("exportEmailBtnRibbon");
+  const ribbonSchedule = document.getElementById("scheduleEmailBtnRibbon");
+  
+  if (ribbonPrint) ribbonPrint.onclick = () => universalPrint();
+  if (ribbonPdf) ribbonPdf.onclick = () => universalExportToPdf();
+  if (ribbonCsv) ribbonCsv.onclick = () => universalExportToCsv();
+  if (ribbonExcel) ribbonExcel.onclick = () => universalExportToExcel();
+  if (ribbonEmail) ribbonEmail.onclick = () => openEmailModal();
+  if (ribbonSchedule) ribbonSchedule.onclick = () => openScheduleEmailModal();
 }
 
 /* ------------------------------------------------------------

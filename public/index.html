@@ -486,9 +486,37 @@
 
     <!-- MAIN CONTENT -->
     <main class="content">
-      <!-- Export Dropdown - positioned top right of content -->
-      <div class="content-export-dropdown">
-        <div class="export-dropdown">
+      <!-- Export Ribbon (Desktop) / Dropdown (Mobile) -->
+      <div class="content-export-area">
+        <!-- Desktop Ribbon -->
+        <div class="export-ribbon">
+          <button id="exportPrintBtnRibbon" class="ribbon-btn" title="Print">
+            <span class="ribbon-icon">🖨️</span>
+            <span class="ribbon-label">Print</span>
+          </button>
+          <button id="exportPdfBtnRibbon" class="ribbon-btn" title="PDF">
+            <span class="ribbon-icon">📄</span>
+            <span class="ribbon-label">PDF</span>
+          </button>
+          <button id="exportCsvBtnRibbon" class="ribbon-btn" title="CSV">
+            <span class="ribbon-icon">📊</span>
+            <span class="ribbon-label">CSV</span>
+          </button>
+          <button id="exportExcelBtnRibbon" class="ribbon-btn" title="Excel">
+            <span class="ribbon-icon">📗</span>
+            <span class="ribbon-label">Excel</span>
+          </button>
+          <button id="exportEmailBtnRibbon" class="ribbon-btn" title="Email">
+            <span class="ribbon-icon">📧</span>
+            <span class="ribbon-label">Email</span>
+          </button>
+          <button id="scheduleEmailBtnRibbon" class="ribbon-btn" title="Schedule">
+            <span class="ribbon-icon">📅</span>
+            <span class="ribbon-label">Schedule</span>
+          </button>
+        </div>
+        <!-- Mobile Dropdown -->
+        <div class="export-dropdown mobile-only">
           <button id="exportDropdownBtn" class="export-dropdown-btn" title="Export options">⬇️</button>
           <div id="exportDropdownMenu" class="dropdown-menu hidden">
             <button id="exportPrintBtn" class="dropdown-item">🖨️ Print</button>

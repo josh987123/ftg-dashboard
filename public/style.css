@@ -845,15 +845,64 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   position: relative;
 }
 
-/* Export dropdown positioned top right of content area */
-.content-export-dropdown {
+/* Export area positioned top right of content area */
+.content-export-area {
   position: absolute;
   top: 30px;
   right: 30px;
   z-index: 100;
 }
 
-.content-export-dropdown .export-dropdown-btn {
+/* Desktop Export Ribbon */
+.export-ribbon {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.ribbon-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  min-width: 50px;
+}
+
+.ribbon-btn:hover {
+  background: var(--border-primary);
+}
+
+.ribbon-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.ribbon-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.ribbon-btn:hover .ribbon-label {
+  color: var(--text-primary);
+}
+
+/* Mobile dropdown - hidden on desktop */
+.export-dropdown.mobile-only {
+  display: none;
+}
+
+.content-export-area .export-dropdown-btn {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-secondary);
   color: var(--text-primary);
@@ -868,12 +917,12 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.content-export-dropdown .export-dropdown-btn:hover {
+.content-export-area .export-dropdown-btn:hover {
   background: var(--border-primary);
   border-color: var(--border-tertiary);
 }
 
-.content-export-dropdown .dropdown-menu {
+.content-export-area .dropdown-menu {
   position: absolute;
   top: 100%;
   right: 0;
@@ -885,9 +934,18 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     padding: 20px 16px;
   }
   
-  .content-export-dropdown {
+  .content-export-area {
     top: 20px;
     right: 16px;
+  }
+  
+  /* Hide ribbon on mobile, show dropdown */
+  .export-ribbon {
+    display: none;
+  }
+  
+  .export-dropdown.mobile-only {
+    display: block;
   }
 }
 
@@ -3017,7 +3075,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   .mobile-menu-btn,
   .logout-btn,
   .export-dropdown,
-  .content-export-dropdown,
+  .content-export-area,
   .rev-controls,
   .export-bar,
   .config-panel,
