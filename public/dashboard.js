@@ -11528,6 +11528,14 @@ function initJobBudgets() {
     return;
   }
   
+  // Open config panel by default for Job Budgets
+  const configHeader = document.querySelector('#jobBudgets .config-header');
+  const configBody = document.getElementById('jobBudgetsConfigBody');
+  if (configHeader && configBody) {
+    configHeader.classList.remove('collapsed');
+    configBody.classList.remove('collapsed');
+  }
+  
   loadJobBudgetsData();
   setupJobBudgetsEventListeners();
   jobBudgetsInitialized = true;

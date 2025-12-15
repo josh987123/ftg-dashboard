@@ -7554,9 +7554,9 @@ body.dark-mode .job-metric-card .metric-label {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   flex: 0 0 auto;
-  min-width: 320px;
-  max-width: 420px;
-  overflow: hidden;
+  min-width: 380px;
+  max-width: 480px;
+  overflow: visible;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -7582,8 +7582,8 @@ body.dark-mode .breakdown-title {
 }
 
 .breakdown-table-wrapper {
-  max-height: 280px;
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
 }
 
 .breakdown-table {
@@ -7969,15 +7969,16 @@ body.dark-mode .job-status-badge.overhead {
 
 /* Breakdown Chart Wrapper */
 .breakdown-chart-wrapper {
-  height: 160px;
+  height: 180px;
   margin-bottom: 12px;
+  padding: 8px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .breakdown-chart-wrapper canvas {
-  max-height: 160px;
+  max-height: 180px;
 }
 
 /* Child nav items in Financials and Jobs - blue background */
