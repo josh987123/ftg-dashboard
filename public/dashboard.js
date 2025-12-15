@@ -836,43 +836,8 @@ function setupDarkModeToggle() {
 }
 
 function applyJobBudgetsDarkModeStyles(theme) {
-  const isDark = theme === "dark";
-  const textColor = isDark ? "#ffffff" : "#374151";
-  const labelColor = isDark ? "#d1d5db" : "#6b7280";
-  
-  // Fix "Job Status:" label
-  const configLabels = document.querySelectorAll(".config-label");
-  configLabels.forEach(el => {
-    el.style.color = textColor;
-  });
-  
-  // Fix "Key Metrics" section title
-  const sectionTitles = document.querySelectorAll(".job-key-metrics-section .section-title");
-  sectionTitles.forEach(el => {
-    el.style.color = textColor;
-  });
-  
-  // Fix metric icon (%) in Avg Profit Margin
-  const marginCard = document.querySelector(".job-metric-card.margin .metric-icon");
-  if (marginCard) {
-    marginCard.style.color = isDark ? "#1e3a5f" : "#1e3a5f";
-  }
-  
-  // Fix breakdown table values
-  const breakdownCells = document.querySelectorAll(".breakdown-table td");
-  breakdownCells.forEach(el => {
-    if (!el.classList.contains("margin-cell")) {
-      el.style.color = textColor;
-    }
-  });
-  
-  // Fix job table cells
-  const jobTableCells = document.querySelectorAll("#jobBudgetsTable td");
-  jobTableCells.forEach(el => {
-    if (!el.classList.contains("margin-cell") && !el.classList.contains("profit-cell")) {
-      el.style.color = textColor;
-    }
-  });
+  // This function is now a no-op - styles handled by CSS
+  // Keeping function to avoid errors from existing calls
 }
 
 function getChartThemeColors() {

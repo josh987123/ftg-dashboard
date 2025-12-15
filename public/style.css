@@ -8782,3 +8782,92 @@ body.dark-mode .action-btn.warning {
 body.dark-mode .action-btn.success {
   background: #10b981;
 }
+
+/* ============================================================
+   JOB BUDGETS - LIGHT AND DARK MODE TEXT COLORS (FINAL FIX)
+   ============================================================ */
+
+/* LIGHT MODE (default) - Black/dark text */
+#jobBudgets .config-label {
+  color: #374151 !important;
+}
+
+#jobBudgets .section-title {
+  color: #1e293b !important;
+}
+
+#jobBudgets .breakdown-table td {
+  color: #374151 !important;
+}
+
+#jobBudgets .breakdown-table th {
+  color: #374151 !important;
+}
+
+#jobBudgets .job-budgets-table td {
+  color: #374151 !important;
+}
+
+#jobBudgets .job-budgets-table th {
+  color: #374151 !important;
+}
+
+#jobBudgets .checkbox-label {
+  color: #374151 !important;
+}
+
+/* Keep margin cells dark for readability on colored backgrounds */
+#jobBudgets .margin-cell {
+  color: #1f2937 !important;
+}
+
+/* DARK MODE - White/light text */
+[data-theme="dark"] #jobBudgets .config-label {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] #jobBudgets .section-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] #jobBudgets .breakdown-table td {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] #jobBudgets .breakdown-table th {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] #jobBudgets .job-budgets-table td {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] #jobBudgets .job-budgets-table th {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] #jobBudgets .checkbox-label {
+  color: #e2e8f0 !important;
+}
+
+/* Keep margin cells dark even in dark mode for readability */
+[data-theme="dark"] #jobBudgets .margin-cell {
+  color: #1f2937 !important;
+}
+
+/* Profit cells should show green/red */
+#jobBudgets .job-budgets-table td.positive {
+  color: #10b981 !important;
+}
+
+#jobBudgets .job-budgets-table td.negative {
+  color: #dc2626 !important;
+}
+
+#jobBudgets .breakdown-table td.positive {
+  color: #10b981 !important;
+}
+
+#jobBudgets .breakdown-table td.negative {
+  color: #dc2626 !important;
+}
