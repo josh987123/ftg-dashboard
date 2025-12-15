@@ -5282,6 +5282,10 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 
 .transaction-table .txn-description {
   color: #374151;
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 300px;
+  line-height: 1.4;
 }
 
 .transaction-table .txn-amount {
