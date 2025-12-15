@@ -11852,6 +11852,7 @@ function renderPmDonutChart() {
   }
   
   const isDarkMode = document.body.classList.contains('dark-mode');
+  const isMobile = window.innerWidth <= 768;
   
   if (pmDonutChart) {
     pmDonutChart.destroy();
@@ -11873,12 +11874,12 @@ function renderPmDonutChart() {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'right',
+          position: isMobile ? 'bottom' : 'right',
           labels: {
             color: isDarkMode ? '#e2e8f0' : '#374151',
-            font: { size: 11 },
-            boxWidth: 12,
-            padding: 8
+            font: { size: isMobile ? 10 : 11 },
+            boxWidth: isMobile ? 10 : 12,
+            padding: isMobile ? 6 : 8
           }
         },
         tooltip: {
@@ -11926,6 +11927,7 @@ function renderCustomerDonutChart() {
   }
   
   const isDarkMode = document.body.classList.contains('dark-mode');
+  const isMobile = window.innerWidth <= 768;
   
   if (customerDonutChart) {
     customerDonutChart.destroy();
@@ -11947,12 +11949,12 @@ function renderCustomerDonutChart() {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'right',
+          position: isMobile ? 'bottom' : 'right',
           labels: {
             color: isDarkMode ? '#e2e8f0' : '#374151',
-            font: { size: 11 },
-            boxWidth: 12,
-            padding: 8
+            font: { size: isMobile ? 10 : 11 },
+            boxWidth: isMobile ? 10 : 12,
+            padding: isMobile ? 6 : 8
           }
         },
         tooltip: {

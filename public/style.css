@@ -8553,11 +8553,26 @@ body.dark-mode .chart-legend-item {
 @media (max-width: 900px) {
   .breakdown-container.stacked {
     flex-direction: column;
+    width: 100%;
+    max-width: 100%;
   }
   
   .breakdown-container.stacked .breakdown-card {
     max-width: 100%;
     width: 100%;
+    min-height: 320px;
+  }
+}
+
+/* Extra small screens - ensure full width */
+@media (max-width: 480px) {
+  .breakdown-container.stacked .breakdown-card {
+    min-height: 350px;
+    padding: 12px;
+  }
+  
+  .breakdown-card .chart-container {
+    min-height: 280px;
   }
 }
 
