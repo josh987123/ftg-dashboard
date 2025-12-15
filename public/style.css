@@ -7434,8 +7434,8 @@ body.dark-mode .job-key-metrics-section .section-title {
 }
 
 .job-metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: inline-flex;
+  flex-wrap: wrap;
   gap: 16px;
 }
 
@@ -7443,12 +7443,13 @@ body.dark-mode .job-key-metrics-section .section-title {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 20px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: transform 0.2s, box-shadow 0.2s;
+  flex: 0 0 auto;
 }
 
 .job-metric-card:hover {
@@ -7489,14 +7490,14 @@ body.dark-mode .job-metric-card {
 }
 
 .metric-icon {
-  font-size: 28px;
-  width: 50px;
-  height: 50px;
+  font-size: 22px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f1f5f9;
-  border-radius: 12px;
+  border-radius: 10px;
   flex-shrink: 0;
 }
 
@@ -7514,11 +7515,11 @@ body.dark-mode .metric-icon {
 }
 
 .job-metric-card .metric-value {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: #1e293b;
   line-height: 1.2;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 body.dark-mode .job-metric-card .metric-value {
@@ -7543,8 +7544,8 @@ body.dark-mode .job-metric-card .metric-label {
 }
 
 .breakdown-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: inline-flex;
+  flex-wrap: wrap;
   gap: 20px;
 }
 
@@ -7552,6 +7553,9 @@ body.dark-mode .job-metric-card .metric-label {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
+  flex: 0 0 auto;
+  min-width: 320px;
+  max-width: 420px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
@@ -7965,15 +7969,15 @@ body.dark-mode .job-status-badge.overhead {
 
 /* Breakdown Chart Wrapper */
 .breakdown-chart-wrapper {
-  height: 200px;
-  margin-bottom: 16px;
+  height: 160px;
+  margin-bottom: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .breakdown-chart-wrapper canvas {
-  max-height: 200px;
+  max-height: 160px;
 }
 
 /* Child nav items in Financials and Jobs - blue background */
