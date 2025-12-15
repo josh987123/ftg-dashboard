@@ -6882,6 +6882,74 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   background: var(--border-secondary);
 }
 
+.btn-danger {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+.btn-danger:disabled {
+  background: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Role Reassignment Modal */
+.reassign-message {
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.reassign-users-list {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.reassign-user-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.reassign-user-item:last-child {
+  border-bottom: none;
+}
+
+.reassign-user-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.reassign-user-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
 /* Responsive admin */
 @media (max-width: 768px) {
   .admin-toolbar {

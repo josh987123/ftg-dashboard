@@ -1826,6 +1826,32 @@
     </div>
   </div>
 
+  <!-- Role Reassignment Modal -->
+  <div id="roleReassignModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Reassign Users</h3>
+        <button class="modal-close" onclick="closeReassignModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="reassignMessage" class="reassign-message"></p>
+        <div id="reassignUsersList" class="reassign-users-list"></div>
+        <input type="hidden" id="reassignRoleId" value="">
+        <div class="form-row">
+          <label for="reassignNewRole">Reassign users to:</label>
+          <select id="reassignNewRole">
+            <option value="">Select new role...</option>
+          </select>
+        </div>
+        <div id="reassignModalError" class="form-error"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeReassignModal()">Cancel</button>
+        <button class="btn-danger" id="confirmReassignBtn" onclick="confirmReassignAndDelete()">Reassign & Delete Role</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Chart Fullscreen Modal -->
   <div id="chartFullscreenModal" class="chart-fullscreen-modal hidden">
     <div class="chart-fullscreen-header">

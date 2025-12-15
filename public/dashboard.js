@@ -11858,7 +11858,7 @@ async function saveRole() {
 }
 
 async function deleteRole(roleId, roleName) {
-  if (!confirm(`Are you sure you want to delete the "${roleName}" role? Any users with this role will need to be reassigned first.`)) return;
+  if (!confirm(`Are you sure you want to delete the "${roleName}" role?`)) return;
   
   try {
     const resp = await fetch(`/api/admin/roles/${roleId}`, {
@@ -11867,12 +11867,86 @@ async function deleteRole(roleId, roleName) {
     });
     
     const result = await resp.json();
-    if (!result.success) throw new Error(result.error);
+    
+    if (!result.success) {
+      if (result.error === 'users_assigned') {
+        openReassignModal(roleId, roleName, result.users, result.availableRoles);
+        return;
+      }
+      throw new Error(result.error);
+    }
     
     loadRoles();
     loadRolesForSelect();
   } catch (err) {
     alert('Error: ' + err.message);
+  }
+}
+
+function openReassignModal(roleId, roleName, users, availableRoles) {
+  const modal = document.getElementById('roleReassignModal');
+  const message = document.getElementById('reassignMessage');
+  const usersList = document.getElementById('reassignUsersList');
+  const roleSelect = document.getElementById('reassignNewRole');
+  const error = document.getElementById('reassignModalError');
+  
+  document.getElementById('reassignRoleId').value = roleId;
+  error.textContent = '';
+  
+  const userCount = users.length;
+  message.innerHTML = `The <strong>"${escapeHtml(roleName)}"</strong> role has <strong>${userCount} user${userCount > 1 ? 's' : ''}</strong> assigned. Please select a new role for them before deleting.`;
+  
+  usersList.innerHTML = users.map(u => `
+    <div class="reassign-user-item">
+      <div class="reassign-user-icon">${escapeHtml(u.username.charAt(0).toUpperCase())}</div>
+      <span class="reassign-user-name">${escapeHtml(u.username)}</span>
+    </div>
+  `).join('');
+  
+  roleSelect.innerHTML = '<option value="">Select new role...</option>' + 
+    availableRoles.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+  
+  modal.classList.remove('hidden');
+}
+
+function closeReassignModal() {
+  document.getElementById('roleReassignModal').classList.add('hidden');
+}
+
+async function confirmReassignAndDelete() {
+  const roleId = document.getElementById('reassignRoleId').value;
+  const newRoleId = document.getElementById('reassignNewRole').value;
+  const error = document.getElementById('reassignModalError');
+  const btn = document.getElementById('confirmReassignBtn');
+  
+  if (!newRoleId) {
+    error.textContent = 'Please select a role to reassign users to';
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = 'Processing...';
+  error.textContent = '';
+  
+  try {
+    const resp = await fetch(`/api/admin/roles/${roleId}/reassign-and-delete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ newRoleId: parseInt(newRoleId) })
+    });
+    
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.error);
+    
+    closeReassignModal();
+    loadRoles();
+    loadRolesForSelect();
+    loadUsers();
+  } catch (err) {
+    error.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Reassign & Delete Role';
   }
 }
 
