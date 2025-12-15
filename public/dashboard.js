@@ -11979,7 +11979,24 @@ function renderJobBreakdownByPm() {
     return;
   }
   
-  tbody.innerHTML = sorted.map(row => {
+  // Top 10 + Other (like the donut chart)
+  const top10 = sorted.slice(0, 10);
+  const others = sorted.slice(10);
+  
+  let displayRows = [...top10];
+  if (others.length > 0) {
+    const otherData = others.reduce((acc, row) => ({
+      name: 'Other',
+      jobs: acc.jobs + row.jobs,
+      contract: acc.contract + row.contract,
+      cost: acc.cost + row.cost,
+      profit: acc.profit + row.profit
+    }), { name: 'Other', jobs: 0, contract: 0, cost: 0, profit: 0 });
+    otherData.margin = otherData.contract > 0 ? (otherData.profit / otherData.contract) * 100 : 0;
+    displayRows.push(otherData);
+  }
+  
+  tbody.innerHTML = displayRows.map(row => {
     const profitClass = row.profit >= 0 ? 'positive' : 'negative';
     const marginColor = getMarginColor(row.margin);
     return `<tr>
@@ -11988,7 +12005,7 @@ function renderJobBreakdownByPm() {
       <td class="number-col">${formatCurrencyCompact(row.contract)}</td>
       <td class="number-col">${formatCurrencyCompact(row.cost)}</td>
       <td class="number-col ${profitClass}">${formatCurrencyCompact(row.profit)}</td>
-      <td class="number-col" style="background-color: ${marginColor}">${row.margin.toFixed(1)}%</td>
+      <td class="number-col margin-cell" style="background-color: ${marginColor}">${row.margin.toFixed(1)}%</td>
     </tr>`;
   }).join('');
 }
@@ -12025,7 +12042,24 @@ function renderJobBreakdownByCustomer() {
     return;
   }
   
-  tbody.innerHTML = sorted.map(row => {
+  // Top 10 + Other (like the donut chart)
+  const top10 = sorted.slice(0, 10);
+  const others = sorted.slice(10);
+  
+  let displayRows = [...top10];
+  if (others.length > 0) {
+    const otherData = others.reduce((acc, row) => ({
+      name: 'Other',
+      jobs: acc.jobs + row.jobs,
+      contract: acc.contract + row.contract,
+      cost: acc.cost + row.cost,
+      profit: acc.profit + row.profit
+    }), { name: 'Other', jobs: 0, contract: 0, cost: 0, profit: 0 });
+    otherData.margin = otherData.contract > 0 ? (otherData.profit / otherData.contract) * 100 : 0;
+    displayRows.push(otherData);
+  }
+  
+  tbody.innerHTML = displayRows.map(row => {
     const profitClass = row.profit >= 0 ? 'positive' : 'negative';
     const marginColor = getMarginColor(row.margin);
     return `<tr>
@@ -12034,7 +12068,7 @@ function renderJobBreakdownByCustomer() {
       <td class="number-col">${formatCurrencyCompact(row.contract)}</td>
       <td class="number-col">${formatCurrencyCompact(row.cost)}</td>
       <td class="number-col ${profitClass}">${formatCurrencyCompact(row.profit)}</td>
-      <td class="number-col" style="background-color: ${marginColor}">${row.margin.toFixed(1)}%</td>
+      <td class="number-col margin-cell" style="background-color: ${marginColor}">${row.margin.toFixed(1)}%</td>
     </tr>`;
   }).join('');
 }

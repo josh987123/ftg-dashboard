@@ -750,7 +750,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 .nav-children.expanded {
-  max-height: 200px;
+  max-height: 500px;
 }
 
 .nav-item.nav-child {
@@ -8218,16 +8218,30 @@ body.dark-mode .job-budgets-table td.margin-cell {
   font-weight: 600;
 }
 
-/* Stacked breakdown container - vertical layout */
+/* Breakdown container - side by side on desktop */
 .breakdown-container.stacked {
-  flex-direction: column;
-  gap: 16px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .breakdown-container.stacked .breakdown-card {
-  min-width: auto;
-  max-width: 600px;
-  width: 100%;
+  flex: 1 1 400px;
+  min-width: 380px;
+  max-width: 550px;
+}
+
+/* Stack on mobile */
+@media (max-width: 900px) {
+  .breakdown-container.stacked {
+    flex-direction: column;
+  }
+  
+  .breakdown-container.stacked .breakdown-card {
+    min-width: auto;
+    max-width: 100%;
+    width: 100%;
+  }
 }
 
 /* Chart subtitle as the main header now */
@@ -8494,4 +8508,23 @@ body.dark-mode .breakdown-card > .chart-subtitle {
     flex: 1 1 45%;
     min-width: 280px;
   }
+}
+
+/* Margin cell text should be dark/black for readability on colored backgrounds */
+.margin-cell,
+.breakdown-table .margin-cell,
+.job-budgets-table .margin-cell {
+  color: #1f2937 !important;
+  font-weight: 600;
+}
+
+body.dark-mode .margin-cell,
+body.dark-mode .breakdown-table .margin-cell,
+body.dark-mode .job-budgets-table .margin-cell {
+  color: #1f2937 !important;
+}
+
+/* Avg Profit Margin metric card in dark mode */
+body.dark-mode .job-metric-card.margin .metric-value {
+  color: #60a5fa !important;
 }
