@@ -1307,6 +1307,44 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 
 .loading-spinner.hidden { display:none; }
 
+.table-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--card-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.table-loading-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.table-loading-overlay .spinner {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+.table-loading-overlay .loading-text {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.table-container-relative {
+  position: relative;
+  min-height: 200px;
+}
+
 .spinner {
   width:40px;
   height:40px;

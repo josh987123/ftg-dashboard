@@ -7567,44 +7567,83 @@ function updateReportHeader(statementType) {
   }
 }
 
+function showTableLoading(tableId, message = 'Loading...') {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  
+  const container = table.closest('.is-table-box, .bs-table-box, .cf-table-box') || table.parentElement;
+  if (!container) return;
+  
+  container.style.position = 'relative';
+  
+  // Remove existing overlay if present
+  const existing = container.querySelector('.table-loading-overlay');
+  if (existing) existing.remove();
+  
+  const overlay = document.createElement('div');
+  overlay.className = 'table-loading-overlay';
+  overlay.innerHTML = `<div class="spinner"></div><div class="loading-text">${message}</div>`;
+  container.appendChild(overlay);
+}
+
+function hideTableLoading(tableId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  
+  const container = table.closest('.is-table-box, .bs-table-box, .cf-table-box') || table.parentElement;
+  if (!container) return;
+  
+  const overlay = container.querySelector('.table-loading-overlay');
+  if (overlay) {
+    overlay.classList.add('fade-out');
+    setTimeout(() => overlay.remove(), 300);
+  }
+}
+
 function renderIncomeStatement() {
-  const viewMode = document.getElementById("isViewMode").value;
-  const periodType = document.getElementById("isPeriodType").value;
-  const periodValue = document.getElementById("isPeriodSelect").value;
-  const groups = isAccountGroups.income_statement.groups;
-  const thead = document.getElementById("isTableHead");
-  const tbody = document.getElementById("isTableBody");
-  const footnote = document.getElementById("isPartialFootnote");
+  showTableLoading('incomeStatementTable', 'Updating...');
   
-  updateReportHeader("is");
-  
-  let hasPartialPeriod = false;
-  
-  if (viewMode === "matrix") {
-    const showSubtotal = document.getElementById("isShowSubtotal").checked;
-    const yearStart = document.getElementById("isMatrixYearStart").value;
-    const yearEnd = document.getElementById("isMatrixYearEnd").value;
+  // Use requestAnimationFrame to allow loading indicator to show
+  requestAnimationFrame(() => {
+    const viewMode = document.getElementById("isViewMode").value;
+    const periodType = document.getElementById("isPeriodType").value;
+    const periodValue = document.getElementById("isPeriodSelect").value;
+    const groups = isAccountGroups.income_statement.groups;
+    const thead = document.getElementById("isTableHead");
+    const tbody = document.getElementById("isTableBody");
+    const footnote = document.getElementById("isPartialFootnote");
     
-    let selectedYear = periodValue;
+    updateReportHeader("is");
     
-    hasPartialPeriod = renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, showSubtotal, thead, tbody);
-  } else {
-    const compare = document.querySelector('input[name="isCompareRadio"]:checked')?.value || "none";
-    hasPartialPeriod = renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody);
-  }
-  
-  if (footnote) {
-    if (hasPartialPeriod) {
-      footnote.classList.remove("hidden");
+    let hasPartialPeriod = false;
+    
+    if (viewMode === "matrix") {
+      const showSubtotal = document.getElementById("isShowSubtotal").checked;
+      const yearStart = document.getElementById("isMatrixYearStart").value;
+      const yearEnd = document.getElementById("isMatrixYearEnd").value;
+      
+      let selectedYear = periodValue;
+      
+      hasPartialPeriod = renderMatrixView(groups, periodType, selectedYear, yearStart, yearEnd, showSubtotal, thead, tbody);
     } else {
-      footnote.classList.add("hidden");
+      const compare = document.querySelector('input[name="isCompareRadio"]:checked')?.value || "none";
+      hasPartialPeriod = renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody);
     }
-  }
-  
-  setTimeout(() => {
-    autoSizeFirstColumn("incomeStatementTable");
-    addResizeHandlesToTable("incomeStatementTable");
-  }, 50);
+    
+    if (footnote) {
+      if (hasPartialPeriod) {
+        footnote.classList.remove("hidden");
+      } else {
+        footnote.classList.add("hidden");
+      }
+    }
+    
+    setTimeout(() => {
+      autoSizeFirstColumn("incomeStatementTable");
+      addResizeHandlesToTable("incomeStatementTable");
+      hideTableLoading('incomeStatementTable');
+    }, 50);
+  });
 }
 
 function renderSinglePeriodView(groups, periodType, periodValue, compare, thead, tbody) {
@@ -8434,6 +8473,14 @@ function renderBalanceSheet() {
     return;
   }
   
+  showTableLoading('balanceSheetTable', 'Updating...');
+  
+  requestAnimationFrame(() => {
+    renderBalanceSheetContent();
+  });
+}
+
+function renderBalanceSheetContent() {
   const viewMode = document.getElementById("bsViewMode")?.value || "single";
   const detailLevel = document.querySelector('input[name="bsDetailLevel"]:checked')?.value || "summary";
   
@@ -8582,6 +8629,7 @@ function renderBalanceSheet() {
   setTimeout(() => {
     autoSizeFirstColumn("balanceSheetTable");
     addResizeHandlesToTable("balanceSheetTable");
+    hideTableLoading('balanceSheetTable');
   }, 50);
 }
 
@@ -8809,7 +8857,10 @@ function renderBalanceSheetMatrix() {
   
   tbody.innerHTML = bodyHtml;
   attachBSToggleListeners();
-  setTimeout(() => addResizeHandlesToTable("balanceSheetTable"), 50);
+  setTimeout(() => {
+    addResizeHandlesToTable("balanceSheetTable");
+    hideTableLoading('balanceSheetTable');
+  }, 50);
 }
 
 /* ============================================================
@@ -9494,6 +9545,14 @@ function renderCashFlowStatement(skipDetailLevelReset = false) {
     return;
   }
   
+  showTableLoading('cashFlowTable', 'Updating...');
+  
+  requestAnimationFrame(() => {
+    renderCashFlowContent(skipDetailLevelReset);
+  });
+}
+
+function renderCashFlowContent(skipDetailLevelReset = false) {
   const viewMode = document.getElementById("cfViewMode").value;
   const periodType = document.getElementById("cfPeriodType").value;
   const periodValue = document.getElementById("cfPeriodSelect").value;
@@ -9701,6 +9760,7 @@ function renderCashFlowStatement(skipDetailLevelReset = false) {
   setTimeout(() => {
     autoSizeFirstColumn("cashFlowTable");
     addResizeHandlesToTable("cashFlowTable");
+    hideTableLoading('cashFlowTable');
   }, 50);
   
   const now = new Date();
@@ -9886,7 +9946,10 @@ function renderCashFlowMatrix(skipDetailLevelReset = false) {
   
   tbody.innerHTML = bodyHtml;
   attachCFToggleListeners();
-  setTimeout(() => addResizeHandlesToTable("cashFlowTable"), 50);
+  setTimeout(() => {
+    addResizeHandlesToTable("cashFlowTable");
+    hideTableLoading('cashFlowTable');
+  }, 50);
 }
 
 function saveCashFlowConfig() {
@@ -11137,45 +11200,49 @@ function autoSizeColumns(tableId) {
   const tbody = table.querySelector('tbody');
   if (!tbody) return;
   
-  const tempSpan = document.createElement('span');
-  tempSpan.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:inherit;padding:0;';
-  document.body.appendChild(tempSpan);
-  
-  headers.forEach((th, idx) => {
-    let maxWidth = 0;
+  // Use requestAnimationFrame to avoid blocking
+  requestAnimationFrame(() => {
+    const tempSpan = document.createElement('span');
+    tempSpan.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:inherit;padding:0;';
+    document.body.appendChild(tempSpan);
     
-    // Measure header text
-    const headerText = th.textContent.replace(/[\u2195\u2194]/g, '').trim();
-    tempSpan.style.font = window.getComputedStyle(th).font;
-    tempSpan.style.fontWeight = 'bold';
-    tempSpan.textContent = headerText;
-    maxWidth = Math.max(maxWidth, tempSpan.offsetWidth + 40);
+    // Cache computed styles to reduce reflows
+    const headerFont = headers.length > 0 ? window.getComputedStyle(headers[0]).font : '13px Inter, sans-serif';
     
-    // Measure first 50 body cells for this column
-    const cells = tbody.querySelectorAll(`tr td:nth-child(${idx + 1})`);
-    const sampleSize = Math.min(cells.length, 50);
-    for (let i = 0; i < sampleSize; i++) {
-      const cell = cells[i];
-      const text = cell.textContent.trim();
-      const indent = cell.style.paddingLeft ? parseInt(cell.style.paddingLeft) : 0;
-      tempSpan.style.font = window.getComputedStyle(cell).font;
-      tempSpan.style.fontWeight = window.getComputedStyle(cell).fontWeight;
-      tempSpan.textContent = text;
-      const cellWidth = tempSpan.offsetWidth + indent + 24;
-      maxWidth = Math.max(maxWidth, cellWidth);
-    }
+    headers.forEach((th, idx) => {
+      let maxWidth = 0;
+      
+      // Measure header text
+      const headerText = th.textContent.replace(/[\u2195\u2194]/g, '').trim();
+      tempSpan.style.font = headerFont;
+      tempSpan.style.fontWeight = 'bold';
+      tempSpan.textContent = headerText;
+      maxWidth = Math.max(maxWidth, tempSpan.offsetWidth + 40);
+      
+      // Sample only first 10 rows for performance
+      const cells = tbody.querySelectorAll(`tr:not(.is-row-hidden) td:nth-child(${idx + 1})`);
+      const sampleSize = Math.min(cells.length, 10);
+      for (let i = 0; i < sampleSize; i++) {
+        const cell = cells[i];
+        const text = cell.textContent.trim();
+        const indent = cell.style.paddingLeft ? parseInt(cell.style.paddingLeft) : 0;
+        tempSpan.textContent = text;
+        const cellWidth = tempSpan.offsetWidth + indent + 24;
+        maxWidth = Math.max(maxWidth, cellWidth);
+      }
+      
+      // Apply constraints
+      const minWidth = idx === 0 ? 120 : 60;
+      const maxAllowed = idx === 0 ? 350 : 200;
+      const finalWidth = Math.min(Math.max(maxWidth, minWidth), maxAllowed);
+      
+      th.style.width = finalWidth + 'px';
+      th.style.minWidth = finalWidth + 'px';
+      th.style.maxWidth = finalWidth + 'px';
+    });
     
-    // Apply constraints
-    const minWidth = idx === 0 ? 120 : 60;
-    const maxAllowed = idx === 0 ? 350 : 200;
-    const finalWidth = Math.min(Math.max(maxWidth, minWidth), maxAllowed);
-    
-    th.style.width = finalWidth + 'px';
-    th.style.minWidth = finalWidth + 'px';
-    th.style.maxWidth = finalWidth + 'px';
+    document.body.removeChild(tempSpan);
   });
-  
-  document.body.removeChild(tempSpan);
 }
 
 function initTableColumnResize(table) {
