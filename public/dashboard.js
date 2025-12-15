@@ -867,6 +867,11 @@ function updateChartColorsForTheme(theme) {
       chart.update("none");
     });
   }
+  
+  // Re-render cash chart to update Total line color
+  if (typeof renderCashChart === 'function' && cashChartInstance) {
+    renderCashChart();
+  }
 }
 
 function setupMetricInfoButtons() {
@@ -10618,6 +10623,10 @@ function renderCashChart() {
     };
   });
   
+  // Get theme colors for the total line
+  const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark";
+  const totalLineColor = isDarkMode ? '#60a5fa' : '#1e3a5f';
+  
   // Add total line if enabled and multiple accounts
   if (showTotal && selectedAccounts.length > 1) {
     const totalData = dates.map(dateKey => {
@@ -10629,7 +10638,7 @@ function renderCashChart() {
       label: 'Total',
       data: totalData,
       type: 'line',
-      borderColor: '#1e3a5f',
+      borderColor: totalLineColor,
       backgroundColor: 'transparent',
       borderWidth: 2,
       pointRadius: showDataLabels ? 3 : 0,
@@ -10640,7 +10649,7 @@ function renderCashChart() {
         align: 'top',
         anchor: 'end',
         offset: 4,
-        color: '#1e3a5f',
+        color: isDarkMode ? '#ffffff' : '#1e3a5f',
         font: { weight: 'bold', size: 10 },
         formatter: (value) => {
           if (value === null || value === undefined) return '';
