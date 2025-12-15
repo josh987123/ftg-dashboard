@@ -11733,11 +11733,123 @@ function updateJobSummaryMetrics() {
   
   const profitEl = document.getElementById('jobTotalProfit');
   profitEl.textContent = formatCurrency(totalProfit);
-  profitEl.className = 'metric-value ' + (totalProfit >= 0 ? 'positive' : 'negative');
+  profitEl.className = 'metric-value ' + (totalProfit >= 0 ? '' : 'negative');
   
   const marginEl = document.getElementById('jobAvgMargin');
   marginEl.textContent = avgMargin.toFixed(1) + '%';
-  marginEl.className = 'metric-value ' + (avgMargin >= 0 ? 'positive' : 'negative');
+  marginEl.className = 'metric-value ' + (avgMargin >= 0 ? '' : 'negative');
+  
+  // Render breakdowns
+  renderJobBreakdowns();
+}
+
+function renderJobBreakdowns() {
+  renderJobBreakdownByPm();
+  renderJobBreakdownByCustomer();
+}
+
+function renderJobBreakdownByPm() {
+  const tbody = document.getElementById('jobPmBreakdownBody');
+  if (!tbody) return;
+  
+  // Aggregate by Project Manager
+  const pmMap = new Map();
+  jobBudgetsFiltered.forEach(job => {
+    const pm = job.project_manager_name || 'Unassigned';
+    if (!pmMap.has(pm)) {
+      pmMap.set(pm, { jobs: 0, contract: 0, cost: 0, profit: 0 });
+    }
+    const data = pmMap.get(pm);
+    data.jobs++;
+    data.contract += job.revised_contract;
+    data.cost += job.revised_cost;
+    data.profit += job.estimated_profit;
+  });
+  
+  // Sort by contract value descending
+  const sorted = [...pmMap.entries()]
+    .map(([pm, data]) => ({
+      name: pm,
+      ...data,
+      margin: data.contract > 0 ? (data.profit / data.contract) * 100 : 0
+    }))
+    .sort((a, b) => b.contract - a.contract);
+  
+  if (sorted.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">No data</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = sorted.map(row => {
+    const profitClass = row.profit >= 0 ? 'positive' : 'negative';
+    const marginClass = row.margin >= 0 ? 'positive' : 'negative';
+    return `<tr>
+      <td>${row.name}</td>
+      <td class="number-col">${row.jobs}</td>
+      <td class="number-col">${formatCurrencyCompact(row.contract)}</td>
+      <td class="number-col">${formatCurrencyCompact(row.cost)}</td>
+      <td class="number-col ${profitClass}">${formatCurrencyCompact(row.profit)}</td>
+      <td class="number-col ${marginClass}">${row.margin.toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderJobBreakdownByCustomer() {
+  const tbody = document.getElementById('jobCustomerBreakdownBody');
+  if (!tbody) return;
+  
+  // Aggregate by Customer
+  const custMap = new Map();
+  jobBudgetsFiltered.forEach(job => {
+    const cust = job.customer_name || 'Unknown';
+    if (!custMap.has(cust)) {
+      custMap.set(cust, { jobs: 0, contract: 0, cost: 0, profit: 0 });
+    }
+    const data = custMap.get(cust);
+    data.jobs++;
+    data.contract += job.revised_contract;
+    data.cost += job.revised_cost;
+    data.profit += job.estimated_profit;
+  });
+  
+  // Sort by contract value descending
+  const sorted = [...custMap.entries()]
+    .map(([cust, data]) => ({
+      name: cust,
+      ...data,
+      margin: data.contract > 0 ? (data.profit / data.contract) * 100 : 0
+    }))
+    .sort((a, b) => b.contract - a.contract);
+  
+  if (sorted.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">No data</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = sorted.map(row => {
+    const profitClass = row.profit >= 0 ? 'positive' : 'negative';
+    const marginClass = row.margin >= 0 ? 'positive' : 'negative';
+    return `<tr>
+      <td>${row.name}</td>
+      <td class="number-col">${row.jobs}</td>
+      <td class="number-col">${formatCurrencyCompact(row.contract)}</td>
+      <td class="number-col">${formatCurrencyCompact(row.cost)}</td>
+      <td class="number-col ${profitClass}">${formatCurrencyCompact(row.profit)}</td>
+      <td class="number-col ${marginClass}">${row.margin.toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+}
+
+function formatCurrencyCompact(value) {
+  const absValue = Math.abs(value);
+  const sign = value < 0 ? '-' : '';
+  if (absValue >= 1000000) {
+    return sign + '$' + (absValue / 1000000).toFixed(1) + 'M';
+  } else if (absValue >= 1000) {
+    return sign + '$' + (absValue / 1000).toFixed(0) + 'K';
+  } else {
+    return sign + '$' + absValue.toFixed(0);
+  }
 }
 
 function renderJobBudgetsTable() {

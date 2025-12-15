@@ -1569,27 +1569,91 @@
           <span class="job-search-icon">🔍</span>
         </div>
 
-        <!-- Summary Metrics -->
-        <div class="job-summary-metrics" id="jobSummaryMetrics">
-          <div class="summary-metric">
-            <div class="metric-label">Total Jobs</div>
-            <div class="metric-value" id="jobTotalCount">-</div>
+        <!-- Key Metrics Dashboard -->
+        <div class="job-key-metrics-section">
+          <h3 class="section-title">Key Metrics</h3>
+          <div class="job-metrics-grid">
+            <div class="job-metric-card primary">
+              <div class="metric-icon">📋</div>
+              <div class="metric-content">
+                <div class="metric-value" id="jobTotalCount">-</div>
+                <div class="metric-label">Total Jobs</div>
+              </div>
+            </div>
+            <div class="job-metric-card">
+              <div class="metric-icon">💰</div>
+              <div class="metric-content">
+                <div class="metric-value" id="jobTotalContract">-</div>
+                <div class="metric-label">Total Contract Value</div>
+              </div>
+            </div>
+            <div class="job-metric-card">
+              <div class="metric-icon">📊</div>
+              <div class="metric-content">
+                <div class="metric-value" id="jobTotalCost">-</div>
+                <div class="metric-label">Total Estimated Cost</div>
+              </div>
+            </div>
+            <div class="job-metric-card profit">
+              <div class="metric-icon">📈</div>
+              <div class="metric-content">
+                <div class="metric-value" id="jobTotalProfit">-</div>
+                <div class="metric-label">Total Estimated Profit</div>
+              </div>
+            </div>
+            <div class="job-metric-card margin">
+              <div class="metric-icon">%</div>
+              <div class="metric-content">
+                <div class="metric-value" id="jobAvgMargin">-</div>
+                <div class="metric-label">Avg Profit Margin</div>
+              </div>
+            </div>
           </div>
-          <div class="summary-metric">
-            <div class="metric-label">Total Revised Contract</div>
-            <div class="metric-value" id="jobTotalContract">-</div>
-          </div>
-          <div class="summary-metric">
-            <div class="metric-label">Total Revised Cost</div>
-            <div class="metric-value" id="jobTotalCost">-</div>
-          </div>
-          <div class="summary-metric">
-            <div class="metric-label">Total Estimated Profit</div>
-            <div class="metric-value" id="jobTotalProfit">-</div>
-          </div>
-          <div class="summary-metric">
-            <div class="metric-label">Avg Profit Margin</div>
-            <div class="metric-value" id="jobAvgMargin">-</div>
+        </div>
+
+        <!-- Breakdown Section -->
+        <div class="job-breakdown-section">
+          <div class="breakdown-container">
+            <div class="breakdown-card">
+              <h4 class="breakdown-title">By Project Manager</h4>
+              <div class="breakdown-table-wrapper">
+                <table class="breakdown-table" id="jobPmBreakdownTable">
+                  <thead>
+                    <tr>
+                      <th>Project Manager</th>
+                      <th class="number-col">Jobs</th>
+                      <th class="number-col">Contract</th>
+                      <th class="number-col">Cost</th>
+                      <th class="number-col">Profit</th>
+                      <th class="number-col">Margin</th>
+                    </tr>
+                  </thead>
+                  <tbody id="jobPmBreakdownBody">
+                    <tr><td colspan="6" class="loading-cell">Loading...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="breakdown-card">
+              <h4 class="breakdown-title">By Customer</h4>
+              <div class="breakdown-table-wrapper">
+                <table class="breakdown-table" id="jobCustomerBreakdownTable">
+                  <thead>
+                    <tr>
+                      <th>Customer</th>
+                      <th class="number-col">Jobs</th>
+                      <th class="number-col">Contract</th>
+                      <th class="number-col">Cost</th>
+                      <th class="number-col">Profit</th>
+                      <th class="number-col">Margin</th>
+                    </tr>
+                  </thead>
+                  <tbody id="jobCustomerBreakdownBody">
+                    <tr><td colspan="6" class="loading-cell">Loading...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
