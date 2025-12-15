@@ -1058,7 +1058,7 @@ function initNavigation() {
 
       // Auto-expand Financials if child is clicked
       if (item.classList.contains("nav-child") && finStatementsParent && finStatementsChildren) {
-        const fsChildren = ['revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts'];
+        const fsChildren = ['revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
         if (fsChildren.includes(id)) {
           finStatementsParent.classList.add("expanded");
           finStatementsChildren.classList.add("expanded");
