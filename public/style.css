@@ -774,6 +774,12 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 
 .nav-parent-label {
   flex: 1;
+  font-weight: 600;
+}
+
+.nav-item[data-section="overview"],
+.nav-item.admin-nav-item {
+  font-weight: 600;
 }
 
 .nav-expand-icon {
