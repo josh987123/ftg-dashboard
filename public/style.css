@@ -195,11 +195,10 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  flex: 1;
 }
 
 .config-expand-btn {
-  margin-left: auto;
+  margin-left: 12px;
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 500;
