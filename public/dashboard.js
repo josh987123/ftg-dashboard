@@ -12568,11 +12568,23 @@ async function loadMissingBudgetsData() {
   overlay?.classList.remove('hidden');
   
   try {
-    const resp = await fetch('/data/jobs.json');
+    // Use the same data source as Job Budgets (financials.json)
+    const resp = await fetch('data/financials.json');
     if (!resp.ok) throw new Error('Failed to load job data');
-    const data = await resp.json();
+    const text = await resp.text();
+    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
     
-    missingBudgetsData = data.jobs || [];
+    // Extract jobs from financials data, calculating revised values
+    const jobs = data.jobs || [];
+    missingBudgetsData = jobs.map(job => ({
+      ...job,
+      original_contract: job.original_contract || 0,
+      tot_income_adj: job.tot_income_adj || 0,
+      revised_contract: (job.original_contract || 0) + (job.tot_income_adj || 0),
+      original_cost: job.original_cost || 0,
+      tot_cost_adj: job.tot_cost_adj || 0,
+      revised_cost: (job.original_cost || 0) + (job.tot_cost_adj || 0)
+    }));
     
     // Populate PM and Customer dropdowns
     const pms = [...new Set(missingBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
