@@ -41,20 +41,15 @@
 </head>
 
 <body>
-  <!-- TEMPORARY DEBUG BANNER - shows admin status for mobile debugging -->
-  <div id="debugBanner" style="position:fixed;top:0;left:0;right:0;background:#ff0;color:#000;padding:4px 8px;font-size:11px;z-index:99999;display:block;">Debug: Loading...</div>
+  <!-- Admin nav visibility fix - handles cached credentials on page load -->
   <script>
-    // IMMEDIATE execution - before any other JS loads
     (function() {
-      var banner = document.getElementById('debugBanner');
       var cached = localStorage.getItem('ftg_is_admin');
       var auth = localStorage.getItem('ftg_authenticated');
       var token = localStorage.getItem('ftg_session_token');
-      banner.textContent = 'Cache: admin=' + cached + ', auth=' + auth;
       
       // If authenticated but admin cache is missing, fetch it from API
       if (auth === 'true' && token && cached === null) {
-        banner.textContent += ' | Fetching role...';
         fetch('/api/verify-session', {
           headers: { 'Authorization': 'Bearer ' + token }
         })
@@ -65,26 +60,21 @@
             var isAdmin = role.toLowerCase() === 'admin';
             localStorage.setItem('ftg_is_admin', isAdmin ? 'true' : 'false');
             localStorage.setItem('ftg_user_role', role);
-            banner.textContent = 'Fetched: admin=' + isAdmin + ', role=' + role;
             if (isAdmin) {
               var adminNav = document.getElementById('adminNavItem');
-              if (adminNav) {
-                adminNav.classList.remove('hidden');
-                banner.textContent += ' | NavShown!';
-              }
+              if (adminNav) adminNav.classList.remove('hidden');
             }
           }
         })
-        .catch(function(e) { banner.textContent += ' | FetchErr: ' + e; });
+        .catch(function(e) { console.log('Admin check failed:', e); });
       }
       
-      // If cached as admin, show nav immediately
+      // If cached as admin, show nav immediately when DOM is ready
       if (cached === 'true' && auth === 'true') {
         var checkNav = setInterval(function() {
           var adminNav = document.getElementById('adminNavItem');
           if (adminNav) {
             adminNav.classList.remove('hidden');
-            banner.textContent += ' | NavFound, removed hidden';
             clearInterval(checkNav);
           }
         }, 50);
@@ -2400,11 +2390,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251216k"></script>
+  <script src="dashboard.js?v=20251216m"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251216k';
+    const APP_VERSION = '20251216m';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {
