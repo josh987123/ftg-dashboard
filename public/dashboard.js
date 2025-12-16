@@ -12663,12 +12663,18 @@ async function loadJobActualsData() {
       const revisedCost = budget.revised_cost || 0;
       const revisedContract = budget.revised_contract || 0;
       
-      const earnedRevenue = revisedCost > 0 
-        ? (job.actual_cost / revisedCost) * revisedContract 
-        : 0;
+      let earnedRevenue = 0;
+      if (revisedCost > 0 && revisedContract > 0 && job.actual_cost > 0) {
+        earnedRevenue = (job.actual_cost / revisedCost) * revisedContract;
+      }
+      if (!isFinite(earnedRevenue)) earnedRevenue = 0;
       
       const actualProfit = earnedRevenue - job.actual_cost;
-      const actualMargin = earnedRevenue > 0 ? (actualProfit / earnedRevenue) * 100 : 0;
+      let actualMargin = 0;
+      if (earnedRevenue > 0) {
+        actualMargin = (actualProfit / earnedRevenue) * 100;
+      }
+      if (!isFinite(actualMargin)) actualMargin = 0;
       
       jobActualsData.push({
         ...job,
@@ -12676,7 +12682,7 @@ async function loadJobActualsData() {
         revised_contract: revisedContract,
         revised_cost: revisedCost,
         earned_revenue: earnedRevenue,
-        actual_profit: actualProfit,
+        actual_profit: isFinite(actualProfit) ? actualProfit : 0,
         actual_margin: actualMargin
       });
     });
