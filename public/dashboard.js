@@ -12631,14 +12631,27 @@ async function loadJobActualsData() {
     
     const jobBudgets = data.job_budgets || [];
     const jobActualsRaw = data.job_actuals || [];
+    const jobBilledRevenueRaw = data.job_billed_revenue || [];
     
     const budgetMap = new Map();
     jobBudgets.forEach(job => {
       budgetMap.set(job.job_no, {
         customer_name: job.customer_name,
+        project_manager_name: job.project_manager_name,
+        job_status: job.job_status,
+        job_description: job.job_description,
         revised_contract: parseFloat(job.revised_contract) || 0,
         revised_cost: parseFloat(job.revised_cost) || 0
       });
+    });
+    
+    const billedRevenueMap = new Map();
+    jobBilledRevenueRaw.forEach(row => {
+      const jobNo = row.Job_No || row.job_no;
+      if (jobNo) {
+        const billedRev = parseFloat(row.Billed_Revenue || row.billed_revenue) || 0;
+        billedRevenueMap.set(jobNo, billedRev);
+      }
     });
     
     const jobMap = new Map();
@@ -12650,8 +12663,7 @@ async function loadJobActualsData() {
           job_status: row.job_status,
           job_description: row.job_description,
           project_manager_name: row.project_manager_name,
-          actual_cost: 0,
-          billed_revenue: 0
+          actual_cost: 0
         });
       }
       jobMap.get(jobNo).actual_cost += parseFloat(row.actual_cost) || 0;
@@ -12662,6 +12674,7 @@ async function loadJobActualsData() {
       const budget = budgetMap.get(jobNo) || {};
       const revisedCost = budget.revised_cost || 0;
       const revisedContract = budget.revised_contract || 0;
+      const billedRevenue = billedRevenueMap.get(jobNo) || 0;
       
       let earnedRevenue = 0;
       if (revisedCost > 0 && revisedContract > 0 && job.actual_cost > 0) {
@@ -12681,6 +12694,7 @@ async function loadJobActualsData() {
         customer_name: budget.customer_name || '',
         revised_contract: revisedContract,
         revised_cost: revisedCost,
+        billed_revenue: billedRevenue,
         earned_revenue: earnedRevenue,
         actual_profit: isFinite(actualProfit) ? actualProfit : 0,
         actual_margin: actualMargin
