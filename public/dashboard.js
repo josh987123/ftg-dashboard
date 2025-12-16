@@ -1086,15 +1086,23 @@ function initSidebar() {
     mobileBtn.addEventListener("click", () => {
       sidebar.classList.add("open");
       overlay.classList.remove("hidden");
+      document.body.classList.add("menu-open");
     });
   }
 
   if (overlay) {
     overlay.addEventListener("click", () => {
-      sidebar.classList.remove("open");
-      overlay.classList.add("hidden");
+      closeMobileSidebar();
     });
   }
+}
+
+function closeMobileSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  if (sidebar) sidebar.classList.remove("open");
+  if (overlay) overlay.classList.add("hidden");
+  document.body.classList.remove("menu-open");
 }
 
 function initNavigation() {
@@ -1172,9 +1180,8 @@ function initNavigation() {
       }
 
       // Auto-close sidebar on mobile
-      if (window.innerWidth <= 768 && sidebar && overlay) {
-        sidebar.classList.remove("open");
-        overlay.classList.add("hidden");
+      if (window.innerWidth <= 768) {
+        closeMobileSidebar();
       }
 
       // Section-specific loaders
