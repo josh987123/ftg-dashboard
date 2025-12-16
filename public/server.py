@@ -268,6 +268,7 @@ def init_database():
             ('cash_flow', 'Cash Flow', 'View statement of cash flows'),
             ('cash_balances', 'Cash Balances', 'View cash position'),
             ('job_budgets', 'Job Budgets', 'View job budget tracking'),
+            ('missing_budgets', 'Missing Budgets', 'View jobs with missing budget data'),
             ('job_analytics', 'Job Analytics', 'View job performance metrics'),
             ('over_under', 'Over/Under Bill', 'View billing variances'),
             ('receivables', 'Receivables/Payables', 'View AR/AP tracking'),

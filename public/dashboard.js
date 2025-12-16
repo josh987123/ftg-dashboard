@@ -1126,7 +1126,7 @@ function initNavigation() {
       
       // Auto-expand Jobs if child is clicked
       if (item.classList.contains("nav-child") && jobsParent && jobsChildren) {
-        const jobsChildItems = ['jobBudgets', 'jobAnalytics', 'overUnderBill'];
+        const jobsChildItems = ['jobBudgets', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
         if (jobsChildItems.includes(id)) {
           jobsParent.classList.add("expanded");
           jobsChildren.classList.add("expanded");
@@ -1148,6 +1148,7 @@ function initNavigation() {
       if (id === "cashFlows") loadCashFlowStatement();
       if (id === "cashReports") initCashReports();
       if (id === "jobBudgets") initJobBudgets();
+      if (id === "missingBudgets") initMissingBudgets();
     });
   });
   
@@ -12433,6 +12434,245 @@ function updateJobPagination(total) {
 }
 
 // ========================================
+// MISSING BUDGETS MODULE
+// ========================================
+
+let missingBudgetsData = [];
+let missingBudgetsFiltered = [];
+let mbCurrentPage = 1;
+let mbPageSize = 25;
+let mbSortColumn = 'job_no';
+let mbSortDirection = 'asc';
+let mbActiveTab = 'noContract';
+
+function initMissingBudgets() {
+  if (missingBudgetsData.length === 0) {
+    loadMissingBudgetsData();
+  } else {
+    renderMissingBudgetsTable();
+  }
+  setupMissingBudgetsEventListeners();
+}
+
+function setupMissingBudgetsEventListeners() {
+  // Tab switching
+  document.querySelectorAll('.mb-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.mb-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      mbActiveTab = tab.dataset.tab;
+      mbCurrentPage = 1;
+      filterMissingBudgets();
+    });
+  });
+  
+  // Status checkboxes
+  ['mbStatusActive', 'mbStatusInactive', 'mbStatusClosed', 'mbStatusOverhead'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => {
+      mbCurrentPage = 1;
+      filterMissingBudgets();
+    });
+  });
+  
+  // PM/Customer filters
+  document.getElementById('mbPmFilter')?.addEventListener('change', () => {
+    mbCurrentPage = 1;
+    filterMissingBudgets();
+  });
+  document.getElementById('mbCustomerFilter')?.addEventListener('change', () => {
+    mbCurrentPage = 1;
+    filterMissingBudgets();
+  });
+  
+  // Search
+  document.getElementById('mbSearchInput')?.addEventListener('input', () => {
+    mbCurrentPage = 1;
+    filterMissingBudgets();
+  });
+  
+  // Pagination
+  document.getElementById('mbPrevPage')?.addEventListener('click', () => {
+    if (mbCurrentPage > 1) {
+      mbCurrentPage--;
+      renderMissingBudgetsTable();
+    }
+  });
+  
+  document.getElementById('mbNextPage')?.addEventListener('click', () => {
+    const totalPages = Math.ceil(missingBudgetsFiltered.length / mbPageSize);
+    if (mbCurrentPage < totalPages) {
+      mbCurrentPage++;
+      renderMissingBudgetsTable();
+    }
+  });
+  
+  document.getElementById('mbPageSize')?.addEventListener('change', (e) => {
+    mbPageSize = parseInt(e.target.value);
+    mbCurrentPage = 1;
+    renderMissingBudgetsTable();
+  });
+  
+  // Sortable headers
+  document.querySelectorAll('#missingBudgetsTable .sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (mbSortColumn === col) {
+        mbSortDirection = mbSortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        mbSortColumn = col;
+        mbSortDirection = 'asc';
+      }
+      sortMissingBudgets();
+    });
+  });
+}
+
+async function loadMissingBudgetsData() {
+  const overlay = document.getElementById('missingBudgetsLoadingOverlay');
+  overlay?.classList.remove('hidden');
+  
+  try {
+    const resp = await fetch('/data/jobs.json');
+    if (!resp.ok) throw new Error('Failed to load job data');
+    const data = await resp.json();
+    
+    missingBudgetsData = data.jobs || [];
+    
+    // Populate PM and Customer dropdowns
+    const pms = [...new Set(missingBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+    const customers = [...new Set(missingBudgetsData.map(j => j.customer_name).filter(Boolean))].sort();
+    
+    const pmSelect = document.getElementById('mbPmFilter');
+    if (pmSelect) {
+      pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
+        pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+    }
+    
+    const custSelect = document.getElementById('mbCustomerFilter');
+    if (custSelect) {
+      custSelect.innerHTML = '<option value="">All Customers</option>' + 
+        customers.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+    
+    // Set data as of date
+    const dateEl = document.getElementById('missingBudgetsDataAsOf');
+    if (dateEl && data.generated_at) {
+      dateEl.textContent = new Date(data.generated_at).toLocaleDateString();
+    }
+    
+    filterMissingBudgets();
+  } catch (err) {
+    console.error('Failed to load missing budgets data:', err);
+    const tbody = document.getElementById('missingBudgetsTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Error loading data</td></tr>';
+  } finally {
+    overlay?.classList.add('hidden');
+  }
+}
+
+function filterMissingBudgets() {
+  const statusActive = document.getElementById('mbStatusActive')?.checked;
+  const statusInactive = document.getElementById('mbStatusInactive')?.checked;
+  const statusClosed = document.getElementById('mbStatusClosed')?.checked;
+  const statusOverhead = document.getElementById('mbStatusOverhead')?.checked;
+  
+  const pmFilter = document.getElementById('mbPmFilter')?.value || '';
+  const custFilter = document.getElementById('mbCustomerFilter')?.value || '';
+  const search = (document.getElementById('mbSearchInput')?.value || '').toLowerCase();
+  
+  missingBudgetsFiltered = missingBudgetsData.filter(job => {
+    // Filter by tab (missing contract vs missing cost)
+    if (mbActiveTab === 'noContract') {
+      if ((job.revised_contract || 0) !== 0) return false;
+    } else {
+      if ((job.revised_cost || 0) !== 0) return false;
+    }
+    
+    // Status filter
+    const status = (job.job_status || '').toLowerCase();
+    if (status === 'a' || status === 'active') {
+      if (!statusActive) return false;
+    } else if (status === 'i' || status === 'inactive') {
+      if (!statusInactive) return false;
+    } else if (status === 'c' || status === 'closed') {
+      if (!statusClosed) return false;
+    } else if (status === 'o' || status === 'overhead') {
+      if (!statusOverhead) return false;
+    }
+    
+    // PM filter
+    if (pmFilter && job.project_manager_name !== pmFilter) return false;
+    
+    // Customer filter
+    if (custFilter && job.customer_name !== custFilter) return false;
+    
+    // Search
+    if (search) {
+      const searchFields = [job.job_no, job.job_description, job.customer_name].join(' ').toLowerCase();
+      if (!searchFields.includes(search)) return false;
+    }
+    
+    return true;
+  });
+  
+  sortMissingBudgets();
+}
+
+function sortMissingBudgets() {
+  missingBudgetsFiltered.sort((a, b) => {
+    let valA = a[mbSortColumn];
+    let valB = b[mbSortColumn];
+    
+    if (typeof valA === 'string') valA = valA.toLowerCase();
+    if (typeof valB === 'string') valB = valB.toLowerCase();
+    
+    if (valA < valB) return mbSortDirection === 'asc' ? -1 : 1;
+    if (valA > valB) return mbSortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  renderMissingBudgetsTable();
+}
+
+function renderMissingBudgetsTable() {
+  const tbody = document.getElementById('missingBudgetsTableBody');
+  if (!tbody) return;
+  
+  if (missingBudgetsFiltered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">No jobs found with missing budget data</td></tr>';
+    updateMbPagination(0);
+    return;
+  }
+  
+  const start = (mbCurrentPage - 1) * mbPageSize;
+  const end = start + mbPageSize;
+  const pageData = missingBudgetsFiltered.slice(start, end);
+  
+  tbody.innerHTML = pageData.map(job => {
+    const status = getJobStatusInfo(job.job_status);
+    return `<tr>
+      <td>${job.job_no || ''}</td>
+      <td>${job.job_description || ''}</td>
+      <td>${job.customer_name || ''}</td>
+      <td><span class="job-status-badge ${status.class}">${status.label}</span></td>
+      <td>${job.project_manager_name || ''}</td>
+      <td class="number-col">${formatCurrency(job.revised_contract)}</td>
+      <td class="number-col">${formatCurrency(job.revised_cost)}</td>
+    </tr>`;
+  }).join('');
+  
+  updateMbPagination(missingBudgetsFiltered.length);
+}
+
+function updateMbPagination(total) {
+  const totalPages = Math.max(1, Math.ceil(total / mbPageSize));
+  
+  document.getElementById('mbPageInfo').textContent = `Page ${mbCurrentPage} of ${totalPages}`;
+  document.getElementById('mbPrevPage').disabled = mbCurrentPage <= 1;
+  document.getElementById('mbNextPage').disabled = mbCurrentPage >= totalPages;
+}
+
+// ========================================
 // ADMIN MODULE
 // ========================================
 
@@ -12831,7 +13071,7 @@ function renderGroupedPermissions(permissions, selectedPerms, roleId, prefix) {
   const permissionGroups = {
     'Executive Overview': ['overview'],
     'Financials': ['revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'receivables'],
-    'Job Reports': ['job_budgets', 'job_analytics', 'over_under'],
+    'Job Reports': ['job_budgets', 'missing_budgets', 'job_analytics', 'over_under'],
     'Admin': ['admin']
   };
   
@@ -13078,6 +13318,7 @@ const sectionToPermission = {
   'receivablesPayables': 'receivables',
   'jobAnalytics': 'job_analytics',
   'jobBudgets': 'job_budgets',
+  'missingBudgets': 'missing_budgets',
   'cashReports': 'cash_balances',
   'admin': 'admin'
 };
@@ -13085,7 +13326,7 @@ const sectionToPermission = {
 // Order of sections for default page selection
 const sectionOrder = [
   'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
-  'cashReports', 'accounts', 'receivablesPayables', 'jobBudgets', 'jobAnalytics', 'overUnderBill'
+  'cashReports', 'accounts', 'receivablesPayables', 'jobBudgets', 'missingBudgets', 'jobAnalytics', 'overUnderBill'
 ];
 
 // Check permissions and show/hide nav items based on user role
@@ -13182,7 +13423,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     const jobsChildren = document.getElementById("navJobsChildren");
     
     const fsChildren = ['revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
-    const jobsChildItems = ['jobBudgets', 'jobAnalytics', 'overUnderBill'];
+    const jobsChildItems = ['jobBudgets', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
     
     if (fsChildren.includes(targetSection) && finStatementsParent && finStatementsChildren) {
       finStatementsParent.classList.add("expanded");
@@ -13196,6 +13437,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     
     // Initialize the section if needed
     if (targetSection === "jobBudgets") initJobBudgets();
+    if (targetSection === "missingBudgets") initMissingBudgets();
     if (targetSection === "revenue") initRevenueModule();
     if (targetSection === "accounts") initAccountModule();
     if (targetSection === "incomeStatement") loadIncomeStatement();

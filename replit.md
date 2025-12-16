@@ -52,6 +52,7 @@ The dashboard offers several key views:
 ### Jobs Module
 The Jobs section in the sidebar contains job-related tracking views:
 - **Job Budgets**: Displays all jobs with filtering by status (Active, Inactive, Closed, Overhead - Active checked by default), project manager, and customer. Features a searchable table with columns for Job #, Description, Customer, Status, Project Manager, Original Contract, Change Orders, Revised Contract (yellow-shaded), Original Cost, Cost Adjustments, Revised Cost, and Estimated Profit (calculated). Includes summary metrics (Total Jobs, Total Revised Contract, Total Revised Cost, Total Estimated Profit, Avg Profit Margin) and pagination.
+- **Missing Budgets**: Shows jobs with incomplete budget data. Has two tabs: "No Contract Value" (jobs with zero revised contract) and "No Estimated Cost" (jobs with zero revised cost). Features same configuration options as Job Budgets (status filters with Active checked by default, PM filter, Customer filter), search, and pagination. Simplified table with columns: Job #, Description, Customer, Status, Project Manager, Revised Contract, Revised Cost (no profit/margin columns).
 - **Job Analytics**: Placeholder for future job analytics features.
 - **Over/Under Bill**: Placeholder for future over/under billing tracking.
 

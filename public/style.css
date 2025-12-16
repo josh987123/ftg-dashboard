@@ -7165,6 +7165,62 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 /* ============================================================
+   MISSING BUDGETS TABS
+   ============================================================ */
+
+.missing-budgets-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--border-secondary);
+}
+
+.mb-tab {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mb-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.mb-tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  font-weight: 600;
+}
+
+body.dark-mode .mb-tab.active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+#missingBudgets .config-panel {
+  width: 70%;
+  max-width: 70%;
+}
+
+@media (max-width: 900px) {
+  #missingBudgets .config-panel {
+    max-width: 100%;
+  }
+  
+  .mb-tab {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+/* ============================================================
    JOB BUDGETS STYLES
    ============================================================ */
 
