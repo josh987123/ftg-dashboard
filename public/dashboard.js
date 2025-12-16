@@ -13032,12 +13032,6 @@ function renderJobActualsTable() {
   tbody.innerHTML = pageData.map(job => {
     const status = getJobStatusLabel(job.job_status);
     const pctComplete = job.percent_complete || 0;
-    let pctCompleteColor = '';
-    if (pctComplete > 100) {
-      pctCompleteColor = 'background-color: rgba(220, 38, 38, 0.15);';
-    } else if (pctComplete >= 90) {
-      pctCompleteColor = 'background-color: rgba(245, 158, 11, 0.15);';
-    }
     
     return `<tr>
       <td>${job.job_no}</td>
@@ -13048,7 +13042,7 @@ function renderJobActualsTable() {
       <td class="number-col">${formatCurrency(job.billed_revenue || 0)}</td>
       <td class="number-col">${formatCurrency(job.earned_revenue)}</td>
       <td class="number-col">${formatCurrency(job.actual_cost)}</td>
-      <td class="number-col" style="${pctCompleteColor}">${pctComplete.toFixed(1)}%</td>
+      <td class="number-col">${pctComplete.toFixed(1)}%</td>
     </tr>`;
   }).join('');
   
