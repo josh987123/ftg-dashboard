@@ -466,6 +466,9 @@ function initAuth() {
   const cachedIsAdmin = localStorage.getItem("ftg_is_admin") === "true";
   const cachedRole = localStorage.getItem("ftg_user_role") || '';
   
+  console.log('[DEBUG] initAuth - isAuthenticated:', isAuthenticated, 'currentUser:', currentUser);
+  console.log('[DEBUG] initAuth - ftg_is_admin raw:', localStorage.getItem("ftg_is_admin"), 'cachedIsAdmin:', cachedIsAdmin, 'cachedRole:', cachedRole);
+  
   if (isAuthenticated === "true" && currentUser) {
     loginScreen.classList.add("hidden");
     if (currentUserEl) {
@@ -487,10 +490,13 @@ function initAuth() {
     
     // IMMEDIATELY show admin nav if user was previously identified as admin
     // This uses cached localStorage value before async API call completes
+    console.log('[DEBUG] initAuth - checking cachedIsAdmin:', cachedIsAdmin);
     if (cachedIsAdmin) {
       const adminNavItem = document.getElementById('adminNavItem');
+      console.log('[DEBUG] initAuth - adminNavItem found:', !!adminNavItem);
       if (adminNavItem) {
         adminNavItem.classList.remove('hidden');
+        console.log('[DEBUG] initAuth - Removed hidden class from adminNavItem');
       }
       window.isAdminUser = true;
     }
@@ -13625,4 +13631,15 @@ initNavigation = function() {
   // Check admin access on load
   console.log('Calling checkAdminAccess from initNavigation');
   checkAdminAccess();
+  
+  // Fallback: Re-check admin nav visibility after a delay to handle any race conditions
+  setTimeout(() => {
+    const cachedIsAdmin = localStorage.getItem("ftg_is_admin") === "true";
+    const adminNav = document.getElementById('adminNavItem');
+    console.log('[DEBUG] Fallback check - cachedIsAdmin:', cachedIsAdmin, 'adminNav:', adminNav);
+    if (cachedIsAdmin && adminNav && adminNav.classList.contains('hidden')) {
+      console.log('[DEBUG] Fallback: Forcing admin nav to show');
+      adminNav.classList.remove('hidden');
+    }
+  }, 500);
 };
