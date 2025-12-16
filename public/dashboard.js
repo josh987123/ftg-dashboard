@@ -1172,7 +1172,7 @@ function initNavigation() {
       
       // Auto-expand Jobs if child is clicked
       if (item.classList.contains("nav-child") && jobsParent && jobsChildren) {
-        const jobsChildItems = ['jobBudgets', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
+        const jobsChildItems = ['jobBudgets', 'jobActuals', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
         if (jobsChildItems.includes(id)) {
           jobsParent.classList.add("expanded");
           jobsChildren.classList.add("expanded");
@@ -1197,6 +1197,7 @@ function initNavigation() {
       if (id === "cashFlows") loadCashFlowStatement();
       if (id === "cashReports") initCashReports();
       if (id === "jobBudgets") initJobBudgets();
+      if (id === "jobActuals") initJobActuals();
       if (id === "missingBudgets") initMissingBudgets();
     });
   });
@@ -12502,6 +12503,545 @@ function updateJobPagination(total) {
 }
 
 // ========================================
+// JOB ACTUALS MODULE
+// ========================================
+
+let jobActualsData = [];
+let jobActualsFiltered = [];
+let jaCurrentPage = 1;
+let jaPageSize = 25;
+let jaSortColumn = 'actual_cost';
+let jaSortDirection = 'desc';
+let jaInitialized = false;
+let jaPmDonutChart = null;
+let jaCustomerDonutChart = null;
+
+function initJobActuals() {
+  if (jaInitialized && jobActualsData.length > 0) {
+    renderJobActualsTable();
+    return;
+  }
+  
+  const configHeader = document.querySelector('#jobActuals .config-header');
+  const configBody = document.getElementById('jobActualsConfigBody');
+  if (configHeader && configBody) {
+    configHeader.classList.remove('collapsed');
+    configBody.classList.remove('collapsed');
+  }
+  
+  loadJobActualsData();
+  setupJobActualsEventListeners();
+  jaInitialized = true;
+}
+
+function setupJobActualsEventListeners() {
+  document.getElementById('jaStatusActive')?.addEventListener('change', filterJobActuals);
+  document.getElementById('jaStatusInactive')?.addEventListener('change', filterJobActuals);
+  document.getElementById('jaStatusClosed')?.addEventListener('change', filterJobActuals);
+  document.getElementById('jaStatusOverhead')?.addEventListener('change', filterJobActuals);
+  
+  document.getElementById('jaPmFilter')?.addEventListener('change', filterJobActuals);
+  document.getElementById('jaCustomerFilter')?.addEventListener('change', filterJobActuals);
+  
+  const searchInput = document.getElementById('jaSearchInput');
+  let searchTimeout;
+  searchInput?.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(filterJobActuals, 300);
+  });
+  
+  document.getElementById('jaPrevPage')?.addEventListener('click', () => {
+    if (jaCurrentPage > 1) {
+      jaCurrentPage--;
+      renderJobActualsTable();
+    }
+  });
+  
+  document.getElementById('jaNextPage')?.addEventListener('click', () => {
+    const totalPages = Math.ceil(jobActualsFiltered.length / jaPageSize);
+    if (jaCurrentPage < totalPages) {
+      jaCurrentPage++;
+      renderJobActualsTable();
+    }
+  });
+  
+  document.getElementById('jaPageSize')?.addEventListener('change', (e) => {
+    jaPageSize = parseInt(e.target.value);
+    jaCurrentPage = 1;
+    renderJobActualsTable();
+  });
+  
+  document.querySelectorAll('#jobActualsTable th.ja-sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (jaSortColumn === col) {
+        jaSortDirection = jaSortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        jaSortColumn = col;
+        jaSortDirection = 'desc';
+      }
+      sortJobActuals();
+      renderJobActualsTable();
+    });
+  });
+  
+  document.querySelectorAll('.ja-quick-sort').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sortCol = btn.dataset.sort;
+      const sortDir = btn.dataset.dir;
+      
+      document.querySelectorAll('.ja-quick-sort').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      jaSortColumn = sortCol;
+      jaSortDirection = sortDir;
+      jaCurrentPage = 1;
+      sortJobActuals();
+      renderJobActualsTable();
+    });
+  });
+  
+  document.querySelectorAll('#jobActuals .breakdown-expand-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.dataset.target;
+      const tableWrapper = document.getElementById(targetId);
+      const textSpan = btn.querySelector('.expand-text');
+      
+      if (tableWrapper) {
+        const isCollapsed = tableWrapper.classList.contains('collapsed');
+        tableWrapper.classList.toggle('collapsed');
+        btn.classList.toggle('expanded');
+        
+        if (textSpan) {
+          textSpan.textContent = isCollapsed ? 'Collapse' : 'Expand';
+        }
+      }
+    });
+  });
+}
+
+async function loadJobActualsData() {
+  const loadingOverlay = document.getElementById('jobActualsLoadingOverlay');
+  if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+  
+  try {
+    const resp = await fetch('data/financials.json');
+    const text = await resp.text();
+    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+    
+    const jobBudgets = data.job_budgets || [];
+    const jobActualsRaw = data.job_actuals || [];
+    
+    const budgetMap = new Map();
+    jobBudgets.forEach(job => {
+      budgetMap.set(job.job_no, {
+        customer_name: job.customer_name,
+        revised_contract: parseFloat(job.revised_contract) || 0,
+        revised_cost: parseFloat(job.revised_cost) || 0
+      });
+    });
+    
+    const jobMap = new Map();
+    jobActualsRaw.forEach(row => {
+      const jobNo = row.job_no;
+      if (!jobMap.has(jobNo)) {
+        jobMap.set(jobNo, {
+          job_no: jobNo,
+          job_status: row.job_status,
+          job_description: row.job_description,
+          project_manager_name: row.project_manager_name,
+          actual_cost: 0,
+          billed_revenue: 0
+        });
+      }
+      jobMap.get(jobNo).actual_cost += parseFloat(row.actual_cost) || 0;
+    });
+    
+    jobActualsData = [];
+    jobMap.forEach((job, jobNo) => {
+      const budget = budgetMap.get(jobNo) || {};
+      const revisedCost = budget.revised_cost || 0;
+      const revisedContract = budget.revised_contract || 0;
+      
+      const earnedRevenue = revisedCost > 0 
+        ? (job.actual_cost / revisedCost) * revisedContract 
+        : 0;
+      
+      const actualProfit = earnedRevenue - job.actual_cost;
+      const actualMargin = earnedRevenue > 0 ? (actualProfit / earnedRevenue) * 100 : 0;
+      
+      jobActualsData.push({
+        ...job,
+        customer_name: budget.customer_name || '',
+        revised_contract: revisedContract,
+        revised_cost: revisedCost,
+        earned_revenue: earnedRevenue,
+        actual_profit: actualProfit,
+        actual_margin: actualMargin
+      });
+    });
+    
+    populateJobActualsFilters();
+    
+    const dataAsOf = document.getElementById('jobActualsDataAsOf');
+    if (dataAsOf && data.generated_at) {
+      dataAsOf.textContent = new Date(data.generated_at).toLocaleDateString();
+    }
+    
+    filterJobActuals();
+  } catch (err) {
+    console.error('Error loading job actuals:', err);
+    document.getElementById('jobActualsTableBody').innerHTML = 
+      '<tr><td colspan="10" class="loading-cell">Error loading job actuals data</td></tr>';
+  } finally {
+    if (loadingOverlay) loadingOverlay.classList.add('hidden');
+  }
+}
+
+function populateJobActualsFilters() {
+  const pmFilter = document.getElementById('jaPmFilter');
+  if (pmFilter) {
+    const pms = [...new Set(jobActualsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+    pmFilter.innerHTML = '<option value="">All Project Managers</option>' + 
+      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+  }
+  
+  const custFilter = document.getElementById('jaCustomerFilter');
+  if (custFilter) {
+    const customers = [...new Set(jobActualsData.map(j => j.customer_name).filter(Boolean))].sort();
+    custFilter.innerHTML = '<option value="">All Customers</option>' + 
+      customers.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+}
+
+function filterJobActuals() {
+  const showActive = document.getElementById('jaStatusActive')?.checked;
+  const showInactive = document.getElementById('jaStatusInactive')?.checked;
+  const showClosed = document.getElementById('jaStatusClosed')?.checked;
+  const showOverhead = document.getElementById('jaStatusOverhead')?.checked;
+  
+  const pmFilter = document.getElementById('jaPmFilter')?.value || '';
+  const custFilter = document.getElementById('jaCustomerFilter')?.value || '';
+  const searchTerm = (document.getElementById('jaSearchInput')?.value || '').toLowerCase().trim();
+  
+  const allowedStatuses = [];
+  if (showActive) allowedStatuses.push('A');
+  if (showInactive) allowedStatuses.push('I');
+  if (showClosed) allowedStatuses.push('C');
+  if (showOverhead) allowedStatuses.push('O');
+  
+  jobActualsFiltered = jobActualsData.filter(job => {
+    if (allowedStatuses.length > 0 && !allowedStatuses.includes(job.job_status)) return false;
+    if (pmFilter && job.project_manager_name !== pmFilter) return false;
+    if (custFilter && job.customer_name !== custFilter) return false;
+    
+    if (searchTerm) {
+      const searchStr = `${job.job_no} ${job.job_description} ${job.customer_name}`.toLowerCase();
+      if (!searchStr.includes(searchTerm)) return false;
+    }
+    
+    return true;
+  });
+  
+  jaCurrentPage = 1;
+  sortJobActuals();
+  updateJobActualsSummaryMetrics();
+  renderJobActualsTable();
+}
+
+function sortJobActuals() {
+  const col = jaSortColumn;
+  const dir = jaSortDirection === 'asc' ? 1 : -1;
+  
+  jobActualsFiltered.sort((a, b) => {
+    let aVal = a[col];
+    let bVal = b[col];
+    
+    if (['billed_revenue', 'earned_revenue', 'actual_cost', 'actual_profit', 'actual_margin'].includes(col)) {
+      return ((aVal || 0) - (bVal || 0)) * dir;
+    }
+    
+    aVal = (aVal || '').toString().toLowerCase();
+    bVal = (bVal || '').toString().toLowerCase();
+    return aVal.localeCompare(bVal) * dir;
+  });
+}
+
+function updateJobActualsSummaryMetrics() {
+  const totalJobs = jobActualsFiltered.length;
+  const totalBilledRevenue = jobActualsFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const totalEarnedRevenue = jobActualsFiltered.reduce((sum, j) => sum + j.earned_revenue, 0);
+  const totalActualCost = jobActualsFiltered.reduce((sum, j) => sum + j.actual_cost, 0);
+  const totalActualProfit = totalEarnedRevenue - totalActualCost;
+  
+  document.getElementById('jaTotalCount').textContent = totalJobs.toLocaleString();
+  document.getElementById('jaTotalBilledRevenue').textContent = formatCurrency(totalBilledRevenue);
+  document.getElementById('jaTotalEarnedRevenue').textContent = formatCurrency(totalEarnedRevenue);
+  document.getElementById('jaTotalActualCost').textContent = formatCurrency(totalActualCost);
+  
+  const profitEl = document.getElementById('jaActualProfit');
+  profitEl.textContent = formatCurrency(totalActualProfit);
+  profitEl.className = 'metric-value ' + (totalActualProfit >= 0 ? '' : 'negative');
+  
+  renderJobActualsBreakdowns();
+}
+
+function renderJobActualsBreakdowns() {
+  renderJaPmDonutChart();
+  renderJaCustomerDonutChart();
+  renderJaPmBreakdownTable();
+  renderJaCustomerBreakdownTable();
+}
+
+function renderJaPmDonutChart() {
+  const canvas = document.getElementById('jaPmDonutChart');
+  if (!canvas) return;
+  
+  const pmMap = new Map();
+  jobActualsFiltered.forEach(job => {
+    const pm = job.project_manager_name || 'Unassigned';
+    if (!pmMap.has(pm)) pmMap.set(pm, 0);
+    pmMap.set(pm, pmMap.get(pm) + job.actual_cost);
+  });
+  
+  const sorted = [...pmMap.entries()].sort((a, b) => b[1] - a[1]);
+  const top10 = sorted.slice(0, 10);
+  const otherTotal = sorted.slice(10).reduce((sum, [, val]) => sum + val, 0);
+  
+  const labels = top10.map(([name]) => name);
+  const data = top10.map(([, val]) => val);
+  
+  if (otherTotal > 0) {
+    labels.push('Other');
+    data.push(otherTotal);
+  }
+  
+  const isDarkMode = document.body.classList.contains('dark-mode');
+  const isMobile = window.innerWidth <= 768;
+  
+  if (jaPmDonutChart) jaPmDonutChart.destroy();
+  
+  jaPmDonutChart = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: chartColors.slice(0, labels.length),
+        borderWidth: 2,
+        borderColor: isDarkMode ? '#1e293b' : '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: isMobile ? 'bottom' : 'right',
+          labels: {
+            color: isDarkMode ? '#e2e8f0' : '#374151',
+            font: { size: isMobile ? 10 : 11 },
+            boxWidth: isMobile ? 10 : 12,
+            padding: isMobile ? 6 : 8
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const value = context.raw;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = ((value / total) * 100).toFixed(1);
+              return `${formatCurrencyCompact(value)} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderJaCustomerDonutChart() {
+  const canvas = document.getElementById('jaCustomerDonutChart');
+  if (!canvas) return;
+  
+  const custMap = new Map();
+  jobActualsFiltered.forEach(job => {
+    const cust = job.customer_name || 'Unknown';
+    if (!custMap.has(cust)) custMap.set(cust, 0);
+    custMap.set(cust, custMap.get(cust) + job.actual_cost);
+  });
+  
+  const sorted = [...custMap.entries()].sort((a, b) => b[1] - a[1]);
+  const top10 = sorted.slice(0, 10);
+  const otherTotal = sorted.slice(10).reduce((sum, [, val]) => sum + val, 0);
+  
+  const labels = top10.map(([name]) => name);
+  const data = top10.map(([, val]) => val);
+  
+  if (otherTotal > 0) {
+    labels.push('Other');
+    data.push(otherTotal);
+  }
+  
+  const isDarkMode = document.body.classList.contains('dark-mode');
+  const isMobile = window.innerWidth <= 768;
+  
+  if (jaCustomerDonutChart) jaCustomerDonutChart.destroy();
+  
+  jaCustomerDonutChart = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: chartColors.slice(0, labels.length),
+        borderWidth: 2,
+        borderColor: isDarkMode ? '#1e293b' : '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: isMobile ? 'bottom' : 'right',
+          labels: {
+            color: isDarkMode ? '#e2e8f0' : '#374151',
+            font: { size: isMobile ? 10 : 11 },
+            boxWidth: isMobile ? 10 : 12,
+            padding: isMobile ? 6 : 8
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const value = context.raw;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = ((value / total) * 100).toFixed(1);
+              return `${formatCurrencyCompact(value)} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderJaPmBreakdownTable() {
+  const tbody = document.getElementById('jaPmBreakdownBody');
+  if (!tbody) return;
+  
+  const pmMap = new Map();
+  jobActualsFiltered.forEach(job => {
+    const pm = job.project_manager_name || 'Unassigned';
+    if (!pmMap.has(pm)) {
+      pmMap.set(pm, { jobs: 0, earnedRev: 0, actualCost: 0 });
+    }
+    const d = pmMap.get(pm);
+    d.jobs++;
+    d.earnedRev += job.earned_revenue;
+    d.actualCost += job.actual_cost;
+  });
+  
+  const sorted = [...pmMap.entries()]
+    .map(([pm, d]) => ({ pm, ...d, profit: d.earnedRev - d.actualCost }))
+    .sort((a, b) => b.actualCost - a.actualCost);
+  
+  tbody.innerHTML = sorted.map(row => {
+    const margin = row.earnedRev > 0 ? (row.profit / row.earnedRev) * 100 : 0;
+    const marginColor = getMarginColor(margin);
+    const profitClass = row.profit >= 0 ? 'positive' : 'negative';
+    return `<tr>
+      <td>${row.pm}</td>
+      <td class="number-col">${row.jobs}</td>
+      <td class="number-col">${formatCurrency(row.earnedRev)}</td>
+      <td class="number-col">${formatCurrency(row.actualCost)}</td>
+      <td class="number-col ${profitClass}">${formatCurrency(row.profit)}</td>
+      <td class="number-col" style="background-color: ${marginColor}">${margin.toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderJaCustomerBreakdownTable() {
+  const tbody = document.getElementById('jaCustomerBreakdownBody');
+  if (!tbody) return;
+  
+  const custMap = new Map();
+  jobActualsFiltered.forEach(job => {
+    const cust = job.customer_name || 'Unknown';
+    if (!custMap.has(cust)) {
+      custMap.set(cust, { jobs: 0, earnedRev: 0, actualCost: 0 });
+    }
+    const d = custMap.get(cust);
+    d.jobs++;
+    d.earnedRev += job.earned_revenue;
+    d.actualCost += job.actual_cost;
+  });
+  
+  const sorted = [...custMap.entries()]
+    .map(([cust, d]) => ({ cust, ...d, profit: d.earnedRev - d.actualCost }))
+    .sort((a, b) => b.actualCost - a.actualCost);
+  
+  tbody.innerHTML = sorted.map(row => {
+    const margin = row.earnedRev > 0 ? (row.profit / row.earnedRev) * 100 : 0;
+    const marginColor = getMarginColor(margin);
+    const profitClass = row.profit >= 0 ? 'positive' : 'negative';
+    return `<tr>
+      <td>${row.cust}</td>
+      <td class="number-col">${row.jobs}</td>
+      <td class="number-col">${formatCurrency(row.earnedRev)}</td>
+      <td class="number-col">${formatCurrency(row.actualCost)}</td>
+      <td class="number-col ${profitClass}">${formatCurrency(row.profit)}</td>
+      <td class="number-col" style="background-color: ${marginColor}">${margin.toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderJobActualsTable() {
+  const tbody = document.getElementById('jobActualsTableBody');
+  if (!tbody) return;
+  
+  const startIdx = (jaCurrentPage - 1) * jaPageSize;
+  const endIdx = startIdx + jaPageSize;
+  const pageData = jobActualsFiltered.slice(startIdx, endIdx);
+  
+  if (pageData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">No jobs found matching filters</td></tr>';
+    updateJaPagination(0);
+    return;
+  }
+  
+  tbody.innerHTML = pageData.map(job => {
+    const status = getJobStatusLabel(job.job_status);
+    const profitClass = job.actual_profit >= 0 ? 'positive' : 'negative';
+    const marginColor = getMarginColor(job.actual_margin);
+    
+    return `<tr>
+      <td>${job.job_no}</td>
+      <td>${job.job_description || ''}</td>
+      <td>${job.customer_name || ''}</td>
+      <td><span class="job-status-badge ${status.class}">${status.label}</span></td>
+      <td>${job.project_manager_name || ''}</td>
+      <td class="number-col">${formatCurrency(job.billed_revenue || 0)}</td>
+      <td class="number-col">${formatCurrency(job.earned_revenue)}</td>
+      <td class="number-col">${formatCurrency(job.actual_cost)}</td>
+      <td class="number-col ${profitClass}">${formatCurrency(job.actual_profit)}</td>
+      <td class="number-col" style="background-color: ${marginColor}">${job.actual_margin.toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+  
+  updateJaPagination(jobActualsFiltered.length);
+}
+
+function updateJaPagination(total) {
+  const totalPages = Math.max(1, Math.ceil(total / jaPageSize));
+  
+  document.getElementById('jaPageInfo').textContent = `Page ${jaCurrentPage} of ${totalPages}`;
+  document.getElementById('jaPrevPage').disabled = jaCurrentPage <= 1;
+  document.getElementById('jaNextPage').disabled = jaCurrentPage >= totalPages;
+}
+
+// ========================================
 // MISSING BUDGETS MODULE
 // ========================================
 
@@ -13607,7 +14147,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     const jobsChildren = document.getElementById("navJobsChildren");
     
     const fsChildren = ['revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
-    const jobsChildItems = ['jobBudgets', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
+    const jobsChildItems = ['jobBudgets', 'jobActuals', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
     
     if (fsChildren.includes(targetSection) && finStatementsParent && finStatementsChildren) {
       finStatementsParent.classList.add("expanded");
