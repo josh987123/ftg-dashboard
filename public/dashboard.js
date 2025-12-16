@@ -13429,6 +13429,7 @@ const sectionOrder = [
 // Check permissions and show/hide nav items based on user role
 async function checkAdminAccess() {
   const token = getAuthToken();
+  console.log('[DEBUG] checkAdminAccess - token:', token ? 'exists' : 'missing');
   if (!token) {
     // No token - show overview as default for legacy behavior
     showDefaultSection();
@@ -13438,12 +13439,14 @@ async function checkAdminAccess() {
   try {
     const resp = await fetch('/api/verify-session', { headers: getAuthHeaders() });
     const data = await resp.json();
+    console.log('[DEBUG] verify-session response:', JSON.stringify(data));
     
     if (data.success && data.user) {
       const userPerms = data.user.permissions || [];
       // Case-insensitive admin check
       const userRole = data.user.role || '';
       const isAdmin = userRole.toLowerCase() === 'admin';
+      console.log('[DEBUG] userRole:', userRole, 'isAdmin:', isAdmin);
       
       // Get all nav items
       const navItems = document.querySelectorAll('.nav-item[data-section]');
@@ -13464,12 +13467,17 @@ async function checkAdminAccess() {
       
       // Special handling for admin nav - only visible to admin role
       const adminNavItem = document.getElementById('adminNavItem');
+      console.log('[DEBUG] adminNavItem element:', adminNavItem);
+      console.log('[DEBUG] adminNavItem classList before:', adminNavItem ? adminNavItem.classList.toString() : 'null');
       if (adminNavItem) {
         if (isAdmin) {
           adminNavItem.classList.remove('hidden');
+          console.log('[DEBUG] Removed hidden class from adminNavItem');
         } else {
           adminNavItem.classList.add('hidden');
+          console.log('[DEBUG] Added hidden class to adminNavItem');
         }
+        console.log('[DEBUG] adminNavItem classList after:', adminNavItem.classList.toString());
       }
       
       // Store permissions for later use (in memory and localStorage for page refresh)
