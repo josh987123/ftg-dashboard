@@ -13039,7 +13039,7 @@ function renderJobActualsTable() {
       <td class="number-col">${formatCurrency(job.billed_revenue || 0)}</td>
       <td class="number-col">${formatCurrency(job.earned_revenue)}</td>
       <td class="number-col">${formatCurrency(job.actual_cost)}</td>
-      <td class="number-col">${pctComplete.toFixed(1)}%</td>
+      <td class="number-col">${Math.round(pctComplete)}%</td>
     </tr>`;
   }).join('');
   
