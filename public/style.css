@@ -859,10 +859,16 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     width:280px;
     z-index:999;
     box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .sidebar.open { 
     transform:translateX(0);
+  }
+  
+  .sidebar nav {
+    padding-bottom: 100px;
   }
   
   .nav-item {
