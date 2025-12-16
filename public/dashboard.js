@@ -2589,7 +2589,7 @@ async function initOverviewModule() {
     
     if (!overviewDataCache) {
       fetchPromises.push(
-        fetch("/data/financials.json").then(r => r.json()).then(data => { overviewDataCache = data; })
+        fetch("/data/financials_gl.json").then(r => r.json()).then(data => { overviewDataCache = data; })
       );
     }
     
@@ -2601,7 +2601,7 @@ async function initOverviewModule() {
     
     if (!isData) {
       fetchPromises.push(
-        fetch("/data/financials.json").then(r => r.json()).then(data => { 
+        fetch("/data/financials_gl.json").then(r => r.json()).then(data => { 
           isData = data;
           buildGLLookup();
         })
@@ -3359,7 +3359,7 @@ initOverviewModule();
 ============================================================ */
 async function loadFinancialCharts() {
   try {
-    const response = await fetch("/data/financials.json");
+    const response = await fetch("/data/financials_gl.json");
 
     const data = await response.json();
 
@@ -3502,7 +3502,7 @@ async function initRevenueModule() {
     if (spinner) spinner.classList.remove("hidden");
     
     if (!revenueDataCache) {
-      const response = await fetch("/data/financials.json");
+      const response = await fetch("/data/financials_gl.json");
       if (!response.ok) throw new Error("Failed to fetch revenue data");
       revenueDataCache = await response.json();
     }
@@ -6266,7 +6266,7 @@ async function initAccountModule() {
       if (revenueDataCache) {
         acctDataCache = revenueDataCache;
       } else {
-        const response = await fetch("/data/financials.json");
+        const response = await fetch("/data/financials_gl.json");
         if (!response.ok) throw new Error("Failed to fetch account data");
         acctDataCache = await response.json();
         revenueDataCache = acctDataCache;
@@ -6880,7 +6880,7 @@ async function loadIncomeStatement() {
   if (!isData || !isAccountGroups) {
     try {
       const [financialsRes, groupsRes] = await Promise.all([
-        fetch("/data/financials.json"),
+        fetch("/data/financials_gl.json"),
         fetch("/data/account_groups.json")
       ]);
       isData = await financialsRes.json();
@@ -8388,7 +8388,7 @@ function initBalanceSheet() {
   }
   
   Promise.all([
-    fetch("data/financials.json").then(r => r.json()),
+    fetch("data/financials_gl.json").then(r => r.json()),
     fetch("data/account_groups.json").then(r => r.json())
   ]).then(([financials, accountGroups]) => {
     bsData = financials;
@@ -9199,7 +9199,7 @@ async function loadCashFlowStatement() {
   if (!cfData || !cfAccountGroups) {
     try {
       const [financialsRes, groupsRes] = await Promise.all([
-        fetch("/data/financials.json"),
+        fetch("/data/financials_gl.json"),
         fetch("/data/account_groups.json")
       ]);
       cfData = await financialsRes.json();
@@ -11912,7 +11912,7 @@ async function loadJobBudgetsData() {
   if (loadingOverlay) loadingOverlay.classList.remove('hidden');
   
   try {
-    const resp = await fetch('data/financials.json');
+    const resp = await fetch('data/financials_jobs.json');
     const text = await resp.text();
     const data = JSON.parse(text.replace(/^\uFEFF/, ''));
     
@@ -12625,7 +12625,7 @@ async function loadJobActualsData() {
   if (loadingOverlay) loadingOverlay.classList.remove('hidden');
   
   try {
-    const resp = await fetch('data/financials.json');
+    const resp = await fetch('data/financials_jobs.json');
     const text = await resp.text();
     const data = JSON.parse(text.replace(/^\uFEFF/, ''));
     
@@ -13074,7 +13074,7 @@ function loadMissingBudgetsData() {
   const tbody = document.getElementById('missingBudgetsTableBody');
   if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">Loading job data...</td></tr>';
   
-  fetch('data/financials.json')
+  fetch('data/financials_jobs.json')
     .then(resp => resp.text())
     .then(text => {
       const data = JSON.parse(text.replace(/^\uFEFF/, ''));
