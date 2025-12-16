@@ -463,6 +463,8 @@ function initAuth() {
   
   const isAuthenticated = localStorage.getItem("ftg_authenticated");
   const currentUser = localStorage.getItem("ftg_current_user");
+  const cachedIsAdmin = localStorage.getItem("ftg_is_admin") === "true";
+  const cachedRole = localStorage.getItem("ftg_user_role") || '';
   
   if (isAuthenticated === "true" && currentUser) {
     loginScreen.classList.add("hidden");
@@ -470,6 +472,33 @@ function initAuth() {
       const displayName = currentUser.charAt(0).toUpperCase() + currentUser.slice(1);
       currentUserEl.textContent = displayName;
     }
+    
+    // IMMEDIATELY show overview section to prevent blank screen on page refresh
+    // This runs synchronously before async checkAdminAccess completes
+    const overviewEl = document.getElementById('overview');
+    const overviewNav = document.querySelector('.nav-item[data-section="overview"]');
+    if (overviewEl && !document.querySelector('.dashboard-section.visible')) {
+      overviewEl.classList.add('visible');
+      if (overviewNav) overviewNav.classList.add('active');
+      // Initialize overview data
+      if (typeof initOverviewModule === 'function') initOverviewModule();
+      if (typeof loadFinancialCharts === 'function') loadFinancialCharts();
+    }
+    
+    // IMMEDIATELY show admin nav if user was previously identified as admin
+    // This uses cached localStorage value before async API call completes
+    if (cachedIsAdmin) {
+      const adminNavItem = document.getElementById('adminNavItem');
+      if (adminNavItem) {
+        adminNavItem.classList.remove('hidden');
+      }
+      window.isAdminUser = true;
+    }
+    window.userRole = cachedRole;
+  } else {
+    // Not authenticated - show login screen, but also show overview as background content
+    const overviewEl = document.getElementById('overview');
+    if (overviewEl) overviewEl.classList.add('visible');
   }
   
   // User dropdown toggle
@@ -491,10 +520,13 @@ function initAuth() {
       localStorage.removeItem("ftg_authenticated");
       localStorage.removeItem("ftg_current_user");
       localStorage.removeItem("ftg_session_token");
+      localStorage.removeItem("ftg_is_admin");
+      localStorage.removeItem("ftg_user_role");
       if (currentUserEl) currentUserEl.textContent = "";
       if (userDropdownMenu) userDropdownMenu.classList.add("hidden");
       window.userPermissions = [];
       window.isAdminUser = false;
+      window.userRole = '';
       const adminNavItem = document.getElementById('adminNavItem');
       if (adminNavItem) adminNavItem.classList.add('hidden');
       loginScreen.classList.remove("hidden");
@@ -783,7 +815,6 @@ function showDisable2FASection() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  console.log('DOMContentLoaded fired - initializing dashboard');
   initAuth();
   initSidebar();
   initNavigation();
@@ -13397,28 +13428,22 @@ const sectionOrder = [
 
 // Check permissions and show/hide nav items based on user role
 async function checkAdminAccess() {
-  console.log('checkAdminAccess called');
   const token = getAuthToken();
-  console.log('Token:', token ? 'exists' : 'missing');
   if (!token) {
     // No token - show overview as default for legacy behavior
-    console.log('No token, showing default section');
     showDefaultSection();
     return;
   }
   
   try {
-    console.log('Fetching /api/verify-session...');
     const resp = await fetch('/api/verify-session', { headers: getAuthHeaders() });
     const data = await resp.json();
-    console.log('verify-session response:', data);
     
     if (data.success && data.user) {
       const userPerms = data.user.permissions || [];
       // Case-insensitive admin check
       const userRole = data.user.role || '';
       const isAdmin = userRole.toLowerCase() === 'admin';
-      console.log('User role:', userRole, 'isAdmin:', isAdmin, 'permissions:', userPerms);
       
       // Get all nav items
       const navItems = document.querySelectorAll('.nav-item[data-section]');
@@ -13426,24 +13451,25 @@ async function checkAdminAccess() {
       navItems.forEach(navItem => {
         const section = navItem.getAttribute('data-section');
         const permKey = sectionToPermission[section];
-        console.log('Nav item:', section, 'permKey:', permKey, 'isAdmin:', isAdmin, 'hasPermission:', userPerms.includes(permKey));
         
         if (permKey) {
           // Admin role has all permissions, otherwise check specific permission
           if (isAdmin || userPerms.includes(permKey)) {
-            console.log('Showing nav item:', section);
             navItem.classList.remove('hidden');
           } else {
-            console.log('Hiding nav item:', section);
             navItem.classList.add('hidden');
           }
         }
       });
       
-      // Store permissions for later use
+      // Store permissions for later use (in memory and localStorage for page refresh)
       window.userPermissions = userPerms;
       window.isAdminUser = isAdmin;
       window.userRole = userRole;
+      
+      // Cache admin status in localStorage for immediate access on page refresh
+      localStorage.setItem("ftg_is_admin", isAdmin ? "true" : "false");
+      localStorage.setItem("ftg_user_role", userRole);
       
       // Navigate to the appropriate default page based on permissions
       navigateToDefaultPage(userRole, userPerms, isAdmin);
@@ -13460,7 +13486,6 @@ async function checkAdminAccess() {
 
 // Fallback function to show overview when permission check fails or for non-authenticated users
 function showDefaultSection() {
-  console.log('showDefaultSection called');
   const overviewEl = document.getElementById('overview');
   const overviewNav = document.querySelector('.nav-item[data-section="overview"]');
   
@@ -13481,7 +13506,6 @@ function showDefaultSection() {
 }
 
 function navigateToDefaultPage(userRole, userPerms, isAdmin) {
-  console.log('navigateToDefaultPage called', { userRole, userPerms, isAdmin });
   // Determine which section to show
   let targetSection = null;
   
@@ -13568,10 +13592,8 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
 }
 
 // Update initNavigation to handle admin section
-console.log('Setting up wrapped initNavigation');
 const originalInitNav = initNavigation;
 initNavigation = function() {
-  console.log('initNavigation called (wrapped version)');
   originalInitNav();
   
   // Add admin section handler

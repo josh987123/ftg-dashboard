@@ -148,10 +148,25 @@
       localStorage.setItem('ftg_authenticated', 'true');
       localStorage.setItem('ftg_current_user', data.email);
       localStorage.setItem('ftg_session_token', data.token);
+      
+      // Cache role and admin status for immediate access on page refresh
+      var role = data.role || '';
+      var isAdmin = role.toLowerCase() === 'admin';
+      localStorage.setItem('ftg_user_role', role);
+      localStorage.setItem('ftg_is_admin', isAdmin ? 'true' : 'false');
+      
       document.getElementById('loginScreen').classList.add('hidden');
       
       var userLabel = document.getElementById('currentUser');
       if (userLabel) userLabel.textContent = data.displayName;
+      
+      // Show admin nav immediately if user is admin
+      if (isAdmin) {
+        var adminNavItem = document.getElementById('adminNavItem');
+        if (adminNavItem) adminNavItem.classList.remove('hidden');
+        window.isAdminUser = true;
+      }
+      window.userRole = role;
       
       if (typeof loadUserPreferences === 'function') {
         setTimeout(function() { loadUserPreferences(); }, 100);
@@ -2334,7 +2349,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251216d"></script>
+  <script src="dashboard.js?v=20251216e"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>

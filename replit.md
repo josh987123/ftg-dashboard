@@ -59,6 +59,11 @@ The Jobs section in the sidebar contains job-related tracking views:
 ### Responsive Design
 The application adopts a mobile-first approach with a responsive sidebar navigation, hamburger menu, and flexible layout using CSS flexbox.
 
+### Session & Navigation State
+- **Cached Auth State**: Admin status and user role are cached in localStorage (`ftg_is_admin`, `ftg_user_role`) for immediate page load without network delay
+- **Instant Section Display**: On page refresh, the overview section is shown immediately (synchronously) while async permission verification runs in background
+- **Admin Nav Persistence**: Admin navigation visibility is restored instantly from localStorage cache on authenticated page loads
+
 ### Color Standards
 A defined color palette is used for consistency:
 - **Positive/Success**: Green (`#10b981`)
