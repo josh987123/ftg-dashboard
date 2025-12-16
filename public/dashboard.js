@@ -11818,6 +11818,25 @@ function setupJobBudgetsEventListeners() {
     });
   });
   
+  // Quick sort buttons
+  document.querySelectorAll('#jobBudgets .quick-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sortCol = btn.dataset.sort;
+      const sortDir = btn.dataset.dir;
+      
+      // Update active state
+      document.querySelectorAll('#jobBudgets .quick-sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Set sort and re-render
+      jobBudgetsSortColumn = sortCol;
+      jobBudgetsSortDirection = sortDir;
+      jobBudgetsCurrentPage = 1;
+      sortJobBudgets();
+      renderJobBudgetsTable();
+    });
+  });
+  
   // Breakdown table expand/collapse buttons
   document.querySelectorAll('.breakdown-expand-btn').forEach(btn => {
     btn.addEventListener('click', () => {

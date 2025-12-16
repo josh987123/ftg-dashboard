@@ -7314,6 +7314,66 @@ body.dark-mode .job-search-input:focus {
   pointer-events: none;
 }
 
+/* Quick Sort Buttons */
+.quick-sort-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.quick-sort-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-right: 4px;
+}
+
+body.dark-mode .quick-sort-label {
+  color: #9ca3af;
+}
+
+.quick-sort-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-sort-btn:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.quick-sort-btn.active {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+body.dark-mode .quick-sort-btn {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+body.dark-mode .quick-sort-btn:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+body.dark-mode .quick-sort-btn.active {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
 /* Job Summary Metrics */
 .job-summary-metrics {
   display: flex;
