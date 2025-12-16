@@ -1914,66 +1914,6 @@
           </div>
         </div>
 
-        <!-- Breakdown Section -->
-        <div class="job-breakdown-section">
-          <div class="breakdown-container stacked">
-            <div class="breakdown-card">
-              <div class="chart-subtitle">Actual Cost by Project Manager</div>
-              <div class="breakdown-chart-wrapper">
-                <canvas id="jaPmDonutChart"></canvas>
-              </div>
-              <button class="breakdown-expand-btn" data-target="jaPmTableWrapper">
-                <span class="expand-text">Expand</span>
-                <span class="expand-arrow">▼</span>
-              </button>
-              <div class="breakdown-table-wrapper collapsed" id="jaPmTableWrapper">
-                <table class="breakdown-table" id="jaPmBreakdownTable">
-                  <thead>
-                    <tr>
-                      <th>Project Manager</th>
-                      <th class="number-col">Jobs</th>
-                      <th class="number-col">Earned Rev</th>
-                      <th class="number-col">Actual Cost</th>
-                      <th class="number-col">Profit</th>
-                      <th class="number-col">Margin</th>
-                    </tr>
-                  </thead>
-                  <tbody id="jaPmBreakdownBody">
-                    <tr><td colspan="6" class="loading-cell">Loading...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div class="breakdown-card">
-              <div class="chart-subtitle">Actual Cost by Customer</div>
-              <div class="breakdown-chart-wrapper">
-                <canvas id="jaCustomerDonutChart"></canvas>
-              </div>
-              <button class="breakdown-expand-btn" data-target="jaCustomerTableWrapper">
-                <span class="expand-text">Expand</span>
-                <span class="expand-arrow">▼</span>
-              </button>
-              <div class="breakdown-table-wrapper collapsed" id="jaCustomerTableWrapper">
-                <table class="breakdown-table" id="jaCustomerBreakdownTable">
-                  <thead>
-                    <tr>
-                      <th>Customer</th>
-                      <th class="number-col">Jobs</th>
-                      <th class="number-col">Earned Rev</th>
-                      <th class="number-col">Actual Cost</th>
-                      <th class="number-col">Profit</th>
-                      <th class="number-col">Margin</th>
-                    </tr>
-                  </thead>
-                  <tbody id="jaCustomerBreakdownBody">
-                    <tr><td colspan="6" class="loading-cell">Loading...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Search Bar -->
         <div class="job-search-bar">
           <input type="text" id="jaSearchInput" placeholder="Search by job number, description, or customer..." class="job-search-input">

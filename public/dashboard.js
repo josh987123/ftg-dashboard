@@ -12805,10 +12805,7 @@ function updateJobActualsSummaryMetrics() {
 }
 
 function renderJobActualsBreakdowns() {
-  renderJaPmDonutChart();
-  renderJaCustomerDonutChart();
-  renderJaPmBreakdownTable();
-  renderJaCustomerBreakdownTable();
+  // Donut charts removed per user request
 }
 
 function renderJaPmDonutChart() {
