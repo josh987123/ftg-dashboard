@@ -7251,6 +7251,7 @@ body.dark-mode .config-label {
 #jobBudgets .config-panel {
   width: 60%;
   max-width: 60%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
@@ -7779,6 +7780,7 @@ body.dark-mode .job-key-metrics-section .section-title {
   gap: 16px;
   width: 60%;
   max-width: 60%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
@@ -7916,11 +7918,12 @@ body.dark-mode .job-metric-card .metric-label {
 }
 
 .breakdown-container {
-  display: inline-flex;
+  display: flex;
   flex-wrap: nowrap;
   gap: 20px;
   width: 60%;
   max-width: 60%;
+  box-sizing: border-box;
 }
 
 .breakdown-card {
