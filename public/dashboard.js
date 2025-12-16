@@ -13498,12 +13498,32 @@ async function checkAdminAccess() {
       // Navigate to the appropriate default page based on permissions
       navigateToDefaultPage(userRole, userPerms, isAdmin);
     } else {
-      // Session invalid - show default section
+      // Session invalid - but preserve cached admin status for display continuity
+      console.log('[DEBUG] Session invalid but checking cached admin status');
+      const cachedIsAdmin = localStorage.getItem("ftg_is_admin") === "true";
+      if (cachedIsAdmin) {
+        window.isAdminUser = true;
+        const adminNavItem = document.getElementById('adminNavItem');
+        if (adminNavItem) {
+          adminNavItem.classList.remove('hidden');
+          console.log('[DEBUG] Session invalid - Preserved admin nav from cache');
+        }
+      }
       showDefaultSection();
     }
   } catch (err) {
-    console.error('Failed to check permissions:', err);
-    // On error, show default section to avoid blank screen
+    console.error('[DEBUG] Failed to check permissions:', err);
+    // On error, preserve cached admin status and show default section
+    const cachedIsAdmin = localStorage.getItem("ftg_is_admin") === "true";
+    console.log('[DEBUG] Error catch - cachedIsAdmin:', cachedIsAdmin);
+    if (cachedIsAdmin) {
+      window.isAdminUser = true;
+      const adminNavItem = document.getElementById('adminNavItem');
+      if (adminNavItem) {
+        adminNavItem.classList.remove('hidden');
+        console.log('[DEBUG] Error catch - Preserved admin nav visibility from cache');
+      }
+    }
     showDefaultSection();
   }
 }
