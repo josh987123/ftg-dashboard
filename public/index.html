@@ -49,11 +49,37 @@
       var banner = document.getElementById('debugBanner');
       var cached = localStorage.getItem('ftg_is_admin');
       var auth = localStorage.getItem('ftg_authenticated');
+      var token = localStorage.getItem('ftg_session_token');
       banner.textContent = 'Cache: admin=' + cached + ', auth=' + auth;
       
-      // If cached as admin, we'll show the nav item as soon as it exists
+      // If authenticated but admin cache is missing, fetch it from API
+      if (auth === 'true' && token && cached === null) {
+        banner.textContent += ' | Fetching role...';
+        fetch('/api/verify-session', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success && data.user) {
+            var role = data.user.role || '';
+            var isAdmin = role.toLowerCase() === 'admin';
+            localStorage.setItem('ftg_is_admin', isAdmin ? 'true' : 'false');
+            localStorage.setItem('ftg_user_role', role);
+            banner.textContent = 'Fetched: admin=' + isAdmin + ', role=' + role;
+            if (isAdmin) {
+              var adminNav = document.getElementById('adminNavItem');
+              if (adminNav) {
+                adminNav.classList.remove('hidden');
+                banner.textContent += ' | NavShown!';
+              }
+            }
+          }
+        })
+        .catch(function(e) { banner.textContent += ' | FetchErr: ' + e; });
+      }
+      
+      // If cached as admin, show nav immediately
       if (cached === 'true' && auth === 'true') {
-        // Wait for DOM to have the nav item, then show it
         var checkNav = setInterval(function() {
           var adminNav = document.getElementById('adminNavItem');
           if (adminNav) {
@@ -62,7 +88,6 @@
             clearInterval(checkNav);
           }
         }, 50);
-        // Stop checking after 3 seconds
         setTimeout(function() { clearInterval(checkNav); }, 3000);
       }
     })();
@@ -2375,11 +2400,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251216j"></script>
+  <script src="dashboard.js?v=20251216k"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251216j';
+    const APP_VERSION = '20251216k';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {
