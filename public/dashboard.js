@@ -12706,7 +12706,7 @@ function renderMissingBudgetsTable() {
   const pageData = missingBudgetsFiltered.slice(start, end);
   
   tbody.innerHTML = pageData.map(job => {
-    const status = getJobStatusInfo(job.job_status);
+    const status = getJobStatusLabel(job.job_status);
     return `<tr>
       <td>${job.job_no || ''}</td>
       <td>${job.job_description || ''}</td>
