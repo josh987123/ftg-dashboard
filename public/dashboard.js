@@ -12456,21 +12456,52 @@ function updateJobPagination(total) {
 // MISSING BUDGETS MODULE
 // ========================================
 
-let missingBudgetsData = [];
 let missingBudgetsFiltered = [];
 let mbCurrentPage = 1;
 let mbPageSize = 25;
 let mbSortColumn = 'job_no';
 let mbSortDirection = 'asc';
 let mbActiveTab = 'noContract';
+let mbEventListenersSetup = false;
 
-function initMissingBudgets() {
-  if (missingBudgetsData.length === 0) {
-    loadMissingBudgetsData();
-  } else {
-    renderMissingBudgetsTable();
+async function initMissingBudgets() {
+  // Reuse data from Job Budgets module - load it if not already loaded
+  if (jobBudgetsData.length === 0) {
+    await loadJobBudgetsData();
   }
-  setupMissingBudgetsEventListeners();
+  
+  // Populate MB filter dropdowns from the shared data
+  populateMbFilters();
+  
+  // Set data as of date
+  const dateEl = document.getElementById('missingBudgetsDataAsOf');
+  if (dateEl) {
+    dateEl.textContent = document.getElementById('jobBudgetsDataAsOf')?.textContent || new Date().toLocaleDateString();
+  }
+  
+  filterMissingBudgets();
+  
+  if (!mbEventListenersSetup) {
+    setupMissingBudgetsEventListeners();
+    mbEventListenersSetup = true;
+  }
+}
+
+function populateMbFilters() {
+  const pms = [...new Set(jobBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+  const customers = [...new Set(jobBudgetsData.map(j => j.customer_name).filter(Boolean))].sort();
+  
+  const pmSelect = document.getElementById('mbPmFilter');
+  if (pmSelect && pmSelect.options.length <= 1) {
+    pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
+      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+  }
+  
+  const custSelect = document.getElementById('mbCustomerFilter');
+  if (custSelect && custSelect.options.length <= 1) {
+    custSelect.innerHTML = '<option value="">All Customers</option>' + 
+      customers.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
 }
 
 function setupMissingBudgetsEventListeners() {
@@ -12563,61 +12594,6 @@ function setupMissingBudgetsEventListeners() {
   });
 }
 
-async function loadMissingBudgetsData() {
-  const overlay = document.getElementById('missingBudgetsLoadingOverlay');
-  overlay?.classList.remove('hidden');
-  
-  try {
-    // Use the same data source as Job Budgets (financials.json)
-    const resp = await fetch('data/financials.json');
-    if (!resp.ok) throw new Error('Failed to load job data');
-    const text = await resp.text();
-    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
-    
-    // Extract jobs from financials data, calculating revised values
-    const jobs = data.jobs || [];
-    missingBudgetsData = jobs.map(job => ({
-      ...job,
-      original_contract: job.original_contract || 0,
-      tot_income_adj: job.tot_income_adj || 0,
-      revised_contract: (job.original_contract || 0) + (job.tot_income_adj || 0),
-      original_cost: job.original_cost || 0,
-      tot_cost_adj: job.tot_cost_adj || 0,
-      revised_cost: (job.original_cost || 0) + (job.tot_cost_adj || 0)
-    }));
-    
-    // Populate PM and Customer dropdowns
-    const pms = [...new Set(missingBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
-    const customers = [...new Set(missingBudgetsData.map(j => j.customer_name).filter(Boolean))].sort();
-    
-    const pmSelect = document.getElementById('mbPmFilter');
-    if (pmSelect) {
-      pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
-        pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
-    }
-    
-    const custSelect = document.getElementById('mbCustomerFilter');
-    if (custSelect) {
-      custSelect.innerHTML = '<option value="">All Customers</option>' + 
-        customers.map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-    
-    // Set data as of date
-    const dateEl = document.getElementById('missingBudgetsDataAsOf');
-    if (dateEl && data.generated_at) {
-      dateEl.textContent = new Date(data.generated_at).toLocaleDateString();
-    }
-    
-    filterMissingBudgets();
-  } catch (err) {
-    console.error('Failed to load missing budgets data:', err);
-    const tbody = document.getElementById('missingBudgetsTableBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">Error loading data</td></tr>';
-  } finally {
-    overlay?.classList.add('hidden');
-  }
-}
-
 function filterMissingBudgets() {
   const statusActive = document.getElementById('mbStatusActive')?.checked;
   const statusInactive = document.getElementById('mbStatusInactive')?.checked;
@@ -12628,7 +12604,8 @@ function filterMissingBudgets() {
   const custFilter = document.getElementById('mbCustomerFilter')?.value || '';
   const search = (document.getElementById('mbSearchInput')?.value || '').toLowerCase();
   
-  missingBudgetsFiltered = missingBudgetsData.filter(job => {
+  // Use shared jobBudgetsData from Job Budgets module
+  missingBudgetsFiltered = jobBudgetsData.filter(job => {
     // Filter by tab (missing contract vs missing cost)
     if (mbActiveTab === 'noContract') {
       if ((job.revised_contract || 0) !== 0) return false;
