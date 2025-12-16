@@ -156,9 +156,8 @@
       if (typeof loadUserPreferences === 'function') {
         setTimeout(function() { loadUserPreferences(); }, 100);
       }
-      // Call checkAdminAccess immediately to prevent unauthorized section visibility
       if (typeof checkAdminAccess === 'function') {
-        checkAdminAccess();
+        setTimeout(function() { checkAdminAccess(); }, 100);
       }
     }
     
@@ -2335,7 +2334,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251214b"></script>
+  <script src="dashboard.js?v=20251216a"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>

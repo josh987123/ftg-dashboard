@@ -3306,9 +3306,7 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
   }
 }
 
-// Defer initOverviewModule until after permissions are checked
-// This prevents preloading overview data for unauthorized users
-// initOverviewModule is called by loadFinancialCharts when overview section is shown
+initOverviewModule();
 
 /* ============================================================
    FINANCIALS SECTION (STATIC CHARTS)
@@ -13398,12 +13396,21 @@ const sectionOrder = [
 
 // Check permissions and show/hide nav items based on user role
 async function checkAdminAccess() {
+  console.log('checkAdminAccess called');
   const token = getAuthToken();
-  if (!token) return;
+  console.log('Token:', token ? 'exists' : 'missing');
+  if (!token) {
+    // No token - show overview as default for legacy behavior
+    console.log('No token, showing default section');
+    showDefaultSection();
+    return;
+  }
   
   try {
+    console.log('Fetching /api/verify-session...');
     const resp = await fetch('/api/verify-session', { headers: getAuthHeaders() });
     const data = await resp.json();
+    console.log('verify-session response:', data);
     
     if (data.success && data.user) {
       const userPerms = data.user.permissions || [];
@@ -13434,13 +13441,34 @@ async function checkAdminAccess() {
       
       // Navigate to the appropriate default page based on permissions
       navigateToDefaultPage(userRole, userPerms, isAdmin);
+    } else {
+      // Session invalid - show default section
+      showDefaultSection();
     }
   } catch (err) {
     console.error('Failed to check permissions:', err);
+    // On error, show default section to avoid blank screen
+    showDefaultSection();
+  }
+}
+
+// Fallback function to show overview when permission check fails
+function showDefaultSection() {
+  const overviewEl = document.getElementById('overview');
+  const overviewNav = document.querySelector('.nav-item[data-section="overview"]');
+  
+  if (overviewEl) {
+    overviewEl.classList.add('visible');
+    initOverviewModule();
+    loadFinancialCharts();
+  }
+  if (overviewNav) {
+    overviewNav.classList.add('active');
   }
 }
 
 function navigateToDefaultPage(userRole, userPerms, isAdmin) {
+  console.log('navigateToDefaultPage called', { userRole, userPerms, isAdmin });
   // Determine which section to show
   let targetSection = null;
   
@@ -13528,6 +13556,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
 // Update initNavigation to handle admin section
 const originalInitNav = initNavigation;
 initNavigation = function() {
+  console.log('initNavigation called (wrapped version)');
   originalInitNav();
   
   // Add admin section handler
@@ -13539,5 +13568,6 @@ initNavigation = function() {
   }
   
   // Check admin access on load
+  console.log('Calling checkAdminAccess from initNavigation');
   checkAdminAccess();
 };
