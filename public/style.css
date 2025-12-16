@@ -7764,14 +7764,33 @@ body.dark-mode .job-metric-card {
 }
 
 .job-metric-card.primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-color: #2563eb;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-color: #e2e8f0;
 }
 
 .job-metric-card.primary .metric-icon,
 .job-metric-card.primary .metric-value,
 .job-metric-card.primary .metric-label {
+  color: #1e293b;
+}
+
+.job-metric-card.primary .metric-icon {
+  background: #f1f5f9;
+}
+
+body.dark-mode .job-metric-card.primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #2563eb;
+}
+
+body.dark-mode .job-metric-card.primary .metric-icon,
+body.dark-mode .job-metric-card.primary .metric-value,
+body.dark-mode .job-metric-card.primary .metric-label {
   color: #ffffff;
+}
+
+body.dark-mode .job-metric-card.primary .metric-icon {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .job-metric-card.profit .metric-value {
@@ -7783,11 +7802,19 @@ body.dark-mode .job-metric-card {
 }
 
 .job-metric-card.margin .metric-value {
-  color: #3b82f6;
+  color: #10b981;
 }
 
 .job-metric-card.margin .metric-value.negative {
   color: #dc2626;
+}
+
+body.dark-mode .job-metric-card.margin .metric-value {
+  color: #10b981;
+}
+
+body.dark-mode .job-metric-card.margin .metric-value.negative {
+  color: #ef4444;
 }
 
 .metric-icon {
@@ -7804,10 +7831,6 @@ body.dark-mode .job-metric-card {
 
 body.dark-mode .metric-icon {
   background: #475569;
-}
-
-.job-metric-card.primary .metric-icon {
-  background: rgba(255, 255, 255, 0.2);
 }
 
 .metric-content {
