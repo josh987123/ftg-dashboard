@@ -7531,6 +7531,42 @@ body.dark-mode .job-budgets-table td.cost-detail-col {
   background: rgba(251, 191, 36, 0.2);
 }
 
+/* Missing Budgets table - same yellow shading for detail columns */
+.job-budgets-table th.mb-contract-detail-col,
+.job-budgets-table td.mb-contract-detail-col,
+.job-budgets-table th.mb-cost-detail-col,
+.job-budgets-table td.mb-cost-detail-col {
+  background: rgba(251, 191, 36, 0.15);
+}
+
+body.dark-mode .job-budgets-table th.mb-contract-detail-col,
+body.dark-mode .job-budgets-table td.mb-contract-detail-col,
+body.dark-mode .job-budgets-table th.mb-cost-detail-col,
+body.dark-mode .job-budgets-table td.mb-cost-detail-col {
+  background: rgba(251, 191, 36, 0.2);
+}
+
+/* Missing Budgets expand icon styling */
+.mb-expand-icon {
+  cursor: pointer;
+  font-size: 10px;
+  margin-right: 4px;
+  color: #6b7280;
+  transition: transform 0.2s;
+}
+
+.mb-expand-icon:hover {
+  color: #3b82f6;
+}
+
+body.dark-mode .mb-expand-icon {
+  color: #9ca3af;
+}
+
+body.dark-mode .mb-expand-icon:hover {
+  color: #60a5fa;
+}
+
 .job-budgets-table td {
   padding: 10px 12px;
   border-bottom: 1px solid #e5e7eb;
