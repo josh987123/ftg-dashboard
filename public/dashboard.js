@@ -12682,12 +12682,11 @@ async function loadJobActualsData() {
       }
       if (!isFinite(earnedRevenue)) earnedRevenue = 0;
       
-      const actualProfit = earnedRevenue - job.actual_cost;
-      let actualMargin = 0;
-      if (earnedRevenue > 0) {
-        actualMargin = (actualProfit / earnedRevenue) * 100;
+      let percentComplete = 0;
+      if (revisedCost > 0 && job.actual_cost > 0) {
+        percentComplete = (job.actual_cost / revisedCost) * 100;
       }
-      if (!isFinite(actualMargin)) actualMargin = 0;
+      if (!isFinite(percentComplete)) percentComplete = 0;
       
       jobActualsData.push({
         ...job,
@@ -12696,8 +12695,7 @@ async function loadJobActualsData() {
         revised_cost: revisedCost,
         billed_revenue: billedRevenue,
         earned_revenue: earnedRevenue,
-        actual_profit: isFinite(actualProfit) ? actualProfit : 0,
-        actual_margin: actualMargin
+        percent_complete: percentComplete
       });
     });
     
@@ -12777,7 +12775,7 @@ function sortJobActuals() {
     let aVal = a[col];
     let bVal = b[col];
     
-    if (['billed_revenue', 'earned_revenue', 'actual_cost', 'actual_profit', 'actual_margin'].includes(col)) {
+    if (['billed_revenue', 'earned_revenue', 'actual_cost', 'percent_complete'].includes(col)) {
       return ((aVal || 0) - (bVal || 0)) * dir;
     }
     
@@ -13026,15 +13024,20 @@ function renderJobActualsTable() {
   const pageData = jobActualsFiltered.slice(startIdx, endIdx);
   
   if (pageData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">No jobs found matching filters</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">No jobs found matching filters</td></tr>';
     updateJaPagination(0);
     return;
   }
   
   tbody.innerHTML = pageData.map(job => {
     const status = getJobStatusLabel(job.job_status);
-    const profitClass = job.actual_profit >= 0 ? 'positive' : 'negative';
-    const marginColor = getMarginColor(job.actual_margin);
+    const pctComplete = job.percent_complete || 0;
+    let pctCompleteColor = '';
+    if (pctComplete > 100) {
+      pctCompleteColor = 'background-color: rgba(220, 38, 38, 0.15);';
+    } else if (pctComplete >= 90) {
+      pctCompleteColor = 'background-color: rgba(245, 158, 11, 0.15);';
+    }
     
     return `<tr>
       <td>${job.job_no}</td>
@@ -13045,8 +13048,7 @@ function renderJobActualsTable() {
       <td class="number-col">${formatCurrency(job.billed_revenue || 0)}</td>
       <td class="number-col">${formatCurrency(job.earned_revenue)}</td>
       <td class="number-col">${formatCurrency(job.actual_cost)}</td>
-      <td class="number-col ${profitClass}">${formatCurrency(job.actual_profit)}</td>
-      <td class="number-col" style="background-color: ${marginColor}">${job.actual_margin.toFixed(1)}%</td>
+      <td class="number-col" style="${pctCompleteColor}">${pctComplete.toFixed(1)}%</td>
     </tr>`;
   }).join('');
   

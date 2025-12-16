@@ -1985,7 +1985,7 @@
           <span class="quick-sort-label">Quick Sort:</span>
           <button class="quick-sort-btn ja-quick-sort" data-sort="actual_cost" data-dir="desc">Highest Actual Cost</button>
           <button class="quick-sort-btn ja-quick-sort" data-sort="earned_revenue" data-dir="desc">Highest Earned Revenue</button>
-          <button class="quick-sort-btn ja-quick-sort" data-sort="actual_margin" data-dir="desc">Highest Margin %</button>
+          <button class="quick-sort-btn ja-quick-sort" data-sort="percent_complete" data-dir="desc">Highest % Complete</button>
         </div>
 
         <!-- Jobs Table -->
@@ -2005,12 +2005,11 @@
                 <th class="sortable ja-sortable number-col" data-sort="billed_revenue">Billed Revenue</th>
                 <th class="sortable ja-sortable number-col" data-sort="earned_revenue">Earned Revenue</th>
                 <th class="sortable ja-sortable number-col" data-sort="actual_cost">Actual Cost</th>
-                <th class="sortable ja-sortable number-col" data-sort="actual_profit">Actual Profit</th>
-                <th class="sortable ja-sortable number-col" data-sort="actual_margin">Margin %</th>
+                <th class="sortable ja-sortable number-col" data-sort="percent_complete">% Complete</th>
               </tr>
             </thead>
             <tbody id="jobActualsTableBody">
-              <tr><td colspan="10" class="loading-cell">Loading job actuals data...</td></tr>
+              <tr><td colspan="9" class="loading-cell">Loading job actuals data...</td></tr>
             </tbody>
           </table>
         </div>
