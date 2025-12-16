@@ -41,6 +41,32 @@
 </head>
 
 <body>
+  <!-- TEMPORARY DEBUG BANNER - shows admin status for mobile debugging -->
+  <div id="debugBanner" style="position:fixed;top:0;left:0;right:0;background:#ff0;color:#000;padding:4px 8px;font-size:11px;z-index:99999;display:block;">Debug: Loading...</div>
+  <script>
+    // IMMEDIATE execution - before any other JS loads
+    (function() {
+      var banner = document.getElementById('debugBanner');
+      var cached = localStorage.getItem('ftg_is_admin');
+      var auth = localStorage.getItem('ftg_authenticated');
+      banner.textContent = 'Cache: admin=' + cached + ', auth=' + auth;
+      
+      // If cached as admin, we'll show the nav item as soon as it exists
+      if (cached === 'true' && auth === 'true') {
+        // Wait for DOM to have the nav item, then show it
+        var checkNav = setInterval(function() {
+          var adminNav = document.getElementById('adminNavItem');
+          if (adminNav) {
+            adminNav.classList.remove('hidden');
+            banner.textContent += ' | NavFound, removed hidden';
+            clearInterval(checkNav);
+          }
+        }, 50);
+        // Stop checking after 3 seconds
+        setTimeout(function() { clearInterval(checkNav); }, 3000);
+      }
+    })();
+  </script>
   <!-- LOGIN SCREEN -->
   <div id="loginScreen" class="login-screen">
     <div class="login-box">
@@ -2349,11 +2375,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251216i"></script>
+  <script src="dashboard.js?v=20251216j"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251216i';
+    const APP_VERSION = '20251216j';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {
