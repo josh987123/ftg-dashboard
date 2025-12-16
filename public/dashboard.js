@@ -12491,7 +12491,7 @@ function initMissingBudgets() {
     .then(resp => resp.text())
     .then(text => {
       const data = JSON.parse(text.replace(/^\uFEFF/, ''));
-      const jobs = data.jobs || [];
+      const jobs = data.job_budgets || [];
       
       // Populate the shared jobBudgetsData array
       jobBudgetsData = jobs.map(job => ({
