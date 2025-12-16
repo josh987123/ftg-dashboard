@@ -12464,27 +12464,59 @@ let mbSortDirection = 'asc';
 let mbActiveTab = 'noContract';
 let mbEventListenersSetup = false;
 
-async function initMissingBudgets() {
-  // Reuse data from Job Budgets module - load it if not already loaded
-  if (jobBudgetsData.length === 0) {
-    await loadJobBudgetsData();
-  }
-  
-  // Populate MB filter dropdowns from the shared data
-  populateMbFilters();
-  
-  // Set data as of date
-  const dateEl = document.getElementById('missingBudgetsDataAsOf');
-  if (dateEl) {
-    dateEl.textContent = document.getElementById('jobBudgetsDataAsOf')?.textContent || new Date().toLocaleDateString();
-  }
-  
-  filterMissingBudgets();
-  
+function initMissingBudgets() {
+  // Setup event listeners first (only once)
   if (!mbEventListenersSetup) {
     setupMissingBudgetsEventListeners();
     mbEventListenersSetup = true;
   }
+  
+  // If Job Budgets data is already loaded, render immediately
+  if (jobBudgetsData.length > 0) {
+    populateMbFilters();
+    const dateEl = document.getElementById('missingBudgetsDataAsOf');
+    if (dateEl) {
+      dateEl.textContent = document.getElementById('jobBudgetsDataAsOf')?.textContent || new Date().toLocaleDateString();
+    }
+    filterMissingBudgets();
+    return;
+  }
+  
+  // Otherwise, load the data
+  const tbody = document.getElementById('missingBudgetsTableBody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">Loading job data...</td></tr>';
+  
+  // Fetch from same endpoint as Job Budgets
+  fetch('data/financials.json')
+    .then(resp => resp.text())
+    .then(text => {
+      const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+      const jobs = data.jobs || [];
+      
+      // Populate the shared jobBudgetsData array
+      jobBudgetsData = jobs.map(job => ({
+        ...job,
+        original_contract: job.original_contract || 0,
+        tot_income_adj: job.tot_income_adj || 0,
+        revised_contract: (job.original_contract || 0) + (job.tot_income_adj || 0),
+        original_cost: job.original_cost || 0,
+        tot_cost_adj: job.tot_cost_adj || 0,
+        revised_cost: (job.original_cost || 0) + (job.tot_cost_adj || 0),
+        estimated_profit: ((job.original_contract || 0) + (job.tot_income_adj || 0)) - ((job.original_cost || 0) + (job.tot_cost_adj || 0))
+      }));
+      
+      // Now populate and render
+      populateMbFilters();
+      const dateEl = document.getElementById('missingBudgetsDataAsOf');
+      if (dateEl && data.generated_at) {
+        dateEl.textContent = new Date(data.generated_at).toLocaleDateString();
+      }
+      filterMissingBudgets();
+    })
+    .catch(err => {
+      console.error('Failed to load job data:', err);
+      if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">Error loading data</td></tr>';
+    });
 }
 
 function populateMbFilters() {
