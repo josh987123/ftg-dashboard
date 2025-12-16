@@ -12493,17 +12493,25 @@ function initMissingBudgets() {
       const data = JSON.parse(text.replace(/^\uFEFF/, ''));
       const jobs = data.job_budgets || [];
       
-      // Populate the shared jobBudgetsData array
-      jobBudgetsData = jobs.map(job => ({
-        ...job,
-        original_contract: job.original_contract || 0,
-        tot_income_adj: job.tot_income_adj || 0,
-        revised_contract: (job.original_contract || 0) + (job.tot_income_adj || 0),
-        original_cost: job.original_cost || 0,
-        tot_cost_adj: job.tot_cost_adj || 0,
-        revised_cost: (job.original_cost || 0) + (job.tot_cost_adj || 0),
-        estimated_profit: ((job.original_contract || 0) + (job.tot_income_adj || 0)) - ((job.original_cost || 0) + (job.tot_cost_adj || 0))
-      }));
+      // Populate the shared jobBudgetsData array (parse strings to numbers)
+      jobBudgetsData = jobs.map(job => {
+        const origContract = parseFloat(job.original_contract) || 0;
+        const incomeAdj = parseFloat(job.tot_income_adj) || 0;
+        const origCost = parseFloat(job.original_cost) || 0;
+        const costAdj = parseFloat(job.tot_cost_adj) || 0;
+        const revisedContract = parseFloat(job.revised_contract) || (origContract + incomeAdj);
+        const revisedCost = parseFloat(job.revised_cost) || (origCost + costAdj);
+        return {
+          ...job,
+          original_contract: origContract,
+          tot_income_adj: incomeAdj,
+          revised_contract: revisedContract,
+          original_cost: origCost,
+          tot_cost_adj: costAdj,
+          revised_cost: revisedCost,
+          estimated_profit: revisedContract - revisedCost
+        };
+      });
       
       // Now populate and render
       populateMbFilters();
