@@ -13497,6 +13497,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     }
     
     // Initialize the section if needed
+    if (targetSection === "overview") loadFinancialCharts();
     if (targetSection === "jobBudgets") initJobBudgets();
     if (targetSection === "missingBudgets") initMissingBudgets();
     if (targetSection === "revenue") initRevenueModule();
@@ -13505,6 +13506,13 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     if (targetSection === "balanceSheet") initBalanceSheet();
     if (targetSection === "cashFlows") loadCashFlowStatement();
     if (targetSection === "cashReports") initCashReports();
+    if (targetSection === "admin") initAdminModule();
+  }
+  
+  // Show admin nav item if user is admin
+  if (isAdmin) {
+    const adminNavItem = document.getElementById('adminNavItem');
+    if (adminNavItem) adminNavItem.classList.remove('hidden');
   }
 }
 
