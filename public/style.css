@@ -7235,10 +7235,10 @@ body.dark-mode .config-label {
   color: #e5e7eb;
 }
 
-/* Job Budgets Config Panel - 70% width */
+/* Job Budgets Config Panel - 60% width */
 #jobBudgets .config-panel {
-  width: 70%;
-  max-width: 70%;
+  width: 60%;
+  max-width: 60%;
 }
 
 @media (max-width: 900px) {
@@ -7729,8 +7729,8 @@ body.dark-mode .job-key-metrics-section .section-title {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  width: 70%;
-  max-width: 70%;
+  width: 60%;
+  max-width: 60%;
 }
 
 @media (max-width: 900px) {
@@ -7846,17 +7846,19 @@ body.dark-mode .job-metric-card .metric-label {
 
 .breakdown-container {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 20px;
+  width: 60%;
+  max-width: 60%;
 }
 
 .breakdown-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  flex: 0 0 auto;
-  min-width: 380px;
-  max-width: 480px;
+  flex: 1 1 45%;
+  min-width: 280px;
+  max-width: 48%;
   overflow: visible;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
