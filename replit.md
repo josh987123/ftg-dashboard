@@ -52,6 +52,13 @@ The dashboard offers several key views:
 ### Jobs Module
 The Jobs section in the sidebar contains job-related tracking views:
 - **Job Budgets**: Displays all jobs with filtering by status (Active, Inactive, Closed, Overhead - Active checked by default), project manager, and customer. Features a searchable table with columns for Job #, Description, Customer, Status, Project Manager, Original Contract, Change Orders, Revised Contract (yellow-shaded), Original Cost, Cost Adjustments, Revised Cost, and Estimated Profit (calculated). Includes summary metrics (Total Jobs, Total Revised Contract, Total Revised Cost, Total Estimated Profit, Avg Profit Margin) and pagination.
+- **Job Actuals**: Displays actual costs vs earned revenue for jobs. Aggregates `actual_cost` from `job_actuals` data by job number and cross-references with `job_budgets` for contract/cost data. Key calculations:
+  - **Actual Cost**: Sum of `actual_cost` from `job_actuals` for each job
+  - **Earned Revenue**: `(Actual Cost / Revised Cost) × Revised Contract` - represents revenue earned based on percentage of budget spent
+  - **Billed Revenue**: Placeholder for future integration (currently shows $0)
+  - **Actual Profit**: `Earned Revenue - Actual Cost`
+  - **Actual Margin**: `(Actual Profit / Earned Revenue) × 100`
+  Features donut charts by PM and Customer, breakdown tables, same filtering options as Job Budgets, search, sort, and pagination.
 - **Missing Budgets**: Shows jobs with incomplete budget data. Has two tabs: "No Contract Value" (jobs with zero revised contract) and "No Estimated Cost" (jobs with zero revised cost). Features same configuration options as Job Budgets (status filters with Active checked by default, PM filter, Customer filter), search, and pagination. Simplified table with columns: Job #, Description, Customer, Status, Project Manager, Revised Contract, Revised Cost (no profit/margin columns).
 - **Job Analytics**: Placeholder for future job analytics features.
 - **Over/Under Bill**: Placeholder for future over/under billing tracking.
