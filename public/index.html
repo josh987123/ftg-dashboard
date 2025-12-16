@@ -440,6 +440,13 @@
           <span class="user-dropdown-arrow">▼</span>
         </button>
         <div id="userDropdownMenu" class="dropdown-menu hidden">
+          <div class="dropdown-item theme-selector">
+            <span>🎨 Theme</span>
+            <select id="themeSelect" onclick="event.stopPropagation()">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
           <button id="changePasswordBtn" class="dropdown-item">🔑 Change Password</button>
           <button id="securitySettingsBtn" class="dropdown-item">🔐 Security Settings</button>
           <button id="logoutBtn" class="dropdown-item">🚪 Logout</button>

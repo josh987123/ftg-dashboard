@@ -801,36 +801,46 @@ document.addEventListener("DOMContentLoaded", function() {
 ------------------------------------------------------------ */
 function setupDarkModeToggle() {
   const toggle = document.getElementById("darkModeToggle");
-  if (!toggle) return;
+  const themeSelect = document.getElementById("themeSelect");
   
   // Load saved theme preference and apply immediately
-  const savedTheme = localStorage.getItem("ftg_theme");
-  if (savedTheme === "dark") {
+  const savedTheme = localStorage.getItem("ftg_theme") || "light";
+  applyTheme(savedTheme);
+  
+  // Sync dropdown with current theme
+  if (themeSelect) {
+    themeSelect.value = savedTheme;
+    themeSelect.addEventListener("change", (e) => {
+      const newTheme = e.target.value;
+      applyTheme(newTheme);
+      localStorage.setItem("ftg_theme", newTheme);
+      updateChartColorsForTheme(newTheme);
+    });
+  }
+  
+  // Header toggle button
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+      applyTheme(newTheme);
+      localStorage.setItem("ftg_theme", newTheme);
+      updateChartColorsForTheme(newTheme);
+      if (themeSelect) themeSelect.value = newTheme;
+    });
+  }
+}
+
+function applyTheme(theme) {
+  if (theme === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
     document.body.classList.add("dark-mode");
     initChartJsThemeDefaults("dark");
   } else {
+    document.documentElement.removeAttribute("data-theme");
     document.body.classList.remove("dark-mode");
     initChartJsThemeDefaults("light");
   }
-  
-  toggle.addEventListener("click", () => {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-    const newTheme = currentTheme === "dark" ? "light" : "dark";
-    
-    if (newTheme === "dark") {
-      document.documentElement.setAttribute("data-theme", "dark");
-      document.body.classList.add("dark-mode");
-      localStorage.setItem("ftg_theme", "dark");
-    } else {
-      document.documentElement.removeAttribute("data-theme");
-      document.body.classList.remove("dark-mode");
-      localStorage.setItem("ftg_theme", "light");
-    }
-    
-    // Update Chart.js colors if charts exist
-    updateChartColorsForTheme(newTheme);
-  });
 }
 
 function applyJobBudgetsDarkModeStyles(theme) {

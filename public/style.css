@@ -657,6 +657,33 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   background: var(--bg-tertiary);
 }
 
+.dropdown-item.theme-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: default;
+}
+
+.dropdown-item.theme-selector:hover {
+  background: none;
+}
+
+.dropdown-item.theme-selector select {
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.dropdown-item.theme-selector select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
 .logout-btn {
   background: transparent;
   border: 1px solid rgba(255,255,255,0.3);
