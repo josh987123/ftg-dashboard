@@ -7251,7 +7251,6 @@ body.dark-mode .config-label {
 #jobBudgets .config-panel {
   width: 60%;
   max-width: 60%;
-  box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
@@ -7532,42 +7531,6 @@ body.dark-mode .job-budgets-table td.cost-detail-col {
   background: rgba(251, 191, 36, 0.2);
 }
 
-/* Missing Budgets table - same yellow shading for detail columns */
-.job-budgets-table th.mb-contract-detail-col,
-.job-budgets-table td.mb-contract-detail-col,
-.job-budgets-table th.mb-cost-detail-col,
-.job-budgets-table td.mb-cost-detail-col {
-  background: rgba(251, 191, 36, 0.15);
-}
-
-body.dark-mode .job-budgets-table th.mb-contract-detail-col,
-body.dark-mode .job-budgets-table td.mb-contract-detail-col,
-body.dark-mode .job-budgets-table th.mb-cost-detail-col,
-body.dark-mode .job-budgets-table td.mb-cost-detail-col {
-  background: rgba(251, 191, 36, 0.2);
-}
-
-/* Missing Budgets expand icon styling */
-.mb-expand-icon {
-  cursor: pointer;
-  font-size: 10px;
-  margin-right: 4px;
-  color: #6b7280;
-  transition: transform 0.2s;
-}
-
-.mb-expand-icon:hover {
-  color: #3b82f6;
-}
-
-body.dark-mode .mb-expand-icon {
-  color: #9ca3af;
-}
-
-body.dark-mode .mb-expand-icon:hover {
-  color: #60a5fa;
-}
-
 .job-budgets-table td {
   padding: 10px 12px;
   border-bottom: 1px solid #e5e7eb;
@@ -7780,7 +7743,6 @@ body.dark-mode .job-key-metrics-section .section-title {
   gap: 16px;
   width: 60%;
   max-width: 60%;
-  box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
@@ -7829,18 +7791,18 @@ body.dark-mode .job-metric-card {
 }
 
 body.dark-mode .job-metric-card.primary {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  border-color: #475569;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #2563eb;
 }
 
 body.dark-mode .job-metric-card.primary .metric-icon,
 body.dark-mode .job-metric-card.primary .metric-value,
 body.dark-mode .job-metric-card.primary .metric-label {
-  color: #f1f5f9;
+  color: #ffffff;
 }
 
 body.dark-mode .job-metric-card.primary .metric-icon {
-  background: #475569;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .job-metric-card.profit .metric-value {
@@ -7918,12 +7880,11 @@ body.dark-mode .job-metric-card .metric-label {
 }
 
 .breakdown-container {
-  display: flex;
+  display: inline-flex;
   flex-wrap: nowrap;
   gap: 20px;
   width: 60%;
   max-width: 60%;
-  box-sizing: border-box;
 }
 
 .breakdown-card {

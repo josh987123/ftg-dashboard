@@ -12533,9 +12533,7 @@ function setupMissingBudgetsEventListeners() {
   
   // Sortable headers
   document.querySelectorAll('#missingBudgetsTable .sortable').forEach(th => {
-    th.addEventListener('click', (e) => {
-      // Don't sort when clicking the expand icon
-      if (e.target.classList.contains('mb-expand-icon')) return;
+    th.addEventListener('click', () => {
       const col = th.dataset.sort;
       if (mbSortColumn === col) {
         mbSortDirection = mbSortDirection === 'asc' ? 'desc' : 'asc';
@@ -12544,26 +12542,6 @@ function setupMissingBudgetsEventListeners() {
         mbSortDirection = 'asc';
       }
       sortMissingBudgets();
-    });
-  });
-  
-  // Expand/collapse column groups
-  document.querySelectorAll('.mb-expand-icon').forEach(icon => {
-    icon.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const group = icon.dataset.expand;
-      const isExpanded = icon.classList.toggle('expanded');
-      icon.textContent = isExpanded ? '◀' : '▶';
-      
-      // Toggle header columns
-      document.querySelectorAll(`#missingBudgetsTable .mb-${group}-detail-col`).forEach(col => {
-        col.classList.toggle('hidden', !isExpanded);
-      });
-      
-      // Toggle body columns
-      document.querySelectorAll(`#missingBudgetsTableBody .mb-${group}-detail-col`).forEach(col => {
-        col.classList.toggle('hidden', !isExpanded);
-      });
     });
   });
 }
@@ -12679,16 +12657,8 @@ function renderMissingBudgetsTable() {
   const tbody = document.getElementById('missingBudgetsTableBody');
   if (!tbody) return;
   
-  // Update sort indicators
-  document.querySelectorAll('#missingBudgetsTable th.sortable').forEach(th => {
-    th.classList.remove('sort-asc', 'sort-desc');
-    if (th.dataset.sort === mbSortColumn) {
-      th.classList.add(mbSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
-    }
-  });
-  
   if (missingBudgetsFiltered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">No jobs found with missing budget data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">No jobs found with missing budget data</td></tr>';
     updateMbPagination(0);
     return;
   }
@@ -12696,12 +12666,6 @@ function renderMissingBudgetsTable() {
   const start = (mbCurrentPage - 1) * mbPageSize;
   const end = start + mbPageSize;
   const pageData = missingBudgetsFiltered.slice(start, end);
-  
-  // Check if columns are expanded
-  const contractExpanded = document.querySelector('.mb-expand-icon[data-expand="contract"]')?.classList.contains('expanded');
-  const costExpanded = document.querySelector('.mb-expand-icon[data-expand="cost"]')?.classList.contains('expanded');
-  const contractHidden = contractExpanded ? '' : 'hidden';
-  const costHidden = costExpanded ? '' : 'hidden';
   
   tbody.innerHTML = pageData.map(job => {
     const status = getJobStatusInfo(job.job_status);
@@ -12711,20 +12675,12 @@ function renderMissingBudgetsTable() {
       <td>${job.customer_name || ''}</td>
       <td><span class="job-status-badge ${status.class}">${status.label}</span></td>
       <td>${job.project_manager_name || ''}</td>
-      <td class="number-col mb-contract-detail-col ${contractHidden}">${formatCurrency(job.original_contract || 0)}</td>
-      <td class="number-col mb-contract-detail-col ${contractHidden}">${formatCurrency(job.tot_income_adj || 0)}</td>
-      <td class="number-col mb-revised-contract-col">${formatCurrency(job.revised_contract || 0)}</td>
-      <td class="number-col mb-cost-detail-col ${costHidden}">${formatCurrency(job.original_cost || 0)}</td>
-      <td class="number-col mb-cost-detail-col ${costHidden}">${formatCurrency(job.tot_cost_adj || 0)}</td>
-      <td class="number-col mb-revised-cost-col">${formatCurrency(job.revised_cost || 0)}</td>
+      <td class="number-col">${formatCurrency(job.revised_contract)}</td>
+      <td class="number-col">${formatCurrency(job.revised_cost)}</td>
     </tr>`;
   }).join('');
   
   updateMbPagination(missingBudgetsFiltered.length);
-  
-  // Apply dark mode styles after rendering
-  const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
-  applyJobBudgetsDarkModeStyles(currentTheme);
 }
 
 function updateMbPagination(total) {
