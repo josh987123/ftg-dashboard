@@ -156,8 +156,9 @@
       if (typeof loadUserPreferences === 'function') {
         setTimeout(function() { loadUserPreferences(); }, 100);
       }
+      // Call checkAdminAccess immediately to prevent unauthorized section visibility
       if (typeof checkAdminAccess === 'function') {
-        setTimeout(function() { checkAdminAccess(); }, 500);
+        checkAdminAccess();
       }
     }
     

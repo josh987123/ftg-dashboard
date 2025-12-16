@@ -1140,6 +1140,10 @@ function initNavigation() {
       }
 
       // Section-specific loaders
+      if (id === "overview") {
+        initOverviewModule();
+        loadFinancialCharts();
+      }
       if (id === "financials") loadFinancialCharts();
       if (id === "revenue") initRevenueModule();
       if (id === "accounts") initAccountModule();
@@ -3302,7 +3306,9 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
   }
 }
 
-initOverviewModule();
+// Defer initOverviewModule until after permissions are checked
+// This prevents preloading overview data for unauthorized users
+// initOverviewModule is called by loadFinancialCharts when overview section is shown
 
 /* ============================================================
    FINANCIALS SECTION (STATIC CHARTS)
@@ -13497,7 +13503,10 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     }
     
     // Initialize the section if needed
-    if (targetSection === "overview") loadFinancialCharts();
+    if (targetSection === "overview") {
+      initOverviewModule();
+      loadFinancialCharts();
+    }
     if (targetSection === "jobBudgets") initJobBudgets();
     if (targetSection === "missingBudgets") initMissingBudgets();
     if (targetSection === "revenue") initRevenueModule();
