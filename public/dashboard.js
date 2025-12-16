@@ -12638,16 +12638,16 @@ function filterMissingBudgets() {
   
   // Use shared jobBudgetsData from Job Budgets module
   missingBudgetsFiltered = jobBudgetsData.filter(job => {
-    // Filter by tab - check if BOTH component values are zero
+    // Filter by tab - check if BOTH component values are zero (handle string values)
     if (mbActiveTab === 'noContract') {
       // No Contract Value: Original Contract = 0 AND Change Orders = 0
-      const origContract = job.original_contract || 0;
-      const changeOrders = job.tot_income_adj || 0;
+      const origContract = parseFloat(job.original_contract) || 0;
+      const changeOrders = parseFloat(job.tot_income_adj) || 0;
       if (origContract !== 0 || changeOrders !== 0) return false;
     } else {
       // No Estimated Cost: Original Cost = 0 AND Cost Adjustments = 0
-      const origCost = job.original_cost || 0;
-      const costAdj = job.tot_cost_adj || 0;
+      const origCost = parseFloat(job.original_cost) || 0;
+      const costAdj = parseFloat(job.tot_cost_adj) || 0;
       if (origCost !== 0 || costAdj !== 0) return false;
     }
     
