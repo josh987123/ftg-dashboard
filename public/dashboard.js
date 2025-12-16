@@ -783,6 +783,7 @@ function showDisable2FASection() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+  console.log('DOMContentLoaded fired - initializing dashboard');
   initAuth();
   initSidebar();
   initNavigation();
@@ -13414,8 +13415,10 @@ async function checkAdminAccess() {
     
     if (data.success && data.user) {
       const userPerms = data.user.permissions || [];
-      const isAdmin = data.user.role === 'admin';
+      // Case-insensitive admin check
       const userRole = data.user.role || '';
+      const isAdmin = userRole.toLowerCase() === 'admin';
+      console.log('User role:', userRole, 'isAdmin:', isAdmin, 'permissions:', userPerms);
       
       // Get all nav items
       const navItems = document.querySelectorAll('.nav-item[data-section]');
@@ -13423,12 +13426,15 @@ async function checkAdminAccess() {
       navItems.forEach(navItem => {
         const section = navItem.getAttribute('data-section');
         const permKey = sectionToPermission[section];
+        console.log('Nav item:', section, 'permKey:', permKey, 'isAdmin:', isAdmin, 'hasPermission:', userPerms.includes(permKey));
         
         if (permKey) {
           // Admin role has all permissions, otherwise check specific permission
           if (isAdmin || userPerms.includes(permKey)) {
+            console.log('Showing nav item:', section);
             navItem.classList.remove('hidden');
           } else {
+            console.log('Hiding nav item:', section);
             navItem.classList.add('hidden');
           }
         }
@@ -13452,8 +13458,9 @@ async function checkAdminAccess() {
   }
 }
 
-// Fallback function to show overview when permission check fails
+// Fallback function to show overview when permission check fails or for non-authenticated users
 function showDefaultSection() {
+  console.log('showDefaultSection called');
   const overviewEl = document.getElementById('overview');
   const overviewNav = document.querySelector('.nav-item[data-section="overview"]');
   
@@ -13465,6 +13472,12 @@ function showDefaultSection() {
   if (overviewNav) {
     overviewNav.classList.add('active');
   }
+  
+  // Also check if we have stored admin status from a previous successful auth
+  if (window.isAdminUser) {
+    const adminNavItem = document.getElementById('adminNavItem');
+    if (adminNavItem) adminNavItem.classList.remove('hidden');
+  }
 }
 
 function navigateToDefaultPage(userRole, userPerms, isAdmin) {
@@ -13473,7 +13486,8 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
   let targetSection = null;
   
   // For Project Managers (manager role), default to Job Budgets if they have access
-  if (userRole === 'manager' && (isAdmin || userPerms.includes('job_budgets'))) {
+  const roleLower = userRole.toLowerCase();
+  if (roleLower === 'manager' && (isAdmin || userPerms.includes('job_budgets'))) {
     targetSection = 'jobBudgets';
   } else if (isAdmin) {
     // Admins default to overview
@@ -13554,6 +13568,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
 }
 
 // Update initNavigation to handle admin section
+console.log('Setting up wrapped initNavigation');
 const originalInitNav = initNavigation;
 initNavigation = function() {
   console.log('initNavigation called (wrapped version)');
