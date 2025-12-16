@@ -13462,6 +13462,16 @@ async function checkAdminAccess() {
         }
       });
       
+      // Special handling for admin nav - only visible to admin role
+      const adminNavItem = document.getElementById('adminNavItem');
+      if (adminNavItem) {
+        if (isAdmin) {
+          adminNavItem.classList.remove('hidden');
+        } else {
+          adminNavItem.classList.add('hidden');
+        }
+      }
+      
       // Store permissions for later use (in memory and localStorage for page refresh)
       window.userPermissions = userPerms;
       window.isAdminUser = isAdmin;
