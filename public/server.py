@@ -1194,7 +1194,7 @@ def api_login():
             'success': True,
             'displayName': user['display_name'],
             'email': user['email'],
-            'role': user['role_name'] or 'viewer',
+            'role': user['role_name'] or 'none',
             'permissions': permissions,
             'token': token
         })
@@ -1282,7 +1282,7 @@ def api_login_2fa():
             'success': True,
             'displayName': session['display_name'],
             'email': session['email'],
-            'role': session['role_name'] or 'viewer',
+            'role': session['role_name'] or 'none',
             'permissions': permissions,
             'token': token
         })
@@ -1614,7 +1614,7 @@ def api_verify_session():
                 'id': user['id'],
                 'email': user['email'],
                 'displayName': user['display_name'],
-                'role': user['role_name'] or 'viewer',
+                'role': user['role_name'] or 'none',
                 'permissions': permissions
             }
         })
