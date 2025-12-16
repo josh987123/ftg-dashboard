@@ -12533,7 +12533,8 @@ function setupMissingBudgetsEventListeners() {
   
   // Sortable headers
   document.querySelectorAll('#missingBudgetsTable .sortable').forEach(th => {
-    th.addEventListener('click', () => {
+    th.addEventListener('click', (e) => {
+      if (e.target.classList.contains('expand-icon')) return;
       const col = th.dataset.sort;
       if (mbSortColumn === col) {
         mbSortDirection = mbSortDirection === 'asc' ? 'desc' : 'asc';
@@ -12542,6 +12543,22 @@ function setupMissingBudgetsEventListeners() {
         mbSortDirection = 'asc';
       }
       sortMissingBudgets();
+    });
+  });
+  
+  // Expandable column toggles for Missing Budgets table
+  document.querySelectorAll('#missingBudgetsTable .expand-icon').forEach(icon => {
+    icon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const type = icon.dataset.expand;
+      const detailClass = type === 'mb-contract' ? 'contract-detail-col' : 'cost-detail-col';
+      
+      icon.classList.toggle('expanded');
+      
+      // Toggle visibility of detail columns in Missing Budgets table only
+      document.querySelectorAll(`#missingBudgetsTable .${detailClass}`).forEach(el => {
+        el.classList.toggle('hidden');
+      });
     });
   });
 }
@@ -12583,7 +12600,7 @@ async function loadMissingBudgetsData() {
   } catch (err) {
     console.error('Failed to load missing budgets data:', err);
     const tbody = document.getElementById('missingBudgetsTableBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Error loading data</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">Error loading data</td></tr>';
   } finally {
     overlay?.classList.add('hidden');
   }
@@ -12658,7 +12675,7 @@ function renderMissingBudgetsTable() {
   if (!tbody) return;
   
   if (missingBudgetsFiltered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">No jobs found with missing budget data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">No jobs found with missing budget data</td></tr>';
     updateMbPagination(0);
     return;
   }
@@ -12675,8 +12692,12 @@ function renderMissingBudgetsTable() {
       <td>${job.customer_name || ''}</td>
       <td><span class="job-status-badge ${status.class}">${status.label}</span></td>
       <td>${job.project_manager_name || ''}</td>
-      <td class="number-col">${formatCurrency(job.revised_contract)}</td>
-      <td class="number-col">${formatCurrency(job.revised_cost)}</td>
+      <td class="number-col contract-detail-col hidden">${formatCurrency(job.original_contract)}</td>
+      <td class="number-col contract-detail-col hidden">${formatCurrency(job.tot_income_adj)}</td>
+      <td class="number-col revised-contract-col">${formatCurrency(job.revised_contract)}</td>
+      <td class="number-col cost-detail-col hidden">${formatCurrency(job.original_cost)}</td>
+      <td class="number-col cost-detail-col hidden">${formatCurrency(job.tot_cost_adj)}</td>
+      <td class="number-col revised-cost-col">${formatCurrency(job.revised_cost)}</td>
     </tr>`;
   }).join('');
   

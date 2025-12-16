@@ -7791,18 +7791,18 @@ body.dark-mode .job-metric-card {
 }
 
 body.dark-mode .job-metric-card.primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-color: #2563eb;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-color: #475569;
 }
 
 body.dark-mode .job-metric-card.primary .metric-icon,
 body.dark-mode .job-metric-card.primary .metric-value,
 body.dark-mode .job-metric-card.primary .metric-label {
-  color: #ffffff;
+  color: #f1f5f9;
 }
 
 body.dark-mode .job-metric-card.primary .metric-icon {
-  background: rgba(255, 255, 255, 0.2);
+  background: #475569;
 }
 
 .job-metric-card.profit .metric-value {
@@ -8821,6 +8821,26 @@ body.dark-mode .job-budgets-table .margin-cell {
    JOB BUDGETS - COMPREHENSIVE FIX FOR ALL ISSUES
    ============================================================ */
 
+/* JOB BUDGETS PAGE - Align config, metrics, and donut charts at 60% width */
+#jobBudgets > .config-panel {
+  width: 60%;
+  max-width: 60%;
+  box-sizing: border-box;
+}
+
+#jobBudgets .job-key-metrics-section {
+  width: 60%;
+  max-width: 60%;
+}
+
+@media (max-width: 900px) {
+  #jobBudgets > .config-panel,
+  #jobBudgets .job-key-metrics-section {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
 /* 1. FILTER DROPDOWNS - Stack vertically with no titles */
 .job-filter-stack {
   display: flex;
@@ -8832,14 +8852,14 @@ body.dark-mode .job-budgets-table .margin-cell {
   width: 200px;
 }
 
-/* 2. BREAKDOWN CONTAINER - 70% screen width total, side by side */
+/* 2. BREAKDOWN CONTAINER - 60% screen width total, side by side */
 .breakdown-container.stacked {
   display: flex !important;
   flex-wrap: nowrap;
   gap: 20px;
   justify-content: flex-start;
-  width: 70%;
-  max-width: 70%;
+  width: 60%;
+  max-width: 60%;
 }
 
 .breakdown-container.stacked .breakdown-card {
