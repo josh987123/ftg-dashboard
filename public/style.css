@@ -8201,6 +8201,110 @@ body.dark-mode .page-size-select {
     padding-bottom: 4px !important;
   }
   
+  /* ========== FINANCIAL OVERVIEW CONFIG - ULTRA COMPACT ========== */
+  #overview .config-panel {
+    margin-bottom: 8px !important;
+  }
+  
+  #overview .config-body {
+    padding: 6px !important;
+    gap: 6px !important;
+  }
+  
+  /* Save view row - compact */
+  #overview .config-body > div:first-child {
+    gap: 4px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  #overview .config-body select {
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+    min-height: 26px !important;
+  }
+  
+  #overview .save-view-btn {
+    padding: 4px 8px !important;
+    font-size: 9px !important;
+  }
+  
+  /* View/Year row - side by side */
+  #overview .overview-config-box {
+    padding: 6px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  #overview .rev-controls {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  
+  #overview .rev-controls > div {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  
+  #overview .rev-controls label {
+    font-size: 10px !important;
+    min-width: auto !important;
+    color: #e5e7eb !important;
+  }
+  
+  #overview .rev-controls select {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  
+  /* Checkbox options - 2x2 grid */
+  #overview .checkbox-group {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 2px 8px !important;
+  }
+  
+  #overview .checkbox-group label,
+  #overview .checkbox-item label {
+    font-size: 9px !important;
+    padding: 2px 0 !important;
+    color: #e5e7eb !important;
+  }
+  
+  #overview .checkbox-group input[type="checkbox"],
+  #overview .checkbox-item input[type="checkbox"] {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  
+  /* Show Metrics section - 3 column grid */
+  #overview .metrics-checkboxes,
+  #overview .checkbox-group.metrics {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 2px 6px !important;
+  }
+  
+  /* Config box headers - visible in dark mode */
+  #overview .overview-config-box > div:first-child,
+  #overview .config-label,
+  #overview .overview-config-box label:first-child {
+    font-size: 9px !important;
+    color: #93c5fd !important;
+    margin-bottom: 4px !important;
+  }
+  
+  body.dark-mode #overview .overview-config-box > div:first-child,
+  body.dark-mode #overview .config-label {
+    color: #93c5fd !important;
+  }
+  
+  body.dark-mode #overview .checkbox-group label,
+  body.dark-mode #overview .checkbox-item label,
+  body.dark-mode #overview .rev-controls label {
+    color: #e5e7eb !important;
+  }
+  
   /* Reduce donut chart empty space - compact on mobile */
   .breakdown-chart-wrapper {
     height: 120px !important;
