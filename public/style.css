@@ -8209,33 +8209,56 @@ body.dark-mode .page-size-select {
     line-height: 1.2 !important;
   }
   
-  /* Job Budgets/Actuals donut charts - bigger chart, less empty space */
+  /* Job Budgets/Actuals donut charts - responsive sizing, minimal spacing */
   #jobBudgets .breakdown-chart-wrapper,
   #jobActuals .breakdown-chart-wrapper {
-    height: 160px !important;
-    margin-bottom: 4px !important;
-    padding: 4px !important;
+    aspect-ratio: 1 !important;
+    height: auto !important;
+    max-height: 200px !important;
+    margin-bottom: 2px !important;
+    padding: 0 !important;
   }
   
   #jobBudgets .breakdown-chart-wrapper canvas,
   #jobActuals .breakdown-chart-wrapper canvas {
-    max-height: 160px !important;
+    height: auto !important;
+    max-height: 200px !important;
   }
   
   #jobBudgets .breakdown-card,
   #jobActuals .breakdown-card {
     padding: 8px !important;
+    padding-bottom: 6px !important;
     margin-bottom: 8px !important;
+    gap: 4px !important;
   }
   
-  /* Legend - reduce empty space below */
+  /* Legend - minimal spacing */
   #jobBudgets .chart-legend,
   #jobActuals .chart-legend,
   #jobBudgets .donut-legend,
-  #jobActuals .donut-legend,
-  .breakdown-card .legend-items {
-    margin-bottom: 4px !important;
-    padding-bottom: 4px !important;
+  #jobActuals .donut-legend {
+    margin: 2px 0 !important;
+    padding: 0 !important;
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+  }
+  
+  /* Expand button/footer - reduce top margin */
+  #jobBudgets .breakdown-footer,
+  #jobActuals .breakdown-footer,
+  #jobBudgets .expand-btn,
+  #jobActuals .expand-btn,
+  #jobBudgets .expand-table-btn,
+  #jobActuals .expand-table-btn {
+    margin-top: 2px !important;
+    padding: 6px 10px !important;
+  }
+  
+  /* Collapsed details - no padding */
+  #jobBudgets .breakdown-details,
+  #jobActuals .breakdown-details {
+    padding: 0 !important;
   }
   
   /* Quick sort buttons - more compact */
