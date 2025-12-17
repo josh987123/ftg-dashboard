@@ -273,8 +273,7 @@ def init_database():
             ('cost_detail', 'Cost Detail', 'View job cost details'),
             ('missing_budgets', 'Missing Budgets', 'View jobs with missing budget data'),
             ('job_analytics', 'Job Analytics', 'View job performance metrics'),
-            ('over_under', 'Over/Under Bill', 'View billing variances'),
-            ('receivables', 'Receivables/Payables', 'View AR/AP tracking'),
+                        ('receivables', 'Receivables/Payables', 'View AR/AP tracking'),
             ('admin', 'Admin', 'Access user management and settings')
         ]
         for page_key, page_name, description in default_permissions:

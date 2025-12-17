@@ -1172,7 +1172,7 @@ function initNavigation() {
       
       // Auto-expand Jobs if child is clicked
       if (item.classList.contains("nav-child") && jobsParent && jobsChildren) {
-        const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
+        const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics'];
         if (jobsChildItems.includes(id)) {
           jobsParent.classList.add("expanded");
           jobsChildren.classList.add("expanded");
@@ -3968,7 +3968,7 @@ async function deleteScheduledReport(id) {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobBudgets", "receivablesPayables", "jobAnalytics", "overUnderBill", "admin"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobBudgets", "receivablesPayables", "jobAnalytics", "admin"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -14398,7 +14398,7 @@ async function openRoleModal(roleId = null) {
 function renderGroupedPermissions(permissions, selectedPerms, roleId, prefix) {
   const permissionGroups = {
     'Financials': ['overview', 'revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'receivables'],
-    'Job Reports': ['job_overview', 'job_budgets', 'job_actuals', 'cost_detail', 'missing_budgets', 'job_analytics', 'over_under'],
+    'Job Reports': ['job_overview', 'job_budgets', 'job_actuals', 'cost_detail', 'missing_budgets', 'job_analytics'],
     'Admin': ['admin']
   };
   
@@ -14641,8 +14641,7 @@ const sectionToPermission = {
   'incomeStatement': 'income_statement',
   'balanceSheet': 'balance_sheet',
   'cashFlows': 'cash_flow',
-  'overUnderBill': 'over_under',
-  'receivablesPayables': 'receivables',
+    'receivablesPayables': 'receivables',
   'jobAnalytics': 'job_analytics',
   'jobOverview': 'job_overview',
   'jobBudgets': 'job_budgets',
@@ -14656,7 +14655,7 @@ const sectionToPermission = {
 // Order of sections for default page selection
 const sectionOrder = [
   'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
-  'cashReports', 'accounts', 'receivablesPayables', 'jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'
+  'cashReports', 'accounts', 'receivablesPayables', 'jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics'
 ];
 
 // Check permissions and show/hide nav items based on user role
@@ -14827,7 +14826,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     const jobsChildren = document.getElementById("navJobsChildren");
     
     const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
-    const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
+    const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics'];
     
     if (fsChildren.includes(targetSection) && finStatementsParent && finStatementsChildren) {
       finStatementsParent.classList.add("expanded");

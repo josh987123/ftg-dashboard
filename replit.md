@@ -62,7 +62,6 @@ The Jobs section in the sidebar contains job-related tracking views:
   Features donut charts by PM and Customer, breakdown tables, same filtering options as Job Budgets, search, sort, and pagination.
 - **Missing Budgets**: Shows jobs with incomplete budget data. Has two tabs: "No Contract Value" (jobs with zero revised contract) and "No Estimated Cost" (jobs with zero revised cost). Features same configuration options as Job Budgets (status filters with Active checked by default, PM filter, Customer filter), search, and pagination. Simplified table with columns: Job #, Description, Customer, Status, Project Manager, Revised Contract, Revised Cost (no profit/margin columns).
 - **Job Analytics**: Placeholder for future job analytics features.
-- **Over/Under Bill**: Placeholder for future over/under billing tracking.
 
 ### Responsive Design
 The application adopts a mobile-first approach with a responsive sidebar navigation, hamburger menu, and flexible layout using CSS flexbox.
