@@ -2055,12 +2055,38 @@
                 </th>
                 <th class="number-col contract-detail-col hidden" data-sort="original_contract">Original Contract</th>
                 <th class="number-col contract-detail-col hidden" data-sort="tot_income_adj">Change Orders</th>
-                <th class="number-col revised-contract-col expandable-col" data-sort="revised_contract"><span class="expand-icon" data-expand="contract">▶</span> Contract Value</th>
+                <th class="number-col revised-contract-col expandable-col sortable-number" data-sort="revised_contract">
+                  <span class="expand-icon" data-expand="contract">▶</span>
+                  <span class="column-header-text">Contract Value</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="revised_contract" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="revised_contract" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
                 <th class="number-col cost-detail-col hidden" data-sort="original_cost">Original Cost</th>
                 <th class="number-col cost-detail-col hidden" data-sort="tot_cost_adj">Cost Adjustments</th>
-                <th class="number-col revised-cost-col expandable-col" data-sort="revised_cost"><span class="expand-icon" data-expand="cost">▶</span> Projected Cost</th>
-                <th class="number-col" data-sort="estimated_profit">Estimated Profit</th>
-                <th class="number-col" data-sort="profit_margin">Profit Margin</th>
+                <th class="number-col revised-cost-col expandable-col sortable-number" data-sort="revised_cost">
+                  <span class="expand-icon" data-expand="cost">▶</span>
+                  <span class="column-header-text">Projected Cost</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="revised_cost" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="revised_cost" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col sortable-number" data-sort="estimated_profit">
+                  <span class="column-header-text">Estimated Profit</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="estimated_profit" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="estimated_profit" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col sortable-number" data-sort="profit_margin">
+                  <span class="column-header-text">Profit Margin</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="profit_margin" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="profit_margin" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody id="jobBudgetsTableBody">

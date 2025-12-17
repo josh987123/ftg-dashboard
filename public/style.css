@@ -10937,6 +10937,22 @@ body.dark-mode .action-btn.success {
   gap: 0;
 }
 
+/* Inline sort controls for numeric columns */
+.sort-controls.inline-sort {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.sortable-number {
+  white-space: nowrap;
+}
+
+.sortable-number .column-header-text {
+  display: inline;
+}
+
 /* Filter button */
 .filter-btn {
   background: none;
