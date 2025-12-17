@@ -8107,6 +8107,53 @@ body.dark-mode .page-size-select {
     overflow-x: hidden;
   }
   
+  /* Reduce config header heights on mobile */
+  .config-header {
+    padding: 6px 10px !important;
+  }
+  
+  .config-title {
+    font-size: 11px !important;
+  }
+  
+  .config-expand-btn {
+    padding: 3px 8px !important;
+    font-size: 10px !important;
+  }
+  
+  .config-body {
+    padding: 8px 10px !important;
+  }
+  
+  /* Reduce section title heights */
+  .section-title,
+  .job-key-metrics-section .section-title {
+    font-size: 14px !important;
+    margin-bottom: 10px !important;
+    padding-bottom: 6px !important;
+  }
+  
+  /* Reduce donut chart empty space */
+  .breakdown-chart-wrapper {
+    height: 140px !important;
+    margin-bottom: 6px !important;
+    padding: 4px !important;
+  }
+  
+  .breakdown-chart-wrapper canvas {
+    max-height: 140px !important;
+  }
+  
+  .breakdown-card {
+    padding: 10px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .breakdown-card > .chart-subtitle {
+    padding: 2px 8px 0 !important;
+    font-size: 10px !important;
+  }
+  
   /* Config panels */
   #jobOverview .config-panel,
   #jobBudgets .config-panel,
