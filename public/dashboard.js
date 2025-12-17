@@ -3979,7 +3979,7 @@ async function deleteScheduledReport(id) {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobBudgets", "receivablesPayables", "jobAnalytics", "admin"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "receivablesPayables", "jobAnalytics", "admin"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -4048,6 +4048,15 @@ function getReportData() {
       tableHtml: getCashBalancesTableHtml(),
       csvData: getCashBalancesCsvData(),
       isWide: true
+    };
+  } else if (view === "jobOverview") {
+    return {
+      title: "Job Overview Report",
+      subtitle: getJobOverviewSubtitle(),
+      tableHtml: getJobOverviewTableHtml(),
+      csvData: getJobOverviewCsvData(),
+      isWide: true,
+      captureCharts: captureJobOverviewCharts
     };
   } else if (view === "jobBudgets") {
     return {
@@ -5433,7 +5442,7 @@ async function sendReportEmail() {
     let chartImage = "";
     
     // Capture chart image based on current view
-    if (view === "overview" || view === "revenue" || view === "accounts" || view === "cashReports") {
+    if (view === "overview" || view === "revenue" || view === "accounts" || view === "cashReports" || view === "jobOverview") {
       statusEl.textContent = "Capturing chart...";
       try {
         if (view === "overview") {
@@ -5444,6 +5453,8 @@ async function sendReportEmail() {
           chartImage = await captureAccountAsImage();
         } else if (view === "cashReports") {
           chartImage = await captureCashAsImage();
+        } else if (view === "jobOverview" && data.captureCharts) {
+          chartImage = await data.captureCharts();
         }
         
         if (chartImage) {
@@ -12902,6 +12913,189 @@ function updateJobOverviewMetrics() {
       overUnderEl.style.color = '#ef4444';
       if (overUnderTile) overUnderTile.style.borderLeftColor = '#ef4444';
     }
+  }
+}
+
+function getJobOverviewSubtitle() {
+  const filters = [];
+  const showActive = document.getElementById('joStatusActive')?.checked;
+  const showInactive = document.getElementById('joStatusInactive')?.checked;
+  const showClosed = document.getElementById('joStatusClosed')?.checked;
+  const showOverhead = document.getElementById('joStatusOverhead')?.checked;
+  
+  const statusFilters = [];
+  if (showActive) statusFilters.push('Active');
+  if (showInactive) statusFilters.push('Inactive');
+  if (showClosed) statusFilters.push('Closed');
+  if (showOverhead) statusFilters.push('Overhead');
+  if (statusFilters.length > 0 && statusFilters.length < 4) {
+    filters.push(`Status: ${statusFilters.join(', ')}`);
+  }
+  
+  const pm = document.getElementById('joPmFilter')?.value;
+  if (pm) filters.push(`PM: ${pm}`);
+  const client = document.getElementById('joCustomerFilter')?.value;
+  if (client) filters.push(`Client: ${client}`);
+  
+  const total = joFiltered?.length || 0;
+  let subtitle = `${total} Job${total !== 1 ? 's' : ''}`;
+  if (filters.length > 0) subtitle += ` | ${filters.join(' | ')}`;
+  return subtitle;
+}
+
+function getJobOverviewTableHtml() {
+  if (!joFiltered || joFiltered.length === 0) {
+    return "<p>No job data available</p>";
+  }
+  
+  const totalJobs = joFiltered.length;
+  const totalContract = joFiltered.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
+  const totalBilled = joFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const totalEarned = joFiltered.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  const totalOverUnder = totalBilled - totalEarned;
+  
+  const jobsWithValidMargin = joFiltered.filter(j => j.revised_contract > 0 && j.revised_cost > 0);
+  let avgProfitMargin = 0;
+  if (jobsWithValidMargin.length > 0) {
+    const totalContractForMargin = jobsWithValidMargin.reduce((sum, j) => sum + j.revised_contract, 0);
+    const totalCostForMargin = jobsWithValidMargin.reduce((sum, j) => sum + j.revised_cost, 0);
+    const totalProfitForMargin = totalContractForMargin - totalCostForMargin;
+    avgProfitMargin = totalContractForMargin > 0 ? (totalProfitForMargin / totalContractForMargin) * 100 : 0;
+  }
+  
+  const overUnderColor = totalOverUnder >= 0 ? '#10b981' : '#dc2626';
+  const marginColor = avgProfitMargin >= 0 ? '#10b981' : '#dc2626';
+  
+  let html = `<div style="margin-bottom:20px;">
+    <h3 style="margin:0 0 12px 0;font-size:14px;color:#374151;">Key Metrics</h3>
+    <table style="border-collapse:collapse;font-size:12px;">
+      <tr>
+        <td style="padding:6px 16px 6px 0;color:#6b7280;">Total Jobs:</td>
+        <td style="padding:6px 0;font-weight:600;">${totalJobs.toLocaleString()}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 16px 6px 0;color:#6b7280;">Contract Value:</td>
+        <td style="padding:6px 0;font-weight:600;">${formatCurrency(totalContract)}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 16px 6px 0;color:#6b7280;">Billed Revenue:</td>
+        <td style="padding:6px 0;font-weight:600;">${formatCurrency(totalBilled)}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 16px 6px 0;color:#6b7280;">Over/(Under) Bill:</td>
+        <td style="padding:6px 0;font-weight:600;color:${overUnderColor};">${formatCurrency(totalOverUnder)}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 16px 6px 0;color:#6b7280;">Est. Profit Margin:</td>
+        <td style="padding:6px 0;font-weight:600;color:${marginColor};">${avgProfitMargin.toFixed(1)}%</td>
+      </tr>
+    </table>
+  </div>`;
+  
+  return html;
+}
+
+function getJobOverviewCsvData() {
+  if (!joFiltered || joFiltered.length === 0) {
+    return "";
+  }
+  
+  let csv = "Job #,Description,Client,Status,Project Manager,Contract Value,Billed Revenue,Earned Revenue,Over/(Under) Bill,Est. Profit Margin %\n";
+  
+  joFiltered.forEach(job => {
+    const status = getJobStatusLabel(job.job_status);
+    const overUnder = (job.billed_revenue || 0) - (job.earned_revenue || 0);
+    const margin = job.revised_contract > 0 && job.revised_cost > 0 
+      ? ((job.revised_contract - job.revised_cost) / job.revised_contract) * 100 
+      : 0;
+    
+    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.revised_contract || 0},${job.billed_revenue || 0},${job.earned_revenue || 0},${overUnder},${margin.toFixed(1)}\n`;
+  });
+  
+  return csv;
+}
+
+async function captureJobOverviewCharts() {
+  try {
+    const chartConfigs = [
+      { chart: joPmJobsChart, title: '# of Jobs by PM' },
+      { chart: joPmContractChart, title: 'Contract Value by PM' },
+      { chart: joPmMarginChart, title: 'Profit Margin % by PM' },
+      { chart: joClientJobsChart, title: '# of Jobs by Client' },
+      { chart: joClientContractChart, title: 'Contract Value by Client' },
+      { chart: joClientMarginChart, title: 'Profit Margin % by Client' }
+    ];
+    
+    const loadImage = (src) => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+    
+    const chartImages = [];
+    for (const cfg of chartConfigs) {
+      if (cfg.chart) {
+        try {
+          const base64 = cfg.chart.toBase64Image("image/png", 1);
+          const img = await loadImage(base64);
+          if (img) chartImages.push({ img, title: cfg.title });
+        } catch (e) {
+          console.log("Error getting chart image:", cfg.title, e);
+        }
+      }
+    }
+    
+    console.log("Captured", chartImages.length, "job overview chart images");
+    
+    if (chartImages.length === 0) {
+      console.log("No chart images captured");
+      return null;
+    }
+    
+    const chartWidth = 350;
+    const chartHeight = 200;
+    const titleHeight = 25;
+    const padding = 12;
+    const tileHeight = titleHeight + chartHeight;
+    
+    const cols = 3;
+    const rows = 2;
+    
+    const compositeCanvas = document.createElement("canvas");
+    compositeCanvas.width = cols * chartWidth + (cols + 1) * padding;
+    compositeCanvas.height = rows * tileHeight + (rows + 1) * padding;
+    const ctx = compositeCanvas.getContext("2d");
+    
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+    
+    for (let i = 0; i < chartImages.length; i++) {
+      const { img, title } = chartImages[i];
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = padding + col * (chartWidth + padding);
+      const y = padding + row * (tileHeight + padding);
+      
+      ctx.fillStyle = "#374151";
+      ctx.font = "bold 13px Arial";
+      ctx.textAlign = "left";
+      ctx.fillText(title, x, y + 16);
+      
+      if (img) {
+        ctx.drawImage(img, x, y + titleHeight, chartWidth, chartHeight);
+      }
+    }
+    
+    const dataUrl = compositeCanvas.toDataURL("image/jpeg", 0.85);
+    const base64Data = dataUrl.split(",")[1];
+    const sizeKB = Math.round(base64Data.length / 1024);
+    console.log("Job Overview composite chart image size:", sizeKB, "KB");
+    
+    return base64Data;
+  } catch (err) {
+    console.error("Job Overview chart capture error:", err.message);
+    return null;
   }
 }
 
