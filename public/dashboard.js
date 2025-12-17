@@ -12930,21 +12930,42 @@ function renderPmDonutChart() {
       responsive: true,
       maintainAspectRatio: false,
       layout: {
-        padding: { left: 0, right: 10 }
+        padding: { left: 0, right: 0, top: 0, bottom: 0 }
       },
       plugins: {
         legend: {
           position: isMobile ? 'bottom' : 'right',
-          align: 'center',
+          align: 'start',
+          maxWidth: isMobile ? undefined : 160,
           labels: {
             color: isDarkMode ? '#e2e8f0' : '#374151',
             font: { size: isMobile ? 10 : 11 },
             boxWidth: isMobile ? 10 : 12,
-            padding: isMobile ? 6 : 8
+            padding: isMobile ? 6 : 6,
+            generateLabels: function(chart) {
+              const data = chart.data;
+              if (data.labels.length && data.datasets.length) {
+                return data.labels.map((label, i) => {
+                  const truncated = label.length > 18 ? label.substring(0, 16) + '...' : label;
+                  return {
+                    text: truncated,
+                    fillStyle: data.datasets[0].backgroundColor[i],
+                    strokeStyle: data.datasets[0].borderColor,
+                    lineWidth: data.datasets[0].borderWidth,
+                    hidden: false,
+                    index: i
+                  };
+                });
+              }
+              return [];
+            }
           }
         },
         tooltip: {
           callbacks: {
+            title: function(context) {
+              return labels[context[0].dataIndex];
+            },
             label: function(context) {
               const value = context.raw;
               const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -13009,21 +13030,42 @@ function renderCustomerDonutChart() {
       responsive: true,
       maintainAspectRatio: false,
       layout: {
-        padding: { left: 0, right: 10 }
+        padding: { left: 0, right: 0, top: 0, bottom: 0 }
       },
       plugins: {
         legend: {
           position: isMobile ? 'bottom' : 'right',
-          align: 'center',
+          align: 'start',
+          maxWidth: isMobile ? undefined : 160,
           labels: {
             color: isDarkMode ? '#e2e8f0' : '#374151',
             font: { size: isMobile ? 10 : 11 },
             boxWidth: isMobile ? 10 : 12,
-            padding: isMobile ? 6 : 8
+            padding: isMobile ? 6 : 6,
+            generateLabels: function(chart) {
+              const data = chart.data;
+              if (data.labels.length && data.datasets.length) {
+                return data.labels.map((label, i) => {
+                  const truncated = label.length > 18 ? label.substring(0, 16) + '...' : label;
+                  return {
+                    text: truncated,
+                    fillStyle: data.datasets[0].backgroundColor[i],
+                    strokeStyle: data.datasets[0].borderColor,
+                    lineWidth: data.datasets[0].borderWidth,
+                    hidden: false,
+                    index: i
+                  };
+                });
+              }
+              return [];
+            }
           }
         },
         tooltip: {
           callbacks: {
+            title: function(context) {
+              return labels[context[0].dataIndex];
+            },
             label: function(context) {
               const value = context.raw;
               const total = context.dataset.data.reduce((a, b) => a + b, 0);
