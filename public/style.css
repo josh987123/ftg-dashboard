@@ -10636,3 +10636,8 @@ body.dark-mode .action-btn.success {
 #jobBudgets .breakdown-table td.negative {
   color: #dc2626 !important;
 }
+
+/* Job Actuals - Keep Over/(Under) Bill column dark in dark mode */
+[data-theme="dark"] #jobActuals .job-budgets-table td[style*="background-color"] {
+  color: #1e293b !important;
+}
