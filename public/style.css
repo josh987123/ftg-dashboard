@@ -5724,12 +5724,14 @@ body.dark-mode .nav-item.nav-parent.expanded {
   opacity: 1;
 }
 
-/* Make matrix tables more compact on mobile */
+/* Make matrix tables fit content on mobile */
 @media (max-width: 768px) {
   #incomeStatementTable,
   #balanceSheetTable,
   #cashFlowTable {
-    min-width: 600px;
+    width: auto;
+    min-width: auto;
+    table-layout: auto;
     font-size: 11px;
   }
   
@@ -5741,9 +5743,10 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #cashFlowTable td {
     padding: 6px 8px;
     white-space: nowrap;
+    width: auto;
   }
   
-  /* Remove sticky positioning on mobile - allow free horizontal scroll */
+  /* First column fits content on mobile */
   #incomeStatementTable td:first-child,
   #incomeStatementTable th:first-child,
   #balanceSheetTable td:first-child,
@@ -5758,6 +5761,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
     max-width: none;
     min-width: auto;
     padding-right: 8px;
+    white-space: nowrap;
   }
   
   /* Scroll hint indicator */
@@ -5774,7 +5778,9 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #incomeStatementTable,
   #balanceSheetTable,
   #cashFlowTable {
-    min-width: 450px;
+    width: auto;
+    min-width: auto;
+    table-layout: auto;
     font-size: 10px;
   }
   
@@ -5785,9 +5791,10 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #cashFlowTable th,
   #cashFlowTable td {
     padding: 4px 6px;
+    width: auto;
   }
   
-  /* Non-sticky first column on small screens */
+  /* First column fits content on small screens */
   #incomeStatementTable td:first-child,
   #incomeStatementTable th:first-child,
   #balanceSheetTable td:first-child,
@@ -5796,6 +5803,9 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #cashFlowTable th:first-child {
     position: static;
     padding-right: 6px;
+    width: auto;
+    min-width: auto;
+    max-width: none;
   }
 }
 
