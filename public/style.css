@@ -9441,17 +9441,21 @@ body.dark-mode #navJobsChildren .nav-child.active {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  width: 80%;
+  margin: 0 auto;
 }
 
 @media (max-width: 1200px) {
   .overview-chart-grid {
     grid-template-columns: repeat(2, 1fr);
+    width: 90%;
   }
 }
 
 @media (max-width: 768px) {
   .overview-chart-grid {
     grid-template-columns: 1fr;
+    width: 100%;
   }
 }
 
@@ -9633,17 +9637,22 @@ body.dark-mode .jo-section-header {
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 24px;
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @media (max-width: 1100px) {
   .jo-chart-grid-3 {
     grid-template-columns: repeat(2, 1fr);
+    width: 90%;
   }
 }
 
 @media (max-width: 768px) {
   .jo-chart-grid-3 {
     grid-template-columns: 1fr;
+    width: 100%;
   }
 }
 
