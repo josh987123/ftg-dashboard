@@ -9382,6 +9382,112 @@ body.dark-mode .job-status-badge.overhead {
   max-height: 180px;
 }
 
+/* Donut Chart Flex Layout with External Legend */
+.donut-flex-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 12px;
+  min-height: 220px;
+}
+
+.donut-canvas-wrapper {
+  flex: 0 0 180px;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-canvas-wrapper canvas {
+  width: 180px !important;
+  height: 180px !important;
+}
+
+.donut-legend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.donut-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #374151;
+  line-height: 1.3;
+}
+
+.donut-legend-color {
+  flex: 0 0 12px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.donut-legend-label {
+  flex: 1;
+  word-break: break-word;
+}
+
+.donut-legend-value {
+  flex: 0 0 auto;
+  font-weight: 500;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+body.dark-mode .donut-legend-item {
+  color: #e2e8f0;
+}
+
+body.dark-mode .donut-legend-value {
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .donut-flex-container {
+    flex-direction: column;
+    align-items: center;
+    min-height: auto;
+  }
+  
+  .donut-canvas-wrapper {
+    flex: 0 0 140px;
+    width: 140px;
+    height: 140px;
+  }
+  
+  .donut-canvas-wrapper canvas {
+    width: 140px !important;
+    height: 140px !important;
+  }
+  
+  .donut-legend {
+    max-height: none;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center;
+    gap: 8px;
+    overflow-y: visible;
+  }
+  
+  .donut-legend-item {
+    font-size: 10px;
+  }
+  
+  .donut-legend-value {
+    display: none;
+  }
+}
+
 /* Child nav items in Financials and Jobs - solid backgrounds with high contrast text */
 #navFinancialStatementsChildren .nav-child,
 #navJobsChildren .nav-child {

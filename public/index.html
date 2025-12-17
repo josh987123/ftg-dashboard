@@ -1923,8 +1923,11 @@
           <div class="breakdown-container stacked">
             <div class="breakdown-card">
               <div class="chart-subtitle">Contract Value by Project Manager</div>
-              <div class="breakdown-chart-wrapper">
-                <canvas id="pmDonutChart"></canvas>
+              <div class="donut-flex-container">
+                <div class="donut-canvas-wrapper">
+                  <canvas id="pmDonutChart"></canvas>
+                </div>
+                <div class="donut-legend" id="pmDonutLegend"></div>
               </div>
               <button class="breakdown-expand-btn" data-target="pmTableWrapper">
                 <span class="expand-text">Expand</span>
@@ -1950,8 +1953,11 @@
             </div>
             <div class="breakdown-card">
               <div class="chart-subtitle">Contract Value by Client</div>
-              <div class="breakdown-chart-wrapper">
-                <canvas id="customerDonutChart"></canvas>
+              <div class="donut-flex-container">
+                <div class="donut-canvas-wrapper">
+                  <canvas id="customerDonutChart"></canvas>
+                </div>
+                <div class="donut-legend" id="customerDonutLegend"></div>
               </div>
               <button class="breakdown-expand-btn" data-target="customerTableWrapper">
                 <span class="expand-text">Expand</span>

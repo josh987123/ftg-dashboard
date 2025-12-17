@@ -13016,6 +13016,25 @@ function renderJobBreakdowns() {
   renderCustomerDonutChart();
 }
 
+function renderDonutLegend(labels, data, colors, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  const total = data.reduce((a, b) => a + b, 0);
+  
+  container.innerHTML = labels.map((label, i) => {
+    const value = data[i];
+    const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+    return `
+      <div class="donut-legend-item">
+        <div class="donut-legend-color" style="background-color: ${colors[i]}"></div>
+        <span class="donut-legend-label">${label}</span>
+        <span class="donut-legend-value">${pct}%</span>
+      </div>
+    `;
+  }).join('');
+}
+
 function renderPmDonutChart() {
   const canvas = document.getElementById('pmDonutChart');
   if (!canvas) return;
@@ -13046,7 +13065,7 @@ function renderPmDonutChart() {
   }
   
   const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains('dark-mode');
-  const isMobile = window.innerWidth <= 768;
+  const colors = chartColors.slice(0, labels.length);
   
   if (pmDonutChart) {
     pmDonutChart.destroy();
@@ -13058,29 +13077,17 @@ function renderPmDonutChart() {
       labels: labels,
       datasets: [{
         data: data,
-        backgroundColor: chartColors.slice(0, labels.length),
+        backgroundColor: colors,
         borderWidth: 2,
         borderColor: isDarkMode ? '#1e293b' : '#ffffff'
       }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
-      layout: {
-        padding: { left: 0, right: 0, top: 0, bottom: 0 }
-      },
+      maintainAspectRatio: true,
       plugins: {
         legend: {
-          position: 'bottom',
-          align: 'center',
-          labels: {
-            color: isDarkMode ? '#e2e8f0' : '#374151',
-            font: { size: 11 },
-            boxWidth: 12,
-            padding: 8,
-            usePointStyle: true,
-            pointStyle: 'rect'
-          }
+          display: false
         },
         tooltip: {
           callbacks: {
@@ -13098,6 +13105,8 @@ function renderPmDonutChart() {
       }
     }
   });
+  
+  renderDonutLegend(labels, data, colors, 'pmDonutLegend');
 }
 
 function renderCustomerDonutChart() {
@@ -13130,7 +13139,7 @@ function renderCustomerDonutChart() {
   }
   
   const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains('dark-mode');
-  const isMobile = window.innerWidth <= 768;
+  const colors = chartColors.slice(0, labels.length);
   
   if (customerDonutChart) {
     customerDonutChart.destroy();
@@ -13142,29 +13151,17 @@ function renderCustomerDonutChart() {
       labels: labels,
       datasets: [{
         data: data,
-        backgroundColor: chartColors.slice(0, labels.length),
+        backgroundColor: colors,
         borderWidth: 2,
         borderColor: isDarkMode ? '#1e293b' : '#ffffff'
       }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
-      layout: {
-        padding: { left: 0, right: 0, top: 0, bottom: 0 }
-      },
+      maintainAspectRatio: true,
       plugins: {
         legend: {
-          position: 'bottom',
-          align: 'center',
-          labels: {
-            color: isDarkMode ? '#e2e8f0' : '#374151',
-            font: { size: 11 },
-            boxWidth: 12,
-            padding: 8,
-            usePointStyle: true,
-            pointStyle: 'rect'
-          }
+          display: false
         },
         tooltip: {
           callbacks: {
@@ -13182,6 +13179,8 @@ function renderCustomerDonutChart() {
       }
     }
   });
+  
+  renderDonutLegend(labels, data, colors, 'customerDonutLegend');
 }
 
 function renderJobBreakdownByPm() {
