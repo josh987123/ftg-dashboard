@@ -1056,19 +1056,22 @@
             <div id="revPartialLegend" class="partial-legend hidden">
               <span class="partial-indicator"></span> Partial period (month in progress)
             </div>
-          </div>
-        </div>
-
-        <div class="rev-table-box">
-          <h3>
-            <span>Revenue Breakdown</span>
-            <button class="export-table-btn" id="revTableExportBtn" type="button">📥 Export CSV</button>
-          </h3>
-          <div class="table-scroll">
-            <table id="revTable">
-              <thead id="revTableHead"></thead>
-              <tbody id="revTableBody"></tbody>
-            </table>
+            <button class="breakdown-expand-btn" data-target="revTableWrapper">
+              <span class="expand-text">Expand</span>
+              <span class="expand-arrow">▼</span>
+            </button>
+            <div class="breakdown-table-wrapper collapsed" id="revTableWrapper">
+              <div class="table-header-row">
+                <span>Revenue Breakdown</span>
+                <button class="export-table-btn" id="revTableExportBtn" type="button">Export CSV</button>
+              </div>
+              <div class="table-scroll">
+                <table id="revTable" class="breakdown-table">
+                  <thead id="revTableHead"></thead>
+                  <tbody id="revTableBody"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1206,19 +1209,22 @@
             <div id="acctPartialLegend" class="partial-legend hidden">
               <span class="partial-indicator"></span> Partial period (month in progress)
             </div>
-          </div>
-        </div>
-
-        <div class="rev-table-box">
-          <h3>
-            <span>Account Breakdown</span>
-            <button class="export-table-btn" id="acctTableExportBtn" type="button">📥 Export CSV</button>
-          </h3>
-          <div class="table-scroll">
-            <table id="acctTable" class="acct-table">
-              <thead id="acctTableHead"></thead>
-              <tbody id="acctTableBody"></tbody>
-            </table>
+            <button class="breakdown-expand-btn" data-target="acctTableWrapper">
+              <span class="expand-text">Expand</span>
+              <span class="expand-arrow">▼</span>
+            </button>
+            <div class="breakdown-table-wrapper collapsed" id="acctTableWrapper">
+              <div class="table-header-row">
+                <span>Account Breakdown</span>
+                <button class="export-table-btn" id="acctTableExportBtn" type="button">Export CSV</button>
+              </div>
+              <div class="table-scroll">
+                <table id="acctTable" class="breakdown-table acct-table">
+                  <thead id="acctTableHead"></thead>
+                  <tbody id="acctTableBody"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 

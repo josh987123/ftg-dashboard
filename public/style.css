@@ -9220,6 +9220,29 @@ body.dark-mode .breakdown-expand-btn:hover {
   color: #f1f5f9;
 }
 
+/* Table header row inside collapsible sections */
+.table-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0 8px 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.table-header-row .export-table-btn {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+body.dark-mode .table-header-row {
+  color: #e2e8f0;
+  border-bottom-color: #475569;
+}
+
 /* Mobile: ensure table wrapper scrolls */
 @media (max-width: 768px) {
   .breakdown-card {
