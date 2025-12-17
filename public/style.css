@@ -8209,19 +8209,25 @@ body.dark-mode .page-size-select {
     line-height: 1.2 !important;
   }
   
-  /* Job Budgets/Actuals donut charts - responsive sizing, minimal spacing */
+  /* Job Budgets/Actuals donut charts - BIG charts, minimal spacing */
   #jobBudgets .breakdown-chart-wrapper,
   #jobActuals .breakdown-chart-wrapper {
-    aspect-ratio: 1 !important;
-    height: auto !important;
-    max-height: 200px !important;
+    width: 100% !important;
+    height: 220px !important;
+    min-height: 220px !important;
+    max-height: none !important;
     margin-bottom: 2px !important;
-    padding: 0 !important;
+    padding: 8px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
   }
   
   #jobBudgets .breakdown-chart-wrapper canvas,
   #jobActuals .breakdown-chart-wrapper canvas {
-    height: auto !important;
+    width: 200px !important;
+    height: 200px !important;
+    max-width: 200px !important;
     max-height: 200px !important;
   }
   
