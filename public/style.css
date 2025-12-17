@@ -9694,6 +9694,20 @@ body.dark-mode .chart-subtitle {
   border-top: 1px solid var(--border-primary);
 }
 
+.jo-key-metrics-constrained {
+  max-width: fit-content;
+}
+
+.jo-key-metrics-constrained .jo-metrics-row-5 {
+  gap: 12px;
+}
+
+.jo-key-metrics-constrained .job-metric-card.compact {
+  min-width: 120px;
+  max-width: 150px;
+  padding: 12px 16px;
+}
+
 .jo-chart-stats .stat-period {
   white-space: nowrap;
   overflow: hidden;
