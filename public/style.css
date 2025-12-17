@@ -2417,16 +2417,17 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 #cashFlowTable th:first-child {
-  background: #374151;
-  color: #fff;
+  background: #f8fafc;
+  color: #374151;
   z-index: 3;
 }
 
 #cashFlowTable th {
   position: sticky;
   top: 0;
-  background: #374151;
-  color: #fff;
+  background: #f8fafc;
+  font-weight: 600;
+  color: #374151;
   z-index: 1;
 }
 
@@ -6599,13 +6600,12 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 [data-theme="dark"] #cashFlowTable th:first-child {
-  background: #374151 !important;
-  color: #fff;
+  background: var(--table-header-bg);
 }
 
 [data-theme="dark"] #cashFlowTable th {
-  background: #374151 !important;
-  color: #fff;
+  background: var(--table-header-bg);
+  color: var(--text-primary);
 }
 
 /* Cash Flow subtotal rows - dark gray in dark mode */
