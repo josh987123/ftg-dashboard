@@ -8285,29 +8285,29 @@ body.dark-mode .page-size-select {
   /* Dropdown rows - side by side within a box */
   .dropdown-stack {
     display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 6px 12px !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 12px !important;
+    align-items: center !important;
   }
   
   .dropdown-row {
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 4px !important;
     min-width: 0 !important;
   }
   
   .dropdown-row label {
     font-size: 10px !important;
     white-space: nowrap !important;
-    min-width: 32px !important;
   }
   
   .dropdown-row select {
     font-size: 10px !important;
     padding: 4px 6px !important;
     min-height: 28px !important;
-    min-width: 80px !important;
-    max-width: 120px !important;
+    min-width: 70px !important;
   }
   
   /* Checkbox stacks - 2 columns */
