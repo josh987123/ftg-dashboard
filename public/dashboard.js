@@ -14207,18 +14207,12 @@ let jaSortDirection = 'desc';
 let jaInitialized = false;
 let jaPmDonutChart = null;
 let jaCustomerDonutChart = null;
+let jobActualsColumnFilters = {};
 
 function initJobActuals() {
   if (jaInitialized && jobActualsData.length > 0) {
     renderJobActualsTable();
     return;
-  }
-  
-  const configHeader = document.querySelector('#jobActuals .config-header');
-  const configBody = document.getElementById('jobActualsConfigBody');
-  if (configHeader && configBody) {
-    configHeader.classList.remove('collapsed');
-    configBody.classList.remove('collapsed');
   }
   
   loadJobActualsData();
@@ -14231,9 +14225,6 @@ function setupJobActualsEventListeners() {
   document.getElementById('jaStatusInactive')?.addEventListener('change', filterJobActuals);
   document.getElementById('jaStatusClosed')?.addEventListener('change', filterJobActuals);
   document.getElementById('jaStatusOverhead')?.addEventListener('change', filterJobActuals);
-  
-  document.getElementById('jaPmFilter')?.addEventListener('change', filterJobActuals);
-  document.getElementById('jaCustomerFilter')?.addEventListener('change', filterJobActuals);
   
   const searchInput = document.getElementById('jaSearchInput');
   let searchTimeout;
@@ -14391,7 +14382,9 @@ async function loadJobActualsData() {
       });
     });
     
-    populateJobActualsFilters();
+    // Initialize column filter dropdowns
+    initJobActualsColumnFilters();
+    updateJobActualsSortIndicators();
     
     const dataAsOf = document.getElementById('jobActualsDataAsOf');
     if (dataAsOf && data.generated_at) {
@@ -14408,20 +14401,126 @@ async function loadJobActualsData() {
   }
 }
 
-function populateJobActualsFilters() {
-  const pmFilter = document.getElementById('jaPmFilter');
-  if (pmFilter) {
-    const pms = [...new Set(jobActualsData.map(j => j.project_manager_name).filter(Boolean))].sort();
-    pmFilter.innerHTML = '<option value="">All Project Managers</option>' + 
-      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
-  }
+function initJobActualsColumnFilters() {
+  const filterColumns = ['job_no', 'job_description', 'customer_name', 'job_status', 'project_manager_name'];
   
-  const custFilter = document.getElementById('jaCustomerFilter');
-  if (custFilter) {
-    const customers = [...new Set(jobActualsData.map(j => j.customer_name).filter(Boolean))].sort();
-    custFilter.innerHTML = '<option value="">All Clients</option>' + 
-      customers.map(c => `<option value="${c}">${c}</option>`).join('');
-  }
+  filterColumns.forEach(col => {
+    const dropdown = document.querySelector(`#jobActualsTable .ja-filter-dropdown[data-filter="${col}"]`);
+    const filterBtn = document.querySelector(`#jobActualsTable .ja-filter-btn[data-filter="${col}"]`);
+    
+    if (!dropdown || !filterBtn) return;
+    
+    // Get unique values for this column
+    let uniqueVals = [...new Set(jobActualsData.map(job => {
+      if (col === 'job_status') return getJobStatusLabel(job[col]).label;
+      return String(job[col] || '');
+    }))].filter(Boolean).sort();
+    
+    // Limit to 100 for performance
+    if (uniqueVals.length > 100) uniqueVals = uniqueVals.slice(0, 100);
+    
+    // Build dropdown HTML
+    dropdown.innerHTML = `
+      <input type="text" class="filter-search-input ja-filter-search" placeholder="Search..." data-filter="${col}">
+      <div class="filter-options-list ja-filter-options" data-filter="${col}">
+        ${uniqueVals.map(val => `
+          <label class="filter-option">
+            <input type="checkbox" value="${val.replace(/"/g, '&quot;')}" checked>
+            <span>${val}</span>
+          </label>
+        `).join('')}
+      </div>
+      <div class="filter-actions">
+        <button class="filter-action-btn select-all-btn" data-filter="${col}">Select All</button>
+        <button class="filter-action-btn clear-all-btn" data-filter="${col}">Clear All</button>
+        <button class="filter-action-btn apply-btn" data-filter="${col}">Apply</button>
+      </div>
+    `;
+    
+    // Filter button click handler
+    filterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.ja-filter-dropdown.open').forEach(d => {
+        if (d !== dropdown) d.classList.remove('open');
+      });
+      dropdown.classList.toggle('open');
+    });
+    
+    // Search within filter
+    const searchInput = dropdown.querySelector('.ja-filter-search');
+    searchInput?.addEventListener('input', (e) => {
+      const searchVal = e.target.value.toLowerCase();
+      dropdown.querySelectorAll('.filter-option').forEach(opt => {
+        const text = opt.textContent.toLowerCase();
+        opt.style.display = text.includes(searchVal) ? '' : 'none';
+      });
+    });
+    
+    // Select All button
+    dropdown.querySelector('.select-all-btn')?.addEventListener('click', () => {
+      dropdown.querySelectorAll('.filter-option input[type="checkbox"]').forEach(cb => {
+        if (cb.closest('.filter-option').style.display !== 'none') cb.checked = true;
+      });
+    });
+    
+    // Clear All button  
+    dropdown.querySelector('.clear-all-btn')?.addEventListener('click', () => {
+      dropdown.querySelectorAll('.filter-option input[type="checkbox"]').forEach(cb => {
+        if (cb.closest('.filter-option').style.display !== 'none') cb.checked = false;
+      });
+    });
+    
+    // Apply button
+    dropdown.querySelector('.apply-btn')?.addEventListener('click', () => {
+      const checkedValues = new Set();
+      dropdown.querySelectorAll('.filter-option input[type="checkbox"]:checked').forEach(cb => {
+        checkedValues.add(cb.value);
+      });
+      
+      if (checkedValues.size === uniqueVals.length) {
+        delete jobActualsColumnFilters[col];
+        filterBtn.classList.remove('has-filter');
+      } else {
+        jobActualsColumnFilters[col] = checkedValues;
+        filterBtn.classList.add('has-filter');
+      }
+      
+      dropdown.classList.remove('open');
+      filterJobActuals();
+    });
+  });
+  
+  // Sort buttons
+  document.querySelectorAll('#jobActualsTable .ja-sort-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const sortCol = btn.dataset.sort;
+      const sortDir = btn.dataset.dir;
+      
+      jaSortColumn = sortCol;
+      jaSortDirection = sortDir;
+      jaCurrentPage = 1;
+      updateJobActualsSortIndicators();
+      sortJobActuals();
+      renderJobActualsTable();
+    });
+  });
+  
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.ja-filter-dropdown') && !e.target.closest('.ja-filter-btn')) {
+      document.querySelectorAll('.ja-filter-dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+  });
+}
+
+function updateJobActualsSortIndicators() {
+  document.querySelectorAll('#jobActualsTable .ja-sort-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.sort === jaSortColumn && btn.dataset.dir === jaSortDirection) {
+      btn.classList.add('active');
+    }
+  });
 }
 
 function filterJobActuals() {
@@ -14430,8 +14529,6 @@ function filterJobActuals() {
   const showClosed = document.getElementById('jaStatusClosed')?.checked;
   const showOverhead = document.getElementById('jaStatusOverhead')?.checked;
   
-  const pmFilter = document.getElementById('jaPmFilter')?.value || '';
-  const custFilter = document.getElementById('jaCustomerFilter')?.value || '';
   const searchTerm = (document.getElementById('jaSearchInput')?.value || '').toLowerCase().trim();
   
   const allowedStatuses = [];
@@ -14441,13 +14538,25 @@ function filterJobActuals() {
   if (showOverhead) allowedStatuses.push('O');
   
   jobActualsFiltered = jobActualsData.filter(job => {
+    // Status filter from config panel
     if (allowedStatuses.length > 0 && !allowedStatuses.includes(job.job_status)) return false;
-    if (pmFilter && job.project_manager_name !== pmFilter) return false;
-    if (custFilter && job.customer_name !== custFilter) return false;
     
+    // Search filter
     if (searchTerm) {
       const searchStr = `${job.job_no} ${job.job_description} ${job.customer_name}`.toLowerCase();
       if (!searchStr.includes(searchTerm)) return false;
+    }
+    
+    // Column filters (multi-select)
+    for (const [col, allowedValues] of Object.entries(jobActualsColumnFilters)) {
+      if (allowedValues && allowedValues.size > 0) {
+        let jobVal = job[col];
+        if (col === 'job_status') {
+          jobVal = getJobStatusLabel(jobVal).label;
+        }
+        jobVal = String(jobVal || '');
+        if (!allowedValues.has(jobVal)) return false;
+      }
     }
     
     return true;
