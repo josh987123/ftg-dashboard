@@ -5719,37 +5719,30 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     white-space: nowrap;
   }
   
-  /* Make the label column sticky and compact on mobile */
+  /* Remove sticky positioning on mobile - allow free horizontal scroll */
   #incomeStatementTable td:first-child,
   #incomeStatementTable th:first-child,
   #balanceSheetTable td:first-child,
   #balanceSheetTable th:first-child,
   #cashFlowTable td:first-child,
   #cashFlowTable th:first-child {
-    position: sticky;
-    left: 0;
-    background: #fff;
-    z-index: 1;
-    box-shadow: 2px 0 4px rgba(0,0,0,0.05);
+    position: static;
+    background: inherit;
+    z-index: auto;
+    box-shadow: none;
     width: auto;
     max-width: none;
-    padding-right: 12px;
-  }
-  
-  /* Subtotal and header rows need colored sticky background */
-  .is-subtotal td:first-child,
-  .cf-subtotal td:first-child {
-    background: #f0f9ff !important;
-  }
-  
-  .is-header td:first-child,
-  .cf-header td:first-child {
-    background: #f3f4f6 !important;
+    min-width: auto;
+    padding-right: 8px;
   }
   
   /* Scroll hint indicator */
-  .is-table-box {
+  .is-table-box,
+  .bs-table-box,
+  .cf-table-box {
     position: relative;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -5770,14 +5763,15 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
     padding: 4px 6px;
   }
   
-  /* Even more compact first column on small screens */
+  /* Non-sticky first column on small screens */
   #incomeStatementTable td:first-child,
   #incomeStatementTable th:first-child,
   #balanceSheetTable td:first-child,
   #balanceSheetTable th:first-child,
   #cashFlowTable td:first-child,
   #cashFlowTable th:first-child {
-    padding-right: 8px;
+    position: static;
+    padding-right: 6px;
   }
 }
 
