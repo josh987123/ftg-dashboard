@@ -11096,10 +11096,12 @@ function renderCashChart() {
   });
   
   // For stacked bars, calculate totals per date
-  if (stackBars && selectedAccounts.length > 1) {
+  if (stackBars && chartAccountsConfig.length > 1) {
     allValues = dates.map(dateKey => {
       const balances = getBalanceForDate(dateKey);
-      return selectedAccounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0);
+      return chartAccountsConfig.reduce((sum, cfg) => {
+        return sum + cfg.accounts.reduce((s, a) => s + (balances[a.name] || 0), 0);
+      }, 0);
     });
   }
   
@@ -11140,7 +11142,7 @@ function renderCashChart() {
       },
       plugins: {
         legend: { 
-          display: selectedAccounts.length > 1, 
+          display: chartAccountsConfig.length > 1, 
           position: 'bottom',
           labels: {
             color: themeColors.legendColor,
@@ -11205,15 +11207,17 @@ function renderCashChart() {
   });
   
   // Update stats tiles
-  updateCashStatsTiles(dates, selectedAccounts);
+  updateCashStatsTiles(dates, chartAccountsConfig);
 }
 
-function updateCashStatsTiles(dates, selectedAccounts) {
+function updateCashStatsTiles(dates, accountsConfig) {
   const totals = dates.map(dateKey => {
     const balances = getBalanceForDate(dateKey);
     return {
       date: dateKey,
-      total: selectedAccounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0)
+      total: accountsConfig.reduce((sum, cfg) => {
+        return sum + cfg.accounts.reduce((s, a) => s + (balances[a.name] || 0), 0);
+      }, 0)
     };
   });
   
