@@ -3311,6 +3311,8 @@ body.dark-mode .nav-item.nav-parent.expanded {
   .user-dropdown,
   .dark-mode-toggle,
   .ai-analysis-panel .analyze-btn,
+  .ai-analysis-panel .ai-run-btn,
+  .ai-analysis-panel:not(.has-analysis),
   .cash-controls,
   .cash-config-box,
   #cashAccountCheckboxes,

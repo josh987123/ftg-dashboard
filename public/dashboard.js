@@ -1269,7 +1269,12 @@ async function performOverviewAiAnalysis() {
       body: JSON.stringify({statementData, periodInfo: 'Executive Overview'})
     });
     const result = await response.json();
-    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    if (result.success) {
+      content.innerHTML = formatMarkdown(result.analysis);
+      panel.classList.add('has-analysis');
+    } else {
+      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    }
   } catch (e) {
     content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
   } finally {
@@ -1322,7 +1327,12 @@ async function performJobOverviewAiAnalysis() {
       body: JSON.stringify({statementData, periodInfo: 'Job Overview Analysis'})
     });
     const result = await response.json();
-    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    if (result.success) {
+      content.innerHTML = formatMarkdown(result.analysis);
+      panel.classList.add('has-analysis');
+    } else {
+      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    }
   } catch (e) {
     content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
   } finally {
@@ -1411,7 +1421,12 @@ async function performJobBudgetsAiAnalysis() {
       body: JSON.stringify({statementData, periodInfo: 'Job Budgets Analysis'})
     });
     const result = await response.json();
-    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    if (result.success) {
+      content.innerHTML = formatMarkdown(result.analysis);
+      panel.classList.add('has-analysis');
+    } else {
+      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    }
   } catch (e) {
     content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
   } finally {
@@ -1495,7 +1510,12 @@ async function performJobActualsAiAnalysis() {
       body: JSON.stringify({statementData, periodInfo: 'Job Actuals Analysis'})
     });
     const result = await response.json();
-    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    if (result.success) {
+      content.innerHTML = formatMarkdown(result.analysis);
+      panel.classList.add('has-analysis');
+    } else {
+      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    }
   } catch (e) {
     content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
   } finally {
@@ -1582,7 +1602,12 @@ async function performRevenueAiAnalysis() {
       body: JSON.stringify({statementData, periodInfo: 'Revenue Analysis'})
     });
     const result = await response.json();
-    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    if (result.success) {
+      content.innerHTML = formatMarkdown(result.analysis);
+      panel.classList.add('has-analysis');
+    } else {
+      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    }
   } catch (e) {
     content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
   } finally {
@@ -1644,7 +1669,12 @@ async function performAccountAiAnalysis() {
       body: JSON.stringify({statementData, periodInfo: 'Account Detail'})
     });
     const result = await response.json();
-    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    if (result.success) {
+      content.innerHTML = formatMarkdown(result.analysis);
+      panel.classList.add('has-analysis');
+    } else {
+      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    }
   } catch (e) {
     content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
   } finally {
@@ -1699,7 +1729,12 @@ async function performBalanceSheetAiAnalysis() {
       body: JSON.stringify({statementData, periodInfo: 'Balance Sheet'})
     });
     const result = await response.json();
-    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    if (result.success) {
+      content.innerHTML = formatMarkdown(result.analysis);
+      panel.classList.add('has-analysis');
+    } else {
+      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    }
   } catch (e) {
     content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
   } finally {
@@ -7573,6 +7608,7 @@ async function performAiAnalysis() {
     
     if (result.success && result.analysis) {
       contentContainer.innerHTML = formatMarkdown(result.analysis);
+      panel.classList.add('has-analysis');
     } else {
       contentContainer.innerHTML = `<div style="color: #dc2626;">Error: ${result.error || "Failed to get analysis"}</div>`;
     }
@@ -10921,6 +10957,7 @@ async function performCFAiAnalysis() {
     
     if (result.success && result.analysis) {
       contentContainer.innerHTML = formatMarkdown(result.analysis);
+      panel.classList.add('has-analysis');
     } else {
       contentContainer.innerHTML = `<div style="color: #dc2626;">Error: ${result.error || "Failed to get analysis"}</div>`;
     }
