@@ -8093,22 +8093,58 @@ body.dark-mode .page-size-select {
   color: #f3f4f6;
 }
 
-/* Job Budgets Mobile Responsive */
+/* Job Pages Mobile Responsive - 100% width */
 @media (max-width: 768px) {
+  /* All job sections - 100% width */
+  #jobOverview,
+  #jobBudgets,
+  #jobActuals,
+  #missingBudgets,
+  #jobAnalytics {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+  
+  /* Config panels */
+  #jobOverview .config-panel,
+  #jobBudgets .config-panel,
+  #jobActuals .config-panel,
+  #missingBudgets .config-panel {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Job summary metrics */
   .job-summary-metrics {
+    width: 100%;
     gap: 8px;
+    flex-wrap: wrap;
   }
   
   .summary-metric {
     min-width: 100px;
     padding: 10px 12px;
+    flex: 1;
   }
   
   .metric-value {
     font-size: 15px;
   }
   
+  /* Search and controls */
+  .job-budgets-controls {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .job-search-bar {
+    width: 100%;
+  }
+  
   .job-search-input {
+    width: 100%;
     max-width: 100%;
   }
   
@@ -8116,8 +8152,16 @@ body.dark-mode .page-size-select {
     right: 14px;
   }
   
+  /* Tables - 100% width with horizontal scroll */
+  .job-table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
   .job-budgets-table {
     font-size: 12px;
+    min-width: 600px;
   }
   
   .job-budgets-table th,
@@ -8125,9 +8169,52 @@ body.dark-mode .page-size-select {
     padding: 8px 10px;
   }
   
+  /* Charts and metrics sections */
+  .job-key-metrics-section {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .job-metrics-grid,
+  .job-metrics-grid.five-col {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .jo-key-metrics-wrapper {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .jo-charts-section {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .jo-charts-grid {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .jo-chart-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Breakdown cards */
+  .breakdown-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Pagination */
   .job-pagination {
+    width: 100%;
     flex-wrap: wrap;
     gap: 10px;
+    justify-content: center;
   }
   
   .pagination-btn {
