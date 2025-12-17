@@ -68,9 +68,11 @@ const debouncedRenderCashChart = debounce(() => {
 /* ------------------------------------------------------------
    AUTO-SIZE FIRST COLUMN ON MOBILE
    Dynamically sizes sticky first column based on content width
+   Note: On mobile (<768px), CSS handles column widths via table-layout: fixed
 ------------------------------------------------------------ */
 function autoSizeFirstColumn(tableId) {
-  if (window.innerWidth > 768) return;
+  // Let CSS handle mobile layout with fixed percentages
+  if (window.innerWidth <= 768) return;
   
   const table = document.getElementById(tableId);
   if (!table) return;
@@ -94,9 +96,7 @@ function autoSizeFirstColumn(tableId) {
   
   document.body.removeChild(tempSpan);
   
-  const screenWidth = window.innerWidth;
-  const maxAllowed = Math.min(screenWidth * 0.6, 280);
-  const finalWidth = Math.min(Math.max(maxWidth, 100), maxAllowed);
+  const finalWidth = Math.min(Math.max(maxWidth, 100), 300);
   
   table.querySelectorAll("th:first-child, td:first-child").forEach(cell => {
     cell.style.minWidth = finalWidth + "px";
@@ -107,39 +107,11 @@ function autoSizeFirstColumn(tableId) {
 
 /* ------------------------------------------------------------
    AUTO-SCALE FONT SIZE TO FILL CONTAINER WIDTH ON MOBILE
-   Increases font size for financial tables until content fills screen
+   Note: On mobile, CSS clamp() handles responsive font sizing
 ------------------------------------------------------------ */
 function autoScaleFontSize(tableId, containerId) {
-  if (window.innerWidth > 768) return;
-  
-  const table = document.getElementById(tableId);
-  const container = document.getElementById(containerId) || table?.parentElement;
-  if (!table || !container) return;
-  
-  const containerWidth = container.clientWidth - 16;
-  if (containerWidth <= 0) return;
-  
-  table.style.fontSize = '10px';
-  
-  requestAnimationFrame(() => {
-    let tableWidth = table.scrollWidth;
-    let currentSize = 10;
-    const maxSize = 16;
-    const minSize = 10;
-    
-    if (tableWidth >= containerWidth) return;
-    
-    while (tableWidth < containerWidth && currentSize < maxSize) {
-      currentSize += 0.5;
-      table.style.fontSize = currentSize + 'px';
-      tableWidth = table.scrollWidth;
-    }
-    
-    if (tableWidth > containerWidth && currentSize > minSize) {
-      currentSize -= 0.5;
-      table.style.fontSize = currentSize + 'px';
-    }
-  });
+  // CSS clamp() handles font scaling on mobile now
+  return;
 }
 
 /* ------------------------------------------------------------

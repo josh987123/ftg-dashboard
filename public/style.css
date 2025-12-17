@@ -5729,10 +5729,10 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #incomeStatementTable,
   #balanceSheetTable,
   #cashFlowTable {
-    width: auto;
+    width: 100%;
     min-width: auto;
-    table-layout: auto;
-    font-size: 11px;
+    table-layout: fixed;
+    font-size: clamp(12px, 3.5vw, 16px);
   }
   
   #incomeStatementTable th,
@@ -5746,7 +5746,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
     width: auto;
   }
   
-  /* First column fits content on mobile */
+  /* First column allows wrapping on mobile */
   #incomeStatementTable td:first-child,
   #incomeStatementTable th:first-child,
   #balanceSheetTable td:first-child,
@@ -5757,10 +5757,24 @@ body.dark-mode .nav-item.nav-parent.expanded {
     background: inherit;
     z-index: auto;
     box-shadow: none;
-    width: auto;
-    max-width: none;
-    min-width: auto;
+    width: 55%;
+    max-width: 55%;
+    min-width: 55%;
     padding-right: 8px;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  
+  /* Second column for numbers */
+  #incomeStatementTable td:nth-child(2),
+  #incomeStatementTable th:nth-child(2),
+  #balanceSheetTable td:nth-child(2),
+  #balanceSheetTable th:nth-child(2),
+  #cashFlowTable td:nth-child(2),
+  #cashFlowTable th:nth-child(2) {
+    width: 45%;
+    text-align: right;
     white-space: nowrap;
   }
   
@@ -5778,10 +5792,10 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #incomeStatementTable,
   #balanceSheetTable,
   #cashFlowTable {
-    width: auto;
+    width: 100%;
     min-width: auto;
-    table-layout: auto;
-    font-size: 10px;
+    table-layout: fixed;
+    font-size: clamp(11px, 3vw, 14px);
   }
   
   #incomeStatementTable th,
@@ -5794,7 +5808,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
     width: auto;
   }
   
-  /* First column fits content on small screens */
+  /* First column on small screens */
   #incomeStatementTable td:first-child,
   #incomeStatementTable th:first-child,
   #balanceSheetTable td:first-child,
@@ -5803,9 +5817,12 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #cashFlowTable th:first-child {
     position: static;
     padding-right: 6px;
-    width: auto;
-    min-width: auto;
-    max-width: none;
+    width: 55%;
+    min-width: 55%;
+    max-width: 55%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 }
 
