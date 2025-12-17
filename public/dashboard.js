@@ -10902,7 +10902,6 @@ function renderCashChart() {
   if (!canvas) return;
   
   const stackBars = document.getElementById("cashStackBars")?.checked !== false;
-  const showTotal = document.getElementById("cashShowTotal")?.checked !== false;
   const showDataLabels = document.getElementById("cashDataLabels")?.checked === true;
   
   // Get dates to display using the new helper function
@@ -10921,12 +10920,24 @@ function renderCashChart() {
   // Colors for accounts
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#dc2626', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
   
-  // Build datasets
+  // Get theme colors
+  const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark";
+  
+  // Pre-calculate totals per date for data labels
+  const dateTotals = dates.map(dateKey => {
+    const balances = getBalanceForDate(dateKey);
+    return selectedAccounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0);
+  });
+  
+  // Build datasets - last dataset in stack shows the total label
   const datasets = selectedAccounts.map((acct, idx) => {
     const data = dates.map(dateKey => {
       const balances = getBalanceForDate(dateKey);
       return balances[acct.name] || 0;
     });
+    
+    // Only the last (top) dataset shows data labels when stacked
+    const isTopDataset = idx === selectedAccounts.length - 1;
     
     return {
       label: acct.name,
@@ -10935,46 +10946,23 @@ function renderCashChart() {
       borderColor: colors[idx % colors.length],
       borderWidth: 1,
       stack: stackBars ? 'stack1' : undefined,
-      datalabels: { display: false }
-    };
-  });
-  
-  // Get theme colors for the total line
-  const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark";
-  const totalLineColor = isDarkMode ? '#60a5fa' : '#1e3a5f';
-  
-  // Add total line if enabled and multiple accounts
-  if (showTotal && selectedAccounts.length > 1) {
-    const totalData = dates.map(dateKey => {
-      const balances = getBalanceForDate(dateKey);
-      return selectedAccounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0);
-    });
-    
-    datasets.push({
-      label: 'Total',
-      data: totalData,
-      type: 'line',
-      borderColor: totalLineColor,
-      backgroundColor: 'transparent',
-      borderWidth: 2,
-      pointRadius: showDataLabels ? 3 : 0,
-      tension: 0.3,
-      order: 0,
-      datalabels: showDataLabels ? {
+      datalabels: (showDataLabels && stackBars && isTopDataset) ? {
         display: true,
-        align: 'top',
+        align: 'end',
         anchor: 'end',
-        offset: 4,
+        offset: 2,
         color: isDarkMode ? '#ffffff' : '#1e3a5f',
         font: { weight: 'bold', size: 10 },
-        formatter: (value) => {
-          if (value === null || value === undefined) return '';
-          const millions = value / 1000000;
+        formatter: (value, context) => {
+          // Show the total for this date, not just this segment
+          const total = dateTotals[context.dataIndex];
+          if (total === null || total === undefined) return '';
+          const millions = total / 1000000;
           return '$' + millions.toFixed(1) + 'M';
         }
       } : { display: false }
-    });
-  }
+    };
+  });
   
   // Labels
   const labels = dates.map(d => {
@@ -11014,6 +11002,7 @@ function renderCashChart() {
   cashChartInstance = new Chart(canvas, {
     type: 'bar',
     data: { labels, datasets },
+    plugins: showDataLabels ? [ChartDataLabels] : [],
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -11032,7 +11021,7 @@ function renderCashChart() {
         active: { animation: { duration: 200 } }
       },
       layout: {
-        padding: { bottom: isMobile ? 10 : 0 }
+        padding: { top: showDataLabels ? 25 : 0, bottom: isMobile ? 10 : 0 }
       },
       plugins: {
         legend: { 
