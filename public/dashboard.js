@@ -12830,9 +12830,7 @@ function updateJobActualsSummaryMetrics() {
   const totalOverUnder = totalBilledRevenue - totalEarnedRevenue;
   
   document.getElementById('jaTotalCount').textContent = totalJobs.toLocaleString();
-  document.getElementById('jaTotalBilledRevenue').textContent = formatCurrency(totalBilledRevenue);
-  document.getElementById('jaTotalEarnedRevenue').textContent = formatCurrency(totalEarnedRevenue);
-  document.getElementById('jaTotalActualCost').textContent = formatCurrency(totalActualCost);
+  
   const overUnderEl = document.getElementById('jaTotalOverUnder');
   overUnderEl.textContent = formatCurrency(totalOverUnder);
   overUnderEl.style.color = totalOverUnder >= 0 ? '#10b981' : '#dc2626';
@@ -12841,6 +12839,21 @@ function updateJobActualsSummaryMetrics() {
   if (overUnderCard) {
     overUnderCard.style.backgroundColor = totalOverUnder >= 0 ? '#d1fae5' : '#fce7f3';
   }
+  
+  // Update bar chart
+  const maxValue = Math.max(totalBilledRevenue, totalEarnedRevenue, totalActualCost, 1);
+  
+  const billedBar = document.getElementById('jaBilledBar');
+  const earnedBar = document.getElementById('jaEarnedBar');
+  const costBar = document.getElementById('jaCostBar');
+  
+  if (billedBar) billedBar.style.width = `${(totalBilledRevenue / maxValue) * 100}%`;
+  if (earnedBar) earnedBar.style.width = `${(totalEarnedRevenue / maxValue) * 100}%`;
+  if (costBar) costBar.style.width = `${(totalActualCost / maxValue) * 100}%`;
+  
+  document.getElementById('jaBilledValue').textContent = formatCurrency(totalBilledRevenue);
+  document.getElementById('jaEarnedValue').textContent = formatCurrency(totalEarnedRevenue);
+  document.getElementById('jaCostValue').textContent = formatCurrency(totalActualCost);
   
   renderJobActualsBreakdowns();
 }

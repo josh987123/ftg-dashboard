@@ -1875,40 +1875,46 @@
         <!-- Key Metrics Dashboard -->
         <div class="job-key-metrics-section">
           <h3 class="section-title">Key Metrics</h3>
-          <div class="job-metrics-grid">
-            <div class="job-metric-card primary">
-              <div class="metric-icon">📋</div>
-              <div class="metric-content">
-                <div class="metric-value" id="jaTotalCount">-</div>
-                <div class="metric-label">Total Jobs</div>
+          <div class="ja-metrics-layout">
+            <div class="ja-metrics-tiles">
+              <div class="job-metric-card primary">
+                <div class="metric-icon">📋</div>
+                <div class="metric-content">
+                  <div class="metric-value" id="jaTotalCount">-</div>
+                  <div class="metric-label">Total Jobs</div>
+                </div>
+              </div>
+              <div class="job-metric-card" id="jaOverUnderCard">
+                <div class="metric-icon">⚖️</div>
+                <div class="metric-content">
+                  <div class="metric-value" id="jaTotalOverUnder">-</div>
+                  <div class="metric-label">Over/(Under) Bill</div>
+                </div>
               </div>
             </div>
-            <div class="job-metric-card">
-              <div class="metric-icon">💵</div>
-              <div class="metric-content">
-                <div class="metric-value" id="jaTotalBilledRevenue">-</div>
-                <div class="metric-label">Billed Revenue</div>
-              </div>
-            </div>
-            <div class="job-metric-card">
-              <div class="metric-icon">📈</div>
-              <div class="metric-content">
-                <div class="metric-value" id="jaTotalEarnedRevenue">-</div>
-                <div class="metric-label">Earned Revenue</div>
-              </div>
-            </div>
-            <div class="job-metric-card">
-              <div class="metric-icon">📊</div>
-              <div class="metric-content">
-                <div class="metric-value" id="jaTotalActualCost">-</div>
-                <div class="metric-label">Actual Cost</div>
-              </div>
-            </div>
-            <div class="job-metric-card" id="jaOverUnderCard">
-              <div class="metric-icon">⚖️</div>
-              <div class="metric-content">
-                <div class="metric-value" id="jaTotalOverUnder">-</div>
-                <div class="metric-label">Over/(Under) Bill</div>
+            <div class="ja-metrics-chart">
+              <div class="ja-bar-chart" id="jaRevenueBarChart">
+                <div class="ja-bar-item">
+                  <div class="ja-bar-label">Billed Revenue</div>
+                  <div class="ja-bar-container">
+                    <div class="ja-bar" id="jaBilledBar" style="width: 0%; background-color: #3b82f6;"></div>
+                  </div>
+                  <div class="ja-bar-value" id="jaBilledValue">$0</div>
+                </div>
+                <div class="ja-bar-item">
+                  <div class="ja-bar-label">Earned Revenue</div>
+                  <div class="ja-bar-container">
+                    <div class="ja-bar" id="jaEarnedBar" style="width: 0%; background-color: #10b981;"></div>
+                  </div>
+                  <div class="ja-bar-value" id="jaEarnedValue">$0</div>
+                </div>
+                <div class="ja-bar-item">
+                  <div class="ja-bar-label">Actual Cost</div>
+                  <div class="ja-bar-container">
+                    <div class="ja-bar" id="jaCostBar" style="width: 0%; background-color: #f59e0b;"></div>
+                  </div>
+                  <div class="ja-bar-value" id="jaCostValue">$0</div>
+                </div>
               </div>
             </div>
           </div>
