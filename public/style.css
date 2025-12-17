@@ -4324,17 +4324,59 @@ body.dark-mode .nav-item.nav-parent.expanded {
     font-size: 15px;
   }
   
-  /* Header adjustments */
+  /* Header adjustments - 100% width on mobile */
   .header {
     padding: 12px 16px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  .header-left {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
   }
   
   .header-logo {
     height: 28px;
+    flex-shrink: 0;
   }
   
   .logo {
-    font-size: 18px;
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .header-right {
+    flex-shrink: 0;
+    gap: 8px;
+  }
+  
+  .dark-mode-toggle {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+  
+  .user-dropdown-btn {
+    padding: 6px 8px;
+    font-size: 12px;
+    max-width: 100px;
+  }
+  
+  .user-dropdown-btn .user-label {
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .user-dropdown-arrow {
+    font-size: 10px;
   }
   
   .logout-btn {
