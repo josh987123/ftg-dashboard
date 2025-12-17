@@ -13378,7 +13378,7 @@ async function captureJobOverviewCharts() {
 }
 
 function updateJobOverviewCharts() {
-  const isDarkMode = document.body.classList.contains('dark-mode');
+  const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains('dark-mode');
   const textColor = isDarkMode ? '#e2e8f0' : '#374151';
   const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
   const showDataLabels = document.getElementById('joDataLabels')?.checked === true;
@@ -14140,7 +14140,7 @@ function renderJaPmDonutChart() {
     data.push(otherTotal);
   }
   
-  const isDarkMode = document.body.classList.contains('dark-mode');
+  const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains('dark-mode');
   const isMobile = window.innerWidth <= 768;
   
   if (jaPmDonutChart) jaPmDonutChart.destroy();
@@ -14207,7 +14207,7 @@ function renderJaCustomerDonutChart() {
     data.push(otherTotal);
   }
   
-  const isDarkMode = document.body.classList.contains('dark-mode');
+  const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains('dark-mode');
   const isMobile = window.innerWidth <= 768;
   
   if (jaCustomerDonutChart) jaCustomerDonutChart.destroy();
