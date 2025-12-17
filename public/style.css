@@ -8474,6 +8474,64 @@ body.dark-mode .overview-chart-card .chart-title {
   color: #f1f5f9;
 }
 
+/* Job Overview Key Metrics Layout */
+.jo-key-metrics-wrapper {
+  display: grid;
+  grid-template-columns: minmax(200px, 0.3fr) 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+  .jo-key-metrics-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jo-metric-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.jo-metric-stack .job-metric-card {
+  flex: 1;
+  min-height: 100px;
+}
+
+.jo-metrics-chart-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.jo-metrics-chart-card .chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.jo-metrics-chart-card .chart-container {
+  flex: 1;
+  min-height: 180px;
+  position: relative;
+}
+
+body.dark-mode .jo-metrics-chart-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+body.dark-mode .jo-metrics-chart-card .chart-title {
+  color: #f1f5f9;
+}
+
 body.dark-mode .chart-subtitle {
   color: #94a3b8;
 }

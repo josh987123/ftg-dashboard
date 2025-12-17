@@ -12512,6 +12512,7 @@ let joFiltered = [];
 let joRevenueChart = null;
 let joOverUnderChart = null;
 let joCostsChart = null;
+let joMetricsBarChart = null;
 let joInitialized = false;
 
 function initJobOverview() {
@@ -12665,23 +12666,24 @@ function filterJobOverview() {
 
 function updateJobOverviewMetrics() {
   const totalJobs = joFiltered.length;
-  
-  let avgComplete = 0;
-  if (totalJobs > 0) {
-    const sumComplete = joFiltered.reduce((sum, j) => sum + (j.percent_complete || 0), 0);
-    avgComplete = sumComplete / totalJobs;
-  }
-  
-  let avgMargin = 0;
-  const jobsWithContract = joFiltered.filter(j => j.revised_contract > 0);
-  if (jobsWithContract.length > 0) {
-    const sumMargin = jobsWithContract.reduce((sum, j) => sum + (j.profit_margin || 0), 0);
-    avgMargin = sumMargin / jobsWithContract.length;
-  }
+  const totalBilled = joFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const totalEarned = joFiltered.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  const totalOverUnder = totalBilled - totalEarned;
   
   document.getElementById('joTotalJobs').textContent = totalJobs.toLocaleString();
-  document.getElementById('joAvgComplete').textContent = `${Math.round(avgComplete)}%`;
-  document.getElementById('joAvgMargin').textContent = `${avgMargin.toFixed(1)}%`;
+  
+  const overUnderEl = document.getElementById('joOverUnderValue');
+  const overUnderTile = document.getElementById('joOverUnderTile');
+  if (overUnderEl) {
+    overUnderEl.textContent = formatCurrency(totalOverUnder);
+    if (totalOverUnder >= 0) {
+      overUnderEl.style.color = '#10b981';
+      if (overUnderTile) overUnderTile.style.borderLeftColor = '#10b981';
+    } else {
+      overUnderEl.style.color = '#ef4444';
+      if (overUnderTile) overUnderTile.style.borderLeftColor = '#ef4444';
+    }
+  }
 }
 
 function updateJobOverviewCharts() {
@@ -12697,9 +12699,51 @@ function updateJobOverviewCharts() {
   const textColor = isDarkMode ? '#e2e8f0' : '#374151';
   const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
   
+  renderJoMetricsBarChart(totalBilled, totalEarned, totalActualCost, textColor, gridColor);
   renderJoRevenueChart(totalContracted, totalEarned, totalBilled, totalBacklog, textColor, gridColor);
   renderJoOverUnderChart(totalBilled, totalEarned, totalOverUnder, textColor, gridColor);
   renderJoCostsChart(totalRevisedCost, totalActualCost, textColor, gridColor);
+}
+
+function renderJoMetricsBarChart(billed, earned, actualCost, textColor, gridColor) {
+  const ctx = document.getElementById('joMetricsBarChart');
+  if (!ctx) return;
+  
+  if (joMetricsBarChart) joMetricsBarChart.destroy();
+  
+  joMetricsBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Billed Revenue', 'Earned Revenue', 'Actual Cost'],
+      datasets: [{
+        data: [billed, earned, actualCost],
+        backgroundColor: ['#f59e0b', '#10b981', '#ef4444'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => formatCurrency(ctx.raw)
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: textColor }, grid: { display: false } },
+        y: { 
+          ticks: { 
+            color: textColor,
+            callback: (val) => formatCurrency(val)
+          }, 
+          grid: { color: gridColor } 
+        }
+      }
+    }
+  });
 }
 
 function renderJoRevenueChart(contracted, earned, billed, backlog, textColor, gridColor) {
