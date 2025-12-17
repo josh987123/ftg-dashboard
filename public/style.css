@@ -4374,7 +4374,20 @@ body.dark-mode .nav-item.nav-parent.expanded {
   }
   
   .summary-tile {
-    min-width: 100%;
+    min-width: 0;
+    padding: 4px 2px;
+  }
+  
+  .summary-tile .tile-label {
+    font-size: 8px;
+  }
+  
+  .summary-tile .tile-value {
+    font-size: 10px;
+  }
+  
+  .summary-tile .tile-sub {
+    font-size: 7px;
   }
   
   .chart-fullscreen-stats {
