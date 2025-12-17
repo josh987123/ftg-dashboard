@@ -12808,8 +12808,16 @@ function sortJobBudgets() {
     
     // Handle profit_margin (calculated field)
     if (col === 'profit_margin') {
-      const aMargin = a.revised_contract ? (a.estimated_profit / a.revised_contract) * 100 : 0;
-      const bMargin = b.revised_contract ? (b.estimated_profit / b.revised_contract) * 100 : 0;
+      const aHasData = a.revised_contract > 0 && a.revised_cost > 0;
+      const bHasData = b.revised_contract > 0 && b.revised_cost > 0;
+      
+      // Always push zero/incomplete jobs to the end
+      if (!aHasData && bHasData) return 1;
+      if (aHasData && !bHasData) return -1;
+      if (!aHasData && !bHasData) return 0;
+      
+      const aMargin = (a.estimated_profit / a.revised_contract) * 100;
+      const bMargin = (b.estimated_profit / b.revised_contract) * 100;
       return (aMargin - bMargin) * dir;
     }
     
