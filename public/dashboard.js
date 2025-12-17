@@ -10523,8 +10523,14 @@ async function initCashReports() {
     
     cashData = data;
     
-    // Initialize selected accounts (all selected by default)
-    cashSelectedAccounts = data.accounts.map(a => a.name);
+    // Initialize selected accounts - use FTG_BUILDERS_LABEL for combined accounts
+    const ftgAccounts = getFTGBuildersAccounts(data.accounts);
+    const otherAccounts = getNonFTGBuildersAccounts(data.accounts);
+    cashSelectedAccounts = [];
+    if (ftgAccounts.length > 0) {
+      cashSelectedAccounts.push(FTG_BUILDERS_LABEL);
+    }
+    cashSelectedAccounts.push(...otherAccounts.map(a => a.name));
     
     // Build account checkboxes
     renderCashAccountCheckboxes(data.accounts);
@@ -10546,14 +10552,47 @@ async function initCashReports() {
   }
 }
 
+// FTG Builders combined accounts (accounts ending in 1883, 2469, 7554)
+const FTG_BUILDERS_ACCOUNT_SUFFIXES = ['1883', '2469', '7554'];
+const FTG_BUILDERS_LABEL = 'FTG Builders accounts';
+
+function isFTGBuildersAccount(accountName) {
+  return FTG_BUILDERS_ACCOUNT_SUFFIXES.some(suffix => accountName.includes(suffix));
+}
+
+function getFTGBuildersAccounts(accounts) {
+  return accounts.filter(a => isFTGBuildersAccount(a.name));
+}
+
+function getNonFTGBuildersAccounts(accounts) {
+  return accounts.filter(a => !isFTGBuildersAccount(a.name));
+}
+
 function renderCashAccountCheckboxes(accounts) {
   const container = document.getElementById("cashAccountCheckboxes");
   if (!container) return;
   
-  const sortedAccounts = [...accounts].sort((a, b) => b.balance - a.balance);
+  const ftgAccounts = getFTGBuildersAccounts(accounts);
+  const otherAccounts = getNonFTGBuildersAccounts(accounts);
+  
+  // Sort other accounts by balance
+  const sortedOtherAccounts = [...otherAccounts].sort((a, b) => b.balance - a.balance);
   
   let html = '';
-  sortedAccounts.forEach(acct => {
+  
+  // Add FTG Builders combined option first if there are FTG accounts
+  if (ftgAccounts.length > 0) {
+    const ftgTotalBalance = ftgAccounts.reduce((sum, a) => sum + a.balance, 0);
+    html += `
+      <label>
+        <input type="checkbox" class="cash-account-cb" value="${FTG_BUILDERS_LABEL}" data-combined="true" checked>
+        ${FTG_BUILDERS_LABEL}
+      </label>
+    `;
+  }
+  
+  // Add other accounts
+  sortedOtherAccounts.forEach(acct => {
     html += `
       <label>
         <input type="checkbox" class="cash-account-cb" value="${acct.name}" checked>
@@ -10569,7 +10608,14 @@ function setupCashEventListeners() {
   // Select All / None buttons
   document.getElementById("cashSelectAll")?.addEventListener("click", () => {
     document.querySelectorAll(".cash-account-cb").forEach(cb => cb.checked = true);
-    cashSelectedAccounts = cashData.accounts.map(a => a.name);
+    // Build selected accounts list with FTG_BUILDERS_LABEL for combined accounts
+    const ftgAccounts = getFTGBuildersAccounts(cashData.accounts);
+    const otherAccounts = getNonFTGBuildersAccounts(cashData.accounts);
+    cashSelectedAccounts = [];
+    if (ftgAccounts.length > 0) {
+      cashSelectedAccounts.push(FTG_BUILDERS_LABEL);
+    }
+    cashSelectedAccounts.push(...otherAccounts.map(a => a.name));
     updateCashDisplay();
   });
   
@@ -10798,17 +10844,39 @@ function renderCashCurrentHeader() {
   const container = document.getElementById("cashCurrentHeader");
   if (!container) return;
   
-  const selectedAccounts = cashData.accounts.filter(a => cashSelectedAccounts.includes(a.name));
+  // Build display accounts list - FTG combined + individual accounts
+  const ftgBuildersSelected = cashSelectedAccounts.includes(FTG_BUILDERS_LABEL);
+  const ftgAccounts = getFTGBuildersAccounts(cashData.accounts);
+  const individualSelectedAccounts = cashData.accounts
+    .filter(a => cashSelectedAccounts.includes(a.name) && !isFTGBuildersAccount(a.name));
   
-  if (selectedAccounts.length === 0) {
+  // Build display entries
+  const displayEntries = [];
+  
+  if (ftgBuildersSelected && ftgAccounts.length > 0) {
+    const ftgTotalBalance = ftgAccounts.reduce((sum, a) => sum + a.balance, 0);
+    displayEntries.push({
+      name: FTG_BUILDERS_LABEL,
+      balance: ftgTotalBalance
+    });
+  }
+  
+  individualSelectedAccounts.forEach(a => {
+    displayEntries.push({
+      name: a.name,
+      balance: a.balance
+    });
+  });
+  
+  if (displayEntries.length === 0) {
     container.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">Select accounts to view balances</div>';
     return;
   }
   
-  const total = selectedAccounts.reduce((sum, a) => sum + a.balance, 0);
+  const total = displayEntries.reduce((sum, a) => sum + a.balance, 0);
   
   let accountsHtml = '';
-  if (selectedAccounts.length > 1) {
+  if (displayEntries.length > 1) {
     const collapsedClass = cashHeaderExpanded ? '' : 'collapsed';
     const toggleIcon = cashHeaderExpanded ? '▲' : '▼';
     
@@ -10819,7 +10887,7 @@ function renderCashCurrentHeader() {
       </div>
       <div class="cash-header-accounts ${collapsedClass}" id="cashHeaderAccounts">`;
     
-    selectedAccounts.forEach(a => {
+    displayEntries.forEach(a => {
       let shortName = a.name;
       const acctMatch = a.name.match(/\((\d+)\)$/);
       if (acctMatch) {
@@ -10847,7 +10915,7 @@ function renderCashCurrentHeader() {
   }
   
   container.innerHTML = `
-    <div class="cash-header-title">Current Total${selectedAccounts.length > 1 ? ' (' + selectedAccounts.length + ' accounts)' : ''}</div>
+    <div class="cash-header-title">Current Total${displayEntries.length > 1 ? ' (' + displayEntries.length + ' accounts)' : ''}</div>
     <div class="cash-header-total">${formatCurrency(total)}</div>
     ${accountsHtml}
   `;
@@ -10923,12 +10991,40 @@ function renderCashChart() {
   // Get dates to display using the new helper function
   const dates = getCashDateRange();
   
-  // Get selected accounts sorted by balance
-  const selectedAccounts = cashData.accounts
-    .filter(a => cashSelectedAccounts.includes(a.name))
+  // Check if FTG Builders is selected
+  const ftgBuildersSelected = cashSelectedAccounts.includes(FTG_BUILDERS_LABEL);
+  const ftgAccounts = getFTGBuildersAccounts(cashData.accounts);
+  
+  // Get individual selected accounts (non-FTG)
+  const individualSelectedAccounts = cashData.accounts
+    .filter(a => cashSelectedAccounts.includes(a.name) && !isFTGBuildersAccount(a.name))
     .sort((a, b) => b.balance - a.balance);
   
-  if (selectedAccounts.length === 0) {
+  // Build chart accounts list - FTG combined + individual accounts
+  const chartAccountsConfig = [];
+  
+  if (ftgBuildersSelected && ftgAccounts.length > 0) {
+    // Add FTG Builders as combined entry
+    const ftgTotalBalance = ftgAccounts.reduce((sum, a) => sum + a.balance, 0);
+    chartAccountsConfig.push({
+      label: FTG_BUILDERS_LABEL,
+      accounts: ftgAccounts,
+      balance: ftgTotalBalance,
+      isCombined: true
+    });
+  }
+  
+  // Add individual accounts
+  individualSelectedAccounts.forEach(acct => {
+    chartAccountsConfig.push({
+      label: acct.name,
+      accounts: [acct],
+      balance: acct.balance,
+      isCombined: false
+    });
+  });
+  
+  if (chartAccountsConfig.length === 0) {
     if (cashChartInstance) cashChartInstance.destroy();
     return;
   }
@@ -10942,21 +11038,24 @@ function renderCashChart() {
   // Pre-calculate totals per date for data labels
   const dateTotals = dates.map(dateKey => {
     const balances = getBalanceForDate(dateKey);
-    return selectedAccounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0);
+    return chartAccountsConfig.reduce((sum, cfg) => {
+      return sum + cfg.accounts.reduce((s, a) => s + (balances[a.name] || 0), 0);
+    }, 0);
   });
   
   // Build datasets - last dataset in stack shows the total label
-  const datasets = selectedAccounts.map((acct, idx) => {
+  const datasets = chartAccountsConfig.map((cfg, idx) => {
     const data = dates.map(dateKey => {
       const balances = getBalanceForDate(dateKey);
-      return balances[acct.name] || 0;
+      // Sum balances for all accounts in this config (for combined FTG accounts)
+      return cfg.accounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0);
     });
     
     // Only the last (top) dataset shows data labels when stacked
-    const isTopDataset = idx === selectedAccounts.length - 1;
+    const isTopDataset = idx === chartAccountsConfig.length - 1;
     
     return {
-      label: acct.name,
+      label: cfg.label,
       data: data,
       backgroundColor: colors[idx % colors.length],
       borderColor: colors[idx % colors.length],
@@ -11147,11 +11246,31 @@ function renderCashDailyTable() {
   const container = document.getElementById("dailyBalanceTableContainer");
   if (!container) return;
   
-  const selectedAccounts = cashData.accounts
-    .filter(a => cashSelectedAccounts.includes(a.name))
+  // Build display columns - FTG combined + individual accounts
+  const ftgBuildersSelected = cashSelectedAccounts.includes(FTG_BUILDERS_LABEL);
+  const ftgAccounts = getFTGBuildersAccounts(cashData.accounts);
+  const individualSelectedAccounts = cashData.accounts
+    .filter(a => cashSelectedAccounts.includes(a.name) && !isFTGBuildersAccount(a.name))
     .sort((a, b) => b.balance - a.balance);
   
-  if (selectedAccounts.length === 0) {
+  // Build column config
+  const columnConfig = [];
+  
+  if (ftgBuildersSelected && ftgAccounts.length > 0) {
+    columnConfig.push({
+      label: FTG_BUILDERS_LABEL,
+      accounts: ftgAccounts
+    });
+  }
+  
+  individualSelectedAccounts.forEach(a => {
+    columnConfig.push({
+      label: a.name,
+      accounts: [a]
+    });
+  });
+  
+  if (columnConfig.length === 0) {
     container.innerHTML = '<div class="error-message">Select accounts to view data</div>';
     return;
   }
@@ -11161,7 +11280,6 @@ function renderCashDailyTable() {
   const today = new Date();
   
   const todayStr = today.toISOString().split('T')[0];
-  const accountNames = selectedAccounts.map(a => a.name);
   
   const expandedClass = cashTableExpanded ? 'expanded' : '';
   const toggleText = cashTableExpanded ? 'Hide Accounts' : 'Show Accounts';
@@ -11178,7 +11296,7 @@ function renderCashDailyTable() {
         <thead>
           <tr>
             <th class="date-col">Date</th>
-            ${accountNames.map(name => `<th class="balance-col account-col">${name}</th>`).join('')}
+            ${columnConfig.map(cfg => `<th class="balance-col account-col">${cfg.label}</th>`).join('')}
             <th class="total-col">Total</th>
           </tr>
         </thead>
@@ -11198,8 +11316,9 @@ function renderCashDailyTable() {
     html += `<tr class="${rowClass}">`;
     html += `<td class="date-col">${isToday ? 'Today' : displayDate}</td>`;
     
-    accountNames.forEach(acctName => {
-      const bal = balances[acctName] || 0;
+    columnConfig.forEach(cfg => {
+      // Sum balances for all accounts in this column
+      const bal = cfg.accounts.reduce((sum, a) => sum + (balances[a.name] || 0), 0);
       rowTotal += bal;
       const balClass = bal < 0 ? 'negative' : '';
       html += `<td class="balance-col account-col ${balClass}">${formatCurrency(bal)}</td>`;
@@ -11230,7 +11349,12 @@ function renderCashTransactionTable() {
   
   const filteredTxns = cashData.transactions.filter(txn => {
     // Check if account is selected
-    if (!cashSelectedAccounts.includes(txn.account)) return false;
+    // FTG Builders accounts: if FTG_BUILDERS_LABEL is selected, include all FTG accounts
+    const ftgBuildersSelected = cashSelectedAccounts.includes(FTG_BUILDERS_LABEL);
+    const isFTG = isFTGBuildersAccount(txn.account);
+    const isDirectlySelected = cashSelectedAccounts.includes(txn.account);
+    
+    if (!isDirectlySelected && !(ftgBuildersSelected && isFTG)) return false;
     
     // Check if within date range
     try {

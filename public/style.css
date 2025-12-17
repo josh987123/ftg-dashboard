@@ -8286,6 +8286,7 @@ body.dark-mode .page-size-select {
   #overview .dropdown-stack,
   #revenue .dropdown-stack,
   #accounts .dropdown-stack,
+  #accounts .overview-config-box .dropdown-stack,
   .dropdown-stack {
     display: flex !important;
     flex-direction: row !important;
@@ -8297,8 +8298,11 @@ body.dark-mode .page-size-select {
   #overview .dropdown-row,
   #revenue .dropdown-row,
   #accounts .dropdown-row,
+  #accounts .overview-config-box .dropdown-row,
+  #acctYearWrapper,
   .dropdown-row {
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     gap: 6px !important;
     min-width: 0 !important;
@@ -8308,6 +8312,7 @@ body.dark-mode .page-size-select {
   #overview .dropdown-row label,
   #revenue .dropdown-row label,
   #accounts .dropdown-row label,
+  #acctYearWrapper label,
   .dropdown-row label {
     font-size: 10px !important;
     white-space: nowrap !important;
@@ -8316,12 +8321,19 @@ body.dark-mode .page-size-select {
   #overview .dropdown-row select,
   #revenue .dropdown-row select,
   #accounts .dropdown-row select,
+  #acctYearWrapper select,
   .dropdown-row select {
     font-size: 10px !important;
     padding: 4px 6px !important;
     min-height: 28px !important;
     width: auto !important;
     min-width: 70px !important;
+  }
+  
+  /* Force Account Detail Time Period dropdowns side-by-side */
+  #accounts .overview-config-box .dropdown-stack {
+    display: flex !important;
+    flex-direction: row !important;
   }
   
   /* Checkbox stacks - 2 columns */
