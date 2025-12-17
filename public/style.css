@@ -6761,7 +6761,13 @@ body.dark-mode .nav-item.nav-parent.expanded {
 [data-theme="dark"] .cf-investing td,
 [data-theme="dark"] .cf-financing td {
   background: transparent !important;
-  color: #fff;
+  color: #fff !important;
+}
+
+[data-theme="dark"] #cashFlowTable tr.cf-operating td,
+[data-theme="dark"] #cashFlowTable tr.cf-investing td,
+[data-theme="dark"] #cashFlowTable tr.cf-financing td {
+  color: #fff !important;
 }
 
 [data-theme="dark"] .cf-toggle,
