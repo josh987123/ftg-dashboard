@@ -12779,6 +12779,12 @@ function sortJobActuals() {
       return ((aVal || 0) - (bVal || 0)) * dir;
     }
     
+    if (col === 'over_under_bill') {
+      const aOver = (a.billed_revenue || 0) - (a.earned_revenue || 0);
+      const bOver = (b.billed_revenue || 0) - (b.earned_revenue || 0);
+      return (aOver - bOver) * dir;
+    }
+    
     aVal = (aVal || '').toString().toLowerCase();
     bVal = (bVal || '').toString().toLowerCase();
     return aVal.localeCompare(bVal) * dir;
@@ -12787,19 +12793,12 @@ function sortJobActuals() {
 
 function updateJobActualsSummaryMetrics() {
   const totalJobs = jobActualsFiltered.length;
-  const totalBilledRevenue = jobActualsFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
   const totalEarnedRevenue = jobActualsFiltered.reduce((sum, j) => sum + j.earned_revenue, 0);
   const totalActualCost = jobActualsFiltered.reduce((sum, j) => sum + j.actual_cost, 0);
-  const totalActualProfit = totalEarnedRevenue - totalActualCost;
   
   document.getElementById('jaTotalCount').textContent = totalJobs.toLocaleString();
-  document.getElementById('jaTotalBilledRevenue').textContent = formatCurrency(totalBilledRevenue);
   document.getElementById('jaTotalEarnedRevenue').textContent = formatCurrency(totalEarnedRevenue);
   document.getElementById('jaTotalActualCost').textContent = formatCurrency(totalActualCost);
-  
-  const profitEl = document.getElementById('jaActualProfit');
-  profitEl.textContent = formatCurrency(totalActualProfit);
-  profitEl.className = 'metric-value ' + (totalActualProfit >= 0 ? '' : 'negative');
   
   renderJobActualsBreakdowns();
 }
@@ -13021,7 +13020,7 @@ function renderJobActualsTable() {
   const pageData = jobActualsFiltered.slice(startIdx, endIdx);
   
   if (pageData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">No jobs found matching filters</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">No jobs found matching filters</td></tr>';
     updateJaPagination(0);
     return;
   }
@@ -13029,6 +13028,8 @@ function renderJobActualsTable() {
   tbody.innerHTML = pageData.map(job => {
     const status = getJobStatusLabel(job.job_status);
     const pctComplete = job.percent_complete || 0;
+    const overUnderBill = (job.billed_revenue || 0) - (job.earned_revenue || 0);
+    const overUnderColor = overUnderBill >= 0 ? '#d1fae5' : '#fce7f3';
     
     return `<tr>
       <td>${job.job_no}</td>
@@ -13040,6 +13041,7 @@ function renderJobActualsTable() {
       <td class="number-col">${formatCurrency(job.earned_revenue)}</td>
       <td class="number-col">${formatCurrency(job.actual_cost)}</td>
       <td class="number-col">${Math.round(pctComplete)}%</td>
+      <td class="number-col" style="background-color: ${overUnderColor}">${formatCurrency(overUnderBill)}</td>
     </tr>`;
   }).join('');
   
