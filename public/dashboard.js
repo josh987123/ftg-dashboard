@@ -12066,11 +12066,11 @@ function updateJobSummaryMetrics() {
   const avgMargin = totalContract > 0 ? (totalProfit / totalContract) * 100 : 0;
   
   document.getElementById('jobTotalCount').textContent = totalJobs.toLocaleString();
-  document.getElementById('jobTotalContract').textContent = formatCurrency(totalContract);
-  document.getElementById('jobTotalCost').textContent = formatCurrency(totalCost);
+  document.getElementById('jobTotalContract').textContent = formatCurrencyCompact(totalContract);
+  document.getElementById('jobTotalCost').textContent = formatCurrencyCompact(totalCost);
   
   const profitEl = document.getElementById('jobTotalProfit');
-  profitEl.textContent = formatCurrency(totalProfit);
+  profitEl.textContent = formatCurrencyCompact(totalProfit);
   profitEl.className = 'metric-value ' + (totalProfit >= 0 ? '' : 'negative');
   
   const marginEl = document.getElementById('jobAvgMargin');
