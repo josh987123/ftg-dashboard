@@ -2417,15 +2417,27 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 #cashFlowTable th:first-child {
-  background: #f9fafb;
+  background: #374151;
+  color: #fff;
   z-index: 3;
 }
 
 #cashFlowTable th {
   position: sticky;
   top: 0;
-  background: #f9fafb;
+  background: #374151;
+  color: #fff;
   z-index: 1;
+}
+
+/* Cash Flow subtotal rows - light gray in light mode */
+#cashFlowTable tr.is-subtotal {
+  background: #e5e7eb !important;
+}
+
+#cashFlowTable tr.is-subtotal td {
+  background: transparent !important;
+  font-weight: 600;
 }
 
 #cashFlowTable tbody tr:hover {
@@ -6587,12 +6599,23 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 [data-theme="dark"] #cashFlowTable th:first-child {
-  background: var(--table-header-bg);
+  background: #374151 !important;
+  color: #fff;
 }
 
 [data-theme="dark"] #cashFlowTable th {
-  background: var(--table-header-bg);
-  color: var(--text-primary);
+  background: #374151 !important;
+  color: #fff;
+}
+
+/* Cash Flow subtotal rows - dark gray in dark mode */
+[data-theme="dark"] #cashFlowTable tr.is-subtotal {
+  background: #374151 !important;
+}
+
+[data-theme="dark"] #cashFlowTable tr.is-subtotal td {
+  background: transparent !important;
+  color: #fff;
 }
 
 [data-theme="dark"] #cashFlowTable tbody tr:hover {
