@@ -13071,31 +13071,15 @@ function renderPmDonutChart() {
       },
       plugins: {
         legend: {
-          position: isMobile ? 'bottom' : 'right',
-          align: 'start',
-          maxWidth: isMobile ? undefined : 160,
+          position: 'bottom',
+          align: 'center',
           labels: {
             color: isDarkMode ? '#e2e8f0' : '#374151',
-            font: { size: isMobile ? 10 : 11 },
-            boxWidth: isMobile ? 10 : 12,
-            padding: isMobile ? 6 : 6,
-            generateLabels: function(chart) {
-              const data = chart.data;
-              if (data.labels.length && data.datasets.length) {
-                return data.labels.map((label, i) => {
-                  const truncated = label.length > 18 ? label.substring(0, 16) + '...' : label;
-                  return {
-                    text: truncated,
-                    fillStyle: data.datasets[0].backgroundColor[i],
-                    strokeStyle: data.datasets[0].borderColor,
-                    lineWidth: data.datasets[0].borderWidth,
-                    hidden: false,
-                    index: i
-                  };
-                });
-              }
-              return [];
-            }
+            font: { size: 11 },
+            boxWidth: 12,
+            padding: 8,
+            usePointStyle: true,
+            pointStyle: 'rect'
           }
         },
         tooltip: {
@@ -13171,31 +13155,15 @@ function renderCustomerDonutChart() {
       },
       plugins: {
         legend: {
-          position: isMobile ? 'bottom' : 'right',
-          align: 'start',
-          maxWidth: isMobile ? undefined : 160,
+          position: 'bottom',
+          align: 'center',
           labels: {
             color: isDarkMode ? '#e2e8f0' : '#374151',
-            font: { size: isMobile ? 10 : 11 },
-            boxWidth: isMobile ? 10 : 12,
-            padding: isMobile ? 6 : 6,
-            generateLabels: function(chart) {
-              const data = chart.data;
-              if (data.labels.length && data.datasets.length) {
-                return data.labels.map((label, i) => {
-                  const truncated = label.length > 18 ? label.substring(0, 16) + '...' : label;
-                  return {
-                    text: truncated,
-                    fillStyle: data.datasets[0].backgroundColor[i],
-                    strokeStyle: data.datasets[0].borderColor,
-                    lineWidth: data.datasets[0].borderWidth,
-                    hidden: false,
-                    index: i
-                  };
-                });
-              }
-              return [];
-            }
+            font: { size: 11 },
+            boxWidth: 12,
+            padding: 8,
+            usePointStyle: true,
+            pointStyle: 'rect'
           }
         },
         tooltip: {
@@ -14800,12 +14768,15 @@ function renderJaPmDonutChart() {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: isMobile ? 'bottom' : 'right',
+          position: 'bottom',
+          align: 'center',
           labels: {
             color: isDarkMode ? '#e2e8f0' : '#374151',
-            font: { size: isMobile ? 10 : 11 },
-            boxWidth: isMobile ? 10 : 12,
-            padding: isMobile ? 6 : 8
+            font: { size: 11 },
+            boxWidth: 12,
+            padding: 8,
+            usePointStyle: true,
+            pointStyle: 'rect'
           }
         },
         tooltip: {
@@ -14867,12 +14838,15 @@ function renderJaCustomerDonutChart() {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: isMobile ? 'bottom' : 'right',
+          position: 'bottom',
+          align: 'center',
           labels: {
             color: isDarkMode ? '#e2e8f0' : '#374151',
-            font: { size: isMobile ? 10 : 11 },
-            boxWidth: isMobile ? 10 : 12,
-            padding: isMobile ? 6 : 8
+            font: { size: 11 },
+            boxWidth: 12,
+            padding: 8,
+            usePointStyle: true,
+            pointStyle: 'rect'
           }
         },
         tooltip: {
