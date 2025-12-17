@@ -2371,22 +2371,22 @@ body.dark-mode .nav-item.nav-parent.expanded {
 .cf-operating,
 .cf-investing,
 .cf-financing {
-  background: #166534 !important;
+  background: #dbeafe !important;
 }
 
 .cf-operating td,
 .cf-investing td,
 .cf-financing td {
   font-weight: 700;
-  background: #166534 !important;
-  color: #fff !important;
+  background: transparent !important;
+  color: #1e3a5f !important;
 }
 
 #cashFlowTable tr.cf-operating td,
 #cashFlowTable tr.cf-investing td,
 #cashFlowTable tr.cf-financing td {
-  background: #166534 !important;
-  color: #fff !important;
+  background: transparent !important;
+  color: #1e3a5f !important;
 }
 
 .cf-toggle, .bs-toggle {
