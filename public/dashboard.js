@@ -1172,7 +1172,7 @@ function initNavigation() {
       
       // Auto-expand Jobs if child is clicked
       if (item.classList.contains("nav-child") && jobsParent && jobsChildren) {
-        const jobsChildItems = ['jobBudgets', 'jobActuals', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
+        const jobsChildItems = ['jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
         if (jobsChildItems.includes(id)) {
           jobsParent.classList.add("expanded");
           jobsChildren.classList.add("expanded");
@@ -13066,6 +13066,232 @@ function updateJaPagination(total) {
 }
 
 // ========================================
+// JOB COSTS MODULE
+// ========================================
+
+let jobCostsData = [];
+let jobCostsFiltered = [];
+let jcCurrentPage = 1;
+let jcPageSize = 25;
+let jcSortColumn = 'job_no';
+let jcSortDirection = 'asc';
+let jcEventListenersSetup = false;
+
+function initJobCosts() {
+  if (!jcEventListenersSetup) {
+    setupJobCostsEventListeners();
+    jcEventListenersSetup = true;
+  }
+  loadJobCostsData();
+}
+
+function setupJobCostsEventListeners() {
+  document.getElementById('jcStatusActive')?.addEventListener('change', filterJobCosts);
+  document.getElementById('jcStatusInactive')?.addEventListener('change', filterJobCosts);
+  document.getElementById('jcStatusClosed')?.addEventListener('change', filterJobCosts);
+  document.getElementById('jcStatusOverhead')?.addEventListener('change', filterJobCosts);
+  document.getElementById('jcPmFilter')?.addEventListener('change', filterJobCosts);
+  document.getElementById('jcCustomerFilter')?.addEventListener('change', filterJobCosts);
+  document.getElementById('jcSearchInput')?.addEventListener('input', filterJobCosts);
+  
+  document.querySelectorAll('.jc-sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (jcSortColumn === col) {
+        jcSortDirection = jcSortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        jcSortColumn = col;
+        jcSortDirection = 'asc';
+      }
+      sortJobCosts();
+      renderJobCostsTable();
+    });
+  });
+  
+  document.getElementById('jcPrevPage')?.addEventListener('click', () => {
+    if (jcCurrentPage > 1) {
+      jcCurrentPage--;
+      renderJobCostsTable();
+    }
+  });
+  
+  document.getElementById('jcNextPage')?.addEventListener('click', () => {
+    const totalPages = Math.ceil(jobCostsFiltered.length / jcPageSize);
+    if (jcCurrentPage < totalPages) {
+      jcCurrentPage++;
+      renderJobCostsTable();
+    }
+  });
+  
+  document.getElementById('jcPageSize')?.addEventListener('change', (e) => {
+    jcPageSize = parseInt(e.target.value);
+    jcCurrentPage = 1;
+    renderJobCostsTable();
+  });
+}
+
+async function loadJobCostsData() {
+  const loadingOverlay = document.getElementById('jobCostsLoadingOverlay');
+  if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+  
+  try {
+    const resp = await fetch('data/financials_jobs.json');
+    const text = await resp.text();
+    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+    
+    const jobBudgets = data.job_budgets || [];
+    const jobActualsRaw = data.job_actuals || [];
+    
+    const budgetMap = new Map();
+    jobBudgets.forEach(job => {
+      const originalCost = parseFloat(job.original_cost) || 0;
+      const costAdjustments = parseFloat(job.cost_adjustments) || 0;
+      budgetMap.set(job.job_no, {
+        customer_name: job.customer_name,
+        project_manager_name: job.project_manager_name,
+        job_status: job.job_status,
+        job_description: job.job_description,
+        estimated_cost: originalCost + costAdjustments
+      });
+    });
+    
+    jobCostsData = jobActualsRaw.map(row => {
+      const budget = budgetMap.get(row.job_no) || {};
+      return {
+        job_no: row.job_no,
+        job_status: row.job_status || budget.job_status,
+        job_description: row.job_description || budget.job_description,
+        project_manager_name: row.project_manager_name || budget.project_manager_name,
+        customer_name: budget.customer_name || '',
+        cost_code_no: row.cost_code_no || '',
+        cost_code_description: row.cost_code_description || '',
+        estimated_cost: budget.estimated_cost || 0,
+        actual_cost: parseFloat(row.actual_cost) || 0
+      };
+    });
+    
+    populateJobCostsFilters();
+    
+    const dataAsOf = document.getElementById('jobCostsDataAsOf');
+    if (dataAsOf && data.generated_at) {
+      dataAsOf.textContent = new Date(data.generated_at).toLocaleDateString();
+    }
+    
+    filterJobCosts();
+  } catch (err) {
+    console.error('Error loading job costs:', err);
+    document.getElementById('jobCostsTableBody').innerHTML = 
+      '<tr><td colspan="6" class="loading-cell">Error loading job costs data</td></tr>';
+  } finally {
+    if (loadingOverlay) loadingOverlay.classList.add('hidden');
+  }
+}
+
+function populateJobCostsFilters() {
+  const pmFilter = document.getElementById('jcPmFilter');
+  if (pmFilter) {
+    const pms = [...new Set(jobCostsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+    pmFilter.innerHTML = '<option value="">All Project Managers</option>' + 
+      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+  }
+  
+  const custFilter = document.getElementById('jcCustomerFilter');
+  if (custFilter) {
+    const customers = [...new Set(jobCostsData.map(j => j.customer_name).filter(Boolean))].sort();
+    custFilter.innerHTML = '<option value="">All Customers</option>' + 
+      customers.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+}
+
+function filterJobCosts() {
+  const showActive = document.getElementById('jcStatusActive')?.checked;
+  const showInactive = document.getElementById('jcStatusInactive')?.checked;
+  const showClosed = document.getElementById('jcStatusClosed')?.checked;
+  const showOverhead = document.getElementById('jcStatusOverhead')?.checked;
+  
+  const pmFilter = document.getElementById('jcPmFilter')?.value || '';
+  const custFilter = document.getElementById('jcCustomerFilter')?.value || '';
+  const searchTerm = (document.getElementById('jcSearchInput')?.value || '').toLowerCase().trim();
+  
+  const allowedStatuses = [];
+  if (showActive) allowedStatuses.push('A');
+  if (showInactive) allowedStatuses.push('I');
+  if (showClosed) allowedStatuses.push('C');
+  if (showOverhead) allowedStatuses.push('O');
+  
+  jobCostsFiltered = jobCostsData.filter(row => {
+    if (allowedStatuses.length > 0 && !allowedStatuses.includes(row.job_status)) return false;
+    if (pmFilter && row.project_manager_name !== pmFilter) return false;
+    if (custFilter && row.customer_name !== custFilter) return false;
+    
+    if (searchTerm) {
+      const searchStr = `${row.job_no} ${row.job_description} ${row.cost_code_no} ${row.cost_code_description}`.toLowerCase();
+      if (!searchStr.includes(searchTerm)) return false;
+    }
+    
+    return true;
+  });
+  
+  jcCurrentPage = 1;
+  sortJobCosts();
+  renderJobCostsTable();
+}
+
+function sortJobCosts() {
+  const col = jcSortColumn;
+  const dir = jcSortDirection === 'asc' ? 1 : -1;
+  
+  jobCostsFiltered.sort((a, b) => {
+    let aVal = a[col];
+    let bVal = b[col];
+    
+    if (['estimated_cost', 'actual_cost'].includes(col)) {
+      return ((aVal || 0) - (bVal || 0)) * dir;
+    }
+    
+    aVal = (aVal || '').toString().toLowerCase();
+    bVal = (bVal || '').toString().toLowerCase();
+    return aVal.localeCompare(bVal) * dir;
+  });
+}
+
+function renderJobCostsTable() {
+  const tbody = document.getElementById('jobCostsTableBody');
+  if (!tbody) return;
+  
+  const startIdx = (jcCurrentPage - 1) * jcPageSize;
+  const endIdx = startIdx + jcPageSize;
+  const pageData = jobCostsFiltered.slice(startIdx, endIdx);
+  
+  if (pageData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">No costs found matching filters</td></tr>';
+    updateJcPagination(0);
+    return;
+  }
+  
+  tbody.innerHTML = pageData.map(row => {
+    return `<tr>
+      <td>${row.job_no}</td>
+      <td>${row.job_description || ''}</td>
+      <td>${row.cost_code_no || ''}</td>
+      <td>${row.cost_code_description || ''}</td>
+      <td class="number-col">${formatCurrency(row.estimated_cost)}</td>
+      <td class="number-col">${formatCurrency(row.actual_cost)}</td>
+    </tr>`;
+  }).join('');
+  
+  updateJcPagination(jobCostsFiltered.length);
+}
+
+function updateJcPagination(total) {
+  const totalPages = Math.max(1, Math.ceil(total / jcPageSize));
+  
+  document.getElementById('jcPageInfo').textContent = `Page ${jcCurrentPage} of ${totalPages}`;
+  document.getElementById('jcPrevPage').disabled = jcCurrentPage <= 1;
+  document.getElementById('jcNextPage').disabled = jcCurrentPage >= totalPages;
+}
+
+// ========================================
 // MISSING BUDGETS MODULE
 // ========================================
 
@@ -14171,7 +14397,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     const jobsChildren = document.getElementById("navJobsChildren");
     
     const fsChildren = ['revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
-    const jobsChildItems = ['jobBudgets', 'jobActuals', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
+    const jobsChildItems = ['jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
     
     if (fsChildren.includes(targetSection) && finStatementsParent && finStatementsChildren) {
       finStatementsParent.classList.add("expanded");
