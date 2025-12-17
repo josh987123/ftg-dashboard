@@ -12420,14 +12420,6 @@ function initJobBudgets() {
     return;
   }
   
-  // Open config panel by default for Job Budgets
-  const configHeader = document.querySelector('#jobBudgets .config-header');
-  const configBody = document.getElementById('jobBudgetsConfigBody');
-  if (configHeader && configBody) {
-    configHeader.classList.remove('collapsed');
-    configBody.classList.remove('collapsed');
-  }
-  
   loadJobBudgetsData();
   setupJobBudgetsEventListeners();
   jobBudgetsInitialized = true;
@@ -12439,10 +12431,6 @@ function setupJobBudgetsEventListeners() {
   document.getElementById('jobStatusInactive')?.addEventListener('change', filterJobBudgets);
   document.getElementById('jobStatusClosed')?.addEventListener('change', filterJobBudgets);
   document.getElementById('jobStatusOverhead')?.addEventListener('change', filterJobBudgets);
-  
-  // Filter dropdowns
-  document.getElementById('jobPmFilter')?.addEventListener('change', filterJobBudgets);
-  document.getElementById('jobCustomerFilter')?.addEventListener('change', filterJobBudgets);
   
   // Search input with debounce
   const searchInput = document.getElementById('jobSearchInput');
@@ -12591,9 +12579,6 @@ async function loadJobBudgetsData() {
       estimated_profit: (parseFloat(job.revised_contract) || 0) - (parseFloat(job.revised_cost) || 0)
     }));
     
-    // Populate filter dropdowns
-    populateJobFilters();
-    
     // Initialize column filter dropdowns
     initJobBudgetsColumnFilters();
     updateJobBudgetsSortIndicators();
@@ -12615,23 +12600,6 @@ async function loadJobBudgetsData() {
   }
 }
 
-function populateJobFilters() {
-  // Project Managers
-  const pmFilter = document.getElementById('jobPmFilter');
-  if (pmFilter) {
-    const pms = [...new Set(jobBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
-    pmFilter.innerHTML = '<option value="">All Project Managers</option>' + 
-      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
-  }
-  
-  // Customers
-  const custFilter = document.getElementById('jobCustomerFilter');
-  if (custFilter) {
-    const customers = [...new Set(jobBudgetsData.map(j => j.customer_name).filter(Boolean))].sort();
-    custFilter.innerHTML = '<option value="">All Clients</option>' + 
-      customers.map(c => `<option value="${c}">${c}</option>`).join('');
-  }
-}
 
 function getMarginColor(margin) {
   // Returns background color based on profit margin
@@ -12662,8 +12630,6 @@ function filterJobBudgets() {
   const showClosed = document.getElementById('jobStatusClosed')?.checked;
   const showOverhead = document.getElementById('jobStatusOverhead')?.checked;
   
-  const pmFilter = document.getElementById('jobPmFilter')?.value || '';
-  const custFilter = document.getElementById('jobCustomerFilter')?.value || '';
   const searchTerm = (document.getElementById('jobSearchInput')?.value || '').toLowerCase().trim();
   
   const allowedStatuses = [];
@@ -12675,12 +12641,6 @@ function filterJobBudgets() {
   jobBudgetsFiltered = jobBudgetsData.filter(job => {
     // Status filter from config panel
     if (allowedStatuses.length > 0 && !allowedStatuses.includes(job.job_status)) return false;
-    
-    // PM filter from config panel
-    if (pmFilter && job.project_manager_name !== pmFilter) return false;
-    
-    // Customer filter from config panel
-    if (custFilter && job.customer_name !== custFilter) return false;
     
     // Search filter
     if (searchTerm) {
