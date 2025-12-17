@@ -12556,7 +12556,7 @@ function renderPmDonutChart() {
     data.push(otherTotal);
   }
   
-  const isDarkMode = document.body.classList.contains('dark-mode');
+  const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains('dark-mode');
   const isMobile = window.innerWidth <= 768;
   
   if (pmDonutChart) {
@@ -12635,7 +12635,7 @@ function renderCustomerDonutChart() {
     data.push(otherTotal);
   }
   
-  const isDarkMode = document.body.classList.contains('dark-mode');
+  const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains('dark-mode');
   const isMobile = window.innerWidth <= 768;
   
   if (customerDonutChart) {
