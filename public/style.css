@@ -6476,12 +6476,16 @@ body.dark-mode .nav-item.nav-parent.expanded {
 /* Mobile sticky columns */
 @media (max-width: 768px) {
   [data-theme="dark"] #incomeStatementTable td:first-child,
-  [data-theme="dark"] #incomeStatementTable th:first-child,
   [data-theme="dark"] #balanceSheetTable td:first-child,
-  [data-theme="dark"] #balanceSheetTable th:first-child,
-  [data-theme="dark"] #cashFlowTable td:first-child,
-  [data-theme="dark"] #cashFlowTable th:first-child {
+  [data-theme="dark"] #cashFlowTable td:first-child {
     background: var(--card-bg);
+  }
+  
+  /* Header row first column - transparent/inherit like Balance Sheet */
+  [data-theme="dark"] #incomeStatementTable th:first-child,
+  [data-theme="dark"] #balanceSheetTable th:first-child,
+  [data-theme="dark"] #cashFlowTable th:first-child {
+    background: transparent !important;
   }
   
   [data-theme="dark"] .is-subtotal td:first-child,
@@ -6492,6 +6496,20 @@ body.dark-mode .nav-item.nav-parent.expanded {
   [data-theme="dark"] .is-header td:first-child,
   [data-theme="dark"] .cf-header td:first-child {
     background: var(--bg-tertiary) !important;
+  }
+  
+  /* Cash Flow category rows - dark gray in dark mode on mobile */
+  [data-theme="dark"] #cashFlowTable tr.cf-operating,
+  [data-theme="dark"] #cashFlowTable tr.cf-investing,
+  [data-theme="dark"] #cashFlowTable tr.cf-financing {
+    background: #374151 !important;
+  }
+  
+  [data-theme="dark"] #cashFlowTable tr.cf-operating td,
+  [data-theme="dark"] #cashFlowTable tr.cf-investing td,
+  [data-theme="dark"] #cashFlowTable tr.cf-financing td {
+    background: transparent !important;
+    color: #fff !important;
   }
 }
 
@@ -6576,7 +6594,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
 [data-theme="dark"] .cf-operating,
 [data-theme="dark"] .cf-investing,
 [data-theme="dark"] .cf-financing {
-  background: #166534 !important;
+  background: #374151 !important;
 }
 
 [data-theme="dark"] .cf-operating td,
