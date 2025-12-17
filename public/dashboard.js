@@ -13452,7 +13452,20 @@ function renderJoClientJobsChart(data, textColor, gridColor, showDataLabels) {
   
   if (joClientJobsChart) joClientJobsChart.destroy();
   
-  const sortedData = [...data].sort((a, b) => b.jobCount - a.jobCount);
+  let sortedData = [...data].sort((a, b) => b.jobCount - a.jobCount);
+  
+  // Limit to 10 items, with 10th being "All Others"
+  if (sortedData.length > 10) {
+    const top9 = sortedData.slice(0, 9);
+    const others = sortedData.slice(9);
+    const othersTotal = others.reduce((sum, d) => sum + d.jobCount, 0);
+    const othersContract = others.reduce((sum, d) => sum + d.contractValue, 0);
+    const othersCost = others.reduce((sum, d) => sum + d.revisedCost, 0);
+    const othersMargin = othersCost > 0 ? ((othersContract - othersCost) / othersContract * 100) : 0;
+    top9.push({ name: 'All Others', jobCount: othersTotal, contractValue: othersContract, revisedCost: othersCost, profitMargin: othersMargin });
+    sortedData = top9;
+  }
+  
   const context = ctx.getContext('2d');
   const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
@@ -13494,15 +13507,29 @@ function renderJoClientContractChart(data, textColor, gridColor, showDataLabels)
   
   if (joClientContractChart) joClientContractChart.destroy();
   
+  let sortedData = [...data].sort((a, b) => b.contractValue - a.contractValue);
+  
+  // Limit to 10 items, with 10th being "All Others"
+  if (sortedData.length > 10) {
+    const top9 = sortedData.slice(0, 9);
+    const others = sortedData.slice(9);
+    const othersJobs = others.reduce((sum, d) => sum + d.jobCount, 0);
+    const othersContract = others.reduce((sum, d) => sum + d.contractValue, 0);
+    const othersCost = others.reduce((sum, d) => sum + d.revisedCost, 0);
+    const othersMargin = othersCost > 0 ? ((othersContract - othersCost) / othersContract * 100) : 0;
+    top9.push({ name: 'All Others', jobCount: othersJobs, contractValue: othersContract, revisedCost: othersCost, profitMargin: othersMargin });
+    sortedData = top9;
+  }
+  
   const context = ctx.getContext('2d');
   const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joClientContractChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
+      labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
-        data: data.map(d => d.contractValue),
+        data: sortedData.map(d => d.contractValue),
         backgroundColor: blueGradient,
         borderRadius: 4
       }]
@@ -13535,7 +13562,20 @@ function renderJoClientMarginChart(data, textColor, gridColor, showDataLabels) {
   
   if (joClientMarginChart) joClientMarginChart.destroy();
   
-  const sortedData = [...data].sort((a, b) => b.profitMargin - a.profitMargin);
+  let sortedData = [...data].sort((a, b) => b.profitMargin - a.profitMargin);
+  
+  // Limit to 10 items, with 10th being "All Others"
+  if (sortedData.length > 10) {
+    const top9 = sortedData.slice(0, 9);
+    const others = sortedData.slice(9);
+    const othersJobs = others.reduce((sum, d) => sum + d.jobCount, 0);
+    const othersContract = others.reduce((sum, d) => sum + d.contractValue, 0);
+    const othersCost = others.reduce((sum, d) => sum + d.revisedCost, 0);
+    const othersMargin = othersContract > 0 ? ((othersContract - othersCost) / othersContract * 100) : 0;
+    top9.push({ name: 'All Others', jobCount: othersJobs, contractValue: othersContract, revisedCost: othersCost, profitMargin: othersMargin });
+    sortedData = top9;
+  }
+  
   const context = ctx.getContext('2d');
   const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
