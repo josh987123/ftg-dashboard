@@ -12986,16 +12986,17 @@ function renderJoPmJobsChart(data, textColor, gridColor, showDataLabels) {
   
   if (joPmJobsChart) joPmJobsChart.destroy();
   
+  const sortedData = [...data].sort((a, b) => b.jobCount - a.jobCount);
   const context = ctx.getContext('2d');
-  const colorPairs = getJoBarColors(data.length);
+  const colorPairs = getJoBarColors(sortedData.length);
   const backgrounds = colorPairs.map(([c1, c2]) => createJoGradient(context, c1, c2));
   
   joPmJobsChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
+      labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
-        data: data.map(d => d.jobCount),
+        data: sortedData.map(d => d.jobCount),
         backgroundColor: backgrounds,
         borderRadius: 4
       }]
@@ -13070,8 +13071,9 @@ function renderJoPmMarginChart(data, textColor, gridColor, showDataLabels) {
   
   if (joPmMarginChart) joPmMarginChart.destroy();
   
+  const sortedData = [...data].sort((a, b) => b.profitMargin - a.profitMargin);
   const context = ctx.getContext('2d');
-  const backgrounds = data.map(d => {
+  const backgrounds = sortedData.map(d => {
     if (d.profitMargin >= 15) return createJoGradient(context, '#047857', '#064e3b');
     if (d.profitMargin >= 0) return createJoGradient(context, '#f59e0b', '#d97706');
     return createJoGradient(context, '#dc2626', '#991b1b');
@@ -13080,9 +13082,9 @@ function renderJoPmMarginChart(data, textColor, gridColor, showDataLabels) {
   joPmMarginChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
+      labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
-        data: data.map(d => d.profitMargin),
+        data: sortedData.map(d => d.profitMargin),
         backgroundColor: backgrounds,
         borderRadius: 4
       }]
@@ -13115,16 +13117,17 @@ function renderJoClientJobsChart(data, textColor, gridColor, showDataLabels) {
   
   if (joClientJobsChart) joClientJobsChart.destroy();
   
+  const sortedData = [...data].sort((a, b) => b.jobCount - a.jobCount);
   const context = ctx.getContext('2d');
-  const colorPairs = getJoBarColors(data.length);
+  const colorPairs = getJoBarColors(sortedData.length);
   const backgrounds = colorPairs.map(([c1, c2]) => createJoGradient(context, c1, c2));
   
   joClientJobsChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
+      labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
-        data: data.map(d => d.jobCount),
+        data: sortedData.map(d => d.jobCount),
         backgroundColor: backgrounds,
         borderRadius: 4
       }]
@@ -13199,8 +13202,9 @@ function renderJoClientMarginChart(data, textColor, gridColor, showDataLabels) {
   
   if (joClientMarginChart) joClientMarginChart.destroy();
   
+  const sortedData = [...data].sort((a, b) => b.profitMargin - a.profitMargin);
   const context = ctx.getContext('2d');
-  const backgrounds = data.map(d => {
+  const backgrounds = sortedData.map(d => {
     if (d.profitMargin >= 15) return createJoGradient(context, '#047857', '#064e3b');
     if (d.profitMargin >= 0) return createJoGradient(context, '#f59e0b', '#d97706');
     return createJoGradient(context, '#dc2626', '#991b1b');
@@ -13209,9 +13213,9 @@ function renderJoClientMarginChart(data, textColor, gridColor, showDataLabels) {
   joClientMarginChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
+      labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
-        data: data.map(d => d.profitMargin),
+        data: sortedData.map(d => d.profitMargin),
         backgroundColor: backgrounds,
         borderRadius: 4
       }]
