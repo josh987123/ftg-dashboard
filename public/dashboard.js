@@ -1218,7 +1218,7 @@ function initNavigation() {
 }
 
 function initAllAiPanelToggles() {
-  ['overview', 'rev', 'acct', 'bs', 'jo'].forEach(prefix => {
+  ['overview', 'rev', 'acct', 'bs', 'jo', 'jb', 'ja'].forEach(prefix => {
     const panel = document.getElementById(`${prefix}AiAnalysisPanel`);
     const header = document.getElementById(`${prefix}AiAnalysisHeader`);
     const analyzeBtn = document.getElementById(`${prefix}AiAnalyzeBtn`);
@@ -1242,6 +1242,12 @@ function initAllAiPanelToggles() {
   
   const joBtn = document.getElementById('joAiAnalyzeBtn');
   if (joBtn) joBtn.addEventListener('click', performJobOverviewAiAnalysis);
+  
+  const jbBtn = document.getElementById('jbAiAnalyzeBtn');
+  if (jbBtn) jbBtn.addEventListener('click', performJobBudgetsAiAnalysis);
+  
+  const jaBtn = document.getElementById('jaAiAnalyzeBtn');
+  if (jaBtn) jaBtn.addEventListener('click', performJobActualsAiAnalysis);
 }
 
 async function performOverviewAiAnalysis() {
@@ -1384,6 +1390,177 @@ function extractJobOverviewData() {
   });
   
   return text || "No job overview data available";
+}
+
+async function performJobBudgetsAiAnalysis() {
+  const btn = document.getElementById('jbAiAnalyzeBtn');
+  const panel = document.getElementById('jbAiAnalysisPanel');
+  const content = document.getElementById('jbAiAnalysisContent');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  panel.classList.remove('collapsed');
+  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing job budgets...</div>';
+  try {
+    const statementData = extractJobBudgetsData();
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/analyze-jobs' : '/.netlify/functions/analyze-jobs';
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({statementData, periodInfo: 'Job Budgets Analysis'})
+    });
+    const result = await response.json();
+    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+  } catch (e) {
+    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis';
+  }
+}
+
+function extractJobBudgetsData() {
+  let text = "Job Budgets Analysis:\n\n";
+  
+  // Get key metrics
+  text += "Key Metrics:\n";
+  const metrics = [
+    { id: 'jobTotalCount', label: 'Total Jobs' },
+    { id: 'jobTotalContract', label: 'Total Contract Value' },
+    { id: 'jobTotalCost', label: 'Total Est. Cost' },
+    { id: 'jobTotalProfit', label: 'Total Est. Profit' },
+    { id: 'jobAvgMargin', label: 'Avg Profit Margin' }
+  ];
+  metrics.forEach(m => {
+    const el = document.getElementById(m.id);
+    if (el) text += `  ${m.label}: ${el.textContent.trim()}\n`;
+  });
+  text += "\n";
+  
+  // Get breakdown by PM
+  const pmBody = document.getElementById('jobPmBreakdownBody');
+  if (pmBody) {
+    text += "Breakdown by Project Manager:\n";
+    const rows = pmBody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 5) {
+        const pm = cells[0]?.textContent.trim() || '';
+        const jobs = cells[1]?.textContent.trim() || '';
+        const contract = cells[2]?.textContent.trim() || '';
+        const margin = cells[5]?.textContent.trim() || '';
+        text += `  ${pm}: ${jobs} jobs, ${contract} contract, ${margin} margin\n`;
+      }
+    });
+    text += "\n";
+  }
+  
+  // Get breakdown by Client
+  const custBody = document.getElementById('jobCustomerBreakdownBody');
+  if (custBody) {
+    text += "Breakdown by Client:\n";
+    const rows = custBody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 5) {
+        const cust = cells[0]?.textContent.trim() || '';
+        const jobs = cells[1]?.textContent.trim() || '';
+        const contract = cells[2]?.textContent.trim() || '';
+        const margin = cells[5]?.textContent.trim() || '';
+        text += `  ${cust}: ${jobs} jobs, ${contract} contract, ${margin} margin\n`;
+      }
+    });
+  }
+  
+  return text || "No job budgets data available";
+}
+
+async function performJobActualsAiAnalysis() {
+  const btn = document.getElementById('jaAiAnalyzeBtn');
+  const panel = document.getElementById('jaAiAnalysisPanel');
+  const content = document.getElementById('jaAiAnalysisContent');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  panel.classList.remove('collapsed');
+  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing job actuals...</div>';
+  try {
+    const statementData = extractJobActualsData();
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/analyze-jobs' : '/.netlify/functions/analyze-jobs';
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({statementData, periodInfo: 'Job Actuals Analysis'})
+    });
+    const result = await response.json();
+    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+  } catch (e) {
+    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis';
+  }
+}
+
+function extractJobActualsData() {
+  let text = "Job Actuals Analysis:\n\n";
+  
+  // Get key metrics
+  text += "Key Metrics:\n";
+  const metrics = [
+    { id: 'jaTotalCount', label: 'Total Jobs' },
+    { id: 'jaTotalBilledRevenue', label: 'Total Billed Revenue' },
+    { id: 'jaTotalEarnedRevenue', label: 'Total Earned Revenue' },
+    { id: 'jaTotalActualCost', label: 'Total Actual Cost' },
+    { id: 'jaOverUnderValue', label: 'Over/(Under) Bill' },
+    { id: 'jaAvgMargin', label: 'Avg Actual Margin' }
+  ];
+  metrics.forEach(m => {
+    const el = document.getElementById(m.id);
+    if (el) text += `  ${m.label}: ${el.textContent.trim()}\n`;
+  });
+  text += "\n";
+  
+  // Get breakdown by PM
+  const pmBody = document.getElementById('jaPmBreakdownBody');
+  if (pmBody) {
+    text += "Breakdown by Project Manager:\n";
+    const rows = pmBody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 5) {
+        const pm = cells[0]?.textContent.trim() || '';
+        const jobs = cells[1]?.textContent.trim() || '';
+        const earned = cells[2]?.textContent.trim() || '';
+        const cost = cells[3]?.textContent.trim() || '';
+        const margin = cells[5]?.textContent.trim() || '';
+        text += `  ${pm}: ${jobs} jobs, ${earned} earned, ${cost} cost, ${margin} margin\n`;
+      }
+    });
+    text += "\n";
+  }
+  
+  // Get breakdown by Client
+  const custBody = document.getElementById('jaCustomerBreakdownBody');
+  if (custBody) {
+    text += "Breakdown by Client:\n";
+    const rows = custBody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 5) {
+        const cust = cells[0]?.textContent.trim() || '';
+        const jobs = cells[1]?.textContent.trim() || '';
+        const earned = cells[2]?.textContent.trim() || '';
+        const cost = cells[3]?.textContent.trim() || '';
+        const margin = cells[5]?.textContent.trim() || '';
+        text += `  ${cust}: ${jobs} jobs, ${earned} earned, ${cost} cost, ${margin} margin\n`;
+      }
+    });
+  }
+  
+  return text || "No job actuals data available";
 }
 
 async function performRevenueAiAnalysis() {
