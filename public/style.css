@@ -2469,11 +2469,11 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 #cashFlowTable tbody tr:nth-child(odd) {
-  background: #fff;
+  background: transparent;
 }
 
 #cashFlowTable tbody tr:nth-child(even) {
-  background: #f9fafb;
+  background: transparent;
 }
 
 #cashFlowTable tbody tr.is-spacer-row {
@@ -2481,11 +2481,11 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 #incomeStatementTable tbody tr:nth-child(odd) {
-  background: #fff;
+  background: transparent;
 }
 
 #incomeStatementTable tbody tr:nth-child(even) {
-  background: #f9fafb;
+  background: transparent;
 }
 
 #incomeStatementTable tbody tr.is-spacer-row {
@@ -2752,7 +2752,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 #balanceSheetTable tbody tr:nth-child(even) {
-  background: #f9fafb;
+  background: transparent;
 }
 
 #balanceSheetTable tbody tr.is-spacer-row {
@@ -6188,7 +6188,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 [data-theme="dark"] #balanceSheetTable tbody tr:nth-child(even) {
-  background: var(--bg-tertiary);
+  background: transparent;
 }
 
 [data-theme="dark"] #balanceSheetTable tbody tr.is-spacer-row {
@@ -6739,11 +6739,11 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 [data-theme="dark"] #incomeStatementTable tbody tr:nth-child(odd) {
-  background: var(--card-bg);
+  background: transparent;
 }
 
 [data-theme="dark"] #incomeStatementTable tbody tr:nth-child(even) {
-  background: var(--bg-tertiary);
+  background: transparent;
 }
 
 [data-theme="dark"] #incomeStatementTable tbody tr.is-spacer-row {
@@ -6814,11 +6814,11 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 [data-theme="dark"] #cashFlowTable tbody tr:nth-child(odd) {
-  background: var(--card-bg);
+  background: transparent;
 }
 
 [data-theme="dark"] #cashFlowTable tbody tr:nth-child(even) {
-  background: var(--bg-tertiary);
+  background: transparent;
 }
 
 [data-theme="dark"] #cashFlowTable tbody tr.is-spacer-row {
