@@ -678,6 +678,7 @@ Period: {period_info}
 @app.route('/api/analyze-revenue', methods=['POST', 'OPTIONS'])
 @app.route('/api/analyze-account', methods=['POST', 'OPTIONS'])
 @app.route('/api/analyze-balance-sheet', methods=['POST', 'OPTIONS'])
+@app.route('/api/analyze-jobs', methods=['POST', 'OPTIONS'])
 def api_analyze_financial_data():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'})
@@ -705,6 +706,9 @@ def api_analyze_financial_data():
         elif 'account' in endpoint:
             title = "GL Account"
             focus = "account details and trends"
+        elif 'jobs' in endpoint:
+            title = "Job Overview"
+            focus = "job performance, contract values, billing status, and profit margins by project manager and client"
         else:
             title = "Balance Sheet"
             focus = "asset, liability, and equity positions"

@@ -1218,7 +1218,7 @@ function initNavigation() {
 }
 
 function initAllAiPanelToggles() {
-  ['overview', 'rev', 'acct', 'bs'].forEach(prefix => {
+  ['overview', 'rev', 'acct', 'bs', 'jo'].forEach(prefix => {
     const panel = document.getElementById(`${prefix}AiAnalysisPanel`);
     const header = document.getElementById(`${prefix}AiAnalysisHeader`);
     const analyzeBtn = document.getElementById(`${prefix}AiAnalyzeBtn`);
@@ -1239,6 +1239,9 @@ function initAllAiPanelToggles() {
   
   const bsBtn = document.getElementById('bsAiAnalyzeBtn');
   if (bsBtn) bsBtn.addEventListener('click', performBalanceSheetAiAnalysis);
+  
+  const joBtn = document.getElementById('joAiAnalyzeBtn');
+  if (joBtn) joBtn.addEventListener('click', performJobOverviewAiAnalysis);
 }
 
 async function performOverviewAiAnalysis() {
@@ -1292,6 +1295,95 @@ function extractOverviewChartData() {
   });
   
   return text || "No overview data available";
+}
+
+async function performJobOverviewAiAnalysis() {
+  const btn = document.getElementById('joAiAnalyzeBtn');
+  const panel = document.getElementById('joAiAnalysisPanel');
+  const content = document.getElementById('joAiAnalysisContent');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  panel.classList.remove('collapsed');
+  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing job data...</div>';
+  try {
+    const statementData = extractJobOverviewData();
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/analyze-jobs' : '/.netlify/functions/analyze-jobs';
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({statementData, periodInfo: 'Job Overview Analysis'})
+    });
+    const result = await response.json();
+    content.innerHTML = result.success ? formatMarkdown(result.analysis) : `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+  } catch (e) {
+    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis';
+  }
+}
+
+function extractJobOverviewData() {
+  let text = "Job Overview Analysis:\n\n";
+  
+  // Get filter selections
+  const statusFilters = [];
+  if (document.getElementById('joStatusActive')?.checked) statusFilters.push('Active');
+  if (document.getElementById('joStatusInactive')?.checked) statusFilters.push('Inactive');
+  if (document.getElementById('joStatusClosed')?.checked) statusFilters.push('Closed');
+  if (document.getElementById('joStatusOverhead')?.checked) statusFilters.push('Overhead');
+  text += `Filters: ${statusFilters.join(', ') || 'None'}\n`;
+  
+  const pmFilter = document.getElementById('joPmFilter')?.value || 'All';
+  const clientFilter = document.getElementById('joCustomerFilter')?.value || 'All';
+  text += `Project Manager: ${pmFilter || 'All'}\n`;
+  text += `Client: ${clientFilter || 'All'}\n\n`;
+  
+  // Get key metrics
+  text += "Key Metrics:\n";
+  const metrics = [
+    { id: 'joTotalJobs', label: 'Total Jobs' },
+    { id: 'joContractValue', label: 'Contract Value' },
+    { id: 'joBilledRevenue', label: 'Billed Revenue' },
+    { id: 'joOverUnderValue', label: 'Over/(Under) Bill' },
+    { id: 'joEstProfitMargin', label: 'Est. Profit Margin' }
+  ];
+  metrics.forEach(m => {
+    const el = document.getElementById(m.id);
+    if (el) text += `  ${m.label}: ${el.textContent.trim()}\n`;
+  });
+  text += "\n";
+  
+  // Get chart summary stats
+  const chartSections = [
+    { title: 'By Project Manager', charts: ['pmJobsChart', 'pmContractChart', 'pmMarginChart'] },
+    { title: 'By Client', charts: ['customerJobsChart', 'customerContractChart', 'customerMarginChart'] }
+  ];
+  
+  chartSections.forEach(section => {
+    text += `${section.title}:\n`;
+    section.charts.forEach(chartId => {
+      const container = document.getElementById(chartId)?.closest('.jo-chart-container');
+      if (container) {
+        const title = container.querySelector('.jo-chart-title')?.textContent.trim() || chartId;
+        text += `  ${title}:\n`;
+        const statTiles = container.querySelectorAll('.jo-stat-tile');
+        statTiles.forEach(tile => {
+          const label = tile.querySelector('.jo-stat-label')?.textContent.trim() || '';
+          const value = tile.querySelector('.jo-stat-value')?.textContent.trim() || '';
+          const name = tile.querySelector('.jo-stat-name')?.textContent.trim() || '';
+          if (label && value) {
+            text += `    ${label}: ${value}${name ? ` (${name})` : ''}\n`;
+          }
+        });
+      }
+    });
+    text += "\n";
+  });
+  
+  return text || "No job overview data available";
 }
 
 async function performRevenueAiAnalysis() {
