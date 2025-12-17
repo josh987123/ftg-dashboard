@@ -8305,6 +8305,207 @@ body.dark-mode .page-size-select {
     color: #e5e7eb !important;
   }
   
+  /* ========== REVENUE, INCOME STATEMENT, BALANCE SHEET, CASH FLOW, ACCOUNT DETAIL CONFIG - ULTRA COMPACT ========== */
+  #revenue .config-panel,
+  #incomeStatement .config-panel,
+  #balanceSheet .config-panel,
+  #cashFlows .config-panel,
+  #accounts .config-panel {
+    margin-bottom: 8px !important;
+  }
+  
+  #revenue .config-body,
+  #incomeStatement .config-body,
+  #balanceSheet .config-body,
+  #cashFlows .config-body,
+  #accounts .config-body {
+    padding: 6px !important;
+    gap: 4px !important;
+  }
+  
+  /* Save view row - compact */
+  #revenue .config-body > div:first-child,
+  #incomeStatement .config-body > div:first-child,
+  #balanceSheet .config-body > div:first-child,
+  #cashFlows .config-body > div:first-child,
+  #accounts .config-body > div:first-child {
+    gap: 4px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  /* All selects - compact */
+  #revenue .config-body select,
+  #incomeStatement .config-body select,
+  #balanceSheet .config-body select,
+  #cashFlows .config-body select,
+  #accounts .config-body select {
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+    min-height: 26px !important;
+  }
+  
+  /* Save view button */
+  #revenue .save-view-btn,
+  #incomeStatement .save-view-btn,
+  #balanceSheet .save-view-btn,
+  #cashFlows .save-view-btn,
+  #accounts .save-view-btn {
+    padding: 4px 8px !important;
+    font-size: 9px !important;
+  }
+  
+  /* Config boxes - compact */
+  #revenue .overview-config-box,
+  #incomeStatement .overview-config-box,
+  #balanceSheet .overview-config-box,
+  #cashFlows .overview-config-box,
+  #accounts .overview-config-box {
+    padding: 6px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  /* Rev controls - 2 columns side by side */
+  #revenue .rev-controls,
+  #incomeStatement .is-controls,
+  #balanceSheet .is-controls,
+  #cashFlows .is-controls,
+  #accounts .rev-controls {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 4px 8px !important;
+  }
+  
+  #revenue .rev-controls > div,
+  #incomeStatement .is-controls > div,
+  #balanceSheet .is-controls > div,
+  #cashFlows .is-controls > div,
+  #accounts .rev-controls > div {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  
+  #revenue .rev-controls label,
+  #incomeStatement .is-controls label,
+  #balanceSheet .is-controls label,
+  #cashFlows .is-controls label,
+  #accounts .rev-controls label {
+    font-size: 9px !important;
+    min-width: auto !important;
+    white-space: nowrap !important;
+  }
+  
+  #revenue .rev-controls select,
+  #incomeStatement .is-controls select,
+  #balanceSheet .is-controls select,
+  #cashFlows .is-controls select,
+  #accounts .rev-controls select {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  
+  /* Checkbox groups - 2x2 grid */
+  #revenue .checkbox-group,
+  #incomeStatement .checkbox-group,
+  #balanceSheet .checkbox-group,
+  #cashFlows .checkbox-group,
+  #accounts .checkbox-group {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 2px 8px !important;
+  }
+  
+  #revenue .checkbox-group label,
+  #incomeStatement .checkbox-group label,
+  #balanceSheet .checkbox-group label,
+  #cashFlows .checkbox-group label,
+  #accounts .checkbox-group label,
+  #revenue .checkbox-label,
+  #incomeStatement .checkbox-label,
+  #balanceSheet .checkbox-label,
+  #cashFlows .checkbox-label,
+  #accounts .checkbox-label {
+    font-size: 9px !important;
+    padding: 2px 0 !important;
+    gap: 4px !important;
+  }
+  
+  #revenue .checkbox-group input[type="checkbox"],
+  #incomeStatement .checkbox-group input[type="checkbox"],
+  #balanceSheet .checkbox-group input[type="checkbox"],
+  #cashFlows .checkbox-group input[type="checkbox"],
+  #accounts .checkbox-group input[type="checkbox"] {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  
+  /* Radio buttons - horizontal layout */
+  #incomeStatement .radio-group,
+  #balanceSheet .radio-group,
+  #cashFlows .radio-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px 12px !important;
+  }
+  
+  #incomeStatement .radio-group label,
+  #balanceSheet .radio-group label,
+  #cashFlows .radio-group label {
+    font-size: 9px !important;
+    gap: 4px !important;
+  }
+  
+  #incomeStatement .radio-group input[type="radio"],
+  #balanceSheet .radio-group input[type="radio"],
+  #cashFlows .radio-group input[type="radio"] {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  
+  /* Range slider - compact */
+  #incomeStatement .range-slider,
+  #balanceSheet .range-slider,
+  #accounts .range-slider {
+    margin: 4px 0 !important;
+  }
+  
+  /* Section headers - visible in dark mode */
+  body.dark-mode #revenue .overview-config-box > div:first-child,
+  body.dark-mode #incomeStatement .overview-config-box > div:first-child,
+  body.dark-mode #balanceSheet .overview-config-box > div:first-child,
+  body.dark-mode #cashFlows .overview-config-box > div:first-child,
+  body.dark-mode #accounts .overview-config-box > div:first-child,
+  body.dark-mode #revenue .config-label,
+  body.dark-mode #incomeStatement .config-label,
+  body.dark-mode #balanceSheet .config-label,
+  body.dark-mode #cashFlows .config-label,
+  body.dark-mode #accounts .config-label {
+    color: #93c5fd !important;
+    font-size: 9px !important;
+  }
+  
+  /* Labels visible in dark mode */
+  body.dark-mode #revenue .checkbox-group label,
+  body.dark-mode #incomeStatement .checkbox-group label,
+  body.dark-mode #balanceSheet .checkbox-group label,
+  body.dark-mode #cashFlows .checkbox-group label,
+  body.dark-mode #accounts .checkbox-group label,
+  body.dark-mode #revenue .checkbox-label,
+  body.dark-mode #incomeStatement .checkbox-label,
+  body.dark-mode #balanceSheet .checkbox-label,
+  body.dark-mode #cashFlows .checkbox-label,
+  body.dark-mode #accounts .checkbox-label,
+  body.dark-mode #revenue .rev-controls label,
+  body.dark-mode #incomeStatement .is-controls label,
+  body.dark-mode #balanceSheet .is-controls label,
+  body.dark-mode #cashFlows .is-controls label,
+  body.dark-mode #accounts .rev-controls label,
+  body.dark-mode #incomeStatement .radio-group label,
+  body.dark-mode #balanceSheet .radio-group label,
+  body.dark-mode #cashFlows .radio-group label {
+    color: #e5e7eb !important;
+  }
+  
   /* Reduce donut chart empty space - compact on mobile */
   .breakdown-chart-wrapper {
     height: 120px !important;
