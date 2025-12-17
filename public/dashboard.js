@@ -4248,7 +4248,7 @@ async function deleteScheduledReport(id) {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "receivablesPayables", "jobAnalytics", "admin"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "receivablesPayables", "jobAnalytics", "admin"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -4333,6 +4333,14 @@ function getReportData() {
       subtitle: getJobBudgetsSubtitle(),
       tableHtml: getJobBudgetsTableHtml(),
       csvData: getJobBudgetsCsvData(),
+      isWide: true
+    };
+  } else if (view === "jobActuals") {
+    return {
+      title: "Job Actuals Report",
+      subtitle: getJobActualsSubtitle(),
+      tableHtml: getJobActualsTableHtml(),
+      csvData: getJobActualsCsvData(),
       isWide: true
     };
   }
@@ -4868,63 +4876,62 @@ function getJobBudgetsTableHtml() {
   const totalProfitColor = totalProfit >= 0 ? '#10b981' : '#dc2626';
   
   // Summary metrics section
-  let html = `<div style="margin-bottom:20px;">
-    <h3 style="margin:0 0 12px 0;font-size:14px;color:#374151;">Summary</h3>
-    <table style="border-collapse:collapse;font-size:12px;">
+  const totalProfitColorClass = totalProfit >= 0 ? '#059669' : '#dc2626';
+  let html = `<h3>Summary</h3>
+    <table class="summary-table">
       <tr>
-        <td style="padding:6px 16px 6px 0;color:#6b7280;">Total Jobs:</td>
-        <td style="padding:6px 0;font-weight:600;">${jobBudgetsFiltered.length}</td>
+        <td>Total Jobs</td>
+        <td>${jobBudgetsFiltered.length}</td>
       </tr>
       <tr>
-        <td style="padding:6px 16px 6px 0;color:#6b7280;">Total Contract:</td>
-        <td style="padding:6px 0;font-weight:600;">${formatCurrency(totalContract)}</td>
+        <td>Total Contract</td>
+        <td>${formatCurrency(totalContract)}</td>
       </tr>
       <tr>
-        <td style="padding:6px 16px 6px 0;color:#6b7280;">Total Cost:</td>
-        <td style="padding:6px 0;font-weight:600;">${formatCurrency(totalCost)}</td>
+        <td>Total Cost</td>
+        <td>${formatCurrency(totalCost)}</td>
       </tr>
       <tr>
-        <td style="padding:6px 16px 6px 0;color:#6b7280;">Total Est. Profit:</td>
-        <td style="padding:6px 0;font-weight:600;color:${totalProfitColor};">${formatCurrency(totalProfit)}</td>
+        <td>Total Est. Profit</td>
+        <td style="color:${totalProfitColorClass};">${formatCurrency(totalProfit)}</td>
       </tr>
       <tr>
-        <td style="padding:6px 16px 6px 0;color:#6b7280;">Avg Margin:</td>
-        <td style="padding:6px 0;font-weight:600;">${totalMargin.toFixed(1)}%</td>
+        <td>Avg Margin</td>
+        <td>${totalMargin.toFixed(1)}%</td>
       </tr>
-    </table>
-  </div>`;
+    </table>`;
   
   // Top 10 jobs by contract value
   const topJobs = [...jobBudgetsFiltered]
     .sort((a, b) => (b.revised_contract || 0) - (a.revised_contract || 0))
     .slice(0, 10);
   
-  html += `<h3 style="margin:20px 0 12px 0;font-size:14px;color:#374151;">Top ${Math.min(10, jobBudgetsFiltered.length)} Jobs by Contract Value</h3>`;
-  html += `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+  html += `<h3>Top ${Math.min(10, jobBudgetsFiltered.length)} Jobs by Contract Value</h3>`;
+  html += `<table>
     <thead>
-      <tr style="background:#f3f4f6;">
-        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Job #</th>
-        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Description</th>
-        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Client</th>
-        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Contract</th>
-        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Est. Profit</th>
-        <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Margin</th>
+      <tr>
+        <th>Job #</th>
+        <th>Description</th>
+        <th>Client</th>
+        <th style="text-align:right;">Contract</th>
+        <th style="text-align:right;">Est. Profit</th>
+        <th style="text-align:right;">Margin</th>
       </tr>
     </thead>
     <tbody>`;
   
   topJobs.forEach(job => {
     const margin = job.revised_contract ? (job.estimated_profit / job.revised_contract) * 100 : 0;
-    const profitColor = job.estimated_profit >= 0 ? '#10b981' : '#dc2626';
+    const profitColor = job.estimated_profit >= 0 ? '#059669' : '#dc2626';
     const desc = (job.job_description || '').substring(0, 40) + ((job.job_description || '').length > 40 ? '...' : '');
     
     html += `<tr>
-      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${job.job_no}</td>
-      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${desc}</td>
-      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${(job.customer_name || '').substring(0, 25)}</td>
-      <td style="padding:6px 8px;text-align:right;border:1px solid #e5e7eb;">${formatCurrency(job.revised_contract)}</td>
-      <td style="padding:6px 8px;text-align:right;border:1px solid #e5e7eb;color:${profitColor};">${formatCurrency(job.estimated_profit)}</td>
-      <td style="padding:6px 8px;text-align:right;border:1px solid #e5e7eb;">${margin.toFixed(1)}%</td>
+      <td>${job.job_no}</td>
+      <td>${desc}</td>
+      <td>${(job.customer_name || '').substring(0, 25)}</td>
+      <td style="text-align:right;">${formatCurrency(job.revised_contract)}</td>
+      <td style="text-align:right;color:${profitColor};">${formatCurrency(job.estimated_profit)}</td>
+      <td style="text-align:right;">${margin.toFixed(1)}%</td>
     </tr>`;
   });
   
@@ -4954,6 +4961,130 @@ function getJobBudgetsCsvData() {
   return csv;
 }
 
+function getJobActualsSubtitle() {
+  const filters = [];
+  if (document.getElementById('jaStatusActive')?.checked) filters.push('Active');
+  if (document.getElementById('jaStatusInactive')?.checked) filters.push('Inactive');
+  if (document.getElementById('jaStatusClosed')?.checked) filters.push('Closed');
+  if (document.getElementById('jaStatusOverhead')?.checked) filters.push('Overhead');
+  
+  const pm = document.getElementById('jaPmFilter')?.value;
+  const customer = document.getElementById('jaCustomerFilter')?.value;
+  
+  const total = typeof jobActualsFiltered !== 'undefined' ? jobActualsFiltered.length : 0;
+  let subtitle = `${total} Job${total !== 1 ? 's' : ''}`;
+  if (filters.length > 0 && filters.length < 4) subtitle += ` | Status: ${filters.join(', ')}`;
+  if (pm) subtitle += ` | PM: ${pm}`;
+  if (customer) subtitle += ` | Client: ${customer}`;
+  return subtitle;
+}
+
+function getJobActualsTableHtml() {
+  if (typeof jobActualsFiltered === 'undefined' || jobActualsFiltered.length === 0) {
+    return "<p>No job actuals data available</p>";
+  }
+  
+  const totalBilled = jobActualsFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const totalEarned = jobActualsFiltered.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  const totalCost = jobActualsFiltered.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
+  const overUnder = totalBilled - totalEarned;
+  const avgComplete = jobActualsFiltered.length > 0 
+    ? jobActualsFiltered.reduce((sum, j) => sum + (j.percent_complete || 0), 0) / jobActualsFiltered.length 
+    : 0;
+  const overUnderColor = overUnder >= 0 ? '#10b981' : '#dc2626';
+  
+  const overUnderColorStyle = overUnder >= 0 ? '#059669' : '#dc2626';
+  let html = `<h3>Summary</h3>
+    <table class="summary-table">
+      <tr>
+        <td>Total Jobs</td>
+        <td>${jobActualsFiltered.length}</td>
+      </tr>
+      <tr>
+        <td>Billed Revenue</td>
+        <td>${formatCurrency(totalBilled)}</td>
+      </tr>
+      <tr>
+        <td>Earned Revenue</td>
+        <td>${formatCurrency(totalEarned)}</td>
+      </tr>
+      <tr>
+        <td>Actual Cost</td>
+        <td>${formatCurrency(totalCost)}</td>
+      </tr>
+      <tr>
+        <td>Over/(Under) Bill</td>
+        <td style="color:${overUnderColorStyle};">${formatCurrency(overUnder)}</td>
+      </tr>
+      <tr>
+        <td>Avg % Complete</td>
+        <td>${avgComplete.toFixed(1)}%</td>
+      </tr>
+    </table>`;
+  
+  const topJobs = [...jobActualsFiltered]
+    .sort((a, b) => (b.earned_revenue || 0) - (a.earned_revenue || 0))
+    .slice(0, 10);
+  
+  html += `<h3>Top ${Math.min(10, jobActualsFiltered.length)} Jobs by Earned Revenue</h3>`;
+  html += `<table>
+    <thead>
+      <tr>
+        <th>Job #</th>
+        <th>Description</th>
+        <th>Client</th>
+        <th style="text-align:right;">Billed Rev</th>
+        <th style="text-align:right;">Earned Rev</th>
+        <th style="text-align:right;">Over/(Under)</th>
+        <th style="text-align:right;">Actual Cost</th>
+        <th style="text-align:right;">% Complete</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  
+  topJobs.forEach(job => {
+    const overUnderJob = (job.billed_revenue || 0) - (job.earned_revenue || 0);
+    const ouColor = overUnderJob >= 0 ? '#059669' : '#dc2626';
+    const desc = (job.job_description || '').substring(0, 35) + ((job.job_description || '').length > 35 ? '...' : '');
+    
+    html += `<tr>
+      <td>${job.job_no}</td>
+      <td>${desc}</td>
+      <td>${(job.customer_name || '').substring(0, 20)}</td>
+      <td style="text-align:right;">${formatCurrency(job.billed_revenue || 0)}</td>
+      <td style="text-align:right;">${formatCurrency(job.earned_revenue || 0)}</td>
+      <td style="text-align:right;color:${ouColor};">${formatCurrency(overUnderJob)}</td>
+      <td style="text-align:right;">${formatCurrency(job.actual_cost || 0)}</td>
+      <td style="text-align:right;">${(job.percent_complete || 0).toFixed(0)}%</td>
+    </tr>`;
+  });
+  
+  html += `</tbody></table>`;
+  
+  if (jobActualsFiltered.length > 10) {
+    html += `<p style="margin-top:12px;font-size:11px;color:#6b7280;font-style:italic;">Showing top 10 of ${jobActualsFiltered.length} jobs. Use CSV or Excel export for complete data.</p>`;
+  }
+  
+  return html;
+}
+
+function getJobActualsCsvData() {
+  if (typeof jobActualsFiltered === 'undefined' || jobActualsFiltered.length === 0) {
+    return "";
+  }
+  
+  let csv = "Job #,Description,Client,Status,Project Manager,Billed Revenue,Earned Revenue,Over/(Under) Bill,Actual Cost,% Complete\n";
+  
+  jobActualsFiltered.forEach(job => {
+    const status = getJobStatusLabel(job.job_status);
+    const overUnder = (job.billed_revenue || 0) - (job.earned_revenue || 0);
+    
+    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.billed_revenue || 0},${job.earned_revenue || 0},${overUnder},${job.actual_cost || 0},${(job.percent_complete || 0).toFixed(1)}\n`;
+  });
+  
+  return csv;
+}
+
 function getIncomeStatementAiAnalysis() {
   const panel = document.getElementById("isAiAnalysisPanel");
   if (!panel || panel.classList.contains("collapsed")) return null;
@@ -4967,6 +5098,7 @@ function generateReportHtml(data, forEmail = false) {
   const pageSize = data.isWide ? "11in 8.5in" : "8.5in 11in";
   
   const isFinancialStatement = ["Income Statement", "Balance Sheet", "Statement of Cash Flows"].includes(data.title);
+  const isJobReport = data.title.includes("Job");
   
   let aiAnalysisHtml = "";
   if (data.aiAnalysis) {
@@ -4985,6 +5117,14 @@ function generateReportHtml(data, forEmail = false) {
         <div class="report-company">FTG Builders</div>
         <div class="report-title">${data.title}</div>
         <div class="report-period">${data.subtitle}</div>
+      </div>
+    `;
+  } else if (isJobReport) {
+    headerHtml = `
+      <div class="job-report-header">
+        <div class="company-name">FTG Builders</div>
+        <div class="report-title">${data.title}</div>
+        <div class="report-subtitle">${data.subtitle}</div>
       </div>
     `;
   } else {
@@ -5013,10 +5153,13 @@ function generateReportHtml(data, forEmail = false) {
         }
         * { box-sizing: border-box; }
         body { 
-          font-family: Arial, sans-serif; 
-          padding: ${forEmail ? "20px" : "0.5in"}; 
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          padding: ${forEmail ? "0" : "0.5in"}; 
           margin: 0;
-          font-size: ${data.isWide ? "9pt" : "10pt"};
+          font-size: 10pt;
+          line-height: 1.5;
+          color: #1f2937;
+          background: ${forEmail ? "#ffffff" : "transparent"};
         }
         .header { 
           display: flex; 
@@ -5034,52 +5177,134 @@ function generateReportHtml(data, forEmail = false) {
         .report-company { font-size: 16pt; font-weight: 600; color: #1f2937; margin-bottom: 4px; }
         .report-title { font-size: 14pt; font-weight: 500; color: #374151; margin-bottom: 4px; }
         .report-period { font-size: 11pt; color: #6b7280; }
+        
+        /* Job Report Header - Professional Look */
+        .job-report-header {
+          background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+          color: white;
+          padding: 24px 28px;
+          margin: ${forEmail ? "0" : "-0.5in -0.5in 20px -0.5in"};
+          border-radius: ${forEmail ? "0" : "0"};
+        }
+        .job-report-header .company-name {
+          font-size: 12pt;
+          font-weight: 500;
+          opacity: 0.9;
+          margin-bottom: 6px;
+          letter-spacing: 0.5px;
+        }
+        .job-report-header .report-title {
+          font-size: 20pt;
+          font-weight: 700;
+          color: white;
+          margin-bottom: 8px;
+        }
+        .job-report-header .report-subtitle {
+          font-size: 11pt;
+          opacity: 0.85;
+          font-weight: 400;
+        }
+        
         .ai-analysis-section { 
-          background: #f9fafb; 
-          border: 1px solid #e5e7eb; 
-          border-radius: 6px; 
-          padding: 15px; 
-          margin-bottom: 20px;
+          background: #f8fafc; 
+          border: 1px solid #e2e8f0; 
+          border-radius: 8px; 
+          padding: 18px; 
+          margin: 20px 0;
         }
         .ai-analysis-header { 
           font-weight: 600; 
-          color: #1f2937; 
-          margin-bottom: 10px; 
+          color: #1e3a5f; 
+          margin-bottom: 12px; 
           font-size: 11pt;
-          border-bottom: 1px solid #e5e7eb;
+          border-bottom: 2px solid #e2e8f0;
+          padding-bottom: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .ai-analysis-content { font-size: 10pt; line-height: 1.6; color: #374151; }
+        .ai-analysis-content h4 { margin: 14px 0 8px 0; font-size: 11pt; color: #1e3a5f; }
+        .ai-analysis-content ul { margin: 8px 0; padding-left: 22px; }
+        .ai-analysis-content li { margin-bottom: 5px; }
+        
+        /* Content area */
+        .content-area {
+          padding: ${forEmail ? "24px 28px" : "0"};
+        }
+        
+        /* Tables - Not 100% width for job reports */
+        table { 
+          border-collapse: collapse; 
+          margin-top: 12px;
+          font-size: 10pt;
+        }
+        ${isJobReport ? '' : 'table { width: 100%; }'}
+        
+        th, td { 
+          border: 1px solid #e2e8f0; 
+          padding: 10px 14px; 
+          text-align: left;
+        }
+        th { 
+          background: #f1f5f9; 
+          font-weight: 600; 
+          color: #1e3a5f;
+          white-space: nowrap;
+        }
+        tbody tr:nth-child(even) { background: #f8fafc; }
+        tbody tr:hover { background: #f1f5f9; }
+        
+        .is-major-total td, .is-major-total th { 
+          background: #e2e8f0; 
+          font-weight: bold; 
+        }
+        
+        /* Section headers in job reports */
+        h3 { 
+          color: #1e3a5f; 
+          font-size: 13pt; 
+          margin: 24px 0 14px 0; 
+          font-weight: 600;
+          border-bottom: 2px solid #e2e8f0;
           padding-bottom: 8px;
         }
-        .ai-analysis-content { font-size: 9pt; line-height: 1.5; color: #374151; }
-        .ai-analysis-content h4 { margin: 12px 0 6px 0; font-size: 10pt; color: #1f2937; }
-        .ai-analysis-content ul { margin: 6px 0; padding-left: 20px; }
-        .ai-analysis-content li { margin-bottom: 4px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-        th, td { 
-          border: 1px solid #d1d5db; 
-          padding: ${data.isWide ? "4px 6px" : "6px 10px"}; 
-          text-align: left; 
-          font-size: ${data.isWide ? "8pt" : "9pt"};
+        h3:first-child { margin-top: 0; }
+        
+        /* Summary tables in job reports */
+        .summary-table { margin-bottom: 24px; }
+        .summary-table td { border: none; padding: 6px 0; }
+        .summary-table td:first-child { 
+          color: #64748b; 
+          padding-right: 24px; 
+          font-weight: 500;
         }
-        th { background: #f3f4f6; font-weight: 600; }
-        tr:nth-child(even) { background: #f9fafb; }
-        .is-major-total td, .is-major-total th { background: #e5e7eb; font-weight: bold; }
+        .summary-table td:last-child { font-weight: 600; }
+        
+        /* Footer */
         .footer { 
-          margin-top: 20px; 
-          padding-top: 10px; 
-          border-top: 1px solid #e5e7eb; 
-          color: #9ca3af; 
+          margin-top: 30px; 
+          padding: 16px 0; 
+          border-top: 2px solid #e2e8f0; 
+          color: #94a3b8; 
           font-size: 9pt; 
           display: flex; 
           justify-content: space-between; 
         }
+        
+        /* Number formatting */
+        .number-col { text-align: right; font-variant-numeric: tabular-nums; }
+        .positive { color: #059669; }
+        .negative { color: #dc2626; }
       </style>
     </head>
     <body>
-      ${aiAnalysisHtml}
       ${headerHtml}
-      ${data.tableHtml}
+      <div class="content-area">
+        ${aiAnalysisHtml}
+        ${data.tableHtml}
+      </div>
       <div class="footer">
-        <span>Generated on ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${new Date().toLocaleTimeString()}</span>
+        <span>Generated on ${new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} at ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
         <span>FTG Dashboard</span>
       </div>
     </body>
