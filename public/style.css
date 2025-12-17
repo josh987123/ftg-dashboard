@@ -5803,6 +5803,14 @@ body.dark-mode .nav-item.nav-parent.expanded {
     width: 45%;
     text-align: right;
     white-space: nowrap;
+    background: transparent !important;
+  }
+  
+  /* All table cells transparent on mobile to inherit row background */
+  #incomeStatementTable tbody td,
+  #balanceSheetTable tbody td,
+  #cashFlowTable tbody td {
+    background: transparent !important;
   }
   
   /* Scroll hint indicator */
