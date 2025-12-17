@@ -9577,6 +9577,76 @@ body.dark-mode .jo-metrics-chart-card .chart-title {
   }
 }
 
+/* Job Overview 5-tile row */
+.jo-metrics-row-5 {
+  display: flex;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.jo-metrics-row-5 .job-metric-card.compact {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+}
+
+@media (max-width: 1200px) {
+  .jo-metrics-row-5 {
+    flex-wrap: wrap;
+  }
+  
+  .jo-metrics-row-5 .job-metric-card.compact {
+    flex: 1 1 calc(33.333% - 10px);
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  .jo-metrics-row-5 {
+    flex-direction: column;
+  }
+  
+  .jo-metrics-row-5 .job-metric-card.compact {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+}
+
+/* Job Overview section headers */
+.jo-section-header {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e3a8a;
+  margin: 8px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #3b82f6;
+}
+
+body.dark-mode .jo-section-header {
+  color: #93c5fd;
+  border-bottom-color: #60a5fa;
+}
+
+/* Job Overview 3-column chart grid */
+.jo-chart-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1100px) {
+  .jo-chart-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .jo-chart-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Job Overview 2x2 chart grid */
 .jo-chart-grid-2x2 {
   display: grid;

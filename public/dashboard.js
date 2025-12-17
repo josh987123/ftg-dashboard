@@ -12702,10 +12702,12 @@ function updateJobPagination(total) {
 
 let joData = [];
 let joFiltered = [];
-let joRevenueChart = null;
-let joOverUnderChart = null;
-let joCostsChart = null;
-let joMetricsBarChart = null;
+let joPmJobsChart = null;
+let joPmContractChart = null;
+let joPmMarginChart = null;
+let joClientJobsChart = null;
+let joClientContractChart = null;
+let joClientMarginChart = null;
 let joInitialized = false;
 
 function initJobOverview() {
@@ -12860,11 +12862,34 @@ function filterJobOverview() {
 
 function updateJobOverviewMetrics() {
   const totalJobs = joFiltered.length;
+  const totalContract = joFiltered.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
   const totalBilled = joFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
   const totalEarned = joFiltered.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
   const totalOverUnder = totalBilled - totalEarned;
   
+  const jobsWithValidMargin = joFiltered.filter(j => j.revised_contract > 0 && j.revised_cost > 0);
+  let avgProfitMargin = 0;
+  if (jobsWithValidMargin.length > 0) {
+    const totalContractForMargin = jobsWithValidMargin.reduce((sum, j) => sum + j.revised_contract, 0);
+    const totalCostForMargin = jobsWithValidMargin.reduce((sum, j) => sum + j.revised_cost, 0);
+    const totalProfitForMargin = totalContractForMargin - totalCostForMargin;
+    avgProfitMargin = totalContractForMargin > 0 ? (totalProfitForMargin / totalContractForMargin) * 100 : 0;
+  }
+  
   document.getElementById('joTotalJobs').textContent = totalJobs.toLocaleString();
+  document.getElementById('joContractValue').textContent = formatCurrency(totalContract);
+  document.getElementById('joBilledRevenue').textContent = formatCurrency(totalBilled);
+  
+  const marginEl = document.getElementById('joEstProfitMargin');
+  if (marginEl) {
+    if (jobsWithValidMargin.length === 0) {
+      marginEl.textContent = '-';
+      marginEl.style.color = '#6b7280';
+    } else {
+      marginEl.textContent = avgProfitMargin.toFixed(1) + '%';
+      marginEl.style.color = avgProfitMargin >= 0 ? '#10b981' : '#ef4444';
+    }
+  }
   
   const overUnderEl = document.getElementById('joOverUnderValue');
   const overUnderTile = document.getElementById('joOverUnderTile');
@@ -12881,23 +12906,51 @@ function updateJobOverviewMetrics() {
 }
 
 function updateJobOverviewCharts() {
-  const totalContracted = joFiltered.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
-  const totalEarned = joFiltered.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
-  const totalBilled = joFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
-  const totalBacklog = joFiltered.reduce((sum, j) => sum + (j.backlog || 0), 0);
-  const totalOverUnder = totalBilled - totalEarned;
-  const totalRevisedCost = joFiltered.reduce((sum, j) => sum + (j.revised_cost || 0), 0);
-  const totalActualCost = joFiltered.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
-  
   const isDarkMode = document.body.classList.contains('dark-mode');
   const textColor = isDarkMode ? '#e2e8f0' : '#374151';
   const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
   const showDataLabels = document.getElementById('joDataLabels')?.checked === true;
   
-  renderJoMetricsBarChart(totalBilled, totalEarned, totalActualCost, textColor, gridColor, showDataLabels);
-  renderJoRevenueChart(totalContracted, totalEarned, totalBilled, totalBacklog, textColor, gridColor, showDataLabels);
-  renderJoOverUnderChart(totalBilled, totalEarned, totalOverUnder, textColor, gridColor, showDataLabels);
-  renderJoCostsChart(totalRevisedCost, totalActualCost, textColor, gridColor, showDataLabels);
+  const pmData = aggregateJobsByField(joFiltered, 'project_manager_name');
+  const customerData = aggregateJobsByField(joFiltered, 'customer_name');
+  
+  renderJoPmJobsChart(pmData, textColor, gridColor, showDataLabels);
+  renderJoPmContractChart(pmData, textColor, gridColor, showDataLabels);
+  renderJoPmMarginChart(pmData, textColor, gridColor, showDataLabels);
+  renderJoClientJobsChart(customerData, textColor, gridColor, showDataLabels);
+  renderJoClientContractChart(customerData, textColor, gridColor, showDataLabels);
+  renderJoClientMarginChart(customerData, textColor, gridColor, showDataLabels);
+}
+
+function aggregateJobsByField(jobs, field) {
+  const groups = {};
+  jobs.forEach(job => {
+    const key = job[field] || 'Unknown';
+    if (!groups[key]) {
+      groups[key] = { 
+        name: key, 
+        jobCount: 0, 
+        contractValue: 0, 
+        revisedCost: 0,
+        estimatedProfit: 0 
+      };
+    }
+    groups[key].jobCount++;
+    groups[key].contractValue += job.revised_contract || 0;
+    groups[key].revisedCost += job.revised_cost || 0;
+    groups[key].estimatedProfit += job.estimated_profit || 0;
+  });
+  
+  return Object.values(groups)
+    .filter(g => g.contractValue > 0 || g.jobCount > 0)
+    .map(g => ({
+      ...g,
+      profitMargin: g.contractValue > 0 && g.revisedCost > 0 
+        ? ((g.contractValue - g.revisedCost) / g.contractValue) * 100 
+        : 0
+    }))
+    .sort((a, b) => b.contractValue - a.contractValue)
+    .slice(0, 15);
 }
 
 function createJoGradient(ctx, color1, color2) {
@@ -12907,28 +12960,43 @@ function createJoGradient(ctx, color1, color2) {
   return gradient;
 }
 
-function renderJoMetricsBarChart(billed, earned, actualCost, textColor, gridColor, showDataLabels) {
-  const ctx = document.getElementById('joMetricsBarChart');
+function getJoBarColors(count) {
+  const colors = [
+    ['#1e40af', '#1e3a8a'],
+    ['#047857', '#064e3b'],
+    ['#7c3aed', '#5b21b6'],
+    ['#0d9488', '#0f766e'],
+    ['#dc2626', '#991b1b'],
+    ['#ea580c', '#c2410c'],
+    ['#4f46e5', '#3730a3'],
+    ['#0891b2', '#0e7490'],
+    ['#be185d', '#9d174d'],
+    ['#65a30d', '#4d7c0f']
+  ];
+  const result = [];
+  for (let i = 0; i < count; i++) {
+    result.push(colors[i % colors.length]);
+  }
+  return result;
+}
+
+function renderJoPmJobsChart(data, textColor, gridColor, showDataLabels) {
+  const ctx = document.getElementById('joPmJobsChart');
   if (!ctx) return;
   
-  if (joMetricsBarChart) joMetricsBarChart.destroy();
+  if (joPmJobsChart) joPmJobsChart.destroy();
   
   const context = ctx.getContext('2d');
-  const darkBlue = createJoGradient(context, '#1e40af', '#1e3a8a');
-  const darkGreen = createJoGradient(context, '#047857', '#064e3b');
-  const darkPurple = createJoGradient(context, '#7c3aed', '#5b21b6');
+  const colorPairs = getJoBarColors(data.length);
+  const backgrounds = colorPairs.map(([c1, c2]) => createJoGradient(context, c1, c2));
   
-  const dataValues = [billed, earned, actualCost];
-  const minVal = Math.min(...dataValues);
-  const yMin = Math.floor(minVal / 10000000) * 10000000;
-  
-  joMetricsBarChart = new Chart(ctx, {
+  joPmJobsChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Billed Revenue', 'Earned Revenue', 'Actual Cost'],
+      labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
-        data: dataValues,
-        backgroundColor: [darkBlue, darkGreen, darkPurple],
+        data: data.map(d => d.jobCount),
+        backgroundColor: backgrounds,
         borderRadius: 4
       }]
     },
@@ -12936,62 +13004,41 @@ function renderJoMetricsBarChart(billed, earned, actualCost, textColor, gridColo
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: showDataLabels ? 25 : 0 } },
+      layout: { padding: { top: showDataLabels ? 20 : 0 } },
       plugins: {
         legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => formatCurrency(ctx.raw)
-          }
-        },
+        tooltip: { callbacks: { label: (ctx) => ctx.raw + ' jobs' } },
         datalabels: showDataLabels ? {
-          display: true,
-          anchor: 'end',
-          align: 'top',
-          offset: 2,
-          color: textColor,
-          font: { weight: 'bold', size: 11 },
-          formatter: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
+          display: true, anchor: 'end', align: 'top', offset: 2,
+          color: textColor, font: { weight: 'bold', size: 10 },
+          formatter: (val) => val
         } : { display: false }
       },
       scales: {
-        x: { ticks: { color: textColor }, grid: { display: false } },
-        y: { 
-          min: yMin > 0 ? yMin : undefined,
-          ticks: { 
-            color: textColor,
-            callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
-          }, 
-          grid: { color: gridColor } 
-        }
+        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }
       }
     }
   });
 }
 
-function renderJoRevenueChart(contracted, earned, billed, backlog, textColor, gridColor, showDataLabels) {
-  const ctx = document.getElementById('joRevenueChart');
+function renderJoPmContractChart(data, textColor, gridColor, showDataLabels) {
+  const ctx = document.getElementById('joPmContractChart');
   if (!ctx) return;
   
-  if (joRevenueChart) joRevenueChart.destroy();
+  if (joPmContractChart) joPmContractChart.destroy();
   
   const context = ctx.getContext('2d');
-  const darkBlue = createJoGradient(context, '#1e40af', '#1e3a8a');
-  const darkGreen = createJoGradient(context, '#047857', '#064e3b');
-  const darkTeal = createJoGradient(context, '#0d9488', '#0f766e');
-  const darkPurple = createJoGradient(context, '#7c3aed', '#5b21b6');
+  const colorPairs = getJoBarColors(data.length);
+  const backgrounds = colorPairs.map(([c1, c2]) => createJoGradient(context, c1, c2));
   
-  const dataValues = [contracted, earned, billed, backlog];
-  const minVal = Math.min(...dataValues);
-  const yMin = Math.floor(minVal / 10000000) * 10000000;
-  
-  joRevenueChart = new Chart(ctx, {
+  joPmContractChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Contracted', 'Earned', 'Billed', 'Backlog'],
+      labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
-        data: dataValues,
-        backgroundColor: [darkBlue, darkGreen, darkTeal, darkPurple],
+        data: data.map(d => d.contractValue),
+        backgroundColor: backgrounds,
         borderRadius: 4
       }]
     },
@@ -12999,63 +13046,44 @@ function renderJoRevenueChart(contracted, earned, billed, backlog, textColor, gr
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: showDataLabels ? 25 : 0 } },
+      layout: { padding: { top: showDataLabels ? 20 : 0 } },
       plugins: {
         legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => formatCurrency(ctx.raw)
-          }
-        },
+        tooltip: { callbacks: { label: (ctx) => formatCurrency(ctx.raw) } },
         datalabels: showDataLabels ? {
-          display: true,
-          anchor: 'end',
-          align: 'top',
-          offset: 2,
-          color: textColor,
-          font: { weight: 'bold', size: 11 },
+          display: true, anchor: 'end', align: 'top', offset: 2,
+          color: textColor, font: { weight: 'bold', size: 10 },
           formatter: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
         } : { display: false }
       },
       scales: {
-        x: { ticks: { color: textColor }, grid: { display: false } },
-        y: { 
-          min: yMin > 0 ? yMin : undefined,
-          ticks: { 
-            color: textColor,
-            callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
-          }, 
-          grid: { color: gridColor } 
-        }
+        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: textColor, callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M' }, grid: { color: gridColor } }
       }
     }
   });
 }
 
-function renderJoOverUnderChart(billed, earned, overUnder, textColor, gridColor, showDataLabels) {
-  const ctx = document.getElementById('joOverUnderChart');
+function renderJoPmMarginChart(data, textColor, gridColor, showDataLabels) {
+  const ctx = document.getElementById('joPmMarginChart');
   if (!ctx) return;
   
-  if (joOverUnderChart) joOverUnderChart.destroy();
+  if (joPmMarginChart) joPmMarginChart.destroy();
   
   const context = ctx.getContext('2d');
-  const darkBlue = createJoGradient(context, '#1e40af', '#1e3a8a');
-  const darkGreen = createJoGradient(context, '#047857', '#064e3b');
-  const overUnderGradient = overUnder >= 0 
-    ? createJoGradient(context, '#047857', '#064e3b')
-    : createJoGradient(context, '#dc2626', '#991b1b');
+  const backgrounds = data.map(d => {
+    if (d.profitMargin >= 15) return createJoGradient(context, '#047857', '#064e3b');
+    if (d.profitMargin >= 0) return createJoGradient(context, '#f59e0b', '#d97706');
+    return createJoGradient(context, '#dc2626', '#991b1b');
+  });
   
-  const dataValues = [billed, earned, overUnder];
-  const minVal = Math.min(...dataValues);
-  const yMin = Math.floor(minVal / 10000000) * 10000000;
-  
-  joOverUnderChart = new Chart(ctx, {
+  joPmMarginChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Billed', 'Earned', 'Over/(Under)'],
+      labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
-        data: dataValues,
-        backgroundColor: [darkBlue, darkGreen, overUnderGradient],
+        data: data.map(d => d.profitMargin),
+        backgroundColor: backgrounds,
         borderRadius: 4
       }]
     },
@@ -13063,60 +13091,41 @@ function renderJoOverUnderChart(billed, earned, overUnder, textColor, gridColor,
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: showDataLabels ? 25 : 0 } },
+      layout: { padding: { top: showDataLabels ? 20 : 0 } },
       plugins: {
         legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => formatCurrency(ctx.raw)
-          }
-        },
+        tooltip: { callbacks: { label: (ctx) => ctx.raw.toFixed(1) + '%' } },
         datalabels: showDataLabels ? {
-          display: true,
-          anchor: 'end',
-          align: 'top',
-          offset: 2,
-          color: textColor,
-          font: { weight: 'bold', size: 11 },
-          formatter: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
+          display: true, anchor: 'end', align: 'top', offset: 2,
+          color: textColor, font: { weight: 'bold', size: 10 },
+          formatter: (val) => val.toFixed(1) + '%'
         } : { display: false }
       },
       scales: {
-        x: { ticks: { color: textColor }, grid: { display: false } },
-        y: { 
-          min: yMin > 0 ? yMin : undefined,
-          ticks: { 
-            color: textColor,
-            callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
-          }, 
-          grid: { color: gridColor } 
-        }
+        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: textColor, callback: (val) => val + '%' }, grid: { color: gridColor } }
       }
     }
   });
 }
 
-function renderJoCostsChart(revisedCost, actualCost, textColor, gridColor, showDataLabels) {
-  const ctx = document.getElementById('joCostsChart');
+function renderJoClientJobsChart(data, textColor, gridColor, showDataLabels) {
+  const ctx = document.getElementById('joClientJobsChart');
   if (!ctx) return;
   
-  if (joCostsChart) joCostsChart.destroy();
+  if (joClientJobsChart) joClientJobsChart.destroy();
   
   const context = ctx.getContext('2d');
-  const darkPurple = createJoGradient(context, '#7c3aed', '#5b21b6');
-  const darkIndigo = createJoGradient(context, '#4f46e5', '#3730a3');
+  const colorPairs = getJoBarColors(data.length);
+  const backgrounds = colorPairs.map(([c1, c2]) => createJoGradient(context, c1, c2));
   
-  const dataValues = [revisedCost, actualCost];
-  const minVal = Math.min(...dataValues);
-  const yMin = Math.floor(minVal / 10000000) * 10000000;
-  
-  joCostsChart = new Chart(ctx, {
+  joClientJobsChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Revised Cost', 'Actual Cost'],
+      labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
-        data: dataValues,
-        backgroundColor: [darkPurple, darkIndigo],
+        data: data.map(d => d.jobCount),
+        backgroundColor: backgrounds,
         borderRadius: 4
       }]
     },
@@ -13124,34 +13133,106 @@ function renderJoCostsChart(revisedCost, actualCost, textColor, gridColor, showD
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: showDataLabels ? 25 : 0 } },
+      layout: { padding: { top: showDataLabels ? 20 : 0 } },
       plugins: {
         legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => formatCurrency(ctx.raw)
-          }
-        },
+        tooltip: { callbacks: { label: (ctx) => ctx.raw + ' jobs' } },
         datalabels: showDataLabels ? {
-          display: true,
-          anchor: 'end',
-          align: 'top',
-          offset: 2,
-          color: textColor,
-          font: { weight: 'bold', size: 11 },
+          display: true, anchor: 'end', align: 'top', offset: 2,
+          color: textColor, font: { weight: 'bold', size: 10 },
+          formatter: (val) => val
+        } : { display: false }
+      },
+      scales: {
+        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }
+      }
+    }
+  });
+}
+
+function renderJoClientContractChart(data, textColor, gridColor, showDataLabels) {
+  const ctx = document.getElementById('joClientContractChart');
+  if (!ctx) return;
+  
+  if (joClientContractChart) joClientContractChart.destroy();
+  
+  const context = ctx.getContext('2d');
+  const colorPairs = getJoBarColors(data.length);
+  const backgrounds = colorPairs.map(([c1, c2]) => createJoGradient(context, c1, c2));
+  
+  joClientContractChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
+      datasets: [{
+        data: data.map(d => d.contractValue),
+        backgroundColor: backgrounds,
+        borderRadius: 4
+      }]
+    },
+    plugins: showDataLabels ? [ChartDataLabels] : [],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: showDataLabels ? 20 : 0 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => formatCurrency(ctx.raw) } },
+        datalabels: showDataLabels ? {
+          display: true, anchor: 'end', align: 'top', offset: 2,
+          color: textColor, font: { weight: 'bold', size: 10 },
           formatter: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
         } : { display: false }
       },
       scales: {
-        x: { ticks: { color: textColor }, grid: { display: false } },
-        y: { 
-          min: yMin > 0 ? yMin : undefined,
-          ticks: { 
-            color: textColor,
-            callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
-          }, 
-          grid: { color: gridColor } 
-        }
+        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: textColor, callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M' }, grid: { color: gridColor } }
+      }
+    }
+  });
+}
+
+function renderJoClientMarginChart(data, textColor, gridColor, showDataLabels) {
+  const ctx = document.getElementById('joClientMarginChart');
+  if (!ctx) return;
+  
+  if (joClientMarginChart) joClientMarginChart.destroy();
+  
+  const context = ctx.getContext('2d');
+  const backgrounds = data.map(d => {
+    if (d.profitMargin >= 15) return createJoGradient(context, '#047857', '#064e3b');
+    if (d.profitMargin >= 0) return createJoGradient(context, '#f59e0b', '#d97706');
+    return createJoGradient(context, '#dc2626', '#991b1b');
+  });
+  
+  joClientMarginChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
+      datasets: [{
+        data: data.map(d => d.profitMargin),
+        backgroundColor: backgrounds,
+        borderRadius: 4
+      }]
+    },
+    plugins: showDataLabels ? [ChartDataLabels] : [],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: showDataLabels ? 20 : 0 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => ctx.raw.toFixed(1) + '%' } },
+        datalabels: showDataLabels ? {
+          display: true, anchor: 'end', align: 'top', offset: 2,
+          color: textColor, font: { weight: 'bold', size: 10 },
+          formatter: (val) => val.toFixed(1) + '%'
+        } : { display: false }
+      },
+      scales: {
+        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: textColor, callback: (val) => val + '%' }, grid: { color: gridColor } }
       }
     }
   });
