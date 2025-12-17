@@ -10284,7 +10284,8 @@ body.dark-mode .job-budgets-table .margin-cell {
    ============================================================ */
 
 /* JOB BUDGETS PAGE - Align config, metrics, and donut charts at 60% width */
-#jobBudgets > .config-panel {
+#jobBudgets > .config-panel,
+#jobActuals > .config-panel {
   width: 60%;
   max-width: 60%;
   box-sizing: border-box;
@@ -10297,6 +10298,7 @@ body.dark-mode .job-budgets-table .margin-cell {
 
 @media (max-width: 900px) {
   #jobBudgets > .config-panel,
+  #jobActuals > .config-panel,
   #jobBudgets .job-key-metrics-section {
     width: 100%;
     max-width: 100%;
