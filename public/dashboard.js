@@ -13511,7 +13511,7 @@ function renderJobActualsTable() {
     <td colspan="5"><strong>Totals (${jobActualsFiltered.length} jobs)</strong></td>
     <td class="number-col"><strong>${formatCurrency(allTotals.billedRevenue)}</strong></td>
     <td class="number-col"><strong>${formatCurrency(allTotals.earnedRevenue)}</strong></td>
-    <td class="number-col" style="background-color: ${totalOverUnderColor}"><strong>${formatCurrency(totalOverUnder)}</strong></td>
+    <td class="number-col" style="background-color: ${totalOverUnderColor}; color: #1e293b;"><strong>${formatCurrency(totalOverUnder)}</strong></td>
     <td class="number-col"><strong>${formatCurrency(allTotals.actualCost)}</strong></td>
     <td class="number-col"><strong>${Math.round(avgPctComplete)}%</strong></td>
   </tr>`;
@@ -13530,7 +13530,7 @@ function renderJobActualsTable() {
       <td>${job.project_manager_name || ''}</td>
       <td class="number-col">${formatCurrency(job.billed_revenue || 0)}</td>
       <td class="number-col">${formatCurrency(job.earned_revenue)}</td>
-      <td class="number-col" style="background-color: ${overUnderColor}">${formatCurrency(overUnderBill)}</td>
+      <td class="number-col" style="background-color: ${overUnderColor}; color: #1e293b;">${formatCurrency(overUnderBill)}</td>
       <td class="number-col">${formatCurrency(job.actual_cost)}</td>
       <td class="number-col">${Math.round(pctComplete)}%</td>
     </tr>`;
