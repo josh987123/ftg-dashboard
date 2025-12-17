@@ -10296,9 +10296,11 @@ body.dark-mode .job-budgets-table .margin-cell {
    JOB BUDGETS - COMPREHENSIVE FIX FOR ALL ISSUES
    ============================================================ */
 
-/* JOB BUDGETS PAGE - Align config, metrics, and donut charts at 60% width */
+/* JOB BUDGETS PAGE - Align config, AI analysis, metrics, and donut charts at 60% width */
 #jobBudgets > .config-panel,
-#jobActuals > .config-panel {
+#jobActuals > .config-panel,
+#jobBudgets > #jbAiAnalysisPanel,
+#jobActuals > #jaAiAnalysisPanel {
   width: 60%;
   max-width: 60%;
   box-sizing: border-box;
@@ -10312,6 +10314,8 @@ body.dark-mode .job-budgets-table .margin-cell {
 @media (max-width: 900px) {
   #jobBudgets > .config-panel,
   #jobActuals > .config-panel,
+  #jobBudgets > #jbAiAnalysisPanel,
+  #jobActuals > #jaAiAnalysisPanel,
   #jobBudgets .job-key-metrics-section {
     width: 100%;
     max-width: 100%;
