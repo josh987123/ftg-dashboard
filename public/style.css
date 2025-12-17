@@ -8209,6 +8209,51 @@ body.dark-mode .page-size-select {
     line-height: 1.2 !important;
   }
   
+  /* Job Budgets/Actuals donut charts - bigger chart, less empty space */
+  #jobBudgets .breakdown-chart-wrapper,
+  #jobActuals .breakdown-chart-wrapper {
+    height: 160px !important;
+    margin-bottom: 4px !important;
+    padding: 4px !important;
+  }
+  
+  #jobBudgets .breakdown-chart-wrapper canvas,
+  #jobActuals .breakdown-chart-wrapper canvas {
+    max-height: 160px !important;
+  }
+  
+  #jobBudgets .breakdown-card,
+  #jobActuals .breakdown-card {
+    padding: 8px !important;
+    margin-bottom: 8px !important;
+  }
+  
+  /* Legend - reduce empty space below */
+  #jobBudgets .chart-legend,
+  #jobActuals .chart-legend,
+  #jobBudgets .donut-legend,
+  #jobActuals .donut-legend,
+  .breakdown-card .legend-items {
+    margin-bottom: 4px !important;
+    padding-bottom: 4px !important;
+  }
+  
+  /* Quick sort buttons - more compact */
+  .quick-sort-buttons {
+    gap: 4px !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .quick-sort-label {
+    font-size: 10px !important;
+    margin-right: 2px !important;
+  }
+  
+  .quick-sort-btn {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+  }
+  
   /* Config panels */
   #jobOverview .config-panel,
   #jobBudgets .config-panel,
