@@ -1223,7 +1223,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
   gap: 20px;
   margin-top: 20px;
   width: 80%;
-  margin-left: auto;
+  margin-left: 0;
   margin-right: auto;
 }
 
@@ -9751,7 +9751,7 @@ body.dark-mode .jo-section-header {
   gap: 16px;
   margin-bottom: 24px;
   width: 80%;
-  margin-left: auto;
+  margin-left: 0;
   margin-right: auto;
 }
 
