@@ -13048,9 +13048,9 @@ function renderJobActualsTable() {
       <td>${job.project_manager_name || ''}</td>
       <td class="number-col">${formatCurrency(job.billed_revenue || 0)}</td>
       <td class="number-col">${formatCurrency(job.earned_revenue)}</td>
+      <td class="number-col" style="background-color: ${overUnderColor}">${formatCurrency(overUnderBill)}</td>
       <td class="number-col">${formatCurrency(job.actual_cost)}</td>
       <td class="number-col">${Math.round(pctComplete)}%</td>
-      <td class="number-col" style="background-color: ${overUnderColor}">${formatCurrency(overUnderBill)}</td>
     </tr>`;
   }).join('');
   
