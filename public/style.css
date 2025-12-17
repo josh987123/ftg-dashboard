@@ -10618,6 +10618,16 @@ body.dark-mode .action-btn.success {
   color: #dc2626 !important;
 }
 
+/* Dark mode - Overview page config labels (inline styled labels) */
+[data-theme="dark"] #overview .config-body > div > div[style] {
+  color: #fff !important;
+}
+
+[data-theme="dark"] #revenue .config-body > div > div[style],
+[data-theme="dark"] #accounts .config-body > div > div[style] {
+  color: #fff !important;
+}
+
 #jobBudgets .breakdown-table td.positive {
   color: #10b981 !important;
 }
