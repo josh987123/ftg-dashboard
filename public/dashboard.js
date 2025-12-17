@@ -94,7 +94,9 @@ function autoSizeFirstColumn(tableId) {
   
   document.body.removeChild(tempSpan);
   
-  const finalWidth = Math.min(Math.max(maxWidth, 100), 200);
+  const screenWidth = window.innerWidth;
+  const maxAllowed = Math.min(screenWidth * 0.6, 280);
+  const finalWidth = Math.min(Math.max(maxWidth, 100), maxAllowed);
   
   table.querySelectorAll("th:first-child, td:first-child").forEach(cell => {
     cell.style.minWidth = finalWidth + "px";
