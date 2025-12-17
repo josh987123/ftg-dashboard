@@ -1959,23 +1959,35 @@ body.dark-mode .nav-item.nav-parent.expanded {
   .content{ padding:18px; }
   
   .chart-with-tiles {
-    flex-direction: column;
+    flex-direction: column-reverse;
+    width: 100%;
   }
   
   .summary-tiles {
+    display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     min-width: auto;
+    width: 100%;
+    gap: 4px;
   }
   
   .summary-tile {
     flex: 1;
-    min-width: 100px;
-    padding: 12px;
+    min-width: 0;
+    padding: 6px 4px;
   }
   
-  .tile-value {
-    font-size: 16px;
+  .summary-tile .tile-label {
+    font-size: 9px;
+  }
+  
+  .summary-tile .tile-value {
+    font-size: 12px;
+  }
+  
+  .summary-tile .tile-sub {
+    font-size: 8px;
   }
   
   .rev-controls{ 
@@ -4162,19 +4174,47 @@ body.dark-mode .nav-item.nav-parent.expanded {
   /* Chart with tiles - stack on mobile */
   .chart-with-tiles {
     flex-direction: column-reverse;
+    width: 100%;
   }
   
   .summary-tiles {
+    display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     min-width: unset;
     width: 100%;
-    justify-content: space-between;
+    gap: 4px;
   }
   
   .summary-tile {
     flex: 1;
-    min-width: calc(50% - 6px);
+    min-width: 0;
+    padding: 6px 4px;
+  }
+  
+  .summary-tile .tile-label {
+    font-size: 9px;
+    margin-bottom: 2px;
+  }
+  
+  .summary-tile .tile-value {
+    font-size: 12px;
+  }
+  
+  .summary-tile .tile-sub {
+    font-size: 8px;
+    margin-top: 2px;
+  }
+  
+  /* Chart 100% width on mobile */
+  .chart-box {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .chart-box canvas {
+    width: 100% !important;
+    max-width: 100%;
   }
   
   /* Expand/close buttons mobile - identical sizing */
