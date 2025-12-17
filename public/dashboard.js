@@ -12732,11 +12732,23 @@ function updateJobOverviewCharts() {
   renderJoCostsChart(totalRevisedCost, totalActualCost, textColor, gridColor, showDataLabels);
 }
 
+function createJoGradient(ctx, color1, color2) {
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, color1);
+  gradient.addColorStop(1, color2);
+  return gradient;
+}
+
 function renderJoMetricsBarChart(billed, earned, actualCost, textColor, gridColor, showDataLabels) {
   const ctx = document.getElementById('joMetricsBarChart');
   if (!ctx) return;
   
   if (joMetricsBarChart) joMetricsBarChart.destroy();
+  
+  const context = ctx.getContext('2d');
+  const darkBlue = createJoGradient(context, '#1e40af', '#1e3a8a');
+  const darkGreen = createJoGradient(context, '#047857', '#064e3b');
+  const darkPurple = createJoGradient(context, '#7c3aed', '#5b21b6');
   
   const dataValues = [billed, earned, actualCost];
   const minVal = Math.min(...dataValues);
@@ -12748,7 +12760,7 @@ function renderJoMetricsBarChart(billed, earned, actualCost, textColor, gridColo
       labels: ['Billed Revenue', 'Earned Revenue', 'Actual Cost'],
       datasets: [{
         data: dataValues,
-        backgroundColor: ['#f59e0b', '#10b981', '#ef4444'],
+        backgroundColor: [darkBlue, darkGreen, darkPurple],
         borderRadius: 4
       }]
     },
@@ -12795,6 +12807,12 @@ function renderJoRevenueChart(contracted, earned, billed, backlog, textColor, gr
   
   if (joRevenueChart) joRevenueChart.destroy();
   
+  const context = ctx.getContext('2d');
+  const darkBlue = createJoGradient(context, '#1e40af', '#1e3a8a');
+  const darkGreen = createJoGradient(context, '#047857', '#064e3b');
+  const darkTeal = createJoGradient(context, '#0d9488', '#0f766e');
+  const darkPurple = createJoGradient(context, '#7c3aed', '#5b21b6');
+  
   const dataValues = [contracted, earned, billed, backlog];
   const minVal = Math.min(...dataValues);
   const yMin = Math.floor(minVal / 10000000) * 10000000;
@@ -12805,7 +12823,7 @@ function renderJoRevenueChart(contracted, earned, billed, backlog, textColor, gr
       labels: ['Contracted', 'Earned', 'Billed', 'Backlog'],
       datasets: [{
         data: dataValues,
-        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#6366f1'],
+        backgroundColor: [darkBlue, darkGreen, darkTeal, darkPurple],
         borderRadius: 4
       }]
     },
@@ -12852,7 +12870,13 @@ function renderJoOverUnderChart(billed, earned, overUnder, textColor, gridColor,
   
   if (joOverUnderChart) joOverUnderChart.destroy();
   
-  const overUnderColor = overUnder >= 0 ? '#10b981' : '#ef4444';
+  const context = ctx.getContext('2d');
+  const darkBlue = createJoGradient(context, '#1e40af', '#1e3a8a');
+  const darkGreen = createJoGradient(context, '#047857', '#064e3b');
+  const overUnderGradient = overUnder >= 0 
+    ? createJoGradient(context, '#047857', '#064e3b')
+    : createJoGradient(context, '#dc2626', '#991b1b');
+  
   const dataValues = [billed, earned, overUnder];
   const minVal = Math.min(...dataValues);
   const yMin = Math.floor(minVal / 10000000) * 10000000;
@@ -12863,7 +12887,7 @@ function renderJoOverUnderChart(billed, earned, overUnder, textColor, gridColor,
       labels: ['Billed', 'Earned', 'Over/(Under)'],
       datasets: [{
         data: dataValues,
-        backgroundColor: ['#f59e0b', '#10b981', overUnderColor],
+        backgroundColor: [darkBlue, darkGreen, overUnderGradient],
         borderRadius: 4
       }]
     },
@@ -12910,6 +12934,10 @@ function renderJoCostsChart(revisedCost, actualCost, textColor, gridColor, showD
   
   if (joCostsChart) joCostsChart.destroy();
   
+  const context = ctx.getContext('2d');
+  const darkPurple = createJoGradient(context, '#7c3aed', '#5b21b6');
+  const darkIndigo = createJoGradient(context, '#4f46e5', '#3730a3');
+  
   const dataValues = [revisedCost, actualCost];
   const minVal = Math.min(...dataValues);
   const yMin = Math.floor(minVal / 10000000) * 10000000;
@@ -12920,7 +12948,7 @@ function renderJoCostsChart(revisedCost, actualCost, textColor, gridColor, showD
       labels: ['Revised Cost', 'Actual Cost'],
       datasets: [{
         data: dataValues,
-        backgroundColor: ['#6366f1', '#ef4444'],
+        backgroundColor: [darkPurple, darkIndigo],
         borderRadius: 4
       }]
     },
