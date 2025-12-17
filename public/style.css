@@ -8411,42 +8411,52 @@ body.dark-mode .job-status-badge.overhead {
   max-height: 180px;
 }
 
-/* Child nav items in Financials and Jobs - lighter blue background */
+/* Child nav items in Financials and Jobs - solid backgrounds with high contrast text */
 #navFinancialStatementsChildren .nav-child,
 #navJobsChildren .nav-child {
-  background: #e0f2fe;
+  background: #dbeafe;
   border-left: 3px solid #3b82f6;
-  color: #1e3a5f;
+  color: #1e3a8a;
+  opacity: 1;
+  font-weight: 500;
 }
 
 #navFinancialStatementsChildren .nav-child:hover,
 #navJobsChildren .nav-child:hover {
-  background: #bae6fd;
+  background: #bfdbfe;
+  color: #1e3a8a;
 }
 
 #navFinancialStatementsChildren .nav-child.active,
 #navJobsChildren .nav-child.active {
-  background: #7dd3fc;
-  border-left-color: #0369a1;
-  color: #0c4a6e;
+  background: #93c5fd;
+  border-left-color: #1d4ed8;
+  color: #1e3a8a;
+  font-weight: 600;
 }
 
-/* Dark mode adjustments */
+/* Dark mode adjustments - solid backgrounds with high contrast text */
 body.dark-mode #navFinancialStatementsChildren .nav-child,
 body.dark-mode #navJobsChildren .nav-child {
-  background: rgba(59, 130, 246, 0.1);
-  border-left-color: rgba(96, 165, 250, 0.4);
+  background: #1e3a5a;
+  border-left-color: #3b82f6;
+  color: #e2e8f0;
+  opacity: 1;
+  font-weight: 500;
 }
 
 body.dark-mode #navFinancialStatementsChildren .nav-child:hover,
 body.dark-mode #navJobsChildren .nav-child:hover {
-  background: rgba(59, 130, 246, 0.2);
+  background: #234b6e;
+  color: #f1f5f9;
 }
 
 body.dark-mode #navFinancialStatementsChildren .nav-child.active,
 body.dark-mode #navJobsChildren .nav-child.active {
-  background: rgba(59, 130, 246, 0.3);
+  background: #2563eb;
   border-left-color: #60a5fa;
+  color: #ffffff;
+  font-weight: 600;
 }
 
 /* Chart subtitle */
