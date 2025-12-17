@@ -1015,6 +1015,7 @@ def get_client_ip():
 def log_audit(user_id, action, target_type=None, target_id=None, details=None):
     """Log an audit event"""
     try:
+        print(f"[AUDIT] Logging: user_id={user_id}, action={action}, target_type={target_type}")
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("""
@@ -1022,10 +1023,13 @@ def log_audit(user_id, action, target_type=None, target_id=None, details=None):
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (user_id, action, target_type, target_id, json.dumps(details) if details else None, get_client_ip()))
         conn.commit()
+        print(f"[AUDIT] Successfully logged: {action}")
         cur.close()
         conn.close()
     except Exception as e:
-        print(f"Audit log error: {e}")
+        print(f"[AUDIT] Error: {e}")
+        import traceback
+        traceback.print_exc()
 
 def get_user_permissions(user_id):
     """Get list of page_keys the user has access to"""

@@ -11341,11 +11341,22 @@ body.dark-mode .filter-btn.has-filter,
 /* Mobile responsiveness for column filters */
 @media (max-width: 900px) {
   .job-budgets-table th.filterable {
-    padding-right: 8px !important;
+    padding-right: 36px !important;
   }
   
   .column-controls {
+    display: flex;
+    right: 4px;
+    gap: 2px;
+  }
+  
+  .sort-controls {
     display: none;
+  }
+  
+  .filter-btn {
+    padding: 4px 6px;
+    font-size: 12px;
   }
   
   .column-filter-dropdown {
@@ -11356,5 +11367,22 @@ body.dark-mode .filter-btn.has-filter,
     right: auto;
     min-width: 280px;
     max-width: 90vw;
+    max-height: 70vh;
+    z-index: 9999;
+  }
+  
+  .column-filter-dropdown .filter-options-list {
+    max-height: 40vh;
+  }
+}
+
+@media (max-width: 600px) {
+  .job-budgets-table th.filterable {
+    padding-right: 30px !important;
+  }
+  
+  .filter-btn {
+    padding: 3px 5px;
+    font-size: 11px;
   }
 }
