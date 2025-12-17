@@ -10618,13 +10618,14 @@ body.dark-mode .action-btn.success {
   color: #dc2626 !important;
 }
 
-/* Dark mode - Overview page config labels (inline styled labels) */
-[data-theme="dark"] #overview .config-body > div > div[style] {
-  color: #fff !important;
-}
-
-[data-theme="dark"] #revenue .config-body > div > div[style],
-[data-theme="dark"] #accounts .config-body > div > div[style] {
+/* Dark mode - Financial pages config labels (inline styled labels) */
+[data-theme="dark"] #overview .config-body div[style*="color"],
+[data-theme="dark"] #revenue .config-body div[style*="color"],
+[data-theme="dark"] #accounts .config-body div[style*="color"],
+[data-theme="dark"] #incomeStatement .config-body div[style*="color"],
+[data-theme="dark"] #balanceSheet .config-body div[style*="color"],
+[data-theme="dark"] #cashFlow .config-body div[style*="color"],
+[data-theme="dark"] #cashBalances .config-body div[style*="color"] {
   color: #fff !important;
 }
 
