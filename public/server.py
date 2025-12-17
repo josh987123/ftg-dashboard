@@ -3116,6 +3116,237 @@ def generate_report_email(report):
     
     return html_content
 
+# ============== PAYMENTS API (Optimized) ==============
+
+_payments_cache = None
+_payments_cache_lock = threading.Lock()
+
+def get_payments_data():
+    """Load and cache payments data with PM lookup - only loads once"""
+    global _payments_cache
+    
+    if _payments_cache is not None:
+        return _payments_cache
+    
+    with _payments_cache_lock:
+        if _payments_cache is not None:
+            return _payments_cache
+        
+        try:
+            # Load payments and jobs data
+            payments_path = os.path.join(os.path.dirname(__file__), 'data', 'payments.json')
+            jobs_path = os.path.join(os.path.dirname(__file__), 'data', 'financials_jobs.json')
+            
+            with open(payments_path, 'r') as f:
+                payments_json = json.load(f)
+            
+            with open(jobs_path, 'r') as f:
+                jobs_json = json.load(f)
+            
+            # Build PM lookup
+            pm_lookup = {}
+            for job in jobs_json.get('job_budgets', []):
+                pm_lookup[job.get('job_no', '')] = job.get('project_manager_name', '')
+            
+            # Process payments - convert dates and add PM
+            payments = []
+            for p in payments_json.get('payments', []):
+                try:
+                    excel_date = float(p.get('invoice_date', 0))
+                    if excel_date > 0:
+                        date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
+                        date_str = date_obj.strftime('%b %d, %Y')
+                    else:
+                        date_obj = None
+                        date_str = '-'
+                except:
+                    date_obj = None
+                    date_str = '-'
+                
+                try:
+                    amount = float(p.get('invoice_amount', 0))
+                except:
+                    amount = 0
+                
+                job_no = p.get('job_no', '')
+                
+                payments.append({
+                    'voucher_no': p.get('voucher_no', ''),
+                    'vendor_no': p.get('vendor_no', ''),
+                    'description': p.get('description', ''),
+                    'invoice_date': date_str,
+                    'invoice_date_sort': date_obj.timestamp() if date_obj else 0,
+                    'invoice_amount': amount,
+                    'job_no': job_no,
+                    'project_manager': pm_lookup.get(job_no, ''),
+                    'account_no': p.get('account_no', ''),
+                    'account_description': p.get('account_description', '')
+                })
+            
+            # Calculate summary metrics
+            total_amount = sum(p['invoice_amount'] for p in payments)
+            unique_vendors = len(set(p['vendor_no'] for p in payments if p['vendor_no']))
+            avg_amount = total_amount / len(payments) if payments else 0
+            
+            _payments_cache = {
+                'payments': payments,
+                'metrics': {
+                    'totalCount': len(payments),
+                    'totalAmount': total_amount,
+                    'uniqueVendors': unique_vendors,
+                    'avgAmount': avg_amount
+                }
+            }
+            
+            print(f"[PAYMENTS] Loaded and cached {len(payments)} payment records")
+            return _payments_cache
+            
+        except Exception as e:
+            print(f"[PAYMENTS] Error loading data: {e}")
+            import traceback
+            traceback.print_exc()
+            return {'payments': [], 'metrics': {'totalCount': 0, 'totalAmount': 0, 'uniqueVendors': 0, 'avgAmount': 0}}
+
+PAYMENTS_VALID_COLUMNS = {'voucher_no', 'vendor_no', 'description', 'invoice_date', 'invoice_amount', 'job_no', 'project_manager', 'account_no', 'account_description'}
+
+@app.route('/api/payments', methods=['GET', 'OPTIONS'])
+def api_get_payments():
+    """Get paginated, filtered, sorted payments data"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = get_payments_data()
+        payments = list(data['payments'])  # Copy to avoid mutating cache
+        
+        # Get query params
+        page = request.args.get('page', 1, type=int)
+        page_size = min(request.args.get('pageSize', 25, type=int), 250)  # Cap at 250
+        sort_column = request.args.get('sortColumn', 'invoice_date')
+        sort_direction = request.args.get('sortDirection', 'desc')
+        search = request.args.get('search', '').lower().strip()
+        
+        # Validate sort column
+        if sort_column not in PAYMENTS_VALID_COLUMNS:
+            sort_column = 'invoice_date'
+        
+        # Get column filters (JSON encoded)
+        filters_json = request.args.get('filters', '{}')
+        try:
+            column_filters = json.loads(filters_json)
+        except:
+            column_filters = {}
+        
+        # Apply search filter
+        if search:
+            payments = [p for p in payments if 
+                search in str(p['voucher_no']).lower() or
+                search in str(p['vendor_no']).lower() or
+                search in str(p['description']).lower() or
+                search in str(p['job_no']).lower() or
+                search in str(p['project_manager']).lower() or
+                search in str(p['account_no']).lower() or
+                search in str(p['account_description']).lower()
+            ]
+        
+        # Apply column filters (validate column names)
+        for col, values in column_filters.items():
+            if col not in PAYMENTS_VALID_COLUMNS:
+                continue
+            if values and isinstance(values, list) and len(values) > 0:
+                # Limit filter values to prevent abuse
+                values = values[:1000]
+                value_set = set(str(v).lower() for v in values)
+                payments = [p for p in payments if str(p.get(col, '')).lower() in value_set]
+        
+        # Sort using proper numeric/date keys
+        sort_key_map = {
+            'invoice_date': 'invoice_date_sort',
+            'invoice_amount': 'invoice_amount'
+        }
+        sort_key = sort_key_map.get(sort_column, sort_column)
+        reverse = sort_direction == 'desc'
+        
+        try:
+            payments = sorted(payments, key=lambda x: (x.get(sort_key) is None or x.get(sort_key) == '', x.get(sort_key, '')), reverse=reverse)
+        except Exception as sort_err:
+            print(f"[PAYMENTS] Sort error: {sort_err}")
+        
+        # Paginate
+        total = len(payments)
+        start_idx = max(0, (page - 1) * page_size)
+        end_idx = start_idx + page_size
+        page_data = payments[start_idx:end_idx]
+        
+        return jsonify({
+            'success': True,
+            'payments': page_data,
+            'total': total,
+            'page': page,
+            'pageSize': page_size,
+            'totalPages': max(1, (total + page_size - 1) // page_size)
+        })
+        
+    except Exception as e:
+        print(f"[PAYMENTS] API error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e), 'payments': [], 'total': 0, 'page': 1, 'pageSize': 25, 'totalPages': 1}), 500
+
+@app.route('/api/payments/metrics', methods=['GET', 'OPTIONS'])
+def api_get_payments_metrics():
+    """Get payments summary metrics (cached, very fast)"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = get_payments_data()
+        return jsonify({
+            'success': True,
+            'metrics': data['metrics']
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/payments/filter-values', methods=['GET', 'OPTIONS'])
+def api_get_payments_filter_values():
+    """Get unique values for filter dropdowns"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        column = request.args.get('column', '')
+        if not column:
+            return jsonify({'success': False, 'error': 'column parameter required', 'values': []}), 400
+        
+        # Validate column name
+        if column not in PAYMENTS_VALID_COLUMNS:
+            return jsonify({'success': False, 'error': 'invalid column', 'values': []}), 400
+        
+        data = get_payments_data()
+        payments = data['payments']
+        
+        # Get unique values for the column
+        values = set()
+        for p in payments:
+            val = p.get(column, '')
+            if val:
+                values.add(str(val))
+        
+        # Sort and limit
+        sorted_values = sorted(list(values))[:500]
+        
+        return jsonify({
+            'success': True,
+            'values': sorted_values,
+            'total': len(values),
+            'truncated': len(values) > 500
+        })
+        
+    except Exception as e:
+        print(f"[PAYMENTS] Filter values error: {e}")
+        return jsonify({'success': False, 'error': str(e), 'values': []}), 500
+
 scheduler_thread = None
 
 def start_scheduler():

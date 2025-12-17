@@ -16435,65 +16435,185 @@ initNavigation = function() {
 };
 
 /* ============================================================
-   PAYMENTS MODULE
+   PAYMENTS MODULE (Optimized - Server-side pagination)
 ============================================================ */
 let paymentsInitialized = false;
-let paymentsData = [];
-let paymentsFilteredData = [];
-let jobPmLookup = {};
 let paymentsCurrentPage = 1;
 let paymentsPageSize = 25;
 let paymentsSortColumn = 'invoice_date';
 let paymentsSortDirection = 'desc';
 let paymentsColumnFilters = {};
 let paymentsSearchTerm = '';
+let paymentsTotal = 0;
+let paymentsTotalPages = 1;
+let paymentsFilterValuesCache = {};
 
 function initPayments() {
-  if (paymentsInitialized && paymentsData.length > 0) {
-    renderPaymentsTable();
-    return;
-  }
-  
   const loadingOverlay = document.getElementById('paymentsLoadingOverlay');
   if (loadingOverlay) loadingOverlay.classList.remove('hidden');
   
-  Promise.all([
-    fetch('data/payments.json').then(r => r.json()),
-    fetch('data/financials_jobs.json').then(r => r.json())
-  ])
-  .then(([paymentsJson, jobsJson]) => {
-    if (jobsJson.job_budgets) {
-      jobsJson.job_budgets.forEach(job => {
-        jobPmLookup[job.job_no] = job.project_manager_name || '';
-      });
-    }
-    
-    paymentsData = (paymentsJson.payments || []).map(p => ({
-      ...p,
-      invoice_amount_num: parseFloat(p.invoice_amount) || 0,
-      invoice_date_parsed: excelDateToDate(parseFloat(p.invoice_date)),
-      project_manager: p.job_no ? (jobPmLookup[p.job_no] || '') : ''
-    }));
-    
+  // Show skeleton loading in table
+  const tbody = document.getElementById('paymentsTableBody');
+  if (tbody) {
+    tbody.innerHTML = Array(10).fill().map(() => `
+      <tr class="skeleton-row">
+        <td><div class="skeleton-text"></div></td>
+        <td><div class="skeleton-text"></div></td>
+        <td><div class="skeleton-text"></div></td>
+        <td><div class="skeleton-text"></div></td>
+        <td><div class="skeleton-text"></div></td>
+        <td><div class="skeleton-text"></div></td>
+        <td><div class="skeleton-text"></div></td>
+        <td><div class="skeleton-text"></div></td>
+        <td><div class="skeleton-text"></div></td>
+      </tr>
+    `).join('');
+  }
+  
+  // Load metrics first (fast, cached on server)
+  fetch('/api/payments/metrics')
+    .then(r => r.json())
+    .then(data => {
+      if (data.success && data.metrics) {
+        updatePaymentsKeyMetricsFromServer(data.metrics);
+      }
+    })
+    .catch(err => console.error('Error loading metrics:', err));
+  
+  // Initialize event handlers only once
+  if (!paymentsInitialized) {
     initPaymentsEventHandlers();
-    initPaymentsColumnFilters();
-    updatePaymentsKeyMetrics();
-    applyPaymentsFilters();
-    
-    const dataAsOf = document.getElementById('paymentsDataAsOf');
-    if (dataAsOf) {
-      const now = new Date();
-      dataAsOf.textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
-    
+    initPaymentsColumnFiltersOptimized();
     paymentsInitialized = true;
-    if (loadingOverlay) loadingOverlay.classList.add('hidden');
-  })
-  .catch(err => {
-    console.error('Error loading payments data:', err);
-    const tbody = document.getElementById('paymentsTableBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="error-cell">Error loading payment data</td></tr>';
-    if (loadingOverlay) loadingOverlay.classList.add('hidden');
+  }
+  
+  // Load first page of data
+  loadPaymentsPage();
+  
+  const dataAsOf = document.getElementById('paymentsDataAsOf');
+  if (dataAsOf) {
+    const now = new Date();
+    dataAsOf.textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+}
+
+function loadPaymentsPage() {
+  const loadingOverlay = document.getElementById('paymentsLoadingOverlay');
+  if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+  
+  // Build query params
+  const params = new URLSearchParams({
+    page: paymentsCurrentPage,
+    pageSize: paymentsPageSize,
+    sortColumn: paymentsSortColumn,
+    sortDirection: paymentsSortDirection
+  });
+  
+  if (paymentsSearchTerm) {
+    params.set('search', paymentsSearchTerm);
+  }
+  
+  // Add column filters
+  const activeFilters = {};
+  for (const [col, values] of Object.entries(paymentsColumnFilters)) {
+    if (values && values.size > 0) {
+      activeFilters[col] = Array.from(values);
+    }
+  }
+  if (Object.keys(activeFilters).length > 0) {
+    params.set('filters', JSON.stringify(activeFilters));
+  }
+  
+  fetch(`/api/payments?${params.toString()}`)
+    .then(r => r.json())
+    .then(data => {
+      paymentsTotal = data.total || 0;
+      paymentsTotalPages = data.totalPages || 1;
+      renderPaymentsTableFromServer(data.payments || []);
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    })
+    .catch(err => {
+      console.error('Error loading payments:', err);
+      const tbody = document.getElementById('paymentsTableBody');
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="9" class="error-cell">Error loading payment data. <button onclick="loadPaymentsPage()" class="retry-btn">Retry</button></td></tr>`;
+      }
+      paymentsTotal = 0;
+      paymentsTotalPages = 1;
+      const pageInfo = document.getElementById('paymentsPageInfo');
+      if (pageInfo) pageInfo.textContent = 'Error loading data';
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    });
+}
+
+function updatePaymentsKeyMetricsFromServer(metrics) {
+  const countEl = document.getElementById('paymentsTotalCount');
+  const amountEl = document.getElementById('paymentsTotalAmount');
+  const vendorsEl = document.getElementById('paymentsUniqueVendors');
+  const avgEl = document.getElementById('paymentsAvgAmount');
+  
+  if (countEl) countEl.textContent = metrics.totalCount.toLocaleString();
+  if (amountEl) amountEl.textContent = formatCurrency(metrics.totalAmount);
+  if (vendorsEl) vendorsEl.textContent = metrics.uniqueVendors.toLocaleString();
+  if (avgEl) avgEl.textContent = formatCurrency(metrics.avgAmount);
+}
+
+function renderPaymentsTableFromServer(payments) {
+  const tbody = document.getElementById('paymentsTableBody');
+  if (!tbody) return;
+  
+  if (payments.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="no-data-cell">No payments found</td></tr>';
+  } else {
+    tbody.innerHTML = payments.map(p => `
+      <tr>
+        <td>${escapeHtml(p.voucher_no || '-')}</td>
+        <td>${escapeHtml(p.vendor_no || '-')}</td>
+        <td>${escapeHtml(p.description || '-')}</td>
+        <td>${escapeHtml(p.invoice_date || '-')}</td>
+        <td class="number-col">${formatCurrency(p.invoice_amount)}</td>
+        <td>${escapeHtml(p.job_no || '-')}</td>
+        <td>${escapeHtml(p.project_manager || '-')}</td>
+        <td>${escapeHtml(p.account_no || '-')}</td>
+        <td>${escapeHtml(p.account_description || '-')}</td>
+      </tr>
+    `).join('');
+  }
+  
+  const pageInfo = document.getElementById('paymentsPageInfo');
+  const prevBtn = document.getElementById('paymentsPrevPage');
+  const nextBtn = document.getElementById('paymentsNextPage');
+  
+  if (pageInfo) pageInfo.textContent = `Page ${paymentsCurrentPage} of ${paymentsTotalPages} (${paymentsTotal.toLocaleString()} records)`;
+  if (prevBtn) prevBtn.disabled = paymentsCurrentPage <= 1;
+  if (nextBtn) nextBtn.disabled = paymentsCurrentPage >= paymentsTotalPages;
+}
+
+function initPaymentsColumnFiltersOptimized() {
+  const filterableColumns = ['voucher_no', 'vendor_no', 'description', 'job_no', 'project_manager', 'account_no', 'account_description'];
+  
+  filterableColumns.forEach(col => {
+    const dropdown = document.querySelector(`#paymentsTable .column-filter-dropdown[data-filter="${col}"]`);
+    if (!dropdown) return;
+    
+    paymentsColumnFilters[col] = new Set();
+    
+    // Show loading state initially
+    dropdown.innerHTML = `
+      <div class="filter-dropdown-header">
+        <input type="text" class="filter-search-input" placeholder="Search...">
+        <div class="filter-quick-actions">
+          <button class="filter-select-all">All</button>
+          <button class="filter-select-none">None</button>
+        </div>
+      </div>
+      <div class="filter-options-list">
+        <div class="filter-loading">Loading values...</div>
+      </div>
+      <div class="filter-dropdown-footer">
+        <button class="filter-apply-btn">Apply</button>
+      </div>
+    `;
   });
 }
 
@@ -16514,8 +16634,8 @@ function initPaymentsEventHandlers() {
     searchInput.addEventListener('input', debounce(() => {
       paymentsSearchTerm = searchInput.value.toLowerCase().trim();
       paymentsCurrentPage = 1;
-      applyPaymentsFilters();
-    }, 300));
+      loadPaymentsPage();
+    }, 400));
   }
   
   document.querySelectorAll('#paymentsTable .sort-btn').forEach(btn => {
@@ -16525,7 +16645,8 @@ function initPaymentsEventHandlers() {
       paymentsSortColumn = col;
       paymentsSortDirection = dir;
       updatePaymentsSortIndicators();
-      applyPaymentsFilters();
+      paymentsCurrentPage = 1;
+      loadPaymentsPage();
     });
   });
   
@@ -16539,9 +16660,10 @@ function initPaymentsEventHandlers() {
         dropdown.classList.toggle('open');
         if (dropdown.classList.contains('open')) {
           positionFilterDropdown(btn, dropdown);
+          loadPaymentsFilterValues(filterCol, dropdown);
         }
-        const searchInput = dropdown.querySelector('.filter-search-input');
-        if (searchInput) searchInput.focus();
+        const searchInputEl = dropdown.querySelector('.filter-search-input');
+        if (searchInputEl) searchInputEl.focus();
       }
     });
   });
@@ -16559,23 +16681,129 @@ function initPaymentsEventHandlers() {
   if (prevBtn) prevBtn.addEventListener('click', () => {
     if (paymentsCurrentPage > 1) {
       paymentsCurrentPage--;
-      renderPaymentsTable();
+      loadPaymentsPage();
     }
   });
   
   if (nextBtn) nextBtn.addEventListener('click', () => {
-    const totalPages = Math.ceil(paymentsFilteredData.length / paymentsPageSize);
-    if (paymentsCurrentPage < totalPages) {
+    if (paymentsCurrentPage < paymentsTotalPages) {
       paymentsCurrentPage++;
-      renderPaymentsTable();
+      loadPaymentsPage();
     }
   });
   
   if (pageSizeSelect) pageSizeSelect.addEventListener('change', () => {
     paymentsPageSize = parseInt(pageSizeSelect.value);
     paymentsCurrentPage = 1;
-    renderPaymentsTable();
+    loadPaymentsPage();
   });
+}
+
+function loadPaymentsFilterValues(col, dropdown) {
+  if (paymentsFilterValuesCache[col]) {
+    populatePaymentsFilterDropdown(col, dropdown, paymentsFilterValuesCache[col]);
+    return;
+  }
+  
+  const optionsList = dropdown.querySelector('.filter-options-list');
+  if (optionsList) optionsList.innerHTML = '<div class="filter-loading">Loading...</div>';
+  
+  fetch(`/api/payments/filter-values?column=${encodeURIComponent(col)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        paymentsFilterValuesCache[col] = data.values;
+        populatePaymentsFilterDropdown(col, dropdown, data.values);
+      }
+    })
+    .catch(err => {
+      console.error('Error loading filter values:', err);
+      if (optionsList) optionsList.innerHTML = '<div class="filter-error">Error loading values</div>';
+    });
+}
+
+function populatePaymentsFilterDropdown(col, dropdown, values) {
+  const optionsList = dropdown.querySelector('.filter-options-list');
+  if (!optionsList) return;
+  
+  const currentFilter = paymentsColumnFilters[col] || new Set();
+  const hasActiveFilter = currentFilter.size > 0;
+  
+  optionsList.innerHTML = values.slice(0, 200).map(val => {
+    const isChecked = hasActiveFilter ? currentFilter.has(val) : true;
+    return `
+      <label class="filter-option">
+        <input type="checkbox" value="${escapeHtml(val)}" ${isChecked ? 'checked' : ''}>
+        <span>${escapeHtml(val) || '(empty)'}</span>
+      </label>
+    `;
+  }).join('') + (values.length > 200 ? `<div class="filter-truncated-notice">${values.length - 200} more values not shown</div>` : '');
+  
+  const searchInput = dropdown.querySelector('.filter-search-input');
+  if (searchInput) {
+    searchInput.oninput = () => {
+      const searchVal = searchInput.value.toLowerCase();
+      const filtered = values.filter(v => (v || '').toLowerCase().includes(searchVal));
+      const currentFilterVals = paymentsColumnFilters[col] || new Set();
+      const hasFilter = currentFilterVals.size > 0;
+      optionsList.innerHTML = filtered.slice(0, 200).map(val => {
+        const isChecked = hasFilter ? currentFilterVals.has(val) : true;
+        return `
+          <label class="filter-option">
+            <input type="checkbox" value="${escapeHtml(val)}" ${isChecked ? 'checked' : ''}>
+            <span>${escapeHtml(val) || '(empty)'}</span>
+          </label>
+        `;
+      }).join('');
+    };
+  }
+  
+  const selectAllBtn = dropdown.querySelector('.filter-select-all');
+  const selectNoneBtn = dropdown.querySelector('.filter-select-none');
+  
+  if (selectAllBtn) selectAllBtn.onclick = () => {
+    dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = true);
+  };
+  
+  if (selectNoneBtn) selectNoneBtn.onclick = () => {
+    dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = false);
+  };
+  
+  const applyBtn = dropdown.querySelector('.filter-apply-btn');
+  if (applyBtn) applyBtn.onclick = () => {
+    collectPaymentsColumnFilter(col, dropdown);
+    closeAllPaymentsFilterDropdowns();
+    paymentsCurrentPage = 1;
+    loadPaymentsPage();
+  };
+}
+
+function collectPaymentsColumnFilter(col, dropdown) {
+  const checkedValues = new Set();
+  dropdown?.querySelectorAll('.filter-option input:checked').forEach(cb => {
+    checkedValues.add(cb.value);
+  });
+  
+  const allValues = new Set();
+  dropdown?.querySelectorAll('.filter-option input').forEach(cb => {
+    allValues.add(cb.value);
+  });
+  
+  if (checkedValues.size === allValues.size || checkedValues.size === 0) {
+    paymentsColumnFilters[col] = new Set();
+  } else {
+    paymentsColumnFilters[col] = checkedValues;
+  }
+  
+  updatePaymentsFilterIndicator(col);
+}
+
+function updatePaymentsFilterIndicator(col) {
+  const btn = document.querySelector(`#paymentsTable .filter-btn[data-filter="${col}"]`);
+  if (btn) {
+    const hasFilter = paymentsColumnFilters[col] && paymentsColumnFilters[col].size > 0;
+    btn.classList.toggle('has-filter', hasFilter);
+  }
 }
 
 function closeAllPaymentsFilterDropdowns() {
@@ -16587,109 +16815,6 @@ function closeAllPaymentsFilterDropdowns() {
   });
 }
 
-function initPaymentsColumnFilters() {
-  const filterableColumns = ['voucher_no', 'vendor_no', 'description', 'job_no', 'project_manager', 'account_no', 'account_description'];
-  
-  filterableColumns.forEach(col => {
-    const dropdown = document.querySelector(`#paymentsTable .column-filter-dropdown[data-filter="${col}"]`);
-    if (!dropdown) return;
-    
-    const uniqueValues = getPaymentsUniqueColumnValues(col);
-    paymentsColumnFilters[col] = new Set();
-    
-    dropdown.innerHTML = `
-      <div class="filter-dropdown-header">
-        <input type="text" class="filter-search-input" placeholder="Search...">
-        <div class="filter-quick-actions">
-          <button class="filter-select-all">All</button>
-          <button class="filter-select-none">None</button>
-        </div>
-      </div>
-      <div class="filter-options-list">
-        ${uniqueValues.slice(0, 100).map(val => `
-          <label class="filter-option">
-            <input type="checkbox" value="${escapeHtml(val)}" checked>
-            <span>${escapeHtml(val) || '(empty)'}</span>
-          </label>
-        `).join('')}
-        ${uniqueValues.length > 100 ? `<div class="filter-truncated-notice">${uniqueValues.length - 100} more values not shown</div>` : ''}
-      </div>
-      <div class="filter-dropdown-footer">
-        <button class="filter-apply-btn">Apply</button>
-      </div>
-    `;
-    
-    const searchInput = dropdown.querySelector('.filter-search-input');
-    if (searchInput) {
-      searchInput.addEventListener('input', () => {
-        const searchVal = searchInput.value.toLowerCase();
-        const filtered = uniqueValues.filter(v => (v || '').toLowerCase().includes(searchVal));
-        updatePaymentsFilterOptions(col, filtered.slice(0, 100));
-      });
-    }
-    
-    const selectAllBtn = dropdown.querySelector('.filter-select-all');
-    const selectNoneBtn = dropdown.querySelector('.filter-select-none');
-    
-    if (selectAllBtn) selectAllBtn.addEventListener('click', () => {
-      dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = true);
-    });
-    
-    if (selectNoneBtn) selectNoneBtn.addEventListener('click', () => {
-      dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = false);
-    });
-    
-    const applyBtn = dropdown.querySelector('.filter-apply-btn');
-    if (applyBtn) applyBtn.addEventListener('click', () => {
-      collectPaymentsColumnFilter(col);
-      closeAllPaymentsFilterDropdowns();
-      paymentsCurrentPage = 1;
-      applyPaymentsFilters();
-    });
-  });
-}
-
-function getPaymentsUniqueColumnValues(col) {
-  const values = new Set();
-  paymentsData.forEach(p => {
-    const val = String(p[col] || '').trim();
-    if (val) values.add(val);
-  });
-  return Array.from(values).sort((a, b) => a.localeCompare(b));
-}
-
-function updatePaymentsFilterOptions(col, values) {
-  const dropdown = document.querySelector(`#paymentsTable .column-filter-dropdown[data-filter="${col}"]`);
-  const optionsList = dropdown?.querySelector('.filter-options-list');
-  if (!optionsList) return;
-  
-  optionsList.innerHTML = values.map(val => `
-    <label class="filter-option">
-      <input type="checkbox" value="${escapeHtml(val)}" checked>
-      <span>${escapeHtml(val) || '(empty)'}</span>
-    </label>
-  `).join('');
-}
-
-function collectPaymentsColumnFilter(col) {
-  const dropdown = document.querySelector(`#paymentsTable .column-filter-dropdown[data-filter="${col}"]`);
-  const checkedValues = new Set();
-  dropdown?.querySelectorAll('.filter-option input:checked').forEach(cb => {
-    checkedValues.add(cb.value);
-  });
-  
-  const allValues = new Set();
-  dropdown?.querySelectorAll('.filter-option input').forEach(cb => {
-    allValues.add(cb.value);
-  });
-  
-  if (checkedValues.size === allValues.size) {
-    paymentsColumnFilters[col] = new Set();
-  } else {
-    paymentsColumnFilters[col] = checkedValues;
-  }
-}
-
 function updatePaymentsSortIndicators() {
   document.querySelectorAll('#paymentsTable .sort-btn').forEach(btn => {
     btn.classList.remove('active');
@@ -16697,103 +16822,6 @@ function updatePaymentsSortIndicators() {
       btn.classList.add('active');
     }
   });
-}
-
-function applyPaymentsFilters() {
-  let filtered = [...paymentsData];
-  
-  if (paymentsSearchTerm) {
-    filtered = filtered.filter(p => {
-      const searchFields = [
-        p.voucher_no, p.vendor_no, p.description, p.job_no,
-        p.job_description, p.project_manager, p.account_no, p.account_description
-      ];
-      return searchFields.some(f => (f || '').toLowerCase().includes(paymentsSearchTerm));
-    });
-  }
-  
-  Object.keys(paymentsColumnFilters).forEach(col => {
-    const filterSet = paymentsColumnFilters[col];
-    if (filterSet && filterSet.size > 0) {
-      filtered = filtered.filter(p => filterSet.has(String(p[col] || '').trim()));
-    }
-  });
-  
-  filtered.sort((a, b) => {
-    let aVal = a[paymentsSortColumn];
-    let bVal = b[paymentsSortColumn];
-    
-    if (paymentsSortColumn === 'invoice_amount') {
-      aVal = a.invoice_amount_num;
-      bVal = b.invoice_amount_num;
-    } else if (paymentsSortColumn === 'invoice_date') {
-      aVal = a.invoice_date_parsed ? a.invoice_date_parsed.getTime() : 0;
-      bVal = b.invoice_date_parsed ? b.invoice_date_parsed.getTime() : 0;
-    } else {
-      aVal = String(aVal || '').toLowerCase();
-      bVal = String(bVal || '').toLowerCase();
-    }
-    
-    if (aVal < bVal) return paymentsSortDirection === 'asc' ? -1 : 1;
-    if (aVal > bVal) return paymentsSortDirection === 'asc' ? 1 : -1;
-    return 0;
-  });
-  
-  paymentsFilteredData = filtered;
-  renderPaymentsTable();
-}
-
-function updatePaymentsKeyMetrics() {
-  const totalCount = paymentsData.length;
-  const totalAmount = paymentsData.reduce((sum, p) => sum + p.invoice_amount_num, 0);
-  const uniqueVendors = new Set(paymentsData.map(p => p.vendor_no)).size;
-  const avgAmount = totalCount > 0 ? totalAmount / totalCount : 0;
-  
-  const countEl = document.getElementById('paymentsTotalCount');
-  const amountEl = document.getElementById('paymentsTotalAmount');
-  const vendorsEl = document.getElementById('paymentsUniqueVendors');
-  const avgEl = document.getElementById('paymentsAvgAmount');
-  
-  if (countEl) countEl.textContent = totalCount.toLocaleString();
-  if (amountEl) amountEl.textContent = formatCurrency(totalAmount);
-  if (vendorsEl) vendorsEl.textContent = uniqueVendors.toLocaleString();
-  if (avgEl) avgEl.textContent = formatCurrency(avgAmount);
-}
-
-function renderPaymentsTable() {
-  const tbody = document.getElementById('paymentsTableBody');
-  if (!tbody) return;
-  
-  const totalPages = Math.ceil(paymentsFilteredData.length / paymentsPageSize) || 1;
-  const startIdx = (paymentsCurrentPage - 1) * paymentsPageSize;
-  const endIdx = startIdx + paymentsPageSize;
-  const pageData = paymentsFilteredData.slice(startIdx, endIdx);
-  
-  if (pageData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="no-data-cell">No payments found</td></tr>';
-  } else {
-    tbody.innerHTML = pageData.map(p => `
-      <tr>
-        <td>${escapeHtml(p.voucher_no || '-')}</td>
-        <td>${escapeHtml(p.vendor_no || '-')}</td>
-        <td>${escapeHtml(p.description || '-')}</td>
-        <td>${formatPaymentDate(p.invoice_date_parsed)}</td>
-        <td class="number-col">${formatCurrency(p.invoice_amount_num)}</td>
-        <td>${escapeHtml(p.job_no || '-')}</td>
-        <td>${escapeHtml(p.project_manager || '-')}</td>
-        <td>${escapeHtml(p.account_no || '-')}</td>
-        <td>${escapeHtml(p.account_description || '-')}</td>
-      </tr>
-    `).join('');
-  }
-  
-  const pageInfo = document.getElementById('paymentsPageInfo');
-  const prevBtn = document.getElementById('paymentsPrevPage');
-  const nextBtn = document.getElementById('paymentsNextPage');
-  
-  if (pageInfo) pageInfo.textContent = `Page ${paymentsCurrentPage} of ${totalPages} (${paymentsFilteredData.length.toLocaleString()} records)`;
-  if (prevBtn) prevBtn.disabled = paymentsCurrentPage <= 1;
-  if (nextBtn) nextBtn.disabled = paymentsCurrentPage >= totalPages;
 }
 
 function escapeHtml(str) {
