@@ -8619,14 +8619,16 @@ body.dark-mode .jo-metrics-chart-card .chart-title {
 /* Totals Row Styling */
 .totals-row {
   background-color: #f0f9ff;
-  border-top: 2px solid #3b82f6;
-  border-bottom: 2px solid #3b82f6;
+  border-top: 3px solid #3b82f6;
+  border-bottom: 3px solid #3b82f6;
   font-weight: 600;
 }
 
 .totals-row td {
   padding-top: 10px !important;
   padding-bottom: 10px !important;
+  border-top: none !important;
+  border-bottom: none !important;
 }
 
 body.dark-mode .totals-row {
