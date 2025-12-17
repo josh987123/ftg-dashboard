@@ -12202,7 +12202,18 @@ function updateJobSummaryMetrics() {
   const totalContract = jobBudgetsFiltered.reduce((sum, j) => sum + j.revised_contract, 0);
   const totalCost = jobBudgetsFiltered.reduce((sum, j) => sum + j.revised_cost, 0);
   const totalProfit = jobBudgetsFiltered.reduce((sum, j) => sum + j.estimated_profit, 0);
-  const avgMargin = totalContract > 0 ? (totalProfit / totalContract) * 100 : 0;
+  
+  // Calculate avg margin excluding jobs with zero revised_contract OR zero revised_cost
+  const jobsWithValidMargin = jobBudgetsFiltered.filter(j => 
+    parseFloat(j.revised_contract) > 0 && parseFloat(j.revised_cost) > 0
+  );
+  const avgMargin = jobsWithValidMargin.length > 0 
+    ? jobsWithValidMargin.reduce((sum, j) => {
+        const rc = parseFloat(j.revised_contract) || 0;
+        const ep = parseFloat(j.estimated_profit) || 0;
+        return sum + (ep / rc) * 100;
+      }, 0) / jobsWithValidMargin.length
+    : 0;
   
   document.getElementById('jobTotalCount').textContent = totalJobs.toLocaleString();
   document.getElementById('jobTotalContract').textContent = formatCurrencyCompact(totalContract);
@@ -12615,12 +12626,15 @@ function renderJobBudgetsTable() {
     estimatedProfit: jobBudgetsFiltered.reduce((sum, j) => sum + (parseFloat(j.estimated_profit) || 0), 0)
   };
   // Calculate average margin as arithmetic mean of individual job margins
-  const jobsWithMargin = jobBudgetsFiltered.filter(j => parseFloat(j.revised_contract) > 0);
+  // Exclude jobs with zero revised_contract OR zero revised_cost
+  const jobsWithMargin = jobBudgetsFiltered.filter(j => 
+    parseFloat(j.revised_contract) > 0 && parseFloat(j.revised_cost) > 0
+  );
   const avgMargin = jobsWithMargin.length > 0 
     ? jobsWithMargin.reduce((sum, j) => {
         const rc = parseFloat(j.revised_contract) || 0;
         const ep = parseFloat(j.estimated_profit) || 0;
-        return sum + (rc > 0 ? (ep / rc) * 100 : 0);
+        return sum + (ep / rc) * 100;
       }, 0) / jobsWithMargin.length
     : 0;
   const totalProfitClass = allTotals.estimatedProfit >= 0 ? 'positive' : 'negative';
@@ -12641,8 +12655,12 @@ function renderJobBudgetsTable() {
   const dataRowsHtml = pageData.map(job => {
     const status = getJobStatusLabel(job.job_status);
     const profitClass = job.estimated_profit >= 0 ? 'positive' : 'negative';
-    const margin = job.revised_contract ? (job.estimated_profit / job.revised_contract) * 100 : 0;
-    const marginColor = getMarginColor(margin);
+    
+    // Only calculate margin if both revised_contract AND revised_cost are non-zero
+    const hasValidMargin = job.revised_contract > 0 && job.revised_cost > 0;
+    const margin = hasValidMargin ? (job.estimated_profit / job.revised_contract) * 100 : null;
+    const marginColor = hasValidMargin ? getMarginColor(margin) : 'transparent';
+    const marginDisplay = hasValidMargin ? `${margin.toFixed(1)}%` : '-';
     
     return `<tr>
       <td>${job.job_no}</td>
@@ -12657,7 +12675,7 @@ function renderJobBudgetsTable() {
       <td class="number-col cost-detail-col ${costHidden}">${formatCurrency(job.tot_cost_adj)}</td>
       <td class="number-col revised-cost-col">${formatCurrency(job.revised_cost)}</td>
       <td class="number-col ${profitClass}">${formatCurrency(job.estimated_profit)}</td>
-      <td class="number-col" style="background-color: ${marginColor}">${margin.toFixed(1)}%</td>
+      <td class="number-col" style="background-color: ${marginColor}">${marginDisplay}</td>
     </tr>`;
   }).join('');
   
