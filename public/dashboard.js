@@ -13020,9 +13020,9 @@ function renderPmDonutChart() {
   const canvas = document.getElementById('pmDonutChart');
   if (!canvas) return;
   
-  // Aggregate by Project Manager
+  // Aggregate by Project Manager - use unfiltered data so charts always show all PMs
   const pmMap = new Map();
-  jobBudgetsFiltered.forEach(job => {
+  jobBudgetsData.forEach(job => {
     const pm = job.project_manager_name || 'Unassigned';
     if (!pmMap.has(pm)) {
       pmMap.set(pm, 0);
@@ -13120,9 +13120,9 @@ function renderCustomerDonutChart() {
   const canvas = document.getElementById('customerDonutChart');
   if (!canvas) return;
   
-  // Aggregate by Customer
+  // Aggregate by Customer - use unfiltered data so charts always show all clients
   const custMap = new Map();
-  jobBudgetsFiltered.forEach(job => {
+  jobBudgetsData.forEach(job => {
     const cust = job.customer_name || 'Unknown';
     if (!custMap.has(cust)) {
       custMap.set(cust, 0);
