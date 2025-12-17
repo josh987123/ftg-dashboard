@@ -9694,17 +9694,14 @@ body.dark-mode .chart-subtitle {
   border-top: 1px solid var(--border-primary);
 }
 
-/* Job Overview: Config, AI Analysis, and Key Metrics at 70% width */
+/* Job Overview: Config, AI Analysis, and Key Metrics at 60% width to match config panel */
 #jobOverview > .config-panel,
-#jobOverview > .ai-analysis-panel,
-#jobOverview > .job-key-metrics-section {
-  width: 70%;
+#jobOverview > #joAiAnalysisPanel,
+#jobOverview > .job-key-metrics-section,
+#jobOverview > .job-key-metrics-section.jo-key-metrics-constrained {
+  width: 60% !important;
+  max-width: 60% !important;
   box-sizing: border-box;
-}
-
-.jo-key-metrics-constrained {
-  max-width: 100%;
-  width: 100%;
 }
 
 .jo-key-metrics-constrained .jo-metrics-row-5 {
@@ -9776,9 +9773,11 @@ body.dark-mode .jo-chart-stats .stat-period {
 /* Job Overview Mobile Responsiveness */
 @media (max-width: 768px) {
   #jobOverview > .config-panel,
-  #jobOverview > .ai-analysis-panel,
-  #jobOverview > .job-key-metrics-section {
-    width: 100%;
+  #jobOverview > #joAiAnalysisPanel,
+  #jobOverview > .job-key-metrics-section,
+  #jobOverview > .job-key-metrics-section.jo-key-metrics-constrained {
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
   .jo-key-metrics-constrained {
