@@ -8209,15 +8209,15 @@ body.dark-mode .page-size-select {
     line-height: 1.2 !important;
   }
   
-  /* Job Budgets/Actuals donut charts - BIG charts, minimal spacing */
+  /* Job Budgets/Actuals donut charts - 50% larger (300px) */
   #jobBudgets .breakdown-chart-wrapper,
   #jobActuals .breakdown-chart-wrapper {
     width: 100% !important;
-    height: 220px !important;
-    min-height: 220px !important;
+    height: 320px !important;
+    min-height: 320px !important;
     max-height: none !important;
-    margin-bottom: 2px !important;
-    padding: 8px !important;
+    margin-bottom: 0 !important;
+    padding: 10px !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -8225,46 +8225,53 @@ body.dark-mode .page-size-select {
   
   #jobBudgets .breakdown-chart-wrapper canvas,
   #jobActuals .breakdown-chart-wrapper canvas {
-    width: 200px !important;
-    height: 200px !important;
-    max-width: 200px !important;
-    max-height: 200px !important;
+    width: 300px !important;
+    height: 300px !important;
+    max-width: 300px !important;
+    max-height: 300px !important;
   }
   
   #jobBudgets .breakdown-card,
   #jobActuals .breakdown-card {
-    padding: 8px !important;
-    padding-bottom: 6px !important;
-    margin-bottom: 8px !important;
-    gap: 4px !important;
+    padding: 6px !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 6px !important;
+    gap: 2px !important;
   }
   
-  /* Legend - minimal spacing */
+  /* Legend - wider, compact */
   #jobBudgets .chart-legend,
   #jobActuals .chart-legend,
   #jobBudgets .donut-legend,
   #jobActuals .donut-legend {
-    margin: 2px 0 !important;
-    padding: 0 !important;
-    font-size: 10px !important;
-    line-height: 1.3 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
   }
   
-  /* Expand button/footer - reduce top margin */
+  /* Expand button - very compact */
   #jobBudgets .breakdown-footer,
   #jobActuals .breakdown-footer,
   #jobBudgets .expand-btn,
   #jobActuals .expand-btn,
   #jobBudgets .expand-table-btn,
   #jobActuals .expand-table-btn {
-    margin-top: 2px !important;
-    padding: 6px 10px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
   }
   
-  /* Collapsed details - no padding */
+  /* Collapsed details - no padding/margin */
   #jobBudgets .breakdown-details,
   #jobActuals .breakdown-details {
     padding: 0 !important;
+    margin: 0 !important;
   }
   
   /* Quick sort buttons - more compact */
