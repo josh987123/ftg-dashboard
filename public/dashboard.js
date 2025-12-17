@@ -4566,7 +4566,7 @@ function getJobBudgetsSubtitle() {
   const pm = document.getElementById('pmFilter')?.value;
   if (pm) filters.push(`PM: ${pm}`);
   const customer = document.getElementById('customerFilter')?.value;
-  if (customer) filters.push(`Customer: ${customer}`);
+  if (customer) filters.push(`Client: ${customer}`);
   
   const total = jobBudgetsFiltered?.length || 0;
   let subtitle = `${total} Job${total !== 1 ? 's' : ''}`;
@@ -4627,7 +4627,7 @@ function getJobBudgetsTableHtml() {
       <tr style="background:#f3f4f6;">
         <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Job #</th>
         <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Description</th>
-        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Customer</th>
+        <th style="padding:8px;text-align:left;border:1px solid #e5e7eb;">Client</th>
         <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Contract</th>
         <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Est. Profit</th>
         <th style="padding:8px;text-align:right;border:1px solid #e5e7eb;">Margin</th>
@@ -4664,7 +4664,7 @@ function getJobBudgetsCsvData() {
     return "";
   }
   
-  let csv = "Job #,Description,Customer,Status,Project Manager,Original Contract,Change Orders,Contract Value,Original Cost,Cost Adjustments,Projected Cost,Estimated Profit,Margin %\n";
+  let csv = "Job #,Description,Client,Status,Project Manager,Original Contract,Change Orders,Contract Value,Original Cost,Cost Adjustments,Projected Cost,Estimated Profit,Margin %\n";
   
   jobBudgetsFiltered.forEach(job => {
     const status = getJobStatusLabel(job.job_status);
@@ -12100,7 +12100,7 @@ function populateJobFilters() {
   const custFilter = document.getElementById('jobCustomerFilter');
   if (custFilter) {
     const customers = [...new Set(jobBudgetsData.map(j => j.customer_name).filter(Boolean))].sort();
-    custFilter.innerHTML = '<option value="">All Customers</option>' + 
+    custFilter.innerHTML = '<option value="">All Clients</option>' + 
       customers.map(c => `<option value="${c}">${c}</option>`).join('');
   }
 }
@@ -12829,7 +12829,7 @@ function populateJobOverviewFilters() {
   const custFilter = document.getElementById('joCustomerFilter');
   if (custFilter) {
     const customers = [...new Set(joData.map(j => j.customer_name).filter(Boolean))].sort();
-    custFilter.innerHTML = '<option value="">All Customers</option>' + 
+    custFilter.innerHTML = '<option value="">All Clients</option>' + 
       customers.map(c => `<option value="${c}">${c}</option>`).join('');
   }
 }
@@ -13463,7 +13463,7 @@ function populateJobActualsFilters() {
   const custFilter = document.getElementById('jaCustomerFilter');
   if (custFilter) {
     const customers = [...new Set(jobActualsData.map(j => j.customer_name).filter(Boolean))].sort();
-    custFilter.innerHTML = '<option value="">All Customers</option>' + 
+    custFilter.innerHTML = '<option value="">All Clients</option>' + 
       customers.map(c => `<option value="${c}">${c}</option>`).join('');
   }
 }
@@ -13959,7 +13959,7 @@ function populateJobCostsFilters() {
   const custFilter = document.getElementById('jcCustomerFilter');
   if (custFilter) {
     const customers = [...new Set(jobCostsData.map(j => j.customer_name).filter(Boolean))].sort();
-    custFilter.innerHTML = '<option value="">All Customers</option>' + 
+    custFilter.innerHTML = '<option value="">All Clients</option>' + 
       customers.map(c => `<option value="${c}">${c}</option>`).join('');
   }
 }
@@ -14125,7 +14125,7 @@ function populateMbFilters() {
   
   const custSelect = document.getElementById('mbCustomerFilter');
   if (custSelect && custSelect.options.length <= 1) {
-    custSelect.innerHTML = '<option value="">All Customers</option>' + 
+    custSelect.innerHTML = '<option value="">All Clients</option>' + 
       customers.map(c => `<option value="${c}">${c}</option>`).join('');
   }
 }
