@@ -12920,6 +12920,61 @@ function updateJobOverviewCharts() {
   renderJoClientJobsChart(customerData, textColor, gridColor, showDataLabels);
   renderJoClientContractChart(customerData, textColor, gridColor, showDataLabels);
   renderJoClientMarginChart(customerData, textColor, gridColor, showDataLabels);
+  
+  updateJoChartStats(pmData, customerData);
+}
+
+function updateJoChartStats(pmData, clientData) {
+  updateJoStatSet(pmData, 'joPm', 'jobCount', false);
+  updateJoStatSet(pmData, 'joPm', 'contractValue', true);
+  updateJoStatSet(pmData, 'joPm', 'profitMargin', false, true);
+  updateJoStatSet(clientData, 'joClient', 'jobCount', false);
+  updateJoStatSet(clientData, 'joClient', 'contractValue', true);
+  updateJoStatSet(clientData, 'joClient', 'profitMargin', false, true);
+}
+
+function updateJoStatSet(data, prefix, field, isCurrency, isPercent) {
+  const fieldSuffix = field === 'jobCount' ? 'Jobs' : field === 'contractValue' ? 'Contract' : 'Margin';
+  
+  if (!data || data.length === 0) {
+    document.getElementById(`${prefix}${fieldSuffix}Avg`).textContent = '-';
+    document.getElementById(`${prefix}${fieldSuffix}High`).textContent = '-';
+    document.getElementById(`${prefix}${fieldSuffix}Low`).textContent = '-';
+    document.getElementById(`${prefix}${fieldSuffix}HighName`).textContent = '';
+    document.getElementById(`${prefix}${fieldSuffix}LowName`).textContent = '';
+    return;
+  }
+  
+  const values = data.map(d => d[field]);
+  const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+  const maxVal = Math.max(...values);
+  const minVal = Math.min(...values);
+  const maxItem = data.find(d => d[field] === maxVal);
+  const minItem = data.find(d => d[field] === minVal);
+  
+  const avgEl = document.getElementById(`${prefix}${fieldSuffix}Avg`);
+  const highEl = document.getElementById(`${prefix}${fieldSuffix}High`);
+  const lowEl = document.getElementById(`${prefix}${fieldSuffix}Low`);
+  const highNameEl = document.getElementById(`${prefix}${fieldSuffix}HighName`);
+  const lowNameEl = document.getElementById(`${prefix}${fieldSuffix}LowName`);
+  
+  if (avgEl) {
+    if (isCurrency) avgEl.textContent = formatCurrency(avg);
+    else if (isPercent) avgEl.textContent = avg.toFixed(1) + '%';
+    else avgEl.textContent = avg.toFixed(1);
+  }
+  if (highEl) {
+    if (isCurrency) highEl.textContent = formatCurrency(maxVal);
+    else if (isPercent) highEl.textContent = maxVal.toFixed(1) + '%';
+    else highEl.textContent = maxVal;
+  }
+  if (lowEl) {
+    if (isCurrency) lowEl.textContent = formatCurrency(minVal);
+    else if (isPercent) lowEl.textContent = minVal.toFixed(1) + '%';
+    else lowEl.textContent = minVal;
+  }
+  if (highNameEl) highNameEl.textContent = maxItem?.name || '';
+  if (lowNameEl) lowNameEl.textContent = minItem?.name || '';
 }
 
 function aggregateJobsByField(jobs, field) {

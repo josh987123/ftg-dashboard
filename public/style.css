@@ -9685,6 +9685,22 @@ body.dark-mode .chart-subtitle {
   color: #94a3b8;
 }
 
+.jo-chart-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-primary);
+}
+
+.jo-chart-stats .stat-period {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
 /* ============================================================
    JOB BUDGETS - COMPREHENSIVE DARK MODE FIXES
    ============================================================ */
