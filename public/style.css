@@ -10195,6 +10195,30 @@ body.dark-mode .breakdown-card > .chart-subtitle {
   opacity: 0;
 }
 
+/* When table is expanded on desktop, allow chart-box to expand horizontally */
+@media (min-width: 769px) {
+  .chart-box.table-expanded {
+    max-height: none;
+    overflow: visible;
+    min-width: fit-content;
+  }
+  
+  .chart-box.table-expanded .breakdown-table-wrapper {
+    overflow: visible;
+    min-width: fit-content;
+  }
+  
+  .chart-box.table-expanded .breakdown-table {
+    min-width: max-content;
+  }
+  
+  /* Also expand the parent container */
+  .chart-with-tiles:has(.chart-box.table-expanded) {
+    overflow-x: auto;
+    min-width: fit-content;
+  }
+}
+
 .breakdown-expand-btn {
   display: flex;
   align-items: center;

@@ -12027,11 +12027,17 @@ function setupJobBudgetsEventListeners() {
       const targetId = btn.dataset.target;
       const tableWrapper = document.getElementById(targetId);
       const textSpan = btn.querySelector('.expand-text');
+      const chartBox = btn.closest('.chart-box');
       
       if (tableWrapper) {
         const isCollapsed = tableWrapper.classList.contains('collapsed');
         tableWrapper.classList.toggle('collapsed');
         btn.classList.toggle('expanded');
+        
+        // Toggle table-expanded class on parent chart-box for desktop expansion
+        if (chartBox) {
+          chartBox.classList.toggle('table-expanded', isCollapsed);
+        }
         
         if (textSpan) {
           textSpan.textContent = isCollapsed ? 'Collapse' : 'Expand';
