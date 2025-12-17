@@ -6707,12 +6707,12 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 [data-theme="dark"] .is-expense-section-expanded {
-  background: #422006 !important;
+  background: #1e3a5f !important;
 }
 
 [data-theme="dark"] .is-expense-section-expanded td {
   background: transparent !important;
-  color: #fde68a;
+  color: #fff;
 }
 
 [data-theme="dark"] .is-gray-section-expanded,
@@ -6726,12 +6726,12 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 [data-theme="dark"] .is-tan-section-expanded {
-  background: #451a03 !important;
+  background: #1e3a5f !important;
 }
 
 [data-theme="dark"] .is-tan-section-expanded td {
   background: transparent !important;
-  color: #fed7aa;
+  color: #fff;
 }
 
 [data-theme="dark"] .is-spacer-row td {
