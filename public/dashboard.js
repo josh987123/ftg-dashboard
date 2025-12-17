@@ -12614,6 +12614,9 @@ function setupJobBudgetsEventListeners() {
       if (dropdown) {
         closeAllColumnFilterDropdowns();
         dropdown.classList.toggle('open');
+        if (dropdown.classList.contains('open')) {
+          positionFilterDropdown(btn, dropdown);
+        }
         const searchInput = dropdown.querySelector('.filter-search-input');
         if (searchInput) searchInput.focus();
       }
@@ -12954,8 +12957,29 @@ function updateFilterButtonIndicators() {
   });
 }
 
+function positionFilterDropdown(btn, dropdown) {
+  const btnRect = btn.getBoundingClientRect();
+  const dropdownHeight = 280;
+  const viewportHeight = window.innerHeight;
+  const margin = 10;
+  
+  dropdown.style.position = 'fixed';
+  dropdown.style.left = `${Math.max(margin, Math.min(btnRect.left, window.innerWidth - 240))}px`;
+  
+  if (btnRect.bottom + dropdownHeight > viewportHeight - margin) {
+    dropdown.style.top = `${Math.max(margin, btnRect.top - dropdownHeight)}px`;
+  } else {
+    dropdown.style.top = `${btnRect.bottom + 4}px`;
+  }
+}
+
 function closeAllColumnFilterDropdowns() {
-  document.querySelectorAll('.column-filter-dropdown.open').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.column-filter-dropdown.open').forEach(d => {
+    d.classList.remove('open');
+    d.style.position = '';
+    d.style.top = '';
+    d.style.left = '';
+  });
 }
 
 function updateJobBudgetsSortIndicators() {
@@ -14545,9 +14569,17 @@ function initJobActualsColumnFilters() {
     filterBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       document.querySelectorAll('.ja-filter-dropdown.open').forEach(d => {
-        if (d !== dropdown) d.classList.remove('open');
+        if (d !== dropdown) {
+          d.classList.remove('open');
+          d.style.position = '';
+          d.style.top = '';
+          d.style.left = '';
+        }
       });
       dropdown.classList.toggle('open');
+      if (dropdown.classList.contains('open')) {
+        positionFilterDropdown(filterBtn, dropdown);
+      }
     });
     
     // Search within filter

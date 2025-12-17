@@ -11107,6 +11107,7 @@ body.dark-mode .action-btn.success {
   right: 0;
   min-width: 220px;
   max-width: 280px;
+  max-height: calc(100vh - 200px);
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -11141,7 +11142,7 @@ body.dark-mode .action-btn.success {
 
 /* Filter options list */
 .filter-options-list {
-  max-height: 200px;
+  max-height: min(200px, calc(100vh - 350px));
   overflow-y: auto;
   padding: 6px 0;
 }
