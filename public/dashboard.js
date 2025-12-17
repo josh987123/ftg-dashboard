@@ -12793,12 +12793,21 @@ function sortJobActuals() {
 
 function updateJobActualsSummaryMetrics() {
   const totalJobs = jobActualsFiltered.length;
+  const totalBilledRevenue = jobActualsFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
   const totalEarnedRevenue = jobActualsFiltered.reduce((sum, j) => sum + j.earned_revenue, 0);
   const totalActualCost = jobActualsFiltered.reduce((sum, j) => sum + j.actual_cost, 0);
+  const totalOverUnder = totalBilledRevenue - totalEarnedRevenue;
   
   document.getElementById('jaTotalCount').textContent = totalJobs.toLocaleString();
+  document.getElementById('jaTotalBilledRevenue').textContent = formatCurrency(totalBilledRevenue);
   document.getElementById('jaTotalEarnedRevenue').textContent = formatCurrency(totalEarnedRevenue);
   document.getElementById('jaTotalActualCost').textContent = formatCurrency(totalActualCost);
+  document.getElementById('jaTotalOverUnder').textContent = formatCurrency(totalOverUnder);
+  
+  const overUnderCard = document.getElementById('jaOverUnderCard');
+  if (overUnderCard) {
+    overUnderCard.style.backgroundColor = totalOverUnder >= 0 ? '#d1fae5' : '#fce7f3';
+  }
   
   renderJobActualsBreakdowns();
 }
