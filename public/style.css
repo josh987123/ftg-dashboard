@@ -8109,28 +8109,94 @@ body.dark-mode .page-size-select {
   
   /* Reduce config header heights on mobile */
   .config-header {
-    padding: 6px 10px !important;
+    padding: 4px 8px !important;
   }
   
   .config-title {
-    font-size: 11px !important;
-  }
-  
-  .config-expand-btn {
-    padding: 3px 8px !important;
     font-size: 10px !important;
   }
   
+  .config-expand-btn {
+    padding: 2px 6px !important;
+    font-size: 9px !important;
+  }
+  
   .config-body {
-    padding: 8px 10px !important;
+    padding: 6px 8px !important;
+  }
+  
+  /* Job Budgets/Actuals config - ultra compact */
+  #jobBudgets .config-panel,
+  #jobActuals .config-panel {
+    margin-bottom: 8px !important;
+  }
+  
+  #jobBudgets .config-body,
+  #jobActuals .config-body {
+    padding: 6px !important;
+  }
+  
+  #jobBudgets .job-budgets-controls,
+  #jobActuals .job-budgets-controls {
+    gap: 6px !important;
+  }
+  
+  /* Config boxes - compact */
+  #jobBudgets .overview-config-box,
+  #jobActuals .overview-config-box {
+    padding: 6px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  /* Job Status label */
+  #jobBudgets .config-label,
+  #jobActuals .config-label {
+    font-size: 9px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  /* Checkboxes - horizontal row layout */
+  #jobBudgets .checkbox-stack,
+  #jobActuals .checkbox-stack {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    flex-direction: row !important;
+    gap: 4px 10px !important;
+  }
+  
+  #jobBudgets .checkbox-label,
+  #jobActuals .checkbox-label {
+    font-size: 10px !important;
+    padding: 2px 0 !important;
+    gap: 4px !important;
+  }
+  
+  #jobBudgets .checkbox-label input,
+  #jobActuals .checkbox-label input {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  
+  /* Filter dropdowns - compact */
+  #jobBudgets .job-filter-stack,
+  #jobActuals .job-filter-stack {
+    gap: 4px !important;
+  }
+  
+  #jobBudgets .filter-select,
+  #jobActuals .filter-select {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+    height: auto !important;
+    min-height: 28px !important;
   }
   
   /* Reduce section title heights */
   .section-title,
   .job-key-metrics-section .section-title {
-    font-size: 14px !important;
-    margin-bottom: 10px !important;
-    padding-bottom: 6px !important;
+    font-size: 12px !important;
+    margin-bottom: 6px !important;
+    padding-bottom: 4px !important;
   }
   
   /* Reduce donut chart empty space - compact on mobile */
