@@ -12484,16 +12484,17 @@ function updateJobSummaryMetrics() {
   const totalProfit = jobBudgetsFiltered.reduce((sum, j) => sum + j.estimated_profit, 0);
   
   // Calculate avg margin excluding jobs with zero revised_contract OR zero revised_cost
+  // Use weighted average (total profit / total contract) to match Job Overview calculation
   const jobsWithValidMargin = jobBudgetsFiltered.filter(j => 
     parseFloat(j.revised_contract) > 0 && parseFloat(j.revised_cost) > 0
   );
-  const avgMargin = jobsWithValidMargin.length > 0 
-    ? jobsWithValidMargin.reduce((sum, j) => {
-        const rc = parseFloat(j.revised_contract) || 0;
-        const ep = parseFloat(j.estimated_profit) || 0;
-        return sum + (ep / rc) * 100;
-      }, 0) / jobsWithValidMargin.length
-    : 0;
+  let avgMargin = 0;
+  if (jobsWithValidMargin.length > 0) {
+    const totalContractForMargin = jobsWithValidMargin.reduce((sum, j) => sum + (parseFloat(j.revised_contract) || 0), 0);
+    const totalCostForMargin = jobsWithValidMargin.reduce((sum, j) => sum + (parseFloat(j.revised_cost) || 0), 0);
+    const totalProfitForMargin = totalContractForMargin - totalCostForMargin;
+    avgMargin = totalContractForMargin > 0 ? (totalProfitForMargin / totalContractForMargin) * 100 : 0;
+  }
   
   document.getElementById('jobTotalCount').textContent = totalJobs.toLocaleString();
   document.getElementById('jobTotalContract').textContent = formatCurrencyCompact(totalContract);
@@ -12913,18 +12914,18 @@ function renderJobBudgetsTable() {
     revisedCost: jobBudgetsFiltered.reduce((sum, j) => sum + (parseFloat(j.revised_cost) || 0), 0),
     estimatedProfit: jobBudgetsFiltered.reduce((sum, j) => sum + (parseFloat(j.estimated_profit) || 0), 0)
   };
-  // Calculate average margin as arithmetic mean of individual job margins
+  // Calculate average margin using weighted average (total profit / total contract)
   // Exclude jobs with zero revised_contract OR zero revised_cost
   const jobsWithMargin = jobBudgetsFiltered.filter(j => 
     parseFloat(j.revised_contract) > 0 && parseFloat(j.revised_cost) > 0
   );
-  const avgMargin = jobsWithMargin.length > 0 
-    ? jobsWithMargin.reduce((sum, j) => {
-        const rc = parseFloat(j.revised_contract) || 0;
-        const ep = parseFloat(j.estimated_profit) || 0;
-        return sum + (ep / rc) * 100;
-      }, 0) / jobsWithMargin.length
-    : 0;
+  let avgMargin = 0;
+  if (jobsWithMargin.length > 0) {
+    const totalContractForMargin = jobsWithMargin.reduce((sum, j) => sum + (parseFloat(j.revised_contract) || 0), 0);
+    const totalCostForMargin = jobsWithMargin.reduce((sum, j) => sum + (parseFloat(j.revised_cost) || 0), 0);
+    const totalProfitForMargin = totalContractForMargin - totalCostForMargin;
+    avgMargin = totalContractForMargin > 0 ? (totalProfitForMargin / totalContractForMargin) * 100 : 0;
+  }
   const totalProfitClass = allTotals.estimatedProfit >= 0 ? 'positive' : 'negative';
   const totalMarginColor = getMarginColor(avgMargin);
   
