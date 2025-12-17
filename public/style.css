@@ -8414,19 +8414,21 @@ body.dark-mode .job-status-badge.overhead {
 /* Child nav items in Financials and Jobs - lighter blue background */
 #navFinancialStatementsChildren .nav-child,
 #navJobsChildren .nav-child {
-  background: rgba(59, 130, 246, 0.06);
-  border-left: 3px solid rgba(59, 130, 246, 0.35);
+  background: #e0f2fe;
+  border-left: 3px solid #3b82f6;
+  color: #1e3a5f;
 }
 
 #navFinancialStatementsChildren .nav-child:hover,
 #navJobsChildren .nav-child:hover {
-  background: rgba(59, 130, 246, 0.12);
+  background: #bae6fd;
 }
 
 #navFinancialStatementsChildren .nav-child.active,
 #navJobsChildren .nav-child.active {
-  background: rgba(59, 130, 246, 0.2);
-  border-left-color: #3b82f6;
+  background: #7dd3fc;
+  border-left-color: #0369a1;
+  color: #0c4a6e;
 }
 
 /* Dark mode adjustments */
