@@ -8283,30 +8283,44 @@ body.dark-mode .page-size-select {
   }
   
   /* Dropdown rows - side by side within a box */
+  #overview .dropdown-stack,
+  #revenue .dropdown-stack,
+  #accounts .dropdown-stack,
   .dropdown-stack {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    gap: 12px !important;
+    gap: 16px !important;
     align-items: center !important;
   }
   
+  #overview .dropdown-row,
+  #revenue .dropdown-row,
+  #accounts .dropdown-row,
   .dropdown-row {
     display: flex !important;
     align-items: center !important;
-    gap: 4px !important;
+    gap: 6px !important;
     min-width: 0 !important;
+    flex: 0 0 auto !important;
   }
   
+  #overview .dropdown-row label,
+  #revenue .dropdown-row label,
+  #accounts .dropdown-row label,
   .dropdown-row label {
     font-size: 10px !important;
     white-space: nowrap !important;
   }
   
+  #overview .dropdown-row select,
+  #revenue .dropdown-row select,
+  #accounts .dropdown-row select,
   .dropdown-row select {
     font-size: 10px !important;
     padding: 4px 6px !important;
     min-height: 28px !important;
+    width: auto !important;
     min-width: 70px !important;
   }
   
