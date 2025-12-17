@@ -8569,6 +8569,53 @@ body.dark-mode .jo-metrics-chart-card .chart-title {
   color: #f1f5f9;
 }
 
+/* Job Overview config panel - 60% width */
+.jo-config-panel {
+  max-width: 60%;
+}
+
+@media (max-width: 768px) {
+  .jo-config-panel {
+    max-width: 100%;
+  }
+}
+
+/* Job Overview metrics row - side by side compact tiles */
+.jo-metrics-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.jo-metrics-row .job-metric-card.compact {
+  flex: 0 0 auto;
+  min-width: 150px;
+  max-width: 200px;
+}
+
+@media (max-width: 768px) {
+  .jo-metrics-row {
+    flex-direction: column;
+  }
+  
+  .jo-metrics-row .job-metric-card.compact {
+    max-width: 100%;
+  }
+}
+
+/* Job Overview 2x2 chart grid */
+.jo-chart-grid-2x2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .jo-chart-grid-2x2 {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Totals Row Styling */
 .totals-row {
   background-color: #f0f9ff;

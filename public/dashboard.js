@@ -12565,6 +12565,7 @@ function setupJobOverviewEventListeners() {
   document.getElementById('joStatusOverhead')?.addEventListener('change', filterJobOverview);
   document.getElementById('joPmFilter')?.addEventListener('change', filterJobOverview);
   document.getElementById('joCustomerFilter')?.addEventListener('change', filterJobOverview);
+  document.getElementById('joDataLabels')?.addEventListener('change', updateJobOverviewCharts);
 }
 
 async function loadJobOverviewData() {
@@ -12723,46 +12724,63 @@ function updateJobOverviewCharts() {
   const isDarkMode = document.body.classList.contains('dark-mode');
   const textColor = isDarkMode ? '#e2e8f0' : '#374151';
   const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  const showDataLabels = document.getElementById('joDataLabels')?.checked === true;
   
-  renderJoMetricsBarChart(totalBilled, totalEarned, totalActualCost, textColor, gridColor);
-  renderJoRevenueChart(totalContracted, totalEarned, totalBilled, totalBacklog, textColor, gridColor);
-  renderJoOverUnderChart(totalBilled, totalEarned, totalOverUnder, textColor, gridColor);
-  renderJoCostsChart(totalRevisedCost, totalActualCost, textColor, gridColor);
+  renderJoMetricsBarChart(totalBilled, totalEarned, totalActualCost, textColor, gridColor, showDataLabels);
+  renderJoRevenueChart(totalContracted, totalEarned, totalBilled, totalBacklog, textColor, gridColor, showDataLabels);
+  renderJoOverUnderChart(totalBilled, totalEarned, totalOverUnder, textColor, gridColor, showDataLabels);
+  renderJoCostsChart(totalRevisedCost, totalActualCost, textColor, gridColor, showDataLabels);
 }
 
-function renderJoMetricsBarChart(billed, earned, actualCost, textColor, gridColor) {
+function renderJoMetricsBarChart(billed, earned, actualCost, textColor, gridColor, showDataLabels) {
   const ctx = document.getElementById('joMetricsBarChart');
   if (!ctx) return;
   
   if (joMetricsBarChart) joMetricsBarChart.destroy();
+  
+  const dataValues = [billed, earned, actualCost];
+  const minVal = Math.min(...dataValues);
+  const yMin = Math.floor(minVal / 10000000) * 10000000;
   
   joMetricsBarChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: ['Billed Revenue', 'Earned Revenue', 'Actual Cost'],
       datasets: [{
-        data: [billed, earned, actualCost],
+        data: dataValues,
         backgroundColor: ['#f59e0b', '#10b981', '#ef4444'],
         borderRadius: 4
       }]
     },
+    plugins: showDataLabels ? [ChartDataLabels] : [],
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { top: showDataLabels ? 25 : 0 } },
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
             label: (ctx) => formatCurrency(ctx.raw)
           }
-        }
+        },
+        datalabels: showDataLabels ? {
+          display: true,
+          anchor: 'end',
+          align: 'top',
+          offset: 2,
+          color: textColor,
+          font: { weight: 'bold', size: 11 },
+          formatter: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
+        } : { display: false }
       },
       scales: {
         x: { ticks: { color: textColor }, grid: { display: false } },
         y: { 
+          min: yMin > 0 ? yMin : undefined,
           ticks: { 
             color: textColor,
-            callback: (val) => formatCurrency(val)
+            callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
           }, 
           grid: { color: gridColor } 
         }
@@ -12771,39 +12789,55 @@ function renderJoMetricsBarChart(billed, earned, actualCost, textColor, gridColo
   });
 }
 
-function renderJoRevenueChart(contracted, earned, billed, backlog, textColor, gridColor) {
+function renderJoRevenueChart(contracted, earned, billed, backlog, textColor, gridColor, showDataLabels) {
   const ctx = document.getElementById('joRevenueChart');
   if (!ctx) return;
   
   if (joRevenueChart) joRevenueChart.destroy();
+  
+  const dataValues = [contracted, earned, billed, backlog];
+  const minVal = Math.min(...dataValues);
+  const yMin = Math.floor(minVal / 10000000) * 10000000;
   
   joRevenueChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: ['Contracted', 'Earned', 'Billed', 'Backlog'],
       datasets: [{
-        data: [contracted, earned, billed, backlog],
+        data: dataValues,
         backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#6366f1'],
         borderRadius: 4
       }]
     },
+    plugins: showDataLabels ? [ChartDataLabels] : [],
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { top: showDataLabels ? 25 : 0 } },
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
             label: (ctx) => formatCurrency(ctx.raw)
           }
-        }
+        },
+        datalabels: showDataLabels ? {
+          display: true,
+          anchor: 'end',
+          align: 'top',
+          offset: 2,
+          color: textColor,
+          font: { weight: 'bold', size: 11 },
+          formatter: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
+        } : { display: false }
       },
       scales: {
         x: { ticks: { color: textColor }, grid: { display: false } },
         y: { 
+          min: yMin > 0 ? yMin : undefined,
           ticks: { 
             color: textColor,
-            callback: (val) => formatCurrency(val)
+            callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
           }, 
           grid: { color: gridColor } 
         }
@@ -12812,41 +12846,56 @@ function renderJoRevenueChart(contracted, earned, billed, backlog, textColor, gr
   });
 }
 
-function renderJoOverUnderChart(billed, earned, overUnder, textColor, gridColor) {
+function renderJoOverUnderChart(billed, earned, overUnder, textColor, gridColor, showDataLabels) {
   const ctx = document.getElementById('joOverUnderChart');
   if (!ctx) return;
   
   if (joOverUnderChart) joOverUnderChart.destroy();
   
   const overUnderColor = overUnder >= 0 ? '#10b981' : '#ef4444';
+  const dataValues = [billed, earned, overUnder];
+  const minVal = Math.min(...dataValues);
+  const yMin = Math.floor(minVal / 10000000) * 10000000;
   
   joOverUnderChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: ['Billed', 'Earned', 'Over/(Under)'],
       datasets: [{
-        data: [billed, earned, overUnder],
+        data: dataValues,
         backgroundColor: ['#f59e0b', '#10b981', overUnderColor],
         borderRadius: 4
       }]
     },
+    plugins: showDataLabels ? [ChartDataLabels] : [],
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { top: showDataLabels ? 25 : 0 } },
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
             label: (ctx) => formatCurrency(ctx.raw)
           }
-        }
+        },
+        datalabels: showDataLabels ? {
+          display: true,
+          anchor: 'end',
+          align: 'top',
+          offset: 2,
+          color: textColor,
+          font: { weight: 'bold', size: 11 },
+          formatter: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
+        } : { display: false }
       },
       scales: {
         x: { ticks: { color: textColor }, grid: { display: false } },
         y: { 
+          min: yMin > 0 ? yMin : undefined,
           ticks: { 
             color: textColor,
-            callback: (val) => formatCurrency(val)
+            callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
           }, 
           grid: { color: gridColor } 
         }
@@ -12855,39 +12904,55 @@ function renderJoOverUnderChart(billed, earned, overUnder, textColor, gridColor)
   });
 }
 
-function renderJoCostsChart(revisedCost, actualCost, textColor, gridColor) {
+function renderJoCostsChart(revisedCost, actualCost, textColor, gridColor, showDataLabels) {
   const ctx = document.getElementById('joCostsChart');
   if (!ctx) return;
   
   if (joCostsChart) joCostsChart.destroy();
+  
+  const dataValues = [revisedCost, actualCost];
+  const minVal = Math.min(...dataValues);
+  const yMin = Math.floor(minVal / 10000000) * 10000000;
   
   joCostsChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: ['Revised Cost', 'Actual Cost'],
       datasets: [{
-        data: [revisedCost, actualCost],
+        data: dataValues,
         backgroundColor: ['#6366f1', '#ef4444'],
         borderRadius: 4
       }]
     },
+    plugins: showDataLabels ? [ChartDataLabels] : [],
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { top: showDataLabels ? 25 : 0 } },
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
             label: (ctx) => formatCurrency(ctx.raw)
           }
-        }
+        },
+        datalabels: showDataLabels ? {
+          display: true,
+          anchor: 'end',
+          align: 'top',
+          offset: 2,
+          color: textColor,
+          font: { weight: 'bold', size: 11 },
+          formatter: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
+        } : { display: false }
       },
       scales: {
         x: { ticks: { color: textColor }, grid: { display: false } },
         y: { 
+          min: yMin > 0 ? yMin : undefined,
           ticks: { 
             color: textColor,
-            callback: (val) => formatCurrency(val)
+            callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
           }, 
           grid: { color: gridColor } 
         }
