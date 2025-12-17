@@ -8155,13 +8155,12 @@ body.dark-mode .page-size-select {
     margin-bottom: 4px !important;
   }
   
-  /* Checkboxes - horizontal row layout */
+  /* Checkboxes - 2x2 grid layout */
   #jobBudgets .checkbox-stack,
   #jobActuals .checkbox-stack {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    flex-direction: row !important;
-    gap: 4px 10px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 4px 12px !important;
   }
   
   #jobBudgets .checkbox-label,
@@ -8177,18 +8176,21 @@ body.dark-mode .page-size-select {
     height: 14px !important;
   }
   
-  /* Filter dropdowns - compact */
+  /* Filter dropdowns - side by side */
   #jobBudgets .job-filter-stack,
   #jobActuals .job-filter-stack {
-    gap: 4px !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
   }
   
   #jobBudgets .filter-select,
   #jobActuals .filter-select {
-    padding: 4px 8px !important;
-    font-size: 10px !important;
+    padding: 4px 6px !important;
+    font-size: 9px !important;
     height: auto !important;
-    min-height: 28px !important;
+    min-height: 26px !important;
+    width: 100% !important;
   }
   
   /* Reduce section title heights */
