@@ -5836,6 +5836,13 @@ body.dark-mode .nav-item.nav-parent.expanded {
     background: transparent !important;
   }
   
+  /* All header columns after first - transparent for matrix view */
+  #incomeStatementTable th:not(:first-child),
+  #balanceSheetTable th:not(:first-child),
+  #cashFlowTable th:not(:first-child) {
+    background: transparent !important;
+  }
+  
   /* All table cells transparent on mobile to inherit row background */
   #incomeStatementTable tbody td,
   #balanceSheetTable tbody td,
