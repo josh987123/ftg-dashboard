@@ -12990,14 +12990,15 @@ function updateJobBudgetsSortIndicators() {
 }
 
 function updateJobSummaryMetrics() {
-  const totalJobs = jobBudgetsFiltered.length;
-  const totalContract = jobBudgetsFiltered.reduce((sum, j) => sum + j.revised_contract, 0);
-  const totalCost = jobBudgetsFiltered.reduce((sum, j) => sum + j.revised_cost, 0);
-  const totalProfit = jobBudgetsFiltered.reduce((sum, j) => sum + j.estimated_profit, 0);
+  // Use unfiltered data so key metrics always reflect all jobs
+  const totalJobs = jobBudgetsData.length;
+  const totalContract = jobBudgetsData.reduce((sum, j) => sum + j.revised_contract, 0);
+  const totalCost = jobBudgetsData.reduce((sum, j) => sum + j.revised_cost, 0);
+  const totalProfit = jobBudgetsData.reduce((sum, j) => sum + j.estimated_profit, 0);
   
   // Calculate avg margin excluding jobs with zero revised_contract OR zero revised_cost
   // Use weighted average (total profit / total contract) to match Job Overview calculation
-  const jobsWithValidMargin = jobBudgetsFiltered.filter(j => 
+  const jobsWithValidMargin = jobBudgetsData.filter(j => 
     parseFloat(j.revised_contract) > 0 && parseFloat(j.revised_cost) > 0
   );
   let avgMargin = 0;
@@ -14729,10 +14730,11 @@ function sortJobActuals() {
 }
 
 function updateJobActualsSummaryMetrics() {
-  const totalJobs = jobActualsFiltered.length;
-  const totalBilledRevenue = jobActualsFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
-  const totalEarnedRevenue = jobActualsFiltered.reduce((sum, j) => sum + j.earned_revenue, 0);
-  const totalActualCost = jobActualsFiltered.reduce((sum, j) => sum + j.actual_cost, 0);
+  // Use unfiltered data so key metrics always reflect all jobs
+  const totalJobs = jobActualsData.length;
+  const totalBilledRevenue = jobActualsData.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const totalEarnedRevenue = jobActualsData.reduce((sum, j) => sum + j.earned_revenue, 0);
+  const totalActualCost = jobActualsData.reduce((sum, j) => sum + j.actual_cost, 0);
   const totalOverUnder = totalBilledRevenue - totalEarnedRevenue;
   
   document.getElementById('jaTotalCount').textContent = totalJobs.toLocaleString();
