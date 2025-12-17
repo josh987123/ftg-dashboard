@@ -12802,7 +12802,9 @@ function updateJobActualsSummaryMetrics() {
   document.getElementById('jaTotalBilledRevenue').textContent = formatCurrency(totalBilledRevenue);
   document.getElementById('jaTotalEarnedRevenue').textContent = formatCurrency(totalEarnedRevenue);
   document.getElementById('jaTotalActualCost').textContent = formatCurrency(totalActualCost);
-  document.getElementById('jaTotalOverUnder').textContent = formatCurrency(totalOverUnder);
+  const overUnderEl = document.getElementById('jaTotalOverUnder');
+  overUnderEl.textContent = formatCurrency(totalOverUnder);
+  overUnderEl.style.color = totalOverUnder >= 0 ? '#10b981' : '#dc2626';
   
   const overUnderCard = document.getElementById('jaOverUnderCard');
   if (overUnderCard) {
