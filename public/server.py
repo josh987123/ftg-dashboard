@@ -260,14 +260,16 @@ def init_database():
         
         # Seed default permissions (one per dashboard page)
         default_permissions = [
-            ('overview', 'Executive Overview', 'View executive summary and key metrics'),
+            ('overview', 'Financial Overview', 'View executive summary and key metrics'),
             ('revenue', 'Revenue', 'View revenue charts and analysis'),
             ('account', 'Account Detail', 'View GL account details'),
             ('income_statement', 'Income Statement', 'View income statement'),
             ('balance_sheet', 'Balance Sheet', 'View balance sheet'),
             ('cash_flow', 'Cash Flow', 'View statement of cash flows'),
             ('cash_balances', 'Cash Balances', 'View cash position'),
-            ('job_budgets', 'Job Budgets', 'View job budget tracking'),
+            ('job_budgets', 'Budgets', 'View job budget tracking'),
+            ('job_actuals', 'Actuals', 'View job actuals and earned revenue'),
+            ('cost_detail', 'Cost Detail', 'View job cost details'),
             ('missing_budgets', 'Missing Budgets', 'View jobs with missing budget data'),
             ('job_analytics', 'Job Analytics', 'View job performance metrics'),
             ('over_under', 'Over/Under Bill', 'View billing variances'),

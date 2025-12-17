@@ -1163,7 +1163,7 @@ function initNavigation() {
 
       // Auto-expand Financials if child is clicked
       if (item.classList.contains("nav-child") && finStatementsParent && finStatementsChildren) {
-        const fsChildren = ['revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
+        const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
         if (fsChildren.includes(id)) {
           finStatementsParent.classList.add("expanded");
           finStatementsChildren.classList.add("expanded");
@@ -13969,9 +13969,8 @@ async function openRoleModal(roleId = null) {
 
 function renderGroupedPermissions(permissions, selectedPerms, roleId, prefix) {
   const permissionGroups = {
-    'Executive Overview': ['overview'],
-    'Financials': ['revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'receivables'],
-    'Job Reports': ['job_budgets', 'missing_budgets', 'job_analytics', 'over_under'],
+    'Financials': ['overview', 'revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'receivables'],
+    'Job Reports': ['job_budgets', 'job_actuals', 'cost_detail', 'missing_budgets', 'job_analytics', 'over_under'],
     'Admin': ['admin']
   };
   
@@ -14218,6 +14217,8 @@ const sectionToPermission = {
   'receivablesPayables': 'receivables',
   'jobAnalytics': 'job_analytics',
   'jobBudgets': 'job_budgets',
+  'jobActuals': 'job_actuals',
+  'costDetail': 'cost_detail',
   'missingBudgets': 'missing_budgets',
   'cashReports': 'cash_balances',
   'admin': 'admin'
@@ -14226,7 +14227,7 @@ const sectionToPermission = {
 // Order of sections for default page selection
 const sectionOrder = [
   'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
-  'cashReports', 'accounts', 'receivablesPayables', 'jobBudgets', 'missingBudgets', 'jobAnalytics', 'overUnderBill'
+  'cashReports', 'accounts', 'receivablesPayables', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'
 ];
 
 // Check permissions and show/hide nav items based on user role
@@ -14396,7 +14397,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     const jobsParent = document.getElementById("navJobs");
     const jobsChildren = document.getElementById("navJobsChildren");
     
-    const fsChildren = ['revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
+    const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
     const jobsChildItems = ['jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
     
     if (fsChildren.includes(targetSection) && finStatementsParent && finStatementsChildren) {
