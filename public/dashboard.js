@@ -13410,7 +13410,9 @@ function renderJoPmMarginChart(data, textColor, gridColor, showDataLabels) {
   
   if (joPmMarginChart) joPmMarginChart.destroy();
   
-  const sortedData = [...data].sort((a, b) => b.profitMargin - a.profitMargin);
+  // Filter out entries with zero contract value or zero estimated costs
+  const filteredData = data.filter(d => d.contractValue > 0 && d.revisedCost > 0);
+  const sortedData = [...filteredData].sort((a, b) => b.profitMargin - a.profitMargin);
   const context = ctx.getContext('2d');
   const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
@@ -13562,7 +13564,9 @@ function renderJoClientMarginChart(data, textColor, gridColor, showDataLabels) {
   
   if (joClientMarginChart) joClientMarginChart.destroy();
   
-  let sortedData = [...data].sort((a, b) => b.profitMargin - a.profitMargin);
+  // Filter out entries with zero contract value or zero estimated costs
+  const filteredData = data.filter(d => d.contractValue > 0 && d.revisedCost > 0);
+  let sortedData = [...filteredData].sort((a, b) => b.profitMargin - a.profitMargin);
   
   // Limit to 10 items, with 10th being "All Others"
   if (sortedData.length > 10) {
