@@ -267,6 +267,7 @@ def init_database():
             ('balance_sheet', 'Balance Sheet', 'View balance sheet'),
             ('cash_flow', 'Cash Flow', 'View statement of cash flows'),
             ('cash_balances', 'Cash Balances', 'View cash position'),
+            ('job_overview', 'Job Overview', 'View job summary metrics and charts'),
             ('job_budgets', 'Budgets', 'View job budget tracking'),
             ('job_actuals', 'Actuals', 'View job actuals and earned revenue'),
             ('cost_detail', 'Cost Detail', 'View job cost details'),

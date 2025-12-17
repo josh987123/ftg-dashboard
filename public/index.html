@@ -540,6 +540,7 @@
             <span class="nav-expand-icon">▼</span>
           </li>
           <ul class="nav-children expanded" id="navJobsChildren">
+            <li class="nav-item nav-child" data-section="jobOverview">Overview</li>
             <li class="nav-item nav-child" data-section="jobBudgets">Budgets</li>
             <li class="nav-item nav-child" data-section="jobActuals">Actuals</li>
             <li class="nav-item nav-child placeholder" data-section="costDetail">Cost Detail</li>
@@ -1609,6 +1610,115 @@
           </table>
           <div id="cfPartialFootnote" class="partial-footnote hidden">
             <span class="is-partial-indicator">*</span> Partial period
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           JOB OVERVIEW
+      ============================================================= -->
+      <section id="jobOverview" class="dashboard-section">
+        <h2>Job Overview</h2>
+        <div class="section-subtitle">Foundation</div>
+        <div class="data-as-of">Data as of: <span id="jobOverviewDataAsOf">-</span></div>
+
+        <!-- Configuration Panel -->
+        <div class="config-panel">
+          <div class="config-header collapsed" data-target="jobOverviewConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
+            <button class="config-expand-btn">Expand ▼</button>
+          </div>
+          <div class="config-body collapsed" id="jobOverviewConfigBody">
+            <div class="job-budgets-controls">
+              <div class="overview-config-box">
+                <div class="config-label">Job Status:</div>
+                <div class="checkbox-stack">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="joStatusActive" checked>
+                    Active
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="joStatusInactive">
+                    Inactive
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="joStatusClosed">
+                    Closed
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="joStatusOverhead">
+                    Overhead
+                  </label>
+                </div>
+              </div>
+
+              <div class="overview-config-box job-filter-stack">
+                <select id="joPmFilter" class="filter-select">
+                  <option value="">All Project Managers</option>
+                </select>
+                <select id="joCustomerFilter" class="filter-select">
+                  <option value="">All Customers</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Metrics Tiles -->
+        <div class="job-key-metrics-section">
+          <h3 class="section-title">Key Metrics</h3>
+          <div class="job-metrics-grid">
+            <div class="job-metric-card primary">
+              <div class="metric-icon">📋</div>
+              <div class="metric-content">
+                <div class="metric-value" id="joTotalJobs">-</div>
+                <div class="metric-label">Total Jobs</div>
+              </div>
+            </div>
+            <div class="job-metric-card">
+              <div class="metric-icon">📊</div>
+              <div class="metric-content">
+                <div class="metric-value" id="joAvgComplete">-</div>
+                <div class="metric-label">Avg % Complete</div>
+              </div>
+            </div>
+            <div class="job-metric-card margin">
+              <div class="metric-icon">%</div>
+              <div class="metric-content">
+                <div class="metric-value" id="joAvgMargin">-</div>
+                <div class="metric-label">Avg Profit Margin</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bar Charts Grid -->
+        <div class="job-overview-charts">
+          <div class="overview-chart-grid">
+            <!-- Revenue Chart -->
+            <div class="overview-chart-card">
+              <div class="chart-title">Revenue</div>
+              <div class="chart-container">
+                <canvas id="joRevenueChart"></canvas>
+              </div>
+            </div>
+            
+            <!-- Over/(Under) Bill Chart -->
+            <div class="overview-chart-card">
+              <div class="chart-title">Over/(Under) Bill</div>
+              <div class="chart-container">
+                <canvas id="joOverUnderChart"></canvas>
+              </div>
+            </div>
+            
+            <!-- Costs Chart -->
+            <div class="overview-chart-card">
+              <div class="chart-title">Costs</div>
+              <div class="chart-container">
+                <canvas id="joCostsChart"></canvas>
+              </div>
+            </div>
           </div>
         </div>
       </section>

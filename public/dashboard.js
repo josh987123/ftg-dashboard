@@ -1172,7 +1172,7 @@ function initNavigation() {
       
       // Auto-expand Jobs if child is clicked
       if (item.classList.contains("nav-child") && jobsParent && jobsChildren) {
-        const jobsChildItems = ['jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
+        const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
         if (jobsChildItems.includes(id)) {
           jobsParent.classList.add("expanded");
           jobsChildren.classList.add("expanded");
@@ -1196,6 +1196,7 @@ function initNavigation() {
       if (id === "balanceSheet") initBalanceSheet();
       if (id === "cashFlows") loadCashFlowStatement();
       if (id === "cashReports") initCashReports();
+      if (id === "jobOverview") initJobOverview();
       if (id === "jobBudgets") initJobBudgets();
       if (id === "jobActuals") initJobActuals();
       if (id === "missingBudgets") initMissingBudgets();
@@ -12503,6 +12504,330 @@ function updateJobPagination(total) {
 }
 
 // ========================================
+// JOB OVERVIEW MODULE
+// ========================================
+
+let joData = [];
+let joFiltered = [];
+let joRevenueChart = null;
+let joOverUnderChart = null;
+let joCostsChart = null;
+let joInitialized = false;
+
+function initJobOverview() {
+  if (joInitialized && joData.length > 0) {
+    updateJobOverviewCharts();
+    return;
+  }
+  
+  const configHeader = document.querySelector('#jobOverview .config-header');
+  const configBody = document.getElementById('jobOverviewConfigBody');
+  if (configHeader && configBody) {
+    configHeader.classList.remove('collapsed');
+    configBody.classList.remove('collapsed');
+  }
+  
+  loadJobOverviewData();
+  setupJobOverviewEventListeners();
+  joInitialized = true;
+}
+
+function setupJobOverviewEventListeners() {
+  document.getElementById('joStatusActive')?.addEventListener('change', filterJobOverview);
+  document.getElementById('joStatusInactive')?.addEventListener('change', filterJobOverview);
+  document.getElementById('joStatusClosed')?.addEventListener('change', filterJobOverview);
+  document.getElementById('joStatusOverhead')?.addEventListener('change', filterJobOverview);
+  document.getElementById('joPmFilter')?.addEventListener('change', filterJobOverview);
+  document.getElementById('joCustomerFilter')?.addEventListener('change', filterJobOverview);
+}
+
+async function loadJobOverviewData() {
+  try {
+    const resp = await fetch('data/financials_jobs.json');
+    const text = await resp.text();
+    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+    
+    const jobBudgets = data.job_budgets || [];
+    const jobActualsRaw = data.job_actuals || [];
+    const jobBilledRevenueRaw = data.job_billed_revenue || [];
+    
+    const actualCostMap = new Map();
+    jobActualsRaw.forEach(row => {
+      const jobNo = row.job_no;
+      if (!actualCostMap.has(jobNo)) actualCostMap.set(jobNo, 0);
+      actualCostMap.set(jobNo, actualCostMap.get(jobNo) + (parseFloat(row.actual_cost) || 0));
+    });
+    
+    const billedRevenueMap = new Map();
+    jobBilledRevenueRaw.forEach(row => {
+      const jobNo = row.Job_No || row.job_no;
+      if (jobNo) {
+        if (!billedRevenueMap.has(jobNo)) billedRevenueMap.set(jobNo, 0);
+        billedRevenueMap.set(jobNo, billedRevenueMap.get(jobNo) + (parseFloat(row.Billed_Revenue || row.billed_revenue) || 0));
+      }
+    });
+    
+    joData = jobBudgets.map(job => {
+      const revisedContract = parseFloat(job.revised_contract) || 0;
+      const revisedCost = parseFloat(job.revised_cost) || 0;
+      const actualCost = actualCostMap.get(job.job_no) || 0;
+      const billedRevenue = billedRevenueMap.get(job.job_no) || 0;
+      
+      let earnedRevenue = 0;
+      if (revisedCost > 0 && revisedContract > 0 && actualCost > 0) {
+        earnedRevenue = (actualCost / revisedCost) * revisedContract;
+      }
+      if (!isFinite(earnedRevenue)) earnedRevenue = 0;
+      
+      let percentComplete = 0;
+      if (revisedCost > 0 && actualCost > 0) {
+        percentComplete = (actualCost / revisedCost) * 100;
+      }
+      if (!isFinite(percentComplete)) percentComplete = 0;
+      
+      const backlog = revisedContract - earnedRevenue;
+      const overUnder = billedRevenue - earnedRevenue;
+      const estimatedProfit = revisedContract - revisedCost;
+      let profitMargin = 0;
+      if (revisedContract > 0) {
+        profitMargin = (estimatedProfit / revisedContract) * 100;
+      }
+      
+      return {
+        ...job,
+        revised_contract: revisedContract,
+        revised_cost: revisedCost,
+        actual_cost: actualCost,
+        billed_revenue: billedRevenue,
+        earned_revenue: earnedRevenue,
+        percent_complete: percentComplete,
+        backlog: backlog,
+        over_under: overUnder,
+        estimated_profit: estimatedProfit,
+        profit_margin: profitMargin
+      };
+    });
+    
+    populateJobOverviewFilters();
+    
+    const dataAsOf = document.getElementById('jobOverviewDataAsOf');
+    if (dataAsOf && data.generated_at) {
+      dataAsOf.textContent = new Date(data.generated_at).toLocaleDateString();
+    }
+    
+    filterJobOverview();
+  } catch (err) {
+    console.error('Error loading job overview:', err);
+  }
+}
+
+function populateJobOverviewFilters() {
+  const pmFilter = document.getElementById('joPmFilter');
+  if (pmFilter) {
+    const pms = [...new Set(joData.map(j => j.project_manager_name).filter(Boolean))].sort();
+    pmFilter.innerHTML = '<option value="">All Project Managers</option>' + 
+      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+  }
+  
+  const custFilter = document.getElementById('joCustomerFilter');
+  if (custFilter) {
+    const customers = [...new Set(joData.map(j => j.customer_name).filter(Boolean))].sort();
+    custFilter.innerHTML = '<option value="">All Customers</option>' + 
+      customers.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+}
+
+function filterJobOverview() {
+  const showActive = document.getElementById('joStatusActive')?.checked;
+  const showInactive = document.getElementById('joStatusInactive')?.checked;
+  const showClosed = document.getElementById('joStatusClosed')?.checked;
+  const showOverhead = document.getElementById('joStatusOverhead')?.checked;
+  
+  const pmFilter = document.getElementById('joPmFilter')?.value || '';
+  const custFilter = document.getElementById('joCustomerFilter')?.value || '';
+  
+  const allowedStatuses = [];
+  if (showActive) allowedStatuses.push('A');
+  if (showInactive) allowedStatuses.push('I');
+  if (showClosed) allowedStatuses.push('C');
+  if (showOverhead) allowedStatuses.push('O');
+  
+  joFiltered = joData.filter(job => {
+    if (allowedStatuses.length > 0 && !allowedStatuses.includes(job.job_status)) return false;
+    if (pmFilter && job.project_manager_name !== pmFilter) return false;
+    if (custFilter && job.customer_name !== custFilter) return false;
+    return true;
+  });
+  
+  updateJobOverviewMetrics();
+  updateJobOverviewCharts();
+}
+
+function updateJobOverviewMetrics() {
+  const totalJobs = joFiltered.length;
+  
+  let avgComplete = 0;
+  if (totalJobs > 0) {
+    const sumComplete = joFiltered.reduce((sum, j) => sum + (j.percent_complete || 0), 0);
+    avgComplete = sumComplete / totalJobs;
+  }
+  
+  let avgMargin = 0;
+  const jobsWithContract = joFiltered.filter(j => j.revised_contract > 0);
+  if (jobsWithContract.length > 0) {
+    const sumMargin = jobsWithContract.reduce((sum, j) => sum + (j.profit_margin || 0), 0);
+    avgMargin = sumMargin / jobsWithContract.length;
+  }
+  
+  document.getElementById('joTotalJobs').textContent = totalJobs.toLocaleString();
+  document.getElementById('joAvgComplete').textContent = `${Math.round(avgComplete)}%`;
+  document.getElementById('joAvgMargin').textContent = `${avgMargin.toFixed(1)}%`;
+}
+
+function updateJobOverviewCharts() {
+  const totalContracted = joFiltered.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
+  const totalEarned = joFiltered.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  const totalBilled = joFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const totalBacklog = joFiltered.reduce((sum, j) => sum + (j.backlog || 0), 0);
+  const totalOverUnder = totalBilled - totalEarned;
+  const totalRevisedCost = joFiltered.reduce((sum, j) => sum + (j.revised_cost || 0), 0);
+  const totalActualCost = joFiltered.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
+  
+  const isDarkMode = document.body.classList.contains('dark-mode');
+  const textColor = isDarkMode ? '#e2e8f0' : '#374151';
+  const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  
+  renderJoRevenueChart(totalContracted, totalEarned, totalBilled, totalBacklog, textColor, gridColor);
+  renderJoOverUnderChart(totalBilled, totalEarned, totalOverUnder, textColor, gridColor);
+  renderJoCostsChart(totalRevisedCost, totalActualCost, textColor, gridColor);
+}
+
+function renderJoRevenueChart(contracted, earned, billed, backlog, textColor, gridColor) {
+  const ctx = document.getElementById('joRevenueChart');
+  if (!ctx) return;
+  
+  if (joRevenueChart) joRevenueChart.destroy();
+  
+  joRevenueChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Contracted', 'Earned', 'Billed', 'Backlog'],
+      datasets: [{
+        data: [contracted, earned, billed, backlog],
+        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#6366f1'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => formatCurrency(ctx.raw)
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: textColor }, grid: { display: false } },
+        y: { 
+          ticks: { 
+            color: textColor,
+            callback: (val) => formatCurrency(val)
+          }, 
+          grid: { color: gridColor } 
+        }
+      }
+    }
+  });
+}
+
+function renderJoOverUnderChart(billed, earned, overUnder, textColor, gridColor) {
+  const ctx = document.getElementById('joOverUnderChart');
+  if (!ctx) return;
+  
+  if (joOverUnderChart) joOverUnderChart.destroy();
+  
+  const overUnderColor = overUnder >= 0 ? '#10b981' : '#ef4444';
+  
+  joOverUnderChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Billed', 'Earned', 'Over/(Under)'],
+      datasets: [{
+        data: [billed, earned, overUnder],
+        backgroundColor: ['#f59e0b', '#10b981', overUnderColor],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => formatCurrency(ctx.raw)
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: textColor }, grid: { display: false } },
+        y: { 
+          ticks: { 
+            color: textColor,
+            callback: (val) => formatCurrency(val)
+          }, 
+          grid: { color: gridColor } 
+        }
+      }
+    }
+  });
+}
+
+function renderJoCostsChart(revisedCost, actualCost, textColor, gridColor) {
+  const ctx = document.getElementById('joCostsChart');
+  if (!ctx) return;
+  
+  if (joCostsChart) joCostsChart.destroy();
+  
+  joCostsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Revised Cost', 'Actual Cost'],
+      datasets: [{
+        data: [revisedCost, actualCost],
+        backgroundColor: ['#6366f1', '#ef4444'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => formatCurrency(ctx.raw)
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: textColor }, grid: { display: false } },
+        y: { 
+          ticks: { 
+            color: textColor,
+            callback: (val) => formatCurrency(val)
+          }, 
+          grid: { color: gridColor } 
+        }
+      }
+    }
+  });
+}
+
+// ========================================
 // JOB ACTUALS MODULE
 // ========================================
 
@@ -13970,7 +14295,7 @@ async function openRoleModal(roleId = null) {
 function renderGroupedPermissions(permissions, selectedPerms, roleId, prefix) {
   const permissionGroups = {
     'Financials': ['overview', 'revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'receivables'],
-    'Job Reports': ['job_budgets', 'job_actuals', 'cost_detail', 'missing_budgets', 'job_analytics', 'over_under'],
+    'Job Reports': ['job_overview', 'job_budgets', 'job_actuals', 'cost_detail', 'missing_budgets', 'job_analytics', 'over_under'],
     'Admin': ['admin']
   };
   
@@ -14216,6 +14541,7 @@ const sectionToPermission = {
   'overUnderBill': 'over_under',
   'receivablesPayables': 'receivables',
   'jobAnalytics': 'job_analytics',
+  'jobOverview': 'job_overview',
   'jobBudgets': 'job_budgets',
   'jobActuals': 'job_actuals',
   'costDetail': 'cost_detail',
@@ -14227,7 +14553,7 @@ const sectionToPermission = {
 // Order of sections for default page selection
 const sectionOrder = [
   'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
-  'cashReports', 'accounts', 'receivablesPayables', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'
+  'cashReports', 'accounts', 'receivablesPayables', 'jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'
 ];
 
 // Check permissions and show/hide nav items based on user role
@@ -14398,7 +14724,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     const jobsChildren = document.getElementById("navJobsChildren");
     
     const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
-    const jobsChildItems = ['jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
+    const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics', 'overUnderBill'];
     
     if (fsChildren.includes(targetSection) && finStatementsParent && finStatementsChildren) {
       finStatementsParent.classList.add("expanded");
