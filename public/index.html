@@ -548,6 +548,7 @@
             <li class="nav-item nav-child" data-section="jobActuals">Actuals</li>
             <li class="nav-item nav-child placeholder" data-section="costDetail">Cost Detail</li>
             <li class="nav-item nav-child" data-section="missingBudgets">Missing Budgets</li>
+            <li class="nav-item nav-child" data-section="payments">Payments</li>
             <li class="nav-item nav-child placeholder" data-section="jobAnalytics">Job Analytics</li>
                       </ul>
           <li class="nav-item admin-nav-item hidden" data-section="admin" id="adminNavItem">Admin</li>
@@ -2461,6 +2462,199 @@
           <span id="mbPageInfo" class="page-info">Page 1 of 1</span>
           <button id="mbNextPage" class="pagination-btn" disabled>Next →</button>
           <select id="mbPageSize" class="page-size-select">
+            <option value="25" selected>25 per page</option>
+            <option value="50">50 per page</option>
+            <option value="100">100 per page</option>
+            <option value="250">250 per page</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           PAYMENTS
+      ============================================================= -->
+      <section id="payments" class="dashboard-section">
+        <h2>Payments</h2>
+        <div class="data-as-of">Data as of: <span id="paymentsDataAsOf">-</span></div>
+
+        <!-- Configuration Panel -->
+        <div class="config-panel">
+          <div class="config-header collapsed" data-target="paymentsConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
+            <button class="config-expand-btn">Expand ▼</button>
+          </div>
+          <div class="config-body collapsed" id="paymentsConfigBody">
+            <div class="job-budgets-controls">
+              <div class="overview-config-box">
+                <div class="config-label">Date Range:</div>
+                <div class="date-range-inputs">
+                  <input type="date" id="paymentsDateStart" class="date-input">
+                  <span>to</span>
+                  <input type="date" id="paymentsDateEnd" class="date-input">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Metrics Dashboard -->
+        <div class="job-key-metrics-section">
+          <h3 class="section-title">Key Metrics</h3>
+          <div class="job-metrics-grid four-col">
+            <div class="job-metric-card primary">
+              <div class="metric-icon">📋</div>
+              <div class="metric-content">
+                <div class="metric-value" id="paymentsTotalCount">-</div>
+                <div class="metric-label">Total Payments</div>
+              </div>
+            </div>
+            <div class="job-metric-card">
+              <div class="metric-icon">💰</div>
+              <div class="metric-content">
+                <div class="metric-value" id="paymentsTotalAmount">-</div>
+                <div class="metric-label">Total Amount</div>
+              </div>
+            </div>
+            <div class="job-metric-card">
+              <div class="metric-icon">🏢</div>
+              <div class="metric-content">
+                <div class="metric-value" id="paymentsUniqueVendors">-</div>
+                <div class="metric-label">Unique Vendors</div>
+              </div>
+            </div>
+            <div class="job-metric-card">
+              <div class="metric-icon">📊</div>
+              <div class="metric-content">
+                <div class="metric-value" id="paymentsAvgAmount">-</div>
+                <div class="metric-label">Avg Amount</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="job-search-bar">
+          <input type="text" id="paymentsSearchInput" placeholder="Search by voucher, vendor, job, description, or account..." class="job-search-input">
+          <span class="job-search-icon">🔍</span>
+        </div>
+
+        <!-- Payments Table -->
+        <div class="job-table-container">
+          <div class="loading-overlay hidden" id="paymentsLoadingOverlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading...</div>
+          </div>
+          <table class="job-budgets-table" id="paymentsTable">
+            <thead>
+              <tr>
+                <th class="filterable" data-sort="voucher_no" data-filter="voucher_no">
+                  <span class="column-header-text">Voucher #</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="voucher_no" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="voucher_no" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="voucher_no" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="voucher_no"></div>
+                </th>
+                <th class="filterable" data-sort="vendor_no" data-filter="vendor_no">
+                  <span class="column-header-text">Vendor #</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="vendor_no" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="vendor_no" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="vendor_no" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="vendor_no"></div>
+                </th>
+                <th class="filterable" data-sort="description" data-filter="description">
+                  <span class="column-header-text">Description</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="description" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="description" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="description" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="description"></div>
+                </th>
+                <th data-sort="invoice_date">
+                  <span class="column-header-text">Invoice Date</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="invoice_date" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="invoice_date" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                  </div>
+                </th>
+                <th class="number-col" data-sort="invoice_amount">
+                  <span class="column-header-text">Amount</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="invoice_amount" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="invoice_amount" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="filterable" data-sort="job_no" data-filter="job_no">
+                  <span class="column-header-text">Job #</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="job_no" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="job_no" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="job_no" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="job_no"></div>
+                </th>
+                <th class="filterable" data-sort="project_manager" data-filter="project_manager">
+                  <span class="column-header-text">Project Manager</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="project_manager" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="project_manager" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="project_manager" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="project_manager"></div>
+                </th>
+                <th class="filterable" data-sort="account_no" data-filter="account_no">
+                  <span class="column-header-text">Account #</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="account_no" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="account_no" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="account_no" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="account_no"></div>
+                </th>
+                <th class="filterable" data-sort="account_description" data-filter="account_description">
+                  <span class="column-header-text">Account</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="account_description" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="account_description" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="account_description" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="account_description"></div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTableBody">
+              <tr><td colspan="9" class="loading-cell">Loading payment data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="job-pagination" id="paymentsPagination">
+          <button id="paymentsPrevPage" class="pagination-btn" disabled>← Previous</button>
+          <span id="paymentsPageInfo" class="page-info">Page 1 of 1</span>
+          <button id="paymentsNextPage" class="pagination-btn" disabled>Next →</button>
+          <select id="paymentsPageSize" class="page-size-select">
             <option value="25" selected>25 per page</option>
             <option value="50">50 per page</option>
             <option value="100">100 per page</option>
