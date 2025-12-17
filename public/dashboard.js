@@ -12400,9 +12400,13 @@ function renderPmDonutChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: { left: 0, right: 10 }
+      },
       plugins: {
         legend: {
           position: isMobile ? 'bottom' : 'right',
+          align: 'center',
           labels: {
             color: isDarkMode ? '#e2e8f0' : '#374151',
             font: { size: isMobile ? 10 : 11 },
@@ -12475,9 +12479,13 @@ function renderCustomerDonutChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: { left: 0, right: 10 }
+      },
       plugins: {
         legend: {
           position: isMobile ? 'bottom' : 'right',
+          align: 'center',
           labels: {
             color: isDarkMode ? '#e2e8f0' : '#374151',
             font: { size: isMobile ? 10 : 11 },
