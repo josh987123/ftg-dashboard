@@ -8803,9 +8803,20 @@ body.dark-mode .job-key-metrics-section .section-title {
   max-width: 100%;
 }
 
+.job-metrics-grid.four-col {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+}
+
 @media (max-width: 1200px) {
   .job-metrics-grid.five-col {
     grid-template-columns: repeat(3, 1fr);
+  }
+  .job-metrics-grid.four-col {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -8815,7 +8826,8 @@ body.dark-mode .job-key-metrics-section .section-title {
     max-width: 100%;
   }
   
-  .job-metrics-grid.five-col {
+  .job-metrics-grid.five-col,
+  .job-metrics-grid.four-col {
     grid-template-columns: repeat(2, 1fr);
   }
 }
