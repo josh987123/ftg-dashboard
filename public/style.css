@@ -2366,8 +2366,15 @@ body.dark-mode .nav-item.nav-parent.expanded {
 .cf-investing td,
 .cf-financing td {
   font-weight: 700;
-  background: transparent !important;
-  color: #fff;
+  background: #166534 !important;
+  color: #fff !important;
+}
+
+#cashFlowTable tr.cf-operating td,
+#cashFlowTable tr.cf-investing td,
+#cashFlowTable tr.cf-financing td {
+  background: #166534 !important;
+  color: #fff !important;
 }
 
 .cf-toggle, .bs-toggle {
