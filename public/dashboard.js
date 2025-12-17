@@ -12988,8 +12988,7 @@ function renderJoPmJobsChart(data, textColor, gridColor, showDataLabels) {
   
   const sortedData = [...data].sort((a, b) => b.jobCount - a.jobCount);
   const context = ctx.getContext('2d');
-  const colorPairs = getJoBarColors(sortedData.length);
-  const backgrounds = colorPairs.map(([c1, c2]) => createJoGradient(context, c1, c2));
+  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joPmJobsChart = new Chart(ctx, {
     type: 'bar',
@@ -12997,7 +12996,7 @@ function renderJoPmJobsChart(data, textColor, gridColor, showDataLabels) {
       labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: sortedData.map(d => d.jobCount),
-        backgroundColor: backgrounds,
+        backgroundColor: blueGradient,
         borderRadius: 4
       }]
     },
@@ -13030,8 +13029,7 @@ function renderJoPmContractChart(data, textColor, gridColor, showDataLabels) {
   if (joPmContractChart) joPmContractChart.destroy();
   
   const context = ctx.getContext('2d');
-  const colorPairs = getJoBarColors(data.length);
-  const backgrounds = colorPairs.map(([c1, c2]) => createJoGradient(context, c1, c2));
+  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joPmContractChart = new Chart(ctx, {
     type: 'bar',
@@ -13039,7 +13037,7 @@ function renderJoPmContractChart(data, textColor, gridColor, showDataLabels) {
       labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: data.map(d => d.contractValue),
-        backgroundColor: backgrounds,
+        backgroundColor: blueGradient,
         borderRadius: 4
       }]
     },
@@ -13073,11 +13071,7 @@ function renderJoPmMarginChart(data, textColor, gridColor, showDataLabels) {
   
   const sortedData = [...data].sort((a, b) => b.profitMargin - a.profitMargin);
   const context = ctx.getContext('2d');
-  const backgrounds = sortedData.map(d => {
-    if (d.profitMargin >= 15) return createJoGradient(context, '#047857', '#064e3b');
-    if (d.profitMargin >= 0) return createJoGradient(context, '#f59e0b', '#d97706');
-    return createJoGradient(context, '#dc2626', '#991b1b');
-  });
+  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joPmMarginChart = new Chart(ctx, {
     type: 'bar',
@@ -13085,7 +13079,7 @@ function renderJoPmMarginChart(data, textColor, gridColor, showDataLabels) {
       labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: sortedData.map(d => d.profitMargin),
-        backgroundColor: backgrounds,
+        backgroundColor: blueGradient,
         borderRadius: 4
       }]
     },
@@ -13119,8 +13113,7 @@ function renderJoClientJobsChart(data, textColor, gridColor, showDataLabels) {
   
   const sortedData = [...data].sort((a, b) => b.jobCount - a.jobCount);
   const context = ctx.getContext('2d');
-  const colorPairs = getJoBarColors(sortedData.length);
-  const backgrounds = colorPairs.map(([c1, c2]) => createJoGradient(context, c1, c2));
+  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joClientJobsChart = new Chart(ctx, {
     type: 'bar',
@@ -13128,7 +13121,7 @@ function renderJoClientJobsChart(data, textColor, gridColor, showDataLabels) {
       labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: sortedData.map(d => d.jobCount),
-        backgroundColor: backgrounds,
+        backgroundColor: blueGradient,
         borderRadius: 4
       }]
     },
@@ -13161,8 +13154,7 @@ function renderJoClientContractChart(data, textColor, gridColor, showDataLabels)
   if (joClientContractChart) joClientContractChart.destroy();
   
   const context = ctx.getContext('2d');
-  const colorPairs = getJoBarColors(data.length);
-  const backgrounds = colorPairs.map(([c1, c2]) => createJoGradient(context, c1, c2));
+  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joClientContractChart = new Chart(ctx, {
     type: 'bar',
@@ -13170,7 +13162,7 @@ function renderJoClientContractChart(data, textColor, gridColor, showDataLabels)
       labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: data.map(d => d.contractValue),
-        backgroundColor: backgrounds,
+        backgroundColor: blueGradient,
         borderRadius: 4
       }]
     },
@@ -13204,11 +13196,7 @@ function renderJoClientMarginChart(data, textColor, gridColor, showDataLabels) {
   
   const sortedData = [...data].sort((a, b) => b.profitMargin - a.profitMargin);
   const context = ctx.getContext('2d');
-  const backgrounds = sortedData.map(d => {
-    if (d.profitMargin >= 15) return createJoGradient(context, '#047857', '#064e3b');
-    if (d.profitMargin >= 0) return createJoGradient(context, '#f59e0b', '#d97706');
-    return createJoGradient(context, '#dc2626', '#991b1b');
-  });
+  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joClientMarginChart = new Chart(ctx, {
     type: 'bar',
@@ -13216,7 +13204,7 @@ function renderJoClientMarginChart(data, textColor, gridColor, showDataLabels) {
       labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: sortedData.map(d => d.profitMargin),
-        backgroundColor: backgrounds,
+        backgroundColor: blueGradient,
         borderRadius: 4
       }]
     },
