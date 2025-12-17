@@ -2282,44 +2282,71 @@ body.dark-mode .nav-item.nav-parent.expanded {
   font-weight: 400;
 }
 
+.is-major-total {
+  background: #e5e7eb !important;
+}
+
 .is-major-total td {
   font-weight: 700;
-  background: #e5e7eb !important;
+  background: transparent !important;
+}
+
+.is-blue-subtotal {
+  background: #dbeafe !important;
 }
 
 .is-blue-subtotal td {
   font-weight: 700;
-  background: #dbeafe !important;
+  background: transparent !important;
 }
 
 .is-blue-subtotal td:first-child {
   padding-left: 24px !important;
-  background: #dbeafe !important;
+}
+
+.is-profit-row {
+  background: #e0e7ef !important;
 }
 
 .is-profit-row td {
   font-weight: 700;
-  background: #e0e7ef !important;
+  background: transparent !important;
+}
+
+.is-expense-section-expanded {
+  background: #fef9c3 !important;
 }
 
 .is-expense-section-expanded td {
   font-weight: 700;
-  background: #fef9c3 !important;
+  background: transparent !important;
+}
+
+.is-gray-section-expanded {
+  background: #e5e7eb !important;
 }
 
 .is-gray-section-expanded td {
   font-weight: 600;
-  background: #e5e7eb !important;
+  background: transparent !important;
+}
+
+.is-tan-section-expanded {
+  background: #f5e6d3 !important;
 }
 
 .is-tan-section-expanded td {
   font-weight: 600;
-  background: #f5e6d3 !important;
+  background: transparent !important;
+}
+
+.is-opexp-gray-expanded {
+  background: #e5e7eb !important;
 }
 
 .is-opexp-gray-expanded td {
   font-weight: 600;
-  background: #e5e7eb !important;
+  background: transparent !important;
 }
 
 .is-spacer-row td {
@@ -6424,32 +6451,57 @@ body.dark-mode .nav-item.nav-parent.expanded {
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .is-major-total td {
+[data-theme="dark"] .is-major-total {
   background: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .is-major-total td {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .is-blue-subtotal {
+  background: #1e3a5f !important;
 }
 
 [data-theme="dark"] .is-blue-subtotal td,
 [data-theme="dark"] .is-blue-subtotal td:first-child {
-  background: #1e3a5f !important;
+  background: transparent !important;
   color: #93c5fd;
 }
 
-[data-theme="dark"] .is-profit-row td {
+[data-theme="dark"] .is-profit-row {
   background: #1e3a5f !important;
 }
 
-[data-theme="dark"] .is-expense-section-expanded td {
+[data-theme="dark"] .is-profit-row td {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .is-expense-section-expanded {
   background: #422006 !important;
+}
+
+[data-theme="dark"] .is-expense-section-expanded td {
+  background: transparent !important;
   color: #fde68a;
+}
+
+[data-theme="dark"] .is-gray-section-expanded,
+[data-theme="dark"] .is-opexp-gray-expanded {
+  background: var(--bg-tertiary) !important;
 }
 
 [data-theme="dark"] .is-gray-section-expanded td,
 [data-theme="dark"] .is-opexp-gray-expanded td {
-  background: var(--bg-tertiary) !important;
+  background: transparent !important;
+}
+
+[data-theme="dark"] .is-tan-section-expanded {
+  background: #451a03 !important;
 }
 
 [data-theme="dark"] .is-tan-section-expanded td {
-  background: #451a03 !important;
+  background: transparent !important;
   color: #fed7aa;
 }
 
