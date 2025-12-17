@@ -4664,7 +4664,7 @@ function getJobBudgetsCsvData() {
     return "";
   }
   
-  let csv = "Job #,Description,Customer,Status,Project Manager,Original Contract,Change Orders,Revised Contract,Original Cost,Cost Adjustments,Revised Cost,Estimated Profit,Margin %\n";
+  let csv = "Job #,Description,Customer,Status,Project Manager,Original Contract,Change Orders,Contract Value,Original Cost,Cost Adjustments,Projected Cost,Estimated Profit,Margin %\n";
   
   jobBudgetsFiltered.forEach(job => {
     const status = getJobStatusLabel(job.job_status);
