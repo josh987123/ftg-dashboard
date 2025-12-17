@@ -104,6 +104,43 @@ function autoSizeFirstColumn(tableId) {
 }
 
 /* ------------------------------------------------------------
+   AUTO-SCALE FONT SIZE TO FILL CONTAINER WIDTH ON MOBILE
+   Increases font size for financial tables until content fills screen
+------------------------------------------------------------ */
+function autoScaleFontSize(tableId, containerId) {
+  if (window.innerWidth > 768) return;
+  
+  const table = document.getElementById(tableId);
+  const container = document.getElementById(containerId) || table?.parentElement;
+  if (!table || !container) return;
+  
+  const containerWidth = container.clientWidth - 16;
+  if (containerWidth <= 0) return;
+  
+  table.style.fontSize = '10px';
+  
+  requestAnimationFrame(() => {
+    let tableWidth = table.scrollWidth;
+    let currentSize = 10;
+    const maxSize = 16;
+    const minSize = 10;
+    
+    if (tableWidth >= containerWidth) return;
+    
+    while (tableWidth < containerWidth && currentSize < maxSize) {
+      currentSize += 0.5;
+      table.style.fontSize = currentSize + 'px';
+      tableWidth = table.scrollWidth;
+    }
+    
+    if (tableWidth > containerWidth && currentSize > minSize) {
+      currentSize -= 0.5;
+      table.style.fontSize = currentSize + 'px';
+    }
+  });
+}
+
+/* ------------------------------------------------------------
    ANIMATED NUMBER COUNTER UTILITY
 ------------------------------------------------------------ */
 function animateValue(element, start, end, duration, formatter) {
@@ -7962,6 +7999,7 @@ function renderIncomeStatement() {
     setTimeout(() => {
       autoSizeFirstColumn("incomeStatementTable");
       addResizeHandlesToTable("incomeStatementTable");
+      autoScaleFontSize("incomeStatementTable", "isTableBox");
       hideTableLoading('incomeStatementTable');
     }, 50);
   });
@@ -8950,6 +8988,7 @@ function renderBalanceSheetContent() {
   setTimeout(() => {
     autoSizeFirstColumn("balanceSheetTable");
     addResizeHandlesToTable("balanceSheetTable");
+    autoScaleFontSize("balanceSheetTable", "bsTableBox");
     hideTableLoading('balanceSheetTable');
   }, 50);
 }
@@ -9180,6 +9219,7 @@ function renderBalanceSheetMatrix() {
   attachBSToggleListeners();
   setTimeout(() => {
     addResizeHandlesToTable("balanceSheetTable");
+    autoScaleFontSize("balanceSheetTable", "bsTableBox");
     hideTableLoading('balanceSheetTable');
   }, 50);
 }
@@ -10081,6 +10121,7 @@ function renderCashFlowContent(skipDetailLevelReset = false) {
   setTimeout(() => {
     autoSizeFirstColumn("cashFlowTable");
     addResizeHandlesToTable("cashFlowTable");
+    autoScaleFontSize("cashFlowTable", "cfTableBox");
     hideTableLoading('cashFlowTable');
   }, 50);
   
@@ -10269,6 +10310,7 @@ function renderCashFlowMatrix(skipDetailLevelReset = false) {
   attachCFToggleListeners();
   setTimeout(() => {
     addResizeHandlesToTable("cashFlowTable");
+    autoScaleFontSize("cashFlowTable", "cfTableBox");
     hideTableLoading('cashFlowTable');
   }, 50);
 }
