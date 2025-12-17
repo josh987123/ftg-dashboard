@@ -12464,36 +12464,7 @@ function renderJobBudgetsTable() {
   const contractHidden = contractExpanded ? '' : 'hidden';
   const costHidden = costExpanded ? '' : 'hidden';
   
-  // Calculate totals from ALL filtered data (not just current page)
-  const totals = jobBudgetsFiltered.reduce((acc, job) => {
-    acc.originalContract += job.original_contract || 0;
-    acc.changeOrders += job.tot_income_adj || 0;
-    acc.revisedContract += job.revised_contract || 0;
-    acc.originalCost += job.original_cost || 0;
-    acc.costAdj += job.tot_cost_adj || 0;
-    acc.revisedCost += job.revised_cost || 0;
-    acc.estProfit += job.estimated_profit || 0;
-    return acc;
-  }, { originalContract: 0, changeOrders: 0, revisedContract: 0, originalCost: 0, costAdj: 0, revisedCost: 0, estProfit: 0 });
-  
-  const avgMargin = totals.revisedContract ? (totals.estProfit / totals.revisedContract) * 100 : 0;
-  const totalProfitClass = totals.estProfit >= 0 ? 'positive' : 'negative';
-  const totalMarginColor = getMarginColor(avgMargin);
-  
-  // Totals row (appears right after header)
-  const totalsRow = `<tr class="totals-row" style="background-color: #f0f9ff; font-weight: 600; border-bottom: 2px solid #3b82f6;">
-    <td colspan="5" style="text-align: right; padding-right: 12px;">TOTALS (${jobBudgetsFiltered.length} jobs)</td>
-    <td class="number-col contract-detail-col ${contractHidden}">${formatCurrency(totals.originalContract)}</td>
-    <td class="number-col contract-detail-col ${contractHidden}">${formatCurrency(totals.changeOrders)}</td>
-    <td class="number-col revised-contract-col">${formatCurrency(totals.revisedContract)}</td>
-    <td class="number-col cost-detail-col ${costHidden}">${formatCurrency(totals.originalCost)}</td>
-    <td class="number-col cost-detail-col ${costHidden}">${formatCurrency(totals.costAdj)}</td>
-    <td class="number-col revised-cost-col">${formatCurrency(totals.revisedCost)}</td>
-    <td class="number-col ${totalProfitClass}">${formatCurrency(totals.estProfit)}</td>
-    <td class="number-col" style="background-color: ${totalMarginColor}">${avgMargin.toFixed(1)}%</td>
-  </tr>`;
-  
-  const dataRows = pageData.map(job => {
+  tbody.innerHTML = pageData.map(job => {
     const status = getJobStatusLabel(job.job_status);
     const profitClass = job.estimated_profit >= 0 ? 'positive' : 'negative';
     const margin = job.revised_contract ? (job.estimated_profit / job.revised_contract) * 100 : 0;
@@ -12515,8 +12486,6 @@ function renderJobBudgetsTable() {
       <td class="number-col" style="background-color: ${marginColor}">${margin.toFixed(1)}%</td>
     </tr>`;
   }).join('');
-  
-  tbody.innerHTML = totalsRow + dataRows;
   
   updateJobPagination(jobBudgetsFiltered.length);
   
@@ -12830,30 +12799,15 @@ function updateJobActualsSummaryMetrics() {
   const totalOverUnder = totalBilledRevenue - totalEarnedRevenue;
   
   document.getElementById('jaTotalCount').textContent = totalJobs.toLocaleString();
-  
-  const overUnderEl = document.getElementById('jaTotalOverUnder');
-  overUnderEl.textContent = formatCurrency(totalOverUnder);
-  overUnderEl.style.color = totalOverUnder >= 0 ? '#10b981' : '#dc2626';
+  document.getElementById('jaTotalBilledRevenue').textContent = formatCurrency(totalBilledRevenue);
+  document.getElementById('jaTotalEarnedRevenue').textContent = formatCurrency(totalEarnedRevenue);
+  document.getElementById('jaTotalActualCost').textContent = formatCurrency(totalActualCost);
+  document.getElementById('jaTotalOverUnder').textContent = formatCurrency(totalOverUnder);
   
   const overUnderCard = document.getElementById('jaOverUnderCard');
   if (overUnderCard) {
     overUnderCard.style.backgroundColor = totalOverUnder >= 0 ? '#d1fae5' : '#fce7f3';
   }
-  
-  // Update bar chart
-  const maxValue = Math.max(totalBilledRevenue, totalEarnedRevenue, totalActualCost, 1);
-  
-  const billedBar = document.getElementById('jaBilledBar');
-  const earnedBar = document.getElementById('jaEarnedBar');
-  const costBar = document.getElementById('jaCostBar');
-  
-  if (billedBar) billedBar.style.width = `${(totalBilledRevenue / maxValue) * 100}%`;
-  if (earnedBar) earnedBar.style.width = `${(totalEarnedRevenue / maxValue) * 100}%`;
-  if (costBar) costBar.style.width = `${(totalActualCost / maxValue) * 100}%`;
-  
-  document.getElementById('jaBilledValue').textContent = formatCurrency(totalBilledRevenue);
-  document.getElementById('jaEarnedValue').textContent = formatCurrency(totalEarnedRevenue);
-  document.getElementById('jaCostValue').textContent = formatCurrency(totalActualCost);
   
   renderJobActualsBreakdowns();
 }
@@ -13080,30 +13034,7 @@ function renderJobActualsTable() {
     return;
   }
   
-  // Calculate totals from ALL filtered data (not just current page)
-  const totals = jobActualsFiltered.reduce((acc, job) => {
-    acc.billedRevenue += job.billed_revenue || 0;
-    acc.earnedRevenue += job.earned_revenue || 0;
-    acc.actualCost += job.actual_cost || 0;
-    acc.pctCompleteSum += job.percent_complete || 0;
-    return acc;
-  }, { billedRevenue: 0, earnedRevenue: 0, actualCost: 0, pctCompleteSum: 0 });
-  
-  const totalOverUnder = totals.billedRevenue - totals.earnedRevenue;
-  const totalOverUnderColor = totalOverUnder >= 0 ? '#d1fae5' : '#fce7f3';
-  const avgPctComplete = jobActualsFiltered.length > 0 ? totals.pctCompleteSum / jobActualsFiltered.length : 0;
-  
-  // Totals row (appears right after header)
-  const totalsRow = `<tr class="totals-row" style="background-color: #f0f9ff; font-weight: 600; border-bottom: 2px solid #3b82f6;">
-    <td colspan="5" style="text-align: right; padding-right: 12px;">TOTALS (${jobActualsFiltered.length} jobs)</td>
-    <td class="number-col">${formatCurrency(totals.billedRevenue)}</td>
-    <td class="number-col">${formatCurrency(totals.earnedRevenue)}</td>
-    <td class="number-col" style="background-color: ${totalOverUnderColor}">${formatCurrency(totalOverUnder)}</td>
-    <td class="number-col">${formatCurrency(totals.actualCost)}</td>
-    <td class="number-col">${Math.round(avgPctComplete)}%</td>
-  </tr>`;
-  
-  const dataRows = pageData.map(job => {
+  tbody.innerHTML = pageData.map(job => {
     const status = getJobStatusLabel(job.job_status);
     const pctComplete = job.percent_complete || 0;
     const overUnderBill = (job.billed_revenue || 0) - (job.earned_revenue || 0);
@@ -13122,8 +13053,6 @@ function renderJobActualsTable() {
       <td class="number-col">${Math.round(pctComplete)}%</td>
     </tr>`;
   }).join('');
-  
-  tbody.innerHTML = totalsRow + dataRows;
   
   updateJaPagination(jobActualsFiltered.length);
 }
