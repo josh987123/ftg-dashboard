@@ -9715,6 +9715,82 @@ body.dark-mode .chart-subtitle {
   max-width: 100%;
 }
 
+/* Job Overview Dark Mode */
+body.dark-mode .jo-chart-stats {
+  border-top-color: #475569;
+}
+
+body.dark-mode .jo-chart-stats .stat-box {
+  background: #334155;
+}
+
+body.dark-mode .jo-chart-stats .stat-box:hover {
+  background: #3f5170;
+}
+
+body.dark-mode .jo-chart-stats .stat-label {
+  color: #94a3b8;
+}
+
+body.dark-mode .jo-chart-stats .stat-value {
+  color: #f1f5f9;
+}
+
+body.dark-mode .jo-chart-stats .stat-period {
+  color: #64748b;
+}
+
+/* Job Overview Mobile Responsiveness */
+@media (max-width: 768px) {
+  .jo-key-metrics-constrained {
+    max-width: 100%;
+  }
+  
+  .jo-key-metrics-constrained .jo-metrics-row-5 {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  
+  .jo-key-metrics-constrained .job-metric-card.compact {
+    flex: 1 1 calc(50% - 8px);
+    min-width: 140px;
+    max-width: none;
+  }
+  
+  .jo-chart-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  
+  .jo-chart-stats .stat-box {
+    padding: 6px 4px;
+  }
+  
+  .jo-chart-stats .stat-label {
+    font-size: 8px;
+  }
+  
+  .jo-chart-stats .stat-value {
+    font-size: 10px;
+  }
+  
+  .jo-chart-stats .stat-period {
+    font-size: 7px;
+  }
+}
+
+@media (max-width: 480px) {
+  .jo-key-metrics-constrained .job-metric-card.compact {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+  
+  .jo-section-header {
+    font-size: 1rem;
+    margin: 6px 0 12px 0;
+  }
+}
+
 /* ============================================================
    JOB BUDGETS - COMPREHENSIVE DARK MODE FIXES
    ============================================================ */
