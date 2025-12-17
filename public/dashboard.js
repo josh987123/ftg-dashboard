@@ -12187,6 +12187,7 @@ let jobBudgetsPageSize = 25;
 let jobBudgetsSortColumn = 'revised_contract';
 let jobBudgetsSortDirection = 'desc';
 let jobBudgetsInitialized = false;
+let jobBudgetsColumnFilters = {};
 
 function initJobBudgets() {
   if (jobBudgetsInitialized && jobBudgetsData.length > 0) {
@@ -12248,22 +12249,40 @@ function setupJobBudgetsEventListeners() {
     renderJobBudgetsTable();
   });
   
-  // Table header sorting
-  document.querySelectorAll('.job-budgets-table th.sortable').forEach(th => {
-    th.addEventListener('click', (e) => {
-      // Don't sort if clicking on expand icon
-      if (e.target.classList.contains('expand-icon')) return;
-      
-      const col = th.dataset.sort;
-      if (jobBudgetsSortColumn === col) {
-        jobBudgetsSortDirection = jobBudgetsSortDirection === 'asc' ? 'desc' : 'asc';
-      } else {
-        jobBudgetsSortColumn = col;
-        jobBudgetsSortDirection = 'asc';
-      }
+  // Sort buttons (new dedicated sort controls)
+  document.querySelectorAll('#jobBudgetsTable .sort-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const col = btn.dataset.sort;
+      const dir = btn.dataset.dir;
+      jobBudgetsSortColumn = col;
+      jobBudgetsSortDirection = dir;
+      updateJobBudgetsSortIndicators();
       sortJobBudgets();
       renderJobBudgetsTable();
     });
+  });
+  
+  // Filter buttons
+  document.querySelectorAll('#jobBudgetsTable .filter-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const filterCol = btn.dataset.filter;
+      const dropdown = document.querySelector(`#jobBudgetsTable .column-filter-dropdown[data-filter="${filterCol}"]`);
+      if (dropdown) {
+        closeAllColumnFilterDropdowns();
+        dropdown.classList.toggle('open');
+        const searchInput = dropdown.querySelector('.filter-search-input');
+        if (searchInput) searchInput.focus();
+      }
+    });
+  });
+  
+  // Close filter dropdowns when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.column-filter-dropdown') && !e.target.closest('.filter-btn')) {
+      closeAllColumnFilterDropdowns();
+    }
   });
   
   // Expandable column toggles
@@ -12350,6 +12369,10 @@ async function loadJobBudgetsData() {
     // Populate filter dropdowns
     populateJobFilters();
     
+    // Initialize column filter dropdowns
+    initJobBudgetsColumnFilters();
+    updateJobBudgetsSortIndicators();
+    
     // Set data as of date
     const dataAsOf = document.getElementById('jobBudgetsDataAsOf');
     if (dataAsOf && data.generated_at) {
@@ -12425,19 +12448,31 @@ function filterJobBudgets() {
   if (showOverhead) allowedStatuses.push('O');
   
   jobBudgetsFiltered = jobBudgetsData.filter(job => {
-    // Status filter
+    // Status filter from config panel
     if (allowedStatuses.length > 0 && !allowedStatuses.includes(job.job_status)) return false;
     
-    // PM filter
+    // PM filter from config panel
     if (pmFilter && job.project_manager_name !== pmFilter) return false;
     
-    // Customer filter
+    // Customer filter from config panel
     if (custFilter && job.customer_name !== custFilter) return false;
     
     // Search filter
     if (searchTerm) {
       const searchStr = `${job.job_no} ${job.job_description} ${job.customer_name}`.toLowerCase();
       if (!searchStr.includes(searchTerm)) return false;
+    }
+    
+    // Column filters (multi-select)
+    for (const [col, allowedValues] of Object.entries(jobBudgetsColumnFilters)) {
+      if (allowedValues && allowedValues.size > 0) {
+        let jobVal = job[col];
+        if (col === 'job_status') {
+          jobVal = getJobStatusLabel(jobVal).label;
+        }
+        jobVal = String(jobVal || '');
+        if (!allowedValues.has(jobVal)) return false;
+      }
     }
     
     return true;
@@ -12474,6 +12509,137 @@ function sortJobBudgets() {
     aVal = (aVal || '').toString().toLowerCase();
     bVal = (bVal || '').toString().toLowerCase();
     return aVal.localeCompare(bVal) * dir;
+  });
+}
+
+function initJobBudgetsColumnFilters() {
+  const filterableColumns = ['job_no', 'job_description', 'customer_name', 'job_status', 'project_manager_name'];
+  
+  filterableColumns.forEach(col => {
+    const dropdown = document.querySelector(`#jobBudgetsTable .column-filter-dropdown[data-filter="${col}"]`);
+    if (!dropdown) return;
+    
+    const uniqueValues = getUniqueColumnValues(col);
+    jobBudgetsColumnFilters[col] = new Set();
+    
+    const columnLabel = getColumnLabel(col);
+    
+    dropdown.innerHTML = `
+      <input type="text" class="filter-search-input" placeholder="Search ${columnLabel}..." data-filter="${col}">
+      <div class="filter-options-list"></div>
+      <div class="filter-actions">
+        <button class="filter-select-all-btn" data-filter="${col}">All</button>
+        <button class="filter-clear-btn" data-filter="${col}">Clear</button>
+      </div>
+    `;
+    
+    populateFilterOptions(col, uniqueValues);
+    
+    const searchInput = dropdown.querySelector('.filter-search-input');
+    searchInput?.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      dropdown.querySelectorAll('.filter-option').forEach(opt => {
+        const text = opt.querySelector('.filter-option-text')?.textContent.toLowerCase() || '';
+        opt.classList.toggle('hidden', !text.includes(query));
+      });
+    });
+    
+    searchInput?.addEventListener('click', (e) => e.stopPropagation());
+    
+    dropdown.querySelector('.filter-select-all-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = true);
+      applyColumnFilter(col);
+    });
+    
+    dropdown.querySelector('.filter-clear-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = false);
+      applyColumnFilter(col);
+    });
+  });
+}
+
+function getUniqueColumnValues(col) {
+  const values = new Set();
+  jobBudgetsData.forEach(job => {
+    let val = job[col];
+    if (col === 'job_status') {
+      val = getJobStatusLabel(val).label;
+    }
+    if (val !== null && val !== undefined && val !== '') {
+      values.add(String(val));
+    }
+  });
+  return Array.from(values).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+}
+
+function getColumnLabel(col) {
+  const labels = {
+    'job_no': 'Job #',
+    'job_description': 'Description',
+    'customer_name': 'Client',
+    'job_status': 'Status',
+    'project_manager_name': 'Project Manager'
+  };
+  return labels[col] || col;
+}
+
+function populateFilterOptions(col, values) {
+  const dropdown = document.querySelector(`#jobBudgetsTable .column-filter-dropdown[data-filter="${col}"]`);
+  const optionsList = dropdown?.querySelector('.filter-options-list');
+  if (!optionsList) return;
+  
+  optionsList.innerHTML = values.map(val => `
+    <label class="filter-option">
+      <input type="checkbox" value="${val}" checked>
+      <span class="filter-option-text">${val}</span>
+    </label>
+  `).join('');
+  
+  optionsList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => applyColumnFilter(col));
+    cb.addEventListener('click', (e) => e.stopPropagation());
+  });
+}
+
+function applyColumnFilter(col) {
+  const dropdown = document.querySelector(`#jobBudgetsTable .column-filter-dropdown[data-filter="${col}"]`);
+  const checkedValues = new Set();
+  dropdown?.querySelectorAll('.filter-option input:checked').forEach(cb => {
+    checkedValues.add(cb.value);
+  });
+  
+  const allCheckboxes = dropdown?.querySelectorAll('.filter-option input');
+  const allChecked = allCheckboxes && [...allCheckboxes].every(cb => cb.checked);
+  const noneChecked = allCheckboxes && [...allCheckboxes].every(cb => !cb.checked);
+  
+  if (allChecked || noneChecked) {
+    delete jobBudgetsColumnFilters[col];
+  } else {
+    jobBudgetsColumnFilters[col] = checkedValues;
+  }
+  
+  updateFilterButtonIndicators();
+  filterJobBudgets();
+}
+
+function updateFilterButtonIndicators() {
+  document.querySelectorAll('#jobBudgetsTable .filter-btn').forEach(btn => {
+    const col = btn.dataset.filter;
+    const hasFilter = jobBudgetsColumnFilters[col] && jobBudgetsColumnFilters[col].size > 0;
+    btn.classList.toggle('has-filter', hasFilter);
+  });
+}
+
+function closeAllColumnFilterDropdowns() {
+  document.querySelectorAll('.column-filter-dropdown.open').forEach(d => d.classList.remove('open'));
+}
+
+function updateJobBudgetsSortIndicators() {
+  document.querySelectorAll('#jobBudgetsTable .sort-btn').forEach(btn => {
+    const isActive = btn.dataset.sort === jobBudgetsSortColumn && btn.dataset.dir === jobBudgetsSortDirection;
+    btn.classList.toggle('active', isActive);
   });
 }
 

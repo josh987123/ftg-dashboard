@@ -10872,3 +10872,338 @@ body.dark-mode .action-btn.success {
 [data-theme="dark"] #jobActuals .job-budgets-table td[style*="background-color"] {
   color: #1e293b !important;
 }
+
+/* ============================================================
+   COLUMN FILTER DROPDOWNS
+   ============================================================ */
+
+/* Table header cell structure */
+.job-budgets-table th.filterable {
+  position: relative;
+  padding-right: 50px !important;
+}
+
+.job-budgets-table th .column-header-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.job-budgets-table th .column-header-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sort and filter controls container */
+.column-controls {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Sort buttons */
+.sort-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 9px;
+  line-height: 1;
+  color: #9ca3af;
+  opacity: 0.6;
+  transition: all 0.15s ease;
+}
+
+.sort-btn:hover {
+  opacity: 1;
+  color: #3b82f6;
+}
+
+.sort-btn.active {
+  opacity: 1;
+  color: #3b82f6;
+}
+
+/* Sort button container for vertical stacking */
+.sort-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Filter button */
+.filter-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  font-size: 11px;
+  color: #9ca3af;
+  opacity: 0.6;
+  transition: all 0.15s ease;
+  border-radius: 3px;
+}
+
+.filter-btn:hover {
+  opacity: 1;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.filter-btn.has-filter {
+  opacity: 1;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
+}
+
+/* Filter dropdown panel */
+.column-filter-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 220px;
+  max-width: 280px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  display: none;
+  overflow: hidden;
+}
+
+.column-filter-dropdown.open {
+  display: block;
+}
+
+/* Search input in filter dropdown */
+.filter-search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+  outline: none;
+  background: #f9fafb;
+}
+
+.filter-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.filter-search-input:focus {
+  background: #fff;
+}
+
+/* Filter options list */
+.filter-options-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  font-size: 13px;
+  color: #374151;
+}
+
+.filter-option:hover {
+  background: #f3f4f6;
+}
+
+.filter-option input[type="checkbox"] {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+}
+
+.filter-option-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-option.hidden {
+  display: none;
+}
+
+/* Filter actions */
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.filter-actions button {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-select-all-btn {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.filter-select-all-btn:hover {
+  background: #f3f4f6;
+}
+
+.filter-clear-btn {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+}
+
+.filter-clear-btn:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.filter-apply-btn {
+  background: #3b82f6;
+  border: 1px solid #3b82f6;
+  color: #fff;
+}
+
+.filter-apply-btn:hover {
+  background: #2563eb;
+}
+
+/* Dark mode styles */
+body.dark-mode .column-filter-dropdown,
+[data-theme="dark"] .column-filter-dropdown {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+body.dark-mode .filter-search-input,
+[data-theme="dark"] .filter-search-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+body.dark-mode .filter-search-input::placeholder,
+[data-theme="dark"] .filter-search-input::placeholder {
+  color: #64748b;
+}
+
+body.dark-mode .filter-option,
+[data-theme="dark"] .filter-option {
+  color: #e2e8f0;
+}
+
+body.dark-mode .filter-option:hover,
+[data-theme="dark"] .filter-option:hover {
+  background: #334155;
+}
+
+body.dark-mode .filter-actions,
+[data-theme="dark"] .filter-actions {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+body.dark-mode .filter-select-all-btn,
+body.dark-mode .filter-clear-btn,
+[data-theme="dark"] .filter-select-all-btn,
+[data-theme="dark"] .filter-clear-btn {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+body.dark-mode .filter-select-all-btn:hover,
+[data-theme="dark"] .filter-select-all-btn:hover {
+  background: #475569;
+}
+
+body.dark-mode .filter-clear-btn:hover,
+[data-theme="dark"] .filter-clear-btn:hover {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fecaca;
+}
+
+body.dark-mode .sort-btn,
+[data-theme="dark"] .sort-btn {
+  color: #64748b;
+}
+
+body.dark-mode .sort-btn:hover,
+body.dark-mode .sort-btn.active,
+[data-theme="dark"] .sort-btn:hover,
+[data-theme="dark"] .sort-btn.active {
+  color: #60a5fa;
+}
+
+body.dark-mode .filter-btn,
+[data-theme="dark"] .filter-btn {
+  color: #64748b;
+}
+
+body.dark-mode .filter-btn:hover,
+[data-theme="dark"] .filter-btn:hover {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.15);
+}
+
+body.dark-mode .filter-btn.has-filter,
+[data-theme="dark"] .filter-btn.has-filter {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.2);
+}
+
+/* Active filter count badge */
+.filter-count-badge {
+  background: #3b82f6;
+  color: white;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 8px;
+  margin-left: 4px;
+  min-width: 14px;
+  text-align: center;
+}
+
+/* Mobile responsiveness for column filters */
+@media (max-width: 900px) {
+  .job-budgets-table th.filterable {
+    padding-right: 8px !important;
+  }
+  
+  .column-controls {
+    display: none;
+  }
+  
+  .column-filter-dropdown {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    right: auto;
+    min-width: 280px;
+    max-width: 90vw;
+  }
+}

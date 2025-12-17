@@ -2006,19 +2006,69 @@
           <table class="job-budgets-table" id="jobBudgetsTable">
             <thead>
               <tr>
-                <th class="sortable" data-sort="job_no">Job #</th>
-                <th class="sortable" data-sort="job_description">Description</th>
-                <th class="sortable" data-sort="customer_name">Client</th>
-                <th class="sortable" data-sort="job_status">Status</th>
-                <th class="sortable" data-sort="project_manager_name">Project Manager</th>
-                <th class="sortable number-col contract-detail-col hidden" data-sort="original_contract">Original Contract</th>
-                <th class="sortable number-col contract-detail-col hidden" data-sort="tot_income_adj">Change Orders</th>
-                <th class="sortable number-col revised-contract-col expandable-col" data-sort="revised_contract"><span class="expand-icon" data-expand="contract">▶</span> Contract Value</th>
-                <th class="sortable number-col cost-detail-col hidden" data-sort="original_cost">Original Cost</th>
-                <th class="sortable number-col cost-detail-col hidden" data-sort="tot_cost_adj">Cost Adjustments</th>
-                <th class="sortable number-col revised-cost-col expandable-col" data-sort="revised_cost"><span class="expand-icon" data-expand="cost">▶</span> Projected Cost</th>
-                <th class="sortable number-col" data-sort="estimated_profit">Estimated Profit</th>
-                <th class="sortable number-col" data-sort="profit_margin">Profit Margin</th>
+                <th class="filterable" data-sort="job_no" data-filter="job_no">
+                  <span class="column-header-text">Job #</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="job_no" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="job_no" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="job_no" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="job_no"></div>
+                </th>
+                <th class="filterable" data-sort="job_description" data-filter="job_description">
+                  <span class="column-header-text">Description</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="job_description" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="job_description" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="job_description" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="job_description"></div>
+                </th>
+                <th class="filterable" data-sort="customer_name" data-filter="customer_name">
+                  <span class="column-header-text">Client</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="customer_name" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="customer_name" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="customer_name" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="customer_name"></div>
+                </th>
+                <th class="filterable" data-sort="job_status" data-filter="job_status">
+                  <span class="column-header-text">Status</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="job_status" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="job_status" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="job_status" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="job_status"></div>
+                </th>
+                <th class="filterable" data-sort="project_manager_name" data-filter="project_manager_name">
+                  <span class="column-header-text">Project Manager</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="project_manager_name" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="project_manager_name" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="project_manager_name" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="project_manager_name"></div>
+                </th>
+                <th class="number-col contract-detail-col hidden" data-sort="original_contract">Original Contract</th>
+                <th class="number-col contract-detail-col hidden" data-sort="tot_income_adj">Change Orders</th>
+                <th class="number-col revised-contract-col expandable-col" data-sort="revised_contract"><span class="expand-icon" data-expand="contract">▶</span> Contract Value</th>
+                <th class="number-col cost-detail-col hidden" data-sort="original_cost">Original Cost</th>
+                <th class="number-col cost-detail-col hidden" data-sort="tot_cost_adj">Cost Adjustments</th>
+                <th class="number-col revised-cost-col expandable-col" data-sort="revised_cost"><span class="expand-icon" data-expand="cost">▶</span> Projected Cost</th>
+                <th class="number-col" data-sort="estimated_profit">Estimated Profit</th>
+                <th class="number-col" data-sort="profit_margin">Profit Margin</th>
               </tr>
             </thead>
             <tbody id="jobBudgetsTableBody">
