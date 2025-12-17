@@ -769,12 +769,36 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   color: #f59e0b !important;
 }
 
-/* Expandable nav parent items */
+/* Expandable nav parent items - solid opaque background */
 .nav-item.nav-parent {
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
+  background: #000000;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.nav-item.nav-parent:hover {
+  background: #1a1a1a;
+}
+
+.nav-item.nav-parent.expanded {
+  background: #0a0a0a;
+}
+
+body.dark-mode .nav-item.nav-parent {
+  background: #000000;
+  color: #ffffff;
+}
+
+body.dark-mode .nav-item.nav-parent:hover {
+  background: #1a1a1a;
+}
+
+body.dark-mode .nav-item.nav-parent.expanded {
+  background: #0a0a0a;
 }
 
 .nav-parent-label {
