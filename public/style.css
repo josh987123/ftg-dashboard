@@ -2356,11 +2356,18 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 /* Cash Flow Statement specific styles */
+.cf-operating,
+.cf-investing,
+.cf-financing {
+  background: #166534 !important;
+}
+
 .cf-operating td,
 .cf-investing td,
 .cf-financing td {
   font-weight: 700;
-  background: #fef3c7 !important;
+  background: transparent !important;
+  color: #fff;
 }
 
 .cf-toggle, .bs-toggle {
@@ -2755,15 +2762,18 @@ body.dark-mode .nav-item.nav-parent.expanded {
 .is-indent-3 td:first-child { padding-left: 56px; }
 .is-indent-4 td:first-child { padding-left: 70px; }
 
-#balanceSheetTable tr.is-row-subtotal {
+#balanceSheetTable tr.is-row-subtotal,
+#balanceSheetTable tr.is-subtotal {
   font-weight: 500;
 }
 
-#balanceSheetTable tr.is-row-subtotal.is-expanded-subtotal {
+#balanceSheetTable tr.is-row-subtotal.is-expanded-subtotal,
+#balanceSheetTable tr.is-subtotal.is-expanded-subtotal {
   background: #f0f9ff;
 }
 
-#balanceSheetTable tr.is-row-subtotal.is-expanded-subtotal td:first-child {
+#balanceSheetTable tr.is-row-subtotal.is-expanded-subtotal td:first-child,
+#balanceSheetTable tr.is-subtotal.is-expanded-subtotal td:first-child {
   color: #1d4ed8;
 }
 
@@ -6017,12 +6027,25 @@ body.dark-mode .nav-item.nav-parent.expanded {
   background: var(--border-secondary) !important;
 }
 
-[data-theme="dark"] #balanceSheetTable tr.is-row-subtotal.is-expanded-subtotal {
-  background: #374151;
+[data-theme="dark"] #balanceSheetTable tr.is-row-subtotal,
+[data-theme="dark"] #balanceSheetTable tr.is-subtotal {
+  background: #374151 !important;
 }
 
-[data-theme="dark"] #balanceSheetTable tr.is-row-subtotal.is-expanded-subtotal td:first-child {
-  color: var(--text-primary);
+[data-theme="dark"] #balanceSheetTable tr.is-row-subtotal td,
+[data-theme="dark"] #balanceSheetTable tr.is-subtotal td {
+  background: transparent !important;
+  color: #fff;
+}
+
+[data-theme="dark"] #balanceSheetTable tr.is-row-subtotal.is-expanded-subtotal,
+[data-theme="dark"] #balanceSheetTable tr.is-subtotal.is-expanded-subtotal {
+  background: #374151 !important;
+}
+
+[data-theme="dark"] #balanceSheetTable tr.is-row-subtotal.is-expanded-subtotal td:first-child,
+[data-theme="dark"] #balanceSheetTable tr.is-subtotal.is-expanded-subtotal td:first-child {
+  color: #fff;
 }
 
 [data-theme="dark"] .bs-toggle:hover {
@@ -6530,11 +6553,17 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 /* Cash Flow Statement table */
+[data-theme="dark"] .cf-operating,
+[data-theme="dark"] .cf-investing,
+[data-theme="dark"] .cf-financing {
+  background: #166534 !important;
+}
+
 [data-theme="dark"] .cf-operating td,
 [data-theme="dark"] .cf-investing td,
 [data-theme="dark"] .cf-financing td {
   background: transparent !important;
-  color: var(--text-primary);
+  color: #fff;
 }
 
 [data-theme="dark"] .cf-toggle,
