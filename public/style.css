@@ -1080,16 +1080,33 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   color: var(--text-primary);
 }
 
-.under-construction {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #fff;
-  font-weight: 700;
-  font-size: 14px;
+/* Placeholder Content for Under Construction Pages */
+.placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
   text-align: center;
-  padding: 10px 20px;
-  border-radius: 6px;
+  color: var(--text-secondary);
+}
+
+.placeholder-icon {
+  font-size: 64px;
   margin-bottom: 20px;
-  letter-spacing: 2px;
+}
+
+.placeholder-content h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.placeholder-content p {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 /* KPI CARDS */
