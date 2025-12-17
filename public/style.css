@@ -10306,7 +10306,8 @@ body.dark-mode .job-budgets-table .margin-cell {
   box-sizing: border-box;
 }
 
-#jobBudgets .job-key-metrics-section {
+#jobBudgets .job-key-metrics-section,
+#jobActuals .job-key-metrics-section {
   width: 60%;
   max-width: 60%;
 }
@@ -10316,7 +10317,8 @@ body.dark-mode .job-budgets-table .margin-cell {
   #jobActuals > .config-panel,
   #jobBudgets > #jbAiAnalysisPanel,
   #jobActuals > #jaAiAnalysisPanel,
-  #jobBudgets .job-key-metrics-section {
+  #jobBudgets .job-key-metrics-section,
+  #jobActuals .job-key-metrics-section {
     width: 100%;
     max-width: 100%;
   }
