@@ -2664,9 +2664,18 @@
           </div>
         </div>
 
-        <!-- Search and Filter Bar -->
-        <div class="cc-filter-bar">
-          <input type="text" id="ccSearchInput" placeholder="Search by cost code or description..." class="job-search-input">
+        <!-- Filter Bar (PM dropdown + Job # search) -->
+        <div class="cc-filter-bar" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
+          <div class="filter-group">
+            <label for="ccPmFilterBar" style="font-weight: 500; margin-right: 8px;">Project Manager:</label>
+            <select id="ccPmFilterBar" class="filter-select" style="min-width: 200px;">
+              <option value="">All Project Managers</option>
+            </select>
+          </div>
+          <div class="filter-group" style="flex: 1; max-width: 300px;">
+            <label for="ccJobSearchBar" style="font-weight: 500; margin-right: 8px;">Job #:</label>
+            <input type="text" id="ccJobSearchBar" class="search-input" placeholder="Search by job number..." style="width: 100%;">
+          </div>
         </div>
 
         <!-- Cost Codes Table -->

@@ -16897,21 +16897,25 @@ function populateCCFilters() {
     return numB - numA;
   });
   
-  const pmSelect = document.getElementById('ccPmFilter');
+  // Populate both PM dropdowns (config panel and filter bar)
+  const pmSelects = [document.getElementById('ccPmFilter'), document.getElementById('ccPmFilterBar')];
+  const pmOptionsHtml = '<option value="">All Project Managers</option>' + 
+    pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
   
-  if (pmSelect) {
-    pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
-      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
-    
-    // Apply My PM View filter if enabled (sync, after options exist)
-    if (getMyPmViewEnabled() && isUserProjectManager()) {
-      const pmName = getCurrentUserPmName();
-      const option = Array.from(pmSelect.options).find(opt => opt.value === pmName);
-      if (option) pmSelect.value = option.value;
+  pmSelects.forEach(pmSelect => {
+    if (pmSelect) {
+      pmSelect.innerHTML = pmOptionsHtml;
+      
+      // Apply My PM View filter if enabled (sync, after options exist)
+      if (getMyPmViewEnabled() && isUserProjectManager()) {
+        const pmName = getCurrentUserPmName();
+        const option = Array.from(pmSelect.options).find(opt => opt.value === pmName);
+        if (option) pmSelect.value = option.value;
+      }
     }
-  }
+  });
   
-  // Setup search-based filters for Customer and Job
+  // Setup search-based filters for Customer and Job in config panel
   setupCCSearchFilter('ccCustomerSearch', 'ccCustomerFilter', 'ccCustomerSuggestions', ccCustomerOptions, 'client');
   setupCCSearchFilter('ccJobSearch', 'ccJobFilter', 'ccJobSuggestions', ccJobOptions, 'job');
 }
@@ -16999,10 +17003,24 @@ function setupCCEventListeners() {
     document.getElementById(id)?.addEventListener('change', updateCostCodes);
   });
   
-  document.getElementById('ccPmFilter')?.addEventListener('change', updateCostCodes);
-  // Customer and Job filters are now handled via search inputs in setupCCSearchFilter
+  // Config panel PM filter
+  document.getElementById('ccPmFilter')?.addEventListener('change', (e) => {
+    // Sync filter bar PM dropdown
+    const filterBarPm = document.getElementById('ccPmFilterBar');
+    if (filterBarPm) filterBarPm.value = e.target.value;
+    updateCostCodes();
+  });
   
-  document.getElementById('ccSearchInput')?.addEventListener('input', debounce(filterAndRenderCC, 300));
+  // Filter bar PM dropdown (above table)
+  document.getElementById('ccPmFilterBar')?.addEventListener('change', (e) => {
+    // Sync config panel PM dropdown
+    const configPm = document.getElementById('ccPmFilter');
+    if (configPm) configPm.value = e.target.value;
+    updateCostCodes();
+  });
+  
+  // Filter bar Job # search (above table)
+  document.getElementById('ccJobSearchBar')?.addEventListener('input', debounce(filterAndRenderCC, 300));
   
   document.querySelectorAll('.cc-sort-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -17468,15 +17486,12 @@ function renderCCBreakdowns(filteredActuals, budgetLookup, totalCost) {
 }
 
 function filterAndRenderCC() {
-  const search = (document.getElementById('ccSearchInput')?.value || '').toLowerCase().trim();
+  const jobSearch = (document.getElementById('ccJobSearchBar')?.value || '').toLowerCase().trim();
   
-  // Filter job+cost code level data
+  // Filter job+cost code level data by job number
   costCodeFiltered = ccJobCostCodeData.filter(item => {
-    if (!search) return true;
-    return item.job_no.toLowerCase().includes(search) ||
-           item.job_description.toLowerCase().includes(search) ||
-           item.cost_code.toLowerCase().includes(search) ||
-           item.description.toLowerCase().includes(search);
+    if (!jobSearch) return true;
+    return item.job_no.toLowerCase().includes(jobSearch);
   });
   
   costCodeFiltered.sort((a, b) => {
