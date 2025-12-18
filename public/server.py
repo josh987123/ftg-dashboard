@@ -3626,21 +3626,28 @@ def api_get_top_vendors():
         start_year = int(request.args.get('startYear', 2020))
         end_year = int(request.args.get('endYear', 2025))
         
-        data = get_payments_data()
-        payments = data['payments']
+        # Load raw invoices data directly for accurate date parsing
+        invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ap_invoices.json')
+        with open(invoices_path, 'r', encoding='utf-8-sig') as f:
+            invoices_json = json.load(f)
+        
+        invoices = invoices_json.get('invoices', [])
         
         # Filter by year range and aggregate by vendor
         vendor_totals = {}
-        for p in payments:
-            date_str = p.get('invoice_date', '')
-            if date_str:
+        for inv in invoices:
+            date_val = inv.get('invoice_date', '')
+            if date_val:
                 try:
-                    if isinstance(date_str, str) and len(date_str) >= 4:
-                        year = int(date_str[:4])
+                    # Convert Excel serial date to year
+                    excel_date = float(date_val)
+                    if excel_date > 0:
+                        date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
+                        year = date_obj.year
                         if start_year <= year <= end_year:
-                            vendor = p.get('vendor', 'Unknown')
-                            amount = p.get('invoice_amount', 0) or 0
-                            if vendor:
+                            vendor = inv.get('vendor_name', 'Unknown') or 'Unknown'
+                            amount = float(inv.get('invoice_amount', 0) or 0)
+                            if vendor and vendor != 'Unknown':
                                 vendor_totals[vendor] = vendor_totals.get(vendor, 0) + amount
                 except (ValueError, TypeError):
                     pass
