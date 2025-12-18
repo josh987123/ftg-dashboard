@@ -14567,8 +14567,8 @@ function updateJobOverviewMetrics() {
   }
   
   document.getElementById('joTotalJobs').textContent = totalJobs.toLocaleString();
-  document.getElementById('joContractValue').textContent = formatCurrency(totalContract);
-  document.getElementById('joBilledRevenue').textContent = formatCurrency(totalBilled);
+  document.getElementById('joContractValue').textContent = formatCurrencyCompact(totalContract);
+  document.getElementById('joBilledRevenue').textContent = formatCurrencyCompact(totalBilled);
   
   const marginEl = document.getElementById('joEstProfitMargin');
   if (marginEl) {
@@ -14584,7 +14584,7 @@ function updateJobOverviewMetrics() {
   const overUnderEl = document.getElementById('joOverUnderValue');
   const overUnderTile = document.getElementById('joOverUnderTile');
   if (overUnderEl) {
-    overUnderEl.textContent = formatCurrency(totalOverUnder);
+    overUnderEl.textContent = formatCurrencyCompact(totalOverUnder);
     if (totalOverUnder >= 0) {
       overUnderEl.style.color = '#10b981';
       if (overUnderTile) overUnderTile.style.borderLeftColor = '#10b981';

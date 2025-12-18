@@ -10486,10 +10486,12 @@ body.dark-mode .chart-subtitle {
 }
 
 .jo-key-metrics-constrained .job-metric-card.compact .metric-label {
-  font-size: clamp(0.6rem, 1.2vw, 0.75rem);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: clamp(0.55rem, 1.1vw, 0.7rem);
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.2;
+  text-align: center;
+  max-width: 100%;
 }
 
 .jo-chart-stats .stat-period {
@@ -10555,7 +10557,9 @@ body.dark-mode .jo-chart-stats .stat-period {
   }
   
   .jo-key-metrics-constrained .job-metric-card.compact .metric-label {
-    font-size: clamp(0.55rem, 2vw, 0.7rem);
+    font-size: clamp(0.5rem, 1.8vw, 0.65rem);
+    white-space: normal;
+    word-wrap: break-word;
   }
   
   .jo-chart-stats {
