@@ -16652,13 +16652,18 @@ function updateCCPagination(total) {
 
 function updateCCTableTotals(data) {
   let totalCost = 0;
+  let totalPct = 0;
   
   data.forEach(cc => {
     totalCost += cc.total_cost;
+    totalPct += cc.pct_of_revenue || 0;
   });
   
   const totalCostCell = document.getElementById('ccTotalCostCell');
   if (totalCostCell) totalCostCell.textContent = formatCurrency(totalCost);
+  
+  const totalPctCell = document.getElementById('ccTotalPctCell');
+  if (totalPctCell) totalPctCell.textContent = totalPct.toFixed(2) + '%';
 }
 
 function extractCostCodesData() {
