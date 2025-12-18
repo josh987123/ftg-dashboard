@@ -16741,8 +16741,17 @@ function updateCCTableTotals(data) {
   const totalCostCell = document.getElementById('ccTotalCostCell');
   if (totalCostCell) totalCostCell.textContent = formatCurrency(totalCost);
   
+  // Show the sum of % of Revenue - note this sums percentages across jobs
   const totalRevPctCell = document.getElementById('ccTotalRevPctCell');
-  if (totalRevPctCell) totalRevPctCell.textContent = totalRevPct > 0 ? totalRevPct.toFixed(2) + '%' : '—';
+  if (totalRevPctCell) {
+    if (totalRevPct > 0) {
+      // Format with commas for large numbers
+      const formatted = totalRevPct.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      totalRevPctCell.textContent = formatted + '%';
+    } else {
+      totalRevPctCell.textContent = '—';
+    }
+  }
 }
 
 function extractCostCodesData() {

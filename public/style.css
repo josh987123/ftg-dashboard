@@ -1210,15 +1210,15 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 .nav-item.placeholder {
-  color: #f59e0b !important;
+  color: #9ca3af !important;
 }
 
 .nav-item.placeholder:hover {
-  color: #fbbf24 !important;
+  color: #b0b8c4 !important;
 }
 
 .nav-item.placeholder.active {
-  color: #f59e0b !important;
+  color: #9ca3af !important;
 }
 
 /* Expandable nav parent items - solid opaque background */
