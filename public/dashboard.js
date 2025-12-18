@@ -1440,6 +1440,7 @@ function initNavigation() {
       if (id === "costCodes") initCostCodes();
       if (id === "missingBudgets") initMissingBudgets();
       if (id === "payments") initPayments();
+      if (id === "apAging") initApAging();
     });
   });
   
@@ -20269,4 +20270,153 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
+}
+
+/* ------------------------------------------------------------
+   AP AGING REPORT
+------------------------------------------------------------ */
+let apAgingInitialized = false;
+let apAgingSortColumn = 'total_due';
+let apAgingSortDirection = 'desc';
+let apAgingSearchTerm = '';
+
+function initApAging() {
+  if (!apAgingInitialized) {
+    setupApAgingEventHandlers();
+    apAgingInitialized = true;
+  }
+  
+  loadApAgingData();
+  
+  const dataAsOf = document.getElementById('apAgingDataAsOf');
+  if (dataAsOf) {
+    const now = new Date();
+    dataAsOf.textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+}
+
+function setupApAgingEventHandlers() {
+  const searchInput = document.getElementById('apAgingSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', debounce(() => {
+      apAgingSearchTerm = searchInput.value.trim();
+      loadApAgingData();
+    }, 300));
+  }
+  
+  const table = document.getElementById('apAgingTable');
+  if (table) {
+    table.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const col = btn.dataset.sort;
+        const dir = btn.dataset.dir;
+        apAgingSortColumn = col;
+        apAgingSortDirection = dir;
+        updateApAgingSortIndicators();
+        loadApAgingData();
+      });
+    });
+  }
+}
+
+function loadApAgingData() {
+  const loadingOverlay = document.getElementById('apAgingLoadingOverlay');
+  if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+  
+  const params = new URLSearchParams({
+    sortColumn: apAgingSortColumn,
+    sortDirection: apAgingSortDirection
+  });
+  
+  if (apAgingSearchTerm) {
+    params.set('search', apAgingSearchTerm);
+  }
+  
+  fetch(`/api/ap-aging?${params.toString()}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        renderApAgingTable(data.vendors || []);
+        updateApAgingSummary(data.totals || {});
+        updateApAgingFooter(data.totals || {});
+      } else {
+        showApAgingError('Failed to load AP aging data');
+      }
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    })
+    .catch(err => {
+      console.error('Error loading AP aging:', err);
+      showApAgingError('Error loading AP aging data');
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    });
+}
+
+function renderApAgingTable(vendors) {
+  const tbody = document.getElementById('apAgingTableBody');
+  if (!tbody) return;
+  
+  if (!vendors || vendors.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">No outstanding AP balances found</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = vendors.map(v => `
+    <tr>
+      <td>${escapeHtml(v.vendor_name)}</td>
+      <td class="text-right">${formatCurrency(v.total_due)}</td>
+      <td class="text-right">${formatCurrency(v.current)}</td>
+      <td class="text-right">${formatCurrency(v.days_31_60)}</td>
+      <td class="text-right">${formatCurrency(v.days_61_90)}</td>
+      <td class="text-right ${v.days_90_plus > 0 ? 'negative' : ''}">${formatCurrency(v.days_90_plus)}</td>
+      <td class="text-right">${formatCurrency(v.retainage)}</td>
+    </tr>
+  `).join('');
+}
+
+function updateApAgingSummary(totals) {
+  const ids = {
+    'apAgingTotalDue': totals.total_due || 0,
+    'apAgingCurrent': totals.current || 0,
+    'apAging31to60': totals.days_31_60 || 0,
+    'apAging61to90': totals.days_61_90 || 0,
+    'apAging90plus': totals.days_90_plus || 0,
+    'apAgingRetainage': totals.retainage || 0
+  };
+  
+  for (const [id, value] of Object.entries(ids)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = formatCurrency(value);
+  }
+}
+
+function updateApAgingFooter(totals) {
+  const ids = {
+    'apAgingFooterTotal': totals.total_due || 0,
+    'apAgingFooterCurrent': totals.current || 0,
+    'apAgingFooter31to60': totals.days_31_60 || 0,
+    'apAgingFooter61to90': totals.days_61_90 || 0,
+    'apAgingFooter90plus': totals.days_90_plus || 0,
+    'apAgingFooterRetainage': totals.retainage || 0
+  };
+  
+  for (const [id, value] of Object.entries(ids)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = formatCurrency(value);
+  }
+}
+
+function updateApAgingSortIndicators() {
+  document.querySelectorAll('#apAgingTable .sort-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.sort === apAgingSortColumn && btn.dataset.dir === apAgingSortDirection) {
+      btn.classList.add('active');
+    }
+  });
+}
+
+function showApAgingError(message) {
+  const tbody = document.getElementById('apAgingTableBody');
+  if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="7" class="error-cell">${escapeHtml(message)} <button onclick="loadApAgingData()" class="retry-btn">Retry</button></td></tr>`;
+  }
 }
