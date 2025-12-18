@@ -19041,7 +19041,6 @@ let paymentsColumnFilters = {};
 let paymentsVendorSearch = '';
 let paymentsInvoiceSearch = '';
 let paymentsJobSearch = '';
-let paymentsDescriptionSearch = '';
 let paymentsPmFilter = '';
 let paymentsTotal = 0;
 let paymentsTotalPages = 1;
@@ -19113,7 +19112,7 @@ function loadPaymentsPage() {
   
   // Add individual search filters
   if (paymentsJobSearch) params.set('job', paymentsJobSearch);
-  if (paymentsDescriptionSearch) params.set('description', paymentsDescriptionSearch);
+  if (paymentsVendorSearch) params.set('vendor', paymentsVendorSearch);
   if (paymentsInvoiceSearch) params.set('invoice', paymentsInvoiceSearch);
   
   // Add column filters
@@ -19283,11 +19282,11 @@ function initPaymentsEventHandlers() {
     }, 400));
   }
   
-  // Description search filter
-  const descriptionSearch = document.getElementById('payDescriptionSearch');
-  if (descriptionSearch) {
-    descriptionSearch.addEventListener('input', debounce(() => {
-      paymentsDescriptionSearch = descriptionSearch.value.toLowerCase().trim();
+  // Vendor search filter
+  const vendorSearch = document.getElementById('payVendorSearch');
+  if (vendorSearch) {
+    vendorSearch.addEventListener('input', debounce(() => {
+      paymentsVendorSearch = vendorSearch.value.toLowerCase().trim();
       paymentsCurrentPage = 1;
       loadPaymentsPage();
     }, 400));
