@@ -2009,6 +2009,13 @@
                 </div>
               </div>
 
+              <div class="overview-config-box">
+                <div class="config-label">Project Manager:</div>
+                <select id="jbPmFilter" class="filter-select" style="min-width: 200px;">
+                  <option value="">All Project Managers</option>
+                </select>
+              </div>
+
             </div>
           </div>
         </div>
@@ -2105,16 +2112,12 @@
                   </div>
                   <div class="column-filter-dropdown" data-filter="job_status"></div>
                 </th>
-                <th class="filterable" data-sort="project_manager_name" data-filter="project_manager_name">
+                <th class="sortable" data-sort="project_manager_name">
                   <span class="column-header-text">Project Manager</span>
-                  <div class="column-controls">
-                    <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="project_manager_name" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="project_manager_name" data-dir="desc" title="Sort descending">▼</button>
-                    </div>
-                    <button class="filter-btn" data-filter="project_manager_name" title="Filter">▼</button>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="project_manager_name" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="project_manager_name" data-dir="desc" title="Sort descending">▼</button>
                   </div>
-                  <div class="column-filter-dropdown" data-filter="project_manager_name"></div>
                 </th>
                 <th class="number-col contract-detail-col hidden" data-sort="original_contract">Original Contract</th>
                 <th class="number-col contract-detail-col hidden" data-sort="tot_income_adj">Change Orders</th>

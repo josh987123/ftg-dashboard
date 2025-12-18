@@ -159,6 +159,7 @@ function applyMyPmViewFilters() {
   // Dropdown-based PM filters
   const dropdownFilters = [
     { id: 'joPmFilter', filterFn: filterJobOverview },
+    { id: 'jbPmFilter', filterFn: filterJobBudgets },
     { id: 'ccPmFilter', filterFn: updateCostCodes },
     { id: 'mbPmFilter', filterFn: filterMissingBudgets },
     { id: 'jcPmFilter', filterFn: filterJobCosts }
@@ -184,31 +185,6 @@ function applyMyPmViewFilters() {
       }
     }
   });
-  
-  // Column-based filters (Job Budgets)
-  if (typeof jobBudgetsColumnFilters !== 'undefined') {
-    if (enabled && pmName) {
-      jobBudgetsColumnFilters['project_manager_name'] = new Set([pmName]);
-      // Update dropdown checkboxes
-      const dropdown = document.querySelector('#jobBudgetsTable .column-filter-dropdown[data-filter="project_manager_name"]');
-      if (dropdown) {
-        dropdown.querySelectorAll('.filter-option input').forEach(cb => {
-          cb.checked = (cb.value === pmName);
-        });
-      }
-    } else {
-      delete jobBudgetsColumnFilters['project_manager_name'];
-      // Check all in dropdown
-      const dropdown = document.querySelector('#jobBudgetsTable .column-filter-dropdown[data-filter="project_manager_name"]');
-      if (dropdown) {
-        dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = true);
-      }
-    }
-    if (typeof updateFilterButtonIndicators === 'function') updateFilterButtonIndicators();
-    if (typeof filterJobBudgets === 'function') {
-      try { filterJobBudgets(); } catch(e) { console.log('Job Budgets filter not ready'); }
-    }
-  }
   
   // Column-based filters (Job Actuals)
   if (typeof jobActualsColumnFilters !== 'undefined') {
@@ -12838,6 +12814,9 @@ function setupJobBudgetsEventListeners() {
   document.getElementById('jobStatusClosed')?.addEventListener('change', filterJobBudgets);
   document.getElementById('jobStatusOverhead')?.addEventListener('change', filterJobBudgets);
   
+  // PM filter dropdown
+  document.getElementById('jbPmFilter')?.addEventListener('change', filterJobBudgets);
+  
   // Search input with debounce
   const searchInput = document.getElementById('jobSearchInput');
   let searchTimeout;
@@ -12992,19 +12971,17 @@ async function loadJobBudgetsData() {
     initJobBudgetsColumnFilters();
     updateJobBudgetsSortIndicators();
     
-    // Apply My PM View to column filters (sync, after checkboxes exist)
+    // Populate PM filter dropdown
+    populateJbPmFilter();
+    
+    // Apply My PM View to PM dropdown
     if (getMyPmViewEnabled() && isUserProjectManager()) {
       const pmName = getCurrentUserPmName();
       if (pmName) {
-        const dropdown = document.querySelector('#jobBudgetsTable .column-filter-dropdown[data-filter="project_manager_name"]');
-        if (dropdown) {
-          // Uncheck all, check only PM
-          dropdown.querySelectorAll('.filter-option input').forEach(cb => {
-            cb.checked = (cb.value === pmName);
-          });
-          // Set the column filter
-          jobBudgetsColumnFilters['project_manager_name'] = new Set([pmName]);
-          updateFilterButtonIndicators();
+        const pmSelect = document.getElementById('jbPmFilter');
+        if (pmSelect) {
+          const option = Array.from(pmSelect.options).find(opt => opt.value === pmName);
+          if (option) pmSelect.value = option.value;
         }
       }
     }
@@ -13057,6 +13034,7 @@ function filterJobBudgets() {
   const showOverhead = document.getElementById('jobStatusOverhead')?.checked;
   
   const searchTerm = (document.getElementById('jobSearchInput')?.value || '').toLowerCase().trim();
+  const pmFilter = document.getElementById('jbPmFilter')?.value || '';
   
   const allowedStatuses = [];
   if (showActive) allowedStatuses.push('A');
@@ -13067,6 +13045,9 @@ function filterJobBudgets() {
   jobBudgetsFiltered = jobBudgetsData.filter(job => {
     // Status filter from config panel
     if (allowedStatuses.length > 0 && !allowedStatuses.includes(job.job_status)) return false;
+    
+    // PM filter from config panel
+    if (pmFilter && job.project_manager_name !== pmFilter) return false;
     
     // Search filter
     if (searchTerm) {
@@ -13131,8 +13112,17 @@ function sortJobBudgets() {
   });
 }
 
+function populateJbPmFilter() {
+  const pms = [...new Set(jobBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+  const pmSelect = document.getElementById('jbPmFilter');
+  if (pmSelect) {
+    pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
+      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+  }
+}
+
 function initJobBudgetsColumnFilters() {
-  const filterableColumns = ['job_no', 'job_description', 'customer_name', 'job_status', 'project_manager_name'];
+  const filterableColumns = ['job_no', 'job_description', 'customer_name', 'job_status'];
   
   filterableColumns.forEach(col => {
     const dropdown = document.querySelector(`#jobBudgetsTable .column-filter-dropdown[data-filter="${col}"]`);
