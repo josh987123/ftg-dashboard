@@ -3086,6 +3086,21 @@
         <!-- Audit Log Tab -->
         <div id="adminAuditTab" class="admin-tab-content">
           <div class="admin-toolbar">
+            <select id="auditCategoryFilter" class="audit-filter-select">
+              <option value="">All Categories</option>
+              <option value="authentication">Authentication</option>
+              <option value="security">Security</option>
+              <option value="user_management">User Management</option>
+              <option value="role_management">Role Management</option>
+              <option value="data_access">Data Access</option>
+            </select>
+            <select id="auditSeverityFilter" class="audit-filter-select">
+              <option value="">All Severities</option>
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="critical">Critical</option>
+            </select>
+            <input type="text" id="auditSearchInput" placeholder="Search logs..." class="admin-search" style="width: 200px;">
             <button id="refreshAuditBtn" class="btn-secondary">Refresh</button>
           </div>
           <div id="auditLogContainer" class="admin-table-container">
@@ -3093,6 +3108,8 @@
               <thead>
                 <tr>
                   <th>Date/Time</th>
+                  <th>Category</th>
+                  <th>Severity</th>
                   <th>User</th>
                   <th>Action</th>
                   <th>Details</th>
@@ -3100,7 +3117,7 @@
                 </tr>
               </thead>
               <tbody id="auditLogBody">
-                <tr><td colspan="5" class="loading-cell">Loading audit log...</td></tr>
+                <tr><td colspan="7" class="loading-cell">Loading audit log...</td></tr>
               </tbody>
             </table>
           </div>

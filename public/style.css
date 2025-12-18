@@ -7464,6 +7464,16 @@ body.dark-mode .nav-item.nav-parent.expanded {
   color: var(--text-primary);
 }
 
+.audit-filter-select {
+  padding: 8px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  min-width: 140px;
+}
+
 /* Admin table */
 .admin-table-container {
   background: var(--card-bg);

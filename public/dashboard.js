@@ -17003,6 +17003,9 @@ function initAdminModule() {
   
   // Refresh audit button
   document.getElementById('refreshAuditBtn')?.addEventListener('click', loadAuditLog);
+  document.getElementById('auditCategoryFilter')?.addEventListener('change', loadAuditLog);
+  document.getElementById('auditSeverityFilter')?.addEventListener('change', loadAuditLog);
+  document.getElementById('auditSearchInput')?.addEventListener('input', debounce(loadAuditLog, 300));
   
   // Load initial data
   loadRolesForSelect();
@@ -17572,22 +17575,44 @@ async function saveRolePermissions(roleId) {
 
 async function loadAuditLog() {
   const tbody = document.getElementById('auditLogBody');
-  tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Loading audit log...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Loading audit log...</td></tr>';
   
   try {
-    const resp = await fetch('/api/admin/audit-log?limit=100', { headers: getAuthHeaders() });
+    const category = document.getElementById('auditCategoryFilter')?.value || '';
+    const severity = document.getElementById('auditSeverityFilter')?.value || '';
+    const search = document.getElementById('auditSearchInput')?.value || '';
+    
+    let url = '/api/admin/audit-log?limit=100';
+    if (category) url += `&category=${encodeURIComponent(category)}`;
+    if (severity) url += `&severity=${encodeURIComponent(severity)}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    
+    const resp = await fetch(url, { headers: getAuthHeaders() });
     const data = await resp.json();
     
     if (!data.success) throw new Error(data.error);
     
     if (data.logs.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">No audit logs found</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">No audit logs found</td></tr>';
       return;
     }
+    
+    const severityBadge = (sev) => {
+      const colors = { info: '#3b82f6', warning: '#f59e0b', critical: '#dc2626' };
+      const color = colors[sev] || '#6b7280';
+      return `<span style="background: ${color}; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase;">${sev || 'info'}</span>`;
+    };
+    
+    const categoryLabel = (cat) => {
+      const labels = { authentication: 'Auth', security: 'Security', user_management: 'Users', role_management: 'Roles', data_access: 'Data', general: 'General' };
+      return labels[cat] || cat || 'General';
+    };
     
     tbody.innerHTML = data.logs.map(log => `
       <tr>
         <td>${log.createdAt ? new Date(log.createdAt).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : ''}</td>
+        <td>${escapeHtml(categoryLabel(log.category))}</td>
+        <td>${severityBadge(log.severity)}</td>
         <td>${escapeHtml(log.userName || 'Unknown')}</td>
         <td>${escapeHtml(log.action)}</td>
         <td>${log.details ? escapeHtml(JSON.stringify(log.details).substring(0, 50)) : ''}</td>
@@ -17595,7 +17620,7 @@ async function loadAuditLog() {
       </tr>
     `).join('');
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="5" class="loading-cell">Error: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="loading-cell">Error: ${err.message}</td></tr>`;
   }
 }
 
