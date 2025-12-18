@@ -1409,7 +1409,7 @@ function initNavigation() {
       
       // Auto-expand Jobs if child is clicked
       if (item.classList.contains("nav-child") && jobsParent && jobsChildren) {
-        const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'costCodes', 'missingBudgets', 'payments', 'jobAnalytics'];
+        const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'payments', 'jobAnalytics'];
         if (jobsChildItems.includes(id)) {
           jobsParent.classList.add("expanded");
           jobsChildren.classList.add("expanded");
@@ -1436,6 +1436,7 @@ function initNavigation() {
       if (id === "jobOverview") initJobOverview();
       if (id === "jobBudgets") initJobBudgets();
       if (id === "jobActuals") initJobActuals();
+      if (id === "overUnderBilling") initOverUnderBilling();
       if (id === "costCodes") initCostCodes();
       if (id === "missingBudgets") initMissingBudgets();
       if (id === "payments") initPayments();
