@@ -7672,8 +7672,10 @@ body.dark-mode .nav-item.nav-parent.expanded {
 
 /* Roles container */
 .roles-container {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
+  align-items: flex-start;
 }
 
 .role-card {
@@ -7681,6 +7683,8 @@ body.dark-mode .nav-item.nav-parent.expanded {
   border: 1px solid var(--border-primary);
   border-radius: 6px;
   padding: 12px 16px;
+  flex: 0 0 auto;
+  max-width: 100%;
 }
 
 .role-card-header {
