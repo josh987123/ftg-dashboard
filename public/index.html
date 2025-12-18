@@ -1856,6 +1856,48 @@
         <h2>Job Budgets</h2>
         <div class="data-as-of">Data as of: <span id="jobBudgetsDataAsOf">-</span></div>
 
+        <!-- Configuration Panel -->
+        <div class="config-panel">
+          <div class="config-header collapsed" data-target="jobBudgetsConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
+            <button class="config-expand-btn">Expand ▼</button>
+          </div>
+          <div class="config-body collapsed" id="jobBudgetsConfigBody">
+            <div class="job-budgets-controls">
+              <div class="overview-config-box">
+                <div class="config-label">Job Status:</div>
+                <div class="checkbox-stack">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusActive" checked>
+                    Active
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusInactive">
+                    Inactive
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusClosed">
+                    Closed
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusOverhead">
+                    Overhead
+                  </label>
+                </div>
+              </div>
+
+              <div class="overview-config-box">
+                <div class="config-label">Project Manager:</div>
+                <select id="jbPmFilter" class="filter-select" style="min-width: 200px;">
+                  <option value="">All Project Managers</option>
+                </select>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
         <!-- AI Analysis Panel -->
         <div id="jbAiAnalysisPanel" class="ai-analysis-panel">
           <div class="ai-analysis-header" id="jbAiAnalysisHeader">
@@ -1974,48 +2016,6 @@
                   </tbody>
                 </table>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Configuration Panel -->
-        <div class="config-panel">
-          <div class="config-header collapsed" data-target="jobBudgetsConfigBody">
-            <span class="config-toggle">▼</span>
-            <span class="config-title">Configuration Options</span>
-            <button class="config-expand-btn">Expand ▼</button>
-          </div>
-          <div class="config-body collapsed" id="jobBudgetsConfigBody">
-            <div class="job-budgets-controls">
-              <div class="overview-config-box">
-                <div class="config-label">Job Status:</div>
-                <div class="checkbox-stack">
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusActive" checked>
-                    Active
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusInactive">
-                    Inactive
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusClosed">
-                    Closed
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusOverhead">
-                    Overhead
-                  </label>
-                </div>
-              </div>
-
-              <div class="overview-config-box">
-                <div class="config-label">Project Manager:</div>
-                <select id="jbPmFilter" class="filter-select" style="min-width: 200px;">
-                  <option value="">All Project Managers</option>
-                </select>
-              </div>
-
             </div>
           </div>
         </div>
@@ -2182,6 +2182,41 @@
         <h2>Job Actuals</h2>
         <div class="data-as-of">Data as of: <span id="jobActualsDataAsOf">-</span></div>
 
+        <!-- Configuration Panel -->
+        <div class="config-panel">
+          <div class="config-header collapsed" data-target="jobActualsConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
+            <button class="config-expand-btn">Expand ▼</button>
+          </div>
+          <div class="config-body collapsed" id="jobActualsConfigBody">
+            <div class="job-budgets-controls">
+              <div class="overview-config-box">
+                <div class="config-label">Job Status:</div>
+                <div class="checkbox-stack">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jaStatusActive" checked>
+                    Active
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jaStatusInactive">
+                    Inactive
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jaStatusClosed">
+                    Closed
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jaStatusOverhead">
+                    Overhead
+                  </label>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
         <!-- AI Analysis Panel -->
         <div id="jaAiAnalysisPanel" class="ai-analysis-panel">
           <div class="ai-analysis-header" id="jaAiAnalysisHeader">
@@ -2234,41 +2269,6 @@
                 <div class="metric-value" id="jaTotalOverUnder">-</div>
                 <div class="metric-label">Over/(Under) Bill</div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Configuration Panel -->
-        <div class="config-panel">
-          <div class="config-header collapsed" data-target="jobActualsConfigBody">
-            <span class="config-toggle">▼</span>
-            <span class="config-title">Configuration Options</span>
-            <button class="config-expand-btn">Expand ▼</button>
-          </div>
-          <div class="config-body collapsed" id="jobActualsConfigBody">
-            <div class="job-budgets-controls">
-              <div class="overview-config-box">
-                <div class="config-label">Job Status:</div>
-                <div class="checkbox-stack">
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jaStatusActive" checked>
-                    Active
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jaStatusInactive">
-                    Inactive
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jaStatusClosed">
-                    Closed
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jaStatusOverhead">
-                    Overhead
-                  </label>
-                </div>
-              </div>
-
             </div>
           </div>
         </div>
