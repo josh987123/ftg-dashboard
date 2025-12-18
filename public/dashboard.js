@@ -16731,23 +16731,20 @@ function updateCCPagination(total) {
 
 function updateCCTableTotals(data) {
   let totalCost = 0;
-  let totalRevPct = 0;
   
   data.forEach(cc => {
     totalCost += cc.total_cost;
-    totalRevPct += cc.pct_of_revenue || 0;
   });
   
   const totalCostCell = document.getElementById('ccTotalCostCell');
   if (totalCostCell) totalCostCell.textContent = formatCurrency(totalCost);
   
-  // Show the sum of % of Revenue - note this sums percentages across jobs
+  // Calculate % of Revenue as total cost / total earned revenue
   const totalRevPctCell = document.getElementById('ccTotalRevPctCell');
   if (totalRevPctCell) {
-    if (totalRevPct > 0) {
-      // Format with commas for large numbers
-      const formatted = totalRevPct.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      totalRevPctCell.textContent = formatted + '%';
+    if (ccTotalEarnedRevenue > 0 && totalCost > 0) {
+      const revPct = (totalCost / ccTotalEarnedRevenue) * 100;
+      totalRevPctCell.textContent = revPct.toFixed(2) + '%';
     } else {
       totalRevPctCell.textContent = '—';
     }
