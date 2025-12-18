@@ -16471,16 +16471,6 @@ function initPayments() {
     `).join('');
   }
   
-  // Load metrics first (fast, cached on server)
-  fetch('/api/payments/metrics')
-    .then(r => r.json())
-    .then(data => {
-      if (data.success && data.metrics) {
-        updatePaymentsKeyMetricsFromServer(data.metrics);
-      }
-    })
-    .catch(err => console.error('Error loading metrics:', err));
-  
   // Initialize event handlers only once
   if (!paymentsInitialized) {
     initPaymentsEventHandlers();

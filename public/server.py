@@ -3136,7 +3136,7 @@ def get_payments_data():
             # Load AP invoices data
             invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ap_invoices.json')
             
-            with open(invoices_path, 'r') as f:
+            with open(invoices_path, 'r', encoding='utf-8-sig') as f:
                 invoices_json = json.load(f)
             
             # Process invoices - convert dates and calculate fields
