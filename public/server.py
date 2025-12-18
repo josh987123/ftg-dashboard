@@ -3426,10 +3426,9 @@ def api_get_payments():
         sort_direction = request.args.get('sortDirection', 'desc')
         
         # Individual filter parameters
-        vendor_filter = request.args.get('vendor', '').lower().strip()
-        invoice_filter = request.args.get('invoice', '').lower().strip()
         job_filter = request.args.get('job', '').lower().strip()
-        pm_filter = request.args.get('pm', '').strip()
+        description_filter = request.args.get('description', '').lower().strip()
+        invoice_filter = request.args.get('invoice', '').lower().strip()
         
         # Validate sort column
         if sort_column not in PAYMENTS_VALID_COLUMNS:
@@ -3443,14 +3442,12 @@ def api_get_payments():
             column_filters = {}
         
         # Apply individual search filters
-        if vendor_filter:
-            payments = [p for p in payments if vendor_filter in str(p.get('vendor', '')).lower()]
-        if invoice_filter:
-            payments = [p for p in payments if invoice_filter in str(p.get('invoice_no', '')).lower()]
         if job_filter:
             payments = [p for p in payments if job_filter in str(p.get('job_no', '')).lower()]
-        if pm_filter:
-            payments = [p for p in payments if str(p.get('project_manager', '')) == pm_filter]
+        if description_filter:
+            payments = [p for p in payments if description_filter in str(p.get('job_description', '')).lower()]
+        if invoice_filter:
+            payments = [p for p in payments if invoice_filter in str(p.get('invoice_no', '')).lower()]
         
         # Apply column filters (validate column names)
         for col, values in column_filters.items():

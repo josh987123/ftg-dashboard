@@ -2027,12 +2027,25 @@
           </div>
         </div>
 
-        <!-- Search Bar and Column Picker -->
-        <div class="table-toolbar">
-          <div class="job-search-bar">
-            <input type="text" id="jobSearchInput" placeholder="Search by job number, description, or client..." class="job-search-input">
-            <span class="job-search-icon">🔍</span>
+        <!-- Filter Bar -->
+        <div class="jb-filter-bar" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
+          <div class="filter-group">
+            <label for="jbJobNoSearch" style="font-weight: 500; margin-right: 8px;">Job #:</label>
+            <input type="text" id="jbJobNoSearch" class="search-input" placeholder="Search job #..." style="width: 120px;">
           </div>
+          <div class="filter-group">
+            <label for="jbDescriptionSearch" style="font-weight: 500; margin-right: 8px;">Description:</label>
+            <input type="text" id="jbDescriptionSearch" class="search-input" placeholder="Search description..." style="width: 180px;">
+          </div>
+          <div class="filter-group">
+            <label for="jbClientSearch" style="font-weight: 500; margin-right: 8px;">Client:</label>
+            <input type="text" id="jbClientSearch" class="search-input" placeholder="Search client..." style="width: 150px;">
+          </div>
+        </div>
+
+        <!-- Column Picker -->
+        <div class="table-toolbar">
+          <div></div>
           <div class="column-picker-container">
             <button class="column-picker-btn" id="budgetsColumnPickerBtn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2271,12 +2284,25 @@
           </div>
         </div>
 
-        <!-- Search Bar and Column Picker -->
-        <div class="table-toolbar">
-          <div class="job-search-bar">
-            <input type="text" id="jaSearchInput" placeholder="Search by job number, description, or client..." class="job-search-input">
-            <span class="job-search-icon">🔍</span>
+        <!-- Filter Bar -->
+        <div class="ja-filter-bar" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
+          <div class="filter-group">
+            <label for="jaJobNoSearch" style="font-weight: 500; margin-right: 8px;">Job #:</label>
+            <input type="text" id="jaJobNoSearch" class="search-input" placeholder="Search job #..." style="width: 120px;">
           </div>
+          <div class="filter-group">
+            <label for="jaDescriptionSearch" style="font-weight: 500; margin-right: 8px;">Description:</label>
+            <input type="text" id="jaDescriptionSearch" class="search-input" placeholder="Search description..." style="width: 180px;">
+          </div>
+          <div class="filter-group">
+            <label for="jaClientSearch" style="font-weight: 500; margin-right: 8px;">Client:</label>
+            <input type="text" id="jaClientSearch" class="search-input" placeholder="Search client..." style="width: 150px;">
+          </div>
+        </div>
+
+        <!-- Column Picker -->
+        <div class="table-toolbar">
+          <div></div>
           <div class="column-picker-container">
             <button class="column-picker-btn" id="actualsColumnPickerBtn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2863,22 +2889,16 @@
         <!-- Filter Bar -->
         <div class="payments-filter-bar" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
           <div class="filter-group">
-            <label for="payVendorSearch" style="font-weight: 500; margin-right: 8px;">Vendor:</label>
-            <input type="text" id="payVendorSearch" class="search-input" placeholder="Search vendor..." style="width: 150px;">
+            <label for="payJobSearch" style="font-weight: 500; margin-right: 8px;">Job #:</label>
+            <input type="text" id="payJobSearch" class="search-input" placeholder="Search job #..." style="width: 120px;">
+          </div>
+          <div class="filter-group">
+            <label for="payDescriptionSearch" style="font-weight: 500; margin-right: 8px;">Description:</label>
+            <input type="text" id="payDescriptionSearch" class="search-input" placeholder="Search description..." style="width: 180px;">
           </div>
           <div class="filter-group">
             <label for="payInvoiceSearch" style="font-weight: 500; margin-right: 8px;">Invoice #:</label>
             <input type="text" id="payInvoiceSearch" class="search-input" placeholder="Search invoice..." style="width: 120px;">
-          </div>
-          <div class="filter-group">
-            <label for="payJobSearch" style="font-weight: 500; margin-right: 8px;">Job #:</label>
-            <input type="text" id="payJobSearch" class="search-input" placeholder="Search job..." style="width: 120px;">
-          </div>
-          <div class="filter-group">
-            <label for="payPmFilter" style="font-weight: 500; margin-right: 8px;">Project Manager:</label>
-            <select id="payPmFilter" class="filter-select" style="min-width: 180px;">
-              <option value="">All Project Managers</option>
-            </select>
           </div>
         </div>
 

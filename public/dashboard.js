@@ -13336,12 +13336,23 @@ function setupJobBudgetsEventListeners() {
   // Client filter dropdown
   document.getElementById('jbClientFilter')?.addEventListener('change', filterJobBudgets);
   
-  // Search input with debounce
-  const searchInput = document.getElementById('jobSearchInput');
-  let searchTimeout;
-  searchInput?.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(filterJobBudgets, 300);
+  // Individual search inputs with debounce
+  let jbSearchTimeout;
+  const jbJobNoSearch = document.getElementById('jbJobNoSearch');
+  const jbDescriptionSearch = document.getElementById('jbDescriptionSearch');
+  const jbClientSearch = document.getElementById('jbClientSearch');
+  
+  jbJobNoSearch?.addEventListener('input', () => {
+    clearTimeout(jbSearchTimeout);
+    jbSearchTimeout = setTimeout(filterJobBudgets, 300);
+  });
+  jbDescriptionSearch?.addEventListener('input', () => {
+    clearTimeout(jbSearchTimeout);
+    jbSearchTimeout = setTimeout(filterJobBudgets, 300);
+  });
+  jbClientSearch?.addEventListener('input', () => {
+    clearTimeout(jbSearchTimeout);
+    jbSearchTimeout = setTimeout(filterJobBudgets, 300);
   });
   
   // Pagination
@@ -13553,7 +13564,9 @@ function filterJobBudgets() {
   const showClosed = document.getElementById('jobStatusClosed')?.checked;
   const showOverhead = document.getElementById('jobStatusOverhead')?.checked;
   
-  const searchTerm = (document.getElementById('jobSearchInput')?.value || '').toLowerCase().trim();
+  const jobNoSearch = (document.getElementById('jbJobNoSearch')?.value || '').toLowerCase().trim();
+  const descriptionSearch = (document.getElementById('jbDescriptionSearch')?.value || '').toLowerCase().trim();
+  const clientSearch = (document.getElementById('jbClientSearch')?.value || '').toLowerCase().trim();
   const pmFilter = document.getElementById('jbPmFilter')?.value || '';
   const clientFilter = document.getElementById('jbClientFilter')?.value || '';
   
@@ -13570,14 +13583,13 @@ function filterJobBudgets() {
     // PM filter from config panel
     if (pmFilter && job.project_manager_name !== pmFilter) return false;
     
-    // Client filter from config panel
+    // Client filter from config panel (dropdown)
     if (clientFilter && job.customer_name !== clientFilter) return false;
     
-    // Search filter
-    if (searchTerm) {
-      const searchStr = `${job.job_no} ${job.job_description} ${job.customer_name}`.toLowerCase();
-      if (!searchStr.includes(searchTerm)) return false;
-    }
+    // Individual search filters
+    if (jobNoSearch && !(job.job_no || '').toLowerCase().includes(jobNoSearch)) return false;
+    if (descriptionSearch && !(job.job_description || '').toLowerCase().includes(descriptionSearch)) return false;
+    if (clientSearch && !(job.customer_name || '').toLowerCase().includes(clientSearch)) return false;
     
     // Column filters (multi-select)
     for (const [col, allowedValues] of Object.entries(jobBudgetsColumnFilters)) {
@@ -15224,11 +15236,23 @@ function setupJobActualsEventListeners() {
   document.getElementById('jaStatusOverhead')?.addEventListener('change', filterJobActuals);
   document.getElementById('jaPmFilter')?.addEventListener('change', filterJobActuals);
   
-  const searchInput = document.getElementById('jaSearchInput');
-  let searchTimeout;
-  searchInput?.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(filterJobActuals, 300);
+  // Individual search inputs with debounce
+  let jaSearchTimeout;
+  const jaJobNoSearch = document.getElementById('jaJobNoSearch');
+  const jaDescriptionSearch = document.getElementById('jaDescriptionSearch');
+  const jaClientSearch = document.getElementById('jaClientSearch');
+  
+  jaJobNoSearch?.addEventListener('input', () => {
+    clearTimeout(jaSearchTimeout);
+    jaSearchTimeout = setTimeout(filterJobActuals, 300);
+  });
+  jaDescriptionSearch?.addEventListener('input', () => {
+    clearTimeout(jaSearchTimeout);
+    jaSearchTimeout = setTimeout(filterJobActuals, 300);
+  });
+  jaClientSearch?.addEventListener('input', () => {
+    clearTimeout(jaSearchTimeout);
+    jaSearchTimeout = setTimeout(filterJobActuals, 300);
   });
   
   document.getElementById('jaPrevPage')?.addEventListener('click', () => {
@@ -15568,7 +15592,9 @@ function filterJobActuals() {
   const showOverhead = document.getElementById('jaStatusOverhead')?.checked;
   const pmFilter = document.getElementById('jaPmFilter')?.value || '';
   
-  const searchTerm = (document.getElementById('jaSearchInput')?.value || '').toLowerCase().trim();
+  const jobNoSearch = (document.getElementById('jaJobNoSearch')?.value || '').toLowerCase().trim();
+  const descriptionSearch = (document.getElementById('jaDescriptionSearch')?.value || '').toLowerCase().trim();
+  const clientSearch = (document.getElementById('jaClientSearch')?.value || '').toLowerCase().trim();
   
   const allowedStatuses = [];
   if (showActive) allowedStatuses.push('A');
@@ -15583,11 +15609,10 @@ function filterJobActuals() {
     // PM filter from config panel
     if (pmFilter && job.project_manager_name !== pmFilter) return false;
     
-    // Search filter
-    if (searchTerm) {
-      const searchStr = `${job.job_no} ${job.job_description} ${job.customer_name}`.toLowerCase();
-      if (!searchStr.includes(searchTerm)) return false;
-    }
+    // Individual search filters
+    if (jobNoSearch && !(job.job_no || '').toLowerCase().includes(jobNoSearch)) return false;
+    if (descriptionSearch && !(job.job_description || '').toLowerCase().includes(descriptionSearch)) return false;
+    if (clientSearch && !(job.customer_name || '').toLowerCase().includes(clientSearch)) return false;
     
     // Column filters (multi-select)
     for (const [col, allowedValues] of Object.entries(jobActualsColumnFilters)) {
@@ -18975,6 +19000,7 @@ let paymentsColumnFilters = {};
 let paymentsVendorSearch = '';
 let paymentsInvoiceSearch = '';
 let paymentsJobSearch = '';
+let paymentsDescriptionSearch = '';
 let paymentsPmFilter = '';
 let paymentsTotal = 0;
 let paymentsTotalPages = 1;
@@ -19045,10 +19071,9 @@ function loadPaymentsPage() {
   });
   
   // Add individual search filters
-  if (paymentsVendorSearch) params.set('vendor', paymentsVendorSearch);
-  if (paymentsInvoiceSearch) params.set('invoice', paymentsInvoiceSearch);
   if (paymentsJobSearch) params.set('job', paymentsJobSearch);
-  if (paymentsPmFilter) params.set('pm', paymentsPmFilter);
+  if (paymentsDescriptionSearch) params.set('description', paymentsDescriptionSearch);
+  if (paymentsInvoiceSearch) params.set('invoice', paymentsInvoiceSearch);
   
   // Add column filters
   const activeFilters = {};
@@ -19207,27 +19232,7 @@ function formatPaymentDate(date) {
 }
 
 function initPaymentsEventHandlers() {
-  // Vendor search filter
-  const vendorSearch = document.getElementById('payVendorSearch');
-  if (vendorSearch) {
-    vendorSearch.addEventListener('input', debounce(() => {
-      paymentsVendorSearch = vendorSearch.value.toLowerCase().trim();
-      paymentsCurrentPage = 1;
-      loadPaymentsPage();
-    }, 400));
-  }
-  
-  // Invoice search filter
-  const invoiceSearch = document.getElementById('payInvoiceSearch');
-  if (invoiceSearch) {
-    invoiceSearch.addEventListener('input', debounce(() => {
-      paymentsInvoiceSearch = invoiceSearch.value.toLowerCase().trim();
-      paymentsCurrentPage = 1;
-      loadPaymentsPage();
-    }, 400));
-  }
-  
-  // Job search filter
+  // Job # search filter
   const jobSearch = document.getElementById('payJobSearch');
   if (jobSearch) {
     jobSearch.addEventListener('input', debounce(() => {
@@ -19237,14 +19242,24 @@ function initPaymentsEventHandlers() {
     }, 400));
   }
   
-  // PM dropdown filter
-  const pmFilter = document.getElementById('payPmFilter');
-  if (pmFilter) {
-    pmFilter.addEventListener('change', () => {
-      paymentsPmFilter = pmFilter.value;
+  // Description search filter
+  const descriptionSearch = document.getElementById('payDescriptionSearch');
+  if (descriptionSearch) {
+    descriptionSearch.addEventListener('input', debounce(() => {
+      paymentsDescriptionSearch = descriptionSearch.value.toLowerCase().trim();
       paymentsCurrentPage = 1;
       loadPaymentsPage();
-    });
+    }, 400));
+  }
+  
+  // Invoice # search filter
+  const invoiceSearch = document.getElementById('payInvoiceSearch');
+  if (invoiceSearch) {
+    invoiceSearch.addEventListener('input', debounce(() => {
+      paymentsInvoiceSearch = invoiceSearch.value.toLowerCase().trim();
+      paymentsCurrentPage = 1;
+      loadPaymentsPage();
+    }, 400));
   }
   
   document.querySelectorAll('#paymentsTable .sort-btn').forEach(btn => {
