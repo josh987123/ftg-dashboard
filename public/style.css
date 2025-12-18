@@ -13625,11 +13625,35 @@ body.dark-mode #overUnderBilling .search-input {
   }
 }
 
+/* Over/(Under) Billing Key Metrics */
+.oub-key-metrics-section {
+  width: 80%;
+  margin: 0 auto 20px auto;
+}
+
+.oub-metrics-row {
+  margin-bottom: 0 !important;
+}
+
+.oub-metrics-container {
+  display: flex;
+  gap: 12px;
+  flex-wrap: nowrap !important;
+}
+
+.oub-metrics-container .job-metric-card {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Over/(Under) Billing Charts */
 .oub-charts-row {
   display: flex;
   gap: 16px;
   margin-bottom: 20px;
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .oub-chart-container {

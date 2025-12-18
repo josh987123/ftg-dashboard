@@ -15674,11 +15674,11 @@ function updateJobActualsSummaryMetrics() {
   const totalOverUnder = totalBilledRevenue - totalEarnedRevenue;
   
   document.getElementById('jaTotalCount').textContent = totalJobs.toLocaleString();
-  document.getElementById('jaTotalBilledRevenue').textContent = formatCurrency(totalBilledRevenue);
-  document.getElementById('jaTotalEarnedRevenue').textContent = formatCurrency(totalEarnedRevenue);
-  document.getElementById('jaTotalActualCost').textContent = formatCurrency(totalActualCost);
+  document.getElementById('jaTotalBilledRevenue').textContent = formatCurrencyCompact(totalBilledRevenue);
+  document.getElementById('jaTotalEarnedRevenue').textContent = formatCurrencyCompact(totalEarnedRevenue);
+  document.getElementById('jaTotalActualCost').textContent = formatCurrencyCompact(totalActualCost);
   const overUnderEl = document.getElementById('jaTotalOverUnder');
-  overUnderEl.textContent = formatCurrency(totalOverUnder);
+  overUnderEl.textContent = formatCurrencyCompact(totalOverUnder);
   overUnderEl.style.color = totalOverUnder >= 0 ? '#10b981' : '#dc2626';
   
   const overUnderCard = document.getElementById('jaOverUnderCard');
@@ -16909,11 +16909,11 @@ function updateOubMetrics() {
   const oubOverUnderCard = document.getElementById('oubOverUnderCard');
   
   if (elTotalJobs) elTotalJobs.textContent = totalJobs.toLocaleString();
-  if (elTotalContract) elTotalContract.textContent = formatCurrency(totalContract);
-  if (elTotalBilled) elTotalBilled.textContent = formatCurrency(totalBilled);
-  if (elTotalEarned) elTotalEarned.textContent = formatCurrency(totalEarned);
+  if (elTotalContract) elTotalContract.textContent = formatCurrencyCompact(totalContract);
+  if (elTotalBilled) elTotalBilled.textContent = formatCurrencyCompact(totalBilled);
+  if (elTotalEarned) elTotalEarned.textContent = formatCurrencyCompact(totalEarned);
   if (elNetOverUnder) {
-    elNetOverUnder.textContent = formatCurrency(netOverUnder);
+    elNetOverUnder.textContent = formatCurrencyCompact(netOverUnder);
     elNetOverUnder.style.color = netOverUnder >= 0 ? '#10b981' : '#dc2626';
   }
   
@@ -16959,7 +16959,8 @@ function renderOubCharts() {
           data: overbilled.map(j => j.over_under),
           backgroundColor: '#10b981',
           borderRadius: 4,
-          barPercentage: 0.8
+          barPercentage: 0.8,
+          jobData: overbilled
         }]
       },
       options: {
@@ -16970,8 +16971,27 @@ function renderOubCharts() {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (ctx) => formatCurrency(ctx.raw)
+              title: (items) => {
+                const idx = items[0].dataIndex;
+                const job = overbilled[idx];
+                return job ? `Job #${job.job_no}` : '';
+              },
+              label: (ctx) => {
+                const job = overbilled[ctx.dataIndex];
+                return [
+                  job ? job.job_description : '',
+                  formatCurrency(ctx.raw)
+                ];
+              }
             }
+          },
+          datalabels: {
+            display: true,
+            anchor: 'end',
+            align: 'top',
+            color: textColor,
+            font: { size: 9, weight: 'bold' },
+            formatter: (val) => formatCurrencyCompact(val)
           }
         },
         scales: {
@@ -16988,7 +17008,8 @@ function renderOubCharts() {
             grid: { color: gridColor }
           }
         }
-      }
+      },
+      plugins: [ChartDataLabels]
     });
   }
   
@@ -17007,7 +17028,8 @@ function renderOubCharts() {
           data: underbilled.map(j => Math.abs(j.over_under)),
           backgroundColor: '#dc2626',
           borderRadius: 4,
-          barPercentage: 0.8
+          barPercentage: 0.8,
+          jobData: underbilled
         }]
       },
       options: {
@@ -17018,8 +17040,27 @@ function renderOubCharts() {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (ctx) => formatCurrency(ctx.raw)
+              title: (items) => {
+                const idx = items[0].dataIndex;
+                const job = underbilled[idx];
+                return job ? `Job #${job.job_no}` : '';
+              },
+              label: (ctx) => {
+                const job = underbilled[ctx.dataIndex];
+                return [
+                  job ? job.job_description : '',
+                  formatCurrency(ctx.raw)
+                ];
+              }
             }
+          },
+          datalabels: {
+            display: true,
+            anchor: 'end',
+            align: 'top',
+            color: textColor,
+            font: { size: 9, weight: 'bold' },
+            formatter: (val) => formatCurrencyCompact(val)
           }
         },
         scales: {
@@ -17036,7 +17077,8 @@ function renderOubCharts() {
             grid: { color: gridColor }
           }
         }
-      }
+      },
+      plugins: [ChartDataLabels]
     });
   }
 }
