@@ -13557,3 +13557,80 @@ body.dark-mode #overUnderBilling .search-input {
 #overUnderBilling .oub-metrics .tile {
   min-width: 140px;
 }
+
+/* ===== Unified Page Filter Bar Styles ===== */
+.page-filter-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.page-filter-bar .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-filter-bar .filter-group label {
+  font-weight: 500;
+  font-size: 13px;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.page-filter-bar .filter-input {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  height: 36px;
+  box-sizing: border-box;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.page-filter-bar .filter-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.page-filter-bar .filter-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Dark mode for page filter bars */
+[data-theme="dark"] .page-filter-bar,
+body.dark-mode .page-filter-bar {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .page-filter-bar .filter-group label,
+body.dark-mode .page-filter-bar .filter-group label {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .page-filter-bar .filter-input,
+body.dark-mode .page-filter-bar .filter-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .page-filter-bar .filter-input:focus,
+body.dark-mode .page-filter-bar .filter-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="dark"] .page-filter-bar .filter-input::placeholder,
+body.dark-mode .page-filter-bar .filter-input::placeholder {
+  color: #64748b;
+}
