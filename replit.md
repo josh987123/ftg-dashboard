@@ -61,6 +61,11 @@ The Jobs section in the sidebar contains job-related tracking views:
   - **Actual Margin**: `(Actual Profit / Earned Revenue) × 100`
   Features donut charts by PM and Customer, breakdown tables, same filtering options as Job Budgets, search, sort, and pagination.
 - **Missing Budgets**: Shows jobs with incomplete budget data. Has two tabs: "No Contract Value" (jobs with zero revised contract) and "No Estimated Cost" (jobs with zero revised cost). Features same configuration options as Job Budgets (status filters with Active checked by default, PM filter, Customer filter), search, and pagination. Simplified table with columns: Job #, Description, Customer, Status, Project Manager, Revised Contract, Revised Cost (no profit/margin columns).
+- **Cost Codes**: Analyzes job costs by cost code category. Features:
+  - **Cost as % of Earned Revenue Chart**: Horizontal bar chart showing top 10 cost codes as a percentage of total earned revenue. Earned revenue calculated as `(Actual Cost / Revised Cost) × Revised Contract` per job.
+  - **Hierarchical Drill-Down Table**: Expandable rows showing Cost Code → Vendor → Invoice detail. Columns include Cost Code, Description, Total Cost, and % of Revenue. Click to expand vendors under each cost code, then click vendor to see invoice entries (up to 50 per vendor).
+  - **Filters**: Status, PM, and Customer dropdown filters. Search input for finding specific cost codes.
+  - **My PM View**: Respects the global PM filter toggle to show only logged-in user's jobs.
 - **Job Analytics**: Placeholder for future job analytics features.
 
 ### Responsive Design
