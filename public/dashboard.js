@@ -66,6 +66,245 @@ const debouncedRenderCashChart = debounce(() => {
 }, 150);
 
 /* ------------------------------------------------------------
+   MY PM VIEW - Username to PM Name Mapping
+   Maps usernames to their full project manager names in the data
+------------------------------------------------------------ */
+const pmUsernameMapping = {
+  'rodney': 'Rodney Terra',
+  'kathy': 'Kathy Ross',
+  'doris': 'Doris',
+  'marcus': 'Mark Alvarado'
+};
+
+// Get current user's PM name if they are a project manager
+function getCurrentUserPmName() {
+  const currentUser = localStorage.getItem('ftg_current_user') || '';
+  const username = currentUser.toLowerCase().trim();
+  return pmUsernameMapping[username] || null;
+}
+
+// Check if current user has a PM name mapping
+function isUserProjectManager() {
+  return getCurrentUserPmName() !== null;
+}
+
+// Get/set My PM View preference
+function getMyPmViewEnabled() {
+  return localStorage.getItem('ftg_my_pm_view') === 'true';
+}
+
+function setMyPmViewEnabled(enabled) {
+  localStorage.setItem('ftg_my_pm_view', enabled ? 'true' : 'false');
+  updateMyPmViewUI();
+  applyMyPmViewFilters();
+}
+
+// Update UI to reflect My PM View state
+function updateMyPmViewUI() {
+  const toggleContainer = document.getElementById('myPmViewToggleContainer');
+  const toggle = document.getElementById('myPmViewToggle');
+  const isPm = isUserProjectManager();
+  const enabled = getMyPmViewEnabled();
+  
+  // Show/hide toggle in dropdown based on if user is a PM
+  if (toggleContainer) {
+    if (isPm) {
+      toggleContainer.classList.remove('hidden');
+    } else {
+      toggleContainer.classList.add('hidden');
+    }
+  }
+  
+  // Sync toggle state
+  if (toggle) {
+    toggle.checked = enabled && isPm;
+  }
+  
+  // Update/create the header badge
+  updatePmViewBadge(enabled && isPm);
+}
+
+// Create/update the PM View badge in header
+function updatePmViewBadge(show) {
+  const headerRight = document.querySelector('.header-right');
+  let badge = document.getElementById('pmViewBadge');
+  
+  if (show && isUserProjectManager()) {
+    const pmName = getCurrentUserPmName();
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.id = 'pmViewBadge';
+      badge.className = 'pm-view-badge';
+      badge.innerHTML = `<span>My Jobs: ${pmName}</span><span class="close-badge" title="Disable My PM View">×</span>`;
+      badge.querySelector('.close-badge').onclick = () => setMyPmViewEnabled(false);
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      if (darkModeToggle && headerRight) {
+        headerRight.insertBefore(badge, darkModeToggle);
+      } else if (headerRight) {
+        headerRight.prepend(badge);
+      }
+    } else {
+      badge.querySelector('span:first-child').textContent = `My Jobs: ${pmName}`;
+    }
+  } else if (badge) {
+    badge.remove();
+  }
+}
+
+// Apply PM filters to all relevant pages when My PM View is enabled
+function applyMyPmViewFilters() {
+  const enabled = getMyPmViewEnabled() && isUserProjectManager();
+  const pmName = getCurrentUserPmName();
+  
+  // Dropdown-based PM filters
+  const dropdownFilters = [
+    { id: 'joPmFilter', filterFn: filterJobOverview },
+    { id: 'ccPmFilter', filterFn: updateCostCodes },
+    { id: 'mbPmFilter', filterFn: filterMissingBudgets },
+    { id: 'jcPmFilter', filterFn: filterJobCosts }
+  ];
+  
+  dropdownFilters.forEach(({ id, filterFn }) => {
+    const select = document.getElementById(id);
+    if (select) {
+      if (enabled && pmName) {
+        const option = Array.from(select.options).find(opt => 
+          opt.value === pmName || opt.textContent === pmName
+        );
+        if (option) {
+          select.value = option.value;
+        }
+      } else {
+        // Reset to All when disabled
+        select.value = '';
+      }
+      // Call the filter function if it exists
+      if (typeof filterFn === 'function') {
+        try { filterFn(); } catch(e) { console.log('Filter not ready:', id); }
+      }
+    }
+  });
+  
+  // Column-based filters (Job Budgets)
+  if (typeof jobBudgetsColumnFilters !== 'undefined') {
+    if (enabled && pmName) {
+      jobBudgetsColumnFilters['project_manager_name'] = new Set([pmName]);
+      // Update dropdown checkboxes
+      const dropdown = document.querySelector('#jobBudgetsTable .column-filter-dropdown[data-filter="project_manager_name"]');
+      if (dropdown) {
+        dropdown.querySelectorAll('.filter-option input').forEach(cb => {
+          cb.checked = (cb.value === pmName);
+        });
+      }
+    } else {
+      delete jobBudgetsColumnFilters['project_manager_name'];
+      // Check all in dropdown
+      const dropdown = document.querySelector('#jobBudgetsTable .column-filter-dropdown[data-filter="project_manager_name"]');
+      if (dropdown) {
+        dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = true);
+      }
+    }
+    if (typeof updateFilterButtonIndicators === 'function') updateFilterButtonIndicators();
+    if (typeof filterJobBudgets === 'function') {
+      try { filterJobBudgets(); } catch(e) { console.log('Job Budgets filter not ready'); }
+    }
+  }
+  
+  // Column-based filters (Job Actuals)
+  if (typeof jobActualsColumnFilters !== 'undefined') {
+    if (enabled && pmName) {
+      jobActualsColumnFilters['project_manager_name'] = new Set([pmName]);
+      // Update dropdown checkboxes
+      const dropdown = document.querySelector('#jobActualsTable .ja-filter-dropdown[data-filter="project_manager_name"]');
+      const filterBtn = document.querySelector('#jobActualsTable .ja-filter-btn[data-filter="project_manager_name"]');
+      if (dropdown) {
+        dropdown.querySelectorAll('.filter-option input').forEach(cb => {
+          cb.checked = (cb.value === pmName);
+        });
+      }
+      if (filterBtn) filterBtn.classList.add('has-filter');
+    } else {
+      delete jobActualsColumnFilters['project_manager_name'];
+      // Check all in dropdown
+      const dropdown = document.querySelector('#jobActualsTable .ja-filter-dropdown[data-filter="project_manager_name"]');
+      const filterBtn = document.querySelector('#jobActualsTable .ja-filter-btn[data-filter="project_manager_name"]');
+      if (dropdown) {
+        dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = true);
+      }
+      if (filterBtn) filterBtn.classList.remove('has-filter');
+    }
+    if (typeof filterJobActuals === 'function') {
+      try { filterJobActuals(); } catch(e) { console.log('Job Actuals filter not ready'); }
+    }
+  }
+  
+  // Column-based filters (Payments - server-side)
+  if (typeof paymentsColumnFilters !== 'undefined') {
+    const filterBtn = document.querySelector('#paymentsTable .filter-btn[data-filter="project_manager"]');
+    if (enabled && pmName) {
+      paymentsColumnFilters['project_manager'] = new Set([pmName]);
+      if (filterBtn) filterBtn.classList.add('has-filter');
+    } else {
+      delete paymentsColumnFilters['project_manager'];
+      if (filterBtn) filterBtn.classList.remove('has-filter');
+    }
+    // Payments uses server-side pagination, reload page
+    if (typeof loadPaymentsPage === 'function') {
+      try { loadPaymentsPage(); } catch(e) { console.log('Payments not ready'); }
+    }
+  }
+}
+
+// Refresh data for the currently visible section
+function refreshCurrentSection() {
+  const visibleSection = document.querySelector('.dashboard-section.visible');
+  if (!visibleSection) return;
+  
+  const sectionId = visibleSection.id;
+  
+  // Trigger appropriate refresh function
+  switch (sectionId) {
+    case 'jobOverview':
+      if (typeof filterJobOverview === 'function') filterJobOverview();
+      break;
+    case 'jobBudgets':
+      if (typeof filterJobBudgets === 'function') filterJobBudgets();
+      break;
+    case 'jobActuals':
+      if (typeof filterJobActuals === 'function') filterJobActuals();
+      break;
+    case 'costCodes':
+      if (typeof updateCostCodes === 'function') updateCostCodes();
+      break;
+    case 'missingBudgets':
+      if (typeof filterMissingBudgets === 'function') filterMissingBudgets();
+      break;
+    case 'payments':
+      if (typeof loadPaymentsPage === 'function') loadPaymentsPage();
+      break;
+  }
+}
+
+// Initialize My PM View on page load
+function initMyPmView() {
+  const toggle = document.getElementById('myPmViewToggle');
+  if (toggle) {
+    toggle.addEventListener('change', function() {
+      setMyPmViewEnabled(this.checked);
+    });
+  }
+  
+  // Update UI state
+  updateMyPmViewUI();
+  
+  // Apply filters if enabled (after a small delay to let data load)
+  if (getMyPmViewEnabled() && isUserProjectManager()) {
+    setTimeout(() => applyMyPmViewFilters(), 500);
+  }
+}
+
+
+/* ------------------------------------------------------------
    AUTO-SIZE FIRST COLUMN ON MOBILE
    Dynamically sizes sticky first column based on content width
    Note: On mobile (<768px), CSS handles column widths via table-layout: fixed
@@ -833,6 +1072,7 @@ function showDisable2FASection() {
 
 document.addEventListener("DOMContentLoaded", function() {
   initAuth();
+  initMyPmView();
   initSidebar();
   initNavigation();
   initConfigPanels();
@@ -12718,6 +12958,23 @@ async function loadJobBudgetsData() {
     initJobBudgetsColumnFilters();
     updateJobBudgetsSortIndicators();
     
+    // Apply My PM View to column filters (sync, after checkboxes exist)
+    if (getMyPmViewEnabled() && isUserProjectManager()) {
+      const pmName = getCurrentUserPmName();
+      if (pmName) {
+        const dropdown = document.querySelector('#jobBudgetsTable .column-filter-dropdown[data-filter="project_manager_name"]');
+        if (dropdown) {
+          // Uncheck all, check only PM
+          dropdown.querySelectorAll('.filter-option input').forEach(cb => {
+            cb.checked = (cb.value === pmName);
+          });
+          // Set the column filter
+          jobBudgetsColumnFilters['project_manager_name'] = new Set([pmName]);
+          updateFilterButtonIndicators();
+        }
+      }
+    }
+    
     // Set data as of date
     const dataAsOf = document.getElementById('jobBudgetsDataAsOf');
     if (dataAsOf && data.generated_at) {
@@ -13680,6 +13937,13 @@ function populateJobOverviewFilters() {
     const pms = [...new Set(joData.map(j => j.project_manager_name).filter(Boolean))].sort();
     pmFilter.innerHTML = '<option value="">All Project Managers</option>' + 
       pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+    
+    // Apply My PM View filter if enabled (sync, after options exist)
+    if (getMyPmViewEnabled() && isUserProjectManager()) {
+      const pmName = getCurrentUserPmName();
+      const option = Array.from(pmFilter.options).find(opt => opt.value === pmName);
+      if (option) pmFilter.value = option.value;
+    }
   }
   
   const custFilter = document.getElementById('joCustomerFilter');
@@ -14561,6 +14825,24 @@ async function loadJobActualsData() {
     initJobActualsColumnFilters();
     updateJobActualsSortIndicators();
     
+    // Apply My PM View to column filters (sync, after checkboxes exist)
+    if (getMyPmViewEnabled() && isUserProjectManager()) {
+      const pmName = getCurrentUserPmName();
+      if (pmName) {
+        const dropdown = document.querySelector('#jobActualsTable .ja-filter-dropdown[data-filter="project_manager_name"]');
+        const filterBtn = document.querySelector('#jobActualsTable .ja-filter-btn[data-filter="project_manager_name"]');
+        if (dropdown) {
+          // Uncheck all, check only PM
+          dropdown.querySelectorAll('.filter-option input').forEach(cb => {
+            cb.checked = (cb.value === pmName);
+          });
+          // Set the column filter
+          jobActualsColumnFilters['project_manager_name'] = new Set([pmName]);
+          if (filterBtn) filterBtn.classList.add('has-filter');
+        }
+      }
+    }
+    
     const dataAsOf = document.getElementById('jobActualsDataAsOf');
     if (dataAsOf && data.generated_at) {
       dataAsOf.textContent = new Date(data.generated_at).toLocaleDateString();
@@ -15232,6 +15514,13 @@ function populateJobCostsFilters() {
     const pms = [...new Set(jobCostsData.map(j => j.project_manager_name).filter(Boolean))].sort();
     pmFilter.innerHTML = '<option value="">All Project Managers</option>' + 
       pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+    
+    // Apply My PM View filter if enabled (sync, after options exist)
+    if (getMyPmViewEnabled() && isUserProjectManager()) {
+      const pmName = getCurrentUserPmName();
+      const option = Array.from(pmFilter.options).find(opt => opt.value === pmName);
+      if (option) pmFilter.value = option.value;
+    }
   }
   
   const custFilter = document.getElementById('jcCustomerFilter');
@@ -15399,6 +15688,13 @@ function populateMbFilters() {
   if (pmSelect && pmSelect.options.length <= 1) {
     pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
       pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+    
+    // Apply My PM View filter if enabled (sync, after options exist)
+    if (getMyPmViewEnabled() && isUserProjectManager()) {
+      const pmName = getCurrentUserPmName();
+      const option = Array.from(pmSelect.options).find(opt => opt.value === pmName);
+      if (option) pmSelect.value = option.value;
+    }
   }
   
   const custSelect = document.getElementById('mbCustomerFilter');
@@ -15655,6 +15951,13 @@ function populateCCFilters() {
   if (pmSelect) {
     pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
       pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+    
+    // Apply My PM View filter if enabled (sync, after options exist)
+    if (getMyPmViewEnabled() && isUserProjectManager()) {
+      const pmName = getCurrentUserPmName();
+      const option = Array.from(pmSelect.options).find(opt => opt.value === pmName);
+      if (option) pmSelect.value = option.value;
+    }
   }
   
   if (custSelect) {
@@ -17474,6 +17777,18 @@ function initPayments() {
     initPaymentsEventHandlers();
     initPaymentsColumnFiltersOptimized();
     paymentsInitialized = true;
+  }
+  
+  // Apply My PM View filter (sync, before loading data)
+  if (getMyPmViewEnabled() && isUserProjectManager()) {
+    const pmName = getCurrentUserPmName();
+    if (pmName) {
+      // Set the column filter for server-side filtering
+      paymentsColumnFilters['project_manager'] = new Set([pmName]);
+      // Update the filter button indicator
+      const filterBtn = document.querySelector('#paymentsTable .filter-btn[data-filter="project_manager"]');
+      if (filterBtn) filterBtn.classList.add('has-filter');
+    }
   }
   
   // Load first page of data

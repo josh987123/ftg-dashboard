@@ -7445,6 +7445,67 @@ body.dark-mode .nav-item.nav-parent.expanded {
   color: var(--text-primary);
 }
 
+/* Small toggle switch variant */
+.toggle-switch.small .toggle-slider {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+}
+
+.toggle-switch.small .toggle-slider::after {
+  width: 16px;
+  height: 16px;
+  top: 2px;
+  left: 2px;
+}
+
+.toggle-switch.small input:checked + .toggle-slider::after {
+  transform: translateX(16px);
+}
+
+/* PM View toggle in dropdown */
+.pm-view-toggle {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+}
+
+.pm-view-toggle span {
+  color: var(--text-primary);
+}
+
+/* My PM View indicator badge */
+.pm-view-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pm-view-badge:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: scale(1.02);
+}
+
+.pm-view-badge .close-badge {
+  font-size: 14px;
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.pm-view-badge .close-badge:hover {
+  opacity: 1;
+}
+
 /* Primary and secondary buttons */
 .btn-primary {
   background: var(--color-primary);
