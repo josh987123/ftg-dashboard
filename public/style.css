@@ -5764,7 +5764,6 @@ body.dark-mode .nav-item.nav-parent.expanded {
 
 .daily-balance-table {
   width: auto;
-  min-width: 100%;
   border-collapse: collapse;
   font-size: 14px;
   table-layout: auto;
@@ -6254,7 +6253,6 @@ body.dark-mode .nav-item.nav-parent.expanded {
 
 .transaction-table {
   width: auto;
-  min-width: 100%;
   border-collapse: collapse;
   font-size: 13px;
   table-layout: auto;
