@@ -16631,6 +16631,14 @@ function togglePaymentsColumnGroup(group) {
 
 function initPaymentsColumnFiltersOptimized() {
   const filterableColumns = ['vendor', 'invoice_no', 'job_no', 'job_description', 'project_manager', 'status'];
+  const columnLabels = {
+    'vendor': 'Vendor',
+    'invoice_no': 'Invoice #',
+    'job_no': 'Job #',
+    'job_description': 'Description',
+    'project_manager': 'Project Manager',
+    'status': 'Status'
+  };
   
   filterableColumns.forEach(col => {
     const dropdown = document.querySelector(`#paymentsTable .column-filter-dropdown[data-filter="${col}"]`);
@@ -16638,20 +16646,14 @@ function initPaymentsColumnFiltersOptimized() {
     
     paymentsColumnFilters[col] = new Set();
     
-    // Show loading state initially
     dropdown.innerHTML = `
-      <div class="filter-dropdown-header">
-        <input type="text" class="filter-search-input" placeholder="Search...">
-        <div class="filter-quick-actions">
-          <button class="filter-select-all">All</button>
-          <button class="filter-select-none">None</button>
-        </div>
-      </div>
+      <input type="text" class="filter-search-input" placeholder="Search ${columnLabels[col] || col}..." data-filter="${col}">
       <div class="filter-options-list">
         <div class="filter-loading">Loading values...</div>
       </div>
-      <div class="filter-dropdown-footer">
-        <button class="filter-apply-btn">Apply</button>
+      <div class="filter-actions">
+        <button class="filter-select-all-btn" data-filter="${col}">All</button>
+        <button class="filter-clear-btn" data-filter="${col}">Clear</button>
       </div>
     `;
   });
@@ -16783,48 +16785,48 @@ function populatePaymentsFilterDropdown(col, dropdown, values) {
     return `
       <label class="filter-option">
         <input type="checkbox" value="${escapeHtml(val)}" ${isChecked ? 'checked' : ''}>
-        <span>${escapeHtml(val) || '(empty)'}</span>
+        <span class="filter-option-text">${escapeHtml(val) || '(empty)'}</span>
       </label>
     `;
   }).join('') + (values.length > 200 ? `<div class="filter-truncated-notice">${values.length - 200} more values not shown</div>` : '');
   
   const searchInput = dropdown.querySelector('.filter-search-input');
   if (searchInput) {
+    searchInput.onclick = (e) => e.stopPropagation();
     searchInput.oninput = () => {
       const searchVal = searchInput.value.toLowerCase();
-      const filtered = values.filter(v => (v || '').toLowerCase().includes(searchVal));
-      const currentFilterVals = paymentsColumnFilters[col] || new Set();
-      const hasFilter = currentFilterVals.size > 0;
-      optionsList.innerHTML = filtered.slice(0, 200).map(val => {
-        const isChecked = hasFilter ? currentFilterVals.has(val) : true;
-        return `
-          <label class="filter-option">
-            <input type="checkbox" value="${escapeHtml(val)}" ${isChecked ? 'checked' : ''}>
-            <span>${escapeHtml(val) || '(empty)'}</span>
-          </label>
-        `;
-      }).join('');
+      dropdown.querySelectorAll('.filter-option').forEach(opt => {
+        const text = opt.querySelector('.filter-option-text')?.textContent.toLowerCase() || '';
+        opt.classList.toggle('hidden', !text.includes(searchVal));
+      });
     };
   }
   
-  const selectAllBtn = dropdown.querySelector('.filter-select-all');
-  const selectNoneBtn = dropdown.querySelector('.filter-select-none');
+  const selectAllBtn = dropdown.querySelector('.filter-select-all-btn');
+  const clearBtn = dropdown.querySelector('.filter-clear-btn');
   
-  if (selectAllBtn) selectAllBtn.onclick = () => {
-    dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = true);
-  };
+  if (selectAllBtn) {
+    selectAllBtn.onclick = (e) => {
+      e.stopPropagation();
+      dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = true);
+      applyPaymentsFilter(col, dropdown);
+    };
+  }
   
-  if (selectNoneBtn) selectNoneBtn.onclick = () => {
-    dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = false);
-  };
-  
-  const applyBtn = dropdown.querySelector('.filter-apply-btn');
-  if (applyBtn) applyBtn.onclick = () => {
-    collectPaymentsColumnFilter(col, dropdown);
-    closeAllPaymentsFilterDropdowns();
-    paymentsCurrentPage = 1;
-    loadPaymentsPage();
-  };
+  if (clearBtn) {
+    clearBtn.onclick = (e) => {
+      e.stopPropagation();
+      dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = false);
+      applyPaymentsFilter(col, dropdown);
+    };
+  }
+}
+
+function applyPaymentsFilter(col, dropdown) {
+  collectPaymentsColumnFilter(col, dropdown);
+  closeAllPaymentsFilterDropdowns();
+  paymentsCurrentPage = 1;
+  loadPaymentsPage();
 }
 
 function collectPaymentsColumnFilter(col, dropdown) {
