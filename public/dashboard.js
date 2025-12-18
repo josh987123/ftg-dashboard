@@ -16521,6 +16521,7 @@ function renderCCTable() {
   });
   
   updateCCPagination(costCodeFiltered.length);
+  updateCCTableTotals(costCodeFiltered);
 }
 
 function toggleCCVendorExpand(row) {
@@ -16643,54 +16644,27 @@ function updateCCPagination(total) {
 }
 
 function updateCCTableTotals(data) {
-  const totalJobs = new Set();
-  let totalEntries = 0;
   let totalCost = 0;
   
   data.forEach(cc => {
-    totalEntries += cc.entry_count;
     totalCost += cc.total_cost;
   });
   
-  const totalJobsCell = document.getElementById('ccTotalJobsCell');
-  const totalEntriesCell = document.getElementById('ccTotalEntriesCell');
   const totalCostCell = document.getElementById('ccTotalCostCell');
-  
-  if (totalJobsCell) totalJobsCell.textContent = data.reduce((sum, cc) => sum + cc.job_count, 0).toLocaleString();
-  if (totalEntriesCell) totalEntriesCell.textContent = totalEntries.toLocaleString();
   if (totalCostCell) totalCostCell.textContent = formatCurrency(totalCost);
 }
 
 function extractCostCodesData() {
   let text = "Cost Code Analysis:\n\n";
   
-  text += "Summary Metrics:\n";
-  text += `  Total Cost: ${document.getElementById('ccTotalCost')?.textContent || '-'}\n`;
-  text += `  Cost Categories: ${document.getElementById('ccTotalCategories')?.textContent || '-'}\n`;
-  text += `  Jobs Analyzed: ${document.getElementById('ccTotalJobs')?.textContent || '-'}\n`;
-  text += `  Top Category: ${document.getElementById('ccTopCategory')?.textContent || '-'}\n\n`;
+  const totalCost = costCodeFiltered.reduce((sum, cc) => sum + cc.total_cost, 0);
+  text += `Total Cost: ${formatCurrency(totalCost)}\n`;
+  text += `Total Earned Revenue: ${formatCurrency(ccTotalEarnedRevenue)}\n`;
+  text += `Cost Categories: ${costCodeFiltered.length}\n\n`;
   
-  text += "Top 15 Cost Categories by Spend:\n";
-  costCodeData.slice(0, 15).forEach((cc, i) => {
-    text += `  ${i + 1}. ${cc.cost_code} - ${cc.description}: ${formatCurrency(cc.total_cost)} (${cc.pct_of_total.toFixed(1)}% of total, ${cc.job_count} jobs)\n`;
-  });
-  
-  text += "\nBreakdown by Project Manager:\n";
-  const pmRows = document.querySelectorAll('#ccPmBreakdownBody tr');
-  pmRows.forEach(row => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length >= 4) {
-      text += `  ${cells[0].textContent}: ${cells[2].textContent} (${cells[3].textContent})\n`;
-    }
-  });
-  
-  text += "\nBreakdown by Client:\n";
-  const clientRows = document.querySelectorAll('#ccClientBreakdownBody tr');
-  clientRows.forEach(row => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length >= 4) {
-      text += `  ${cells[0].textContent}: ${cells[2].textContent} (${cells[3].textContent})\n`;
-    }
+  text += "Cost Categories by Spend (with % of Earned Revenue):\n";
+  costCodeFiltered.forEach((cc, i) => {
+    text += `  ${i + 1}. ${cc.cost_code} - ${cc.description}: ${formatCurrency(cc.total_cost)} (${cc.pct_of_revenue.toFixed(1)}% of revenue)\n`;
   });
   
   return text || "No cost code data available";
@@ -16703,15 +16677,12 @@ function exportCostCodesCsv() {
     return;
   }
   
-  const headers = ['Cost Code', 'Description', 'Jobs', 'Entries', 'Total Cost', 'Avg/Job', '% of Total'];
+  const headers = ['Cost Code', 'Description', 'Total Cost', '% of Revenue'];
   const rows = costCodeFiltered.map(cc => [
     cc.cost_code,
     `"${cc.description.replace(/"/g, '""')}"`,
-    cc.job_count,
-    cc.entry_count,
     cc.total_cost.toFixed(2),
-    cc.avg_per_job.toFixed(2),
-    cc.pct_of_total.toFixed(1)
+    cc.pct_of_revenue.toFixed(1)
   ]);
   
   const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -16764,6 +16735,10 @@ function exportCostCodesPdf() {
           <div class="metric-value">${formatCurrency(totalCost)}</div>
         </div>
         <div class="metric">
+          <div class="metric-label">Earned Revenue</div>
+          <div class="metric-value">${formatCurrency(ccTotalEarnedRevenue)}</div>
+        </div>
+        <div class="metric">
           <div class="metric-label">Categories</div>
           <div class="metric-value">${costCodeFiltered.length}</div>
         </div>
@@ -16774,10 +16749,8 @@ function exportCostCodesPdf() {
           <tr>
             <th>Cost Code</th>
             <th>Description</th>
-            <th class="number-col">Jobs</th>
-            <th class="number-col">Entries</th>
             <th class="number-col">Total Cost</th>
-            <th class="number-col">% of Total</th>
+            <th class="number-col">% of Revenue</th>
           </tr>
         </thead>
         <tbody>
@@ -16785,10 +16758,8 @@ function exportCostCodesPdf() {
             <tr>
               <td>${cc.cost_code}</td>
               <td>${cc.description}</td>
-              <td class="number-col">${cc.job_count}</td>
-              <td class="number-col">${cc.entry_count}</td>
               <td class="number-col">${formatCurrency(cc.total_cost)}</td>
-              <td class="number-col">${cc.pct_of_total.toFixed(1)}%</td>
+              <td class="number-col">${cc.pct_of_revenue.toFixed(1)}%</td>
             </tr>
           `).join('')}
         </tbody>
