@@ -1464,6 +1464,11 @@ def api_2fa_disable():
         cur.execute("SELECT password_hash FROM users WHERE id = %s", (user['id'],))
         row = cur.fetchone()
         
+        if not row:
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'User not found'}), 404
+        
         if not verify_password(password, row['password_hash']):
             cur.close()
             conn.close()
@@ -1517,6 +1522,9 @@ def api_2fa_status():
         
         cur.close()
         conn.close()
+        
+        if not row:
+            return jsonify({'error': 'User not found'}), 404
         
         return jsonify({
             'success': True,
