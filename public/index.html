@@ -529,36 +529,56 @@
         <img src="logo.png" alt="FTG Logo">
         <span>FTG Dashboard</span>
       </div>
+      
+      <!-- Sidebar Collapse Toggle (Desktop) -->
+      <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">
+        <span class="collapse-icon">◀</span>
+      </button>
+      
       <nav>
         <ul>
-          <li class="nav-item nav-parent expanded" id="navFinancialStatements">
-            <span class="nav-parent-label">Financials</span>
-            <span class="nav-expand-icon">▼</span>
+          <!-- Financials Section -->
+          <li class="nav-section">
+            <div class="nav-section-header" id="navFinancialStatements">
+              <span class="nav-section-icon">📊</span>
+              <span class="nav-section-label">Financials</span>
+              <span class="nav-section-toggle">▼</span>
+            </div>
+            <ul class="nav-section-items expanded" id="navFinancialStatementsChildren">
+              <li class="nav-item nav-child" data-section="overview">Overview</li>
+              <li class="nav-item nav-child" data-section="revenue">Revenue</li>
+              <li class="nav-item nav-child" data-section="incomeStatement">Income Statement</li>
+              <li class="nav-item nav-child" data-section="balanceSheet">Balance Sheet</li>
+              <li class="nav-item nav-child" data-section="cashFlows">Statement of Cash Flows</li>
+              <li class="nav-item nav-child" data-section="cashReports">Cash Balances</li>
+              <li class="nav-item nav-child" data-section="accounts">Account Detail</li>
+              <li class="nav-item nav-child" data-section="payments">Payments</li>
+              <li class="nav-item nav-child placeholder" data-section="receivablesPayables">Receivables/Payables</li>
+            </ul>
           </li>
-          <ul class="nav-children expanded" id="navFinancialStatementsChildren">
-            <li class="nav-item nav-child" data-section="overview">Overview</li>
-            <li class="nav-item nav-child" data-section="revenue">Revenue</li>
-            <li class="nav-item nav-child" data-section="incomeStatement">Income Statement</li>
-            <li class="nav-item nav-child" data-section="balanceSheet">Balance Sheet</li>
-            <li class="nav-item nav-child" data-section="cashFlows">Statement of Cash Flows</li>
-            <li class="nav-item nav-child" data-section="cashReports">Cash Balances</li>
-            <li class="nav-item nav-child" data-section="accounts">Account Detail</li>
-            <li class="nav-item nav-child" data-section="payments">Payments</li>
-            <li class="nav-item nav-child placeholder" data-section="receivablesPayables">Receivables/Payables</li>
-          </ul>
-          <li class="nav-item nav-parent expanded" id="navJobs">
-            <span class="nav-parent-label">Jobs</span>
-            <span class="nav-expand-icon">▼</span>
+          
+          <!-- Jobs Section -->
+          <li class="nav-section">
+            <div class="nav-section-header" id="navJobs">
+              <span class="nav-section-icon">📁</span>
+              <span class="nav-section-label">Jobs</span>
+              <span class="nav-section-toggle">▼</span>
+            </div>
+            <ul class="nav-section-items expanded" id="navJobsChildren">
+              <li class="nav-item nav-child" data-section="jobOverview">Overview</li>
+              <li class="nav-item nav-child" data-section="jobBudgets">Budgets</li>
+              <li class="nav-item nav-child" data-section="jobActuals">Actuals</li>
+              <li class="nav-item nav-child" data-section="costCodes">Cost Codes</li>
+              <li class="nav-item nav-child" data-section="missingBudgets">Missing Budgets</li>
+              <li class="nav-item nav-child placeholder" data-section="jobAnalytics">Job Analytics</li>
+            </ul>
           </li>
-          <ul class="nav-children expanded" id="navJobsChildren">
-            <li class="nav-item nav-child" data-section="jobOverview">Overview</li>
-            <li class="nav-item nav-child" data-section="jobBudgets">Budgets</li>
-            <li class="nav-item nav-child" data-section="jobActuals">Actuals</li>
-            <li class="nav-item nav-child" data-section="costCodes">Cost Codes</li>
-            <li class="nav-item nav-child" data-section="missingBudgets">Missing Budgets</li>
-            <li class="nav-item nav-child placeholder" data-section="jobAnalytics">Job Analytics</li>
-                      </ul>
-          <li class="nav-item admin-nav-item hidden" data-section="admin" id="adminNavItem">Admin</li>
+          
+          <!-- Admin Section (standalone) -->
+          <li class="nav-item admin-nav-item hidden" data-section="admin" id="adminNavItem">
+            <span class="nav-item-icon">⚙️</span>
+            <span class="nav-item-label">Admin</span>
+          </li>
         </ul>
       </nav>
     </aside>

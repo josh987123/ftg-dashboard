@@ -188,7 +188,7 @@ def init_database():
         except:
             pass
         
-        # Create audit_log table
+        # Create audit_log table with enhanced structure
         cur.execute("""
             CREATE TABLE IF NOT EXISTS audit_log (
                 id SERIAL PRIMARY KEY,
@@ -201,6 +201,20 @@ def init_database():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        
+        # Add enhanced audit log columns for structured logging
+        enhanced_audit_columns = [
+            ("category", "VARCHAR(50) DEFAULT 'general'"),
+            ("severity", "VARCHAR(20) DEFAULT 'info'"),
+            ("user_agent", "TEXT"),
+            ("session_id", "VARCHAR(255)"),
+            ("result", "VARCHAR(20) DEFAULT 'success'")
+        ]
+        for col_name, col_def in enhanced_audit_columns:
+            try:
+                cur.execute(f"ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS {col_name} {col_def}")
+            except:
+                pass
         
         # Create scheduled_reports table
         cur.execute("""
@@ -1024,22 +1038,90 @@ def get_client_ip():
         return request.headers.get('X-Forwarded-For').split(',')[0].strip()
     return request.remote_addr or 'unknown'
 
-def log_audit(user_id, action, target_type=None, target_id=None, details=None):
-    """Log an audit event"""
+AUDIT_CATEGORIES = {
+    'login': 'authentication',
+    'logout': 'authentication',
+    'login_failed': 'authentication',
+    'login_2fa': 'authentication',
+    '2fa_enabled': 'security',
+    '2fa_disabled': 'security',
+    'password_changed': 'security',
+    'password_reset_requested': 'security',
+    'password_reset_completed': 'security',
+    'admin_password_reset': 'security',
+    'create_user': 'user_management',
+    'update_user': 'user_management',
+    'disable_user': 'user_management',
+    'permanent_delete_user': 'user_management',
+    'create_role': 'role_management',
+    'update_role': 'role_management',
+    'delete_role': 'role_management',
+    'update_role_permissions': 'role_management',
+    'reassign_users_and_delete_role': 'role_management',
+    'export_report': 'data_access',
+    'view_report': 'data_access',
+    'email_report': 'data_access',
+    'schedule_report': 'data_access',
+    'api_access': 'data_access'
+}
+
+AUDIT_SEVERITY = {
+    'login_failed': 'warning',
+    '2fa_disabled': 'warning',
+    'password_reset_requested': 'warning',
+    'admin_password_reset': 'warning',
+    'disable_user': 'warning',
+    'permanent_delete_user': 'critical',
+    'delete_role': 'warning'
+}
+
+def log_audit(user_id, action, target_type=None, target_id=None, details=None, result='success'):
+    """Log a structured audit event with category, severity, and metadata"""
     try:
-        print(f"[AUDIT] Logging: user_id={user_id}, action={action}, target_type={target_type}")
+        category = AUDIT_CATEGORIES.get(action, 'general')
+        severity = AUDIT_SEVERITY.get(action, 'info')
+        if result == 'failure':
+            severity = 'warning'
+        
+        # Safely access request context (may not be available in background tasks)
+        ip_address = None
+        user_agent = None
+        session_token = None
+        try:
+            from flask import has_request_context
+            if has_request_context():
+                ip_address = get_client_ip()
+                user_agent = request.headers.get('User-Agent', '')[:500]
+                auth_header = request.headers.get('Authorization', '')
+                if auth_header.startswith('Bearer '):
+                    session_token = auth_header[7:][:20] + '...'
+        except:
+            pass
+        
+        log_msg = f"[AUDIT] {severity.upper()} | {category} | {action}"
+        if user_id:
+            log_msg += f" | user_id={user_id}"
+        if target_type:
+            log_msg += f" | {target_type}={target_id}"
+        if result != 'success':
+            log_msg += f" | result={result}"
+        print(log_msg)
+        
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO audit_log (user_id, action, target_type, target_id, details, ip_address)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (user_id, action, target_type, target_id, json.dumps(details) if details else None, get_client_ip()))
+            INSERT INTO audit_log (user_id, action, target_type, target_id, details, ip_address, category, severity, user_agent, session_id, result)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            user_id, action, target_type, target_id,
+            json.dumps(details) if details else None,
+            ip_address, category, severity, user_agent, session_token, result
+        ))
         conn.commit()
-        print(f"[AUDIT] Successfully logged: {action}")
         cur.close()
         conn.close()
     except Exception as e:
-        print(f"[AUDIT] Error: {e}")
+        print(f"[AUDIT] Error logging event: {e}")
         import traceback
         traceback.print_exc()
 
@@ -1147,11 +1229,13 @@ def api_login():
         if not user:
             cur.close()
             conn.close()
+            log_audit(None, 'login_failed', 'user', None, {'email': email, 'reason': 'invalid_email'}, result='failure')
             return jsonify({'error': 'Invalid email address'}), 401
         
         if not user['is_active']:
             cur.close()
             conn.close()
+            log_audit(user['id'], 'login_failed', 'user', user['id'], {'email': email, 'reason': 'account_disabled'}, result='failure')
             return jsonify({'error': 'Account is disabled. Contact your administrator.'}), 401
         
         # Check password using bcrypt (with SHA-256 fallback for legacy)
@@ -1159,6 +1243,7 @@ def api_login():
         if not password_valid:
             cur.close()
             conn.close()
+            log_audit(user['id'], 'login_failed', 'user', user['id'], {'email': email, 'reason': 'invalid_password'}, result='failure')
             return jsonify({'error': 'Incorrect password'}), 401
         
         # Upgrade legacy SHA-256 hash to bcrypt if needed
@@ -1272,6 +1357,7 @@ def api_login_2fa():
         if not is_valid:
             cur.close()
             conn.close()
+            log_audit(session['user_id'], 'login_failed', 'user', session['user_id'], {'email': session['email'], 'reason': 'invalid_2fa_code'}, result='failure')
             return jsonify({'error': 'Invalid verification code'}), 401
         
         # Delete the 2FA challenge session
@@ -1621,10 +1707,18 @@ def api_logout():
         if token:
             conn = get_db_connection()
             cur = conn.cursor()
+            # Get user_id before deleting session for audit log
+            cur.execute("SELECT user_id FROM sessions WHERE token = %s", (token,))
+            session = cur.fetchone()
+            user_id = session['user_id'] if session else None
+            
             cur.execute("DELETE FROM sessions WHERE token = %s", (token,))
             conn.commit()
             cur.close()
             conn.close()
+            
+            if user_id:
+                log_audit(user_id, 'logout', 'user', user_id)
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -2478,21 +2572,76 @@ def api_get_audit_log():
     try:
         limit = request.args.get('limit', 100, type=int)
         offset = request.args.get('offset', 0, type=int)
+        category = request.args.get('category')
+        severity = request.args.get('severity')
+        action = request.args.get('action')
+        user_id = request.args.get('user_id', type=int)
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        search = request.args.get('search', '').strip()
         
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("""
+        
+        where_clauses = []
+        params = []
+        
+        if category:
+            where_clauses.append("a.category = %s")
+            params.append(category)
+        if severity:
+            where_clauses.append("a.severity = %s")
+            params.append(severity)
+        if action:
+            where_clauses.append("a.action = %s")
+            params.append(action)
+        if user_id:
+            where_clauses.append("a.user_id = %s")
+            params.append(user_id)
+        if start_date:
+            where_clauses.append("a.created_at >= %s")
+            params.append(start_date)
+        if end_date:
+            where_clauses.append("a.created_at <= %s")
+            params.append(end_date + ' 23:59:59')
+        if search:
+            where_clauses.append("(a.action ILIKE %s OR u.display_name ILIKE %s OR u.email ILIKE %s OR a.ip_address ILIKE %s)")
+            search_param = f"%{search}%"
+            params.extend([search_param, search_param, search_param, search_param])
+        
+        where_sql = ""
+        if where_clauses:
+            where_sql = "WHERE " + " AND ".join(where_clauses)
+        
+        query = f"""
             SELECT a.id, a.action, a.target_type, a.target_id, a.details, a.ip_address, a.created_at,
-                   u.display_name as user_name, u.email as user_email
+                   u.display_name as user_name, u.email as user_email,
+                   COALESCE(a.category, 'general') as category,
+                   COALESCE(a.severity, 'info') as severity,
+                   COALESCE(a.result, 'success') as result
             FROM audit_log a
             LEFT JOIN users u ON a.user_id = u.id
+            {where_sql}
             ORDER BY a.created_at DESC
             LIMIT %s OFFSET %s
-        """, (limit, offset))
+        """
+        params.extend([limit, offset])
+        cur.execute(query, params)
         logs = cur.fetchall()
         
-        cur.execute("SELECT COUNT(*) as count FROM audit_log")
+        count_query = f"SELECT COUNT(*) as count FROM audit_log a LEFT JOIN users u ON a.user_id = u.id {where_sql}"
+        cur.execute(count_query, params[:-2] if params else [])
         total = cur.fetchone()['count']
+        
+        cur.execute("""
+            SELECT DISTINCT category FROM audit_log WHERE category IS NOT NULL ORDER BY category
+        """)
+        categories = [r['category'] for r in cur.fetchall()]
+        
+        cur.execute("""
+            SELECT DISTINCT action FROM audit_log ORDER BY action
+        """)
+        actions = [r['action'] for r in cur.fetchall()]
         
         cur.close()
         conn.close()
@@ -2500,6 +2649,11 @@ def api_get_audit_log():
         return jsonify({
             'success': True,
             'total': total,
+            'filters': {
+                'categories': categories,
+                'actions': actions,
+                'severities': ['info', 'warning', 'critical']
+            },
             'logs': [{
                 'id': log['id'],
                 'action': log['action'],
@@ -2509,11 +2663,16 @@ def api_get_audit_log():
                 'ipAddress': log['ip_address'],
                 'createdAt': log['created_at'].isoformat() if log['created_at'] else None,
                 'userName': log['user_name'],
-                'userEmail': log['user_email']
+                'userEmail': log['user_email'],
+                'category': log['category'],
+                'severity': log['severity'],
+                'result': log['result']
             } for log in logs]
         })
     except Exception as e:
         print(f"Get audit log error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 # ============== SCHEDULED REPORTS API ==============

@@ -63,7 +63,7 @@ The Jobs section in the sidebar contains job-related tracking views:
 - **Missing Budgets**: Shows jobs with incomplete budget data. Has two tabs: "No Contract Value" (jobs with zero revised contract) and "No Estimated Cost" (jobs with zero revised cost). Features same configuration options as Job Budgets (status filters with Active checked by default, PM filter, Customer filter), search, and pagination. Simplified table with columns: Job #, Description, Customer, Status, Project Manager, Revised Contract, Revised Cost (no profit/margin columns).
 - **Cost Codes**: Analyzes job costs by cost code category. Features:
   - **Cost as % of Earned Revenue Chart**: Horizontal bar chart showing top 10 cost codes as a percentage of total earned revenue. Earned revenue calculated as `(Actual Cost / Revised Cost) × Revised Contract` per job.
-  - **Hierarchical Drill-Down Table**: Expandable rows showing Cost Code → Vendor → Invoice detail. Columns include Cost Code, Description, Total Cost, and % of Revenue. Click to expand vendors under each cost code, then click vendor to see invoice entries (up to 50 per vendor).
+  - **Job + Cost Code Table**: Flat table showing each job and cost code combination with columns: Job #, Job Description, Cost Code, Description, Total Cost, % of Revenue.
   - **Filters**: Status, PM, and Customer dropdown filters. Search input for finding specific cost codes.
   - **My PM View**: Respects the global PM filter toggle to show only logged-in user's jobs.
 - **Job Analytics**: Placeholder for future job analytics features.
@@ -75,6 +75,24 @@ The application adopts a mobile-first approach with a responsive sidebar navigat
 - **Cached Auth State**: Admin status and user role are cached in localStorage (`ftg_is_admin`, `ftg_user_role`) for immediate page load without network delay
 - **Instant Section Display**: On page refresh, the overview section is shown immediately (synchronously) while async permission verification runs in background
 - **Admin Nav Persistence**: Admin navigation visibility is restored instantly from localStorage cache on authenticated page loads
+- **Sidebar Collapse**: Desktop sidebar can be collapsed to icon-only mode (state persisted in localStorage). Hover over section icons shows submenu flyout.
+
+### UI Polish & Micro-interactions
+- **Button Effects**: Subtle lift on hover, scale on active
+- **Input Focus**: Blue glow ring on focus
+- **Table Rows**: Smooth hover highlight transitions
+- **Cards/Tiles**: Lift effect on hover
+- **Loading States**: Skeleton shimmer and pulse animations
+- **Notifications**: Slide-in/slide-out animations
+- **Reduced Motion**: Respects user's motion preference for accessibility
+
+### Structured Audit Logging
+- **Categories**: authentication, security, user_management, role_management, data_access, general
+- **Severity Levels**: info, warning, critical
+- **Events Logged**: Login (success/failure), logout, 2FA enable/disable, password changes/resets, user CRUD, role CRUD
+- **Failure Tracking**: Invalid email, disabled account, wrong password, invalid 2FA code
+- **Metadata**: IP address, user agent, session ID, result status
+- **Admin API**: Filterable by category, severity, action, user, date range, with search
 
 ### Color Standards
 A defined color palette is used for consistency:

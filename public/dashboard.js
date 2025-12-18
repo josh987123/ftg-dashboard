@@ -1361,28 +1361,47 @@ function initNavigation() {
   const sections = document.querySelectorAll(".dashboard-section");
   const sidebar = document.getElementById("sidebar");
   const overlay = document.getElementById("overlay");
+  const layout = document.querySelector(".layout");
 
-  // Handle expandable Financial Statements parent
+  // Handle sidebar collapse toggle
+  const sidebarCollapseBtn = document.getElementById("sidebarCollapseBtn");
+  if (sidebarCollapseBtn && sidebar) {
+    // Restore collapsed state from localStorage
+    const isCollapsed = localStorage.getItem("ftg_sidebar_collapsed") === "true";
+    if (isCollapsed) {
+      sidebar.classList.add("collapsed");
+      if (layout) layout.classList.add("sidebar-collapsed");
+    }
+    
+    sidebarCollapseBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle("collapsed");
+      if (layout) layout.classList.toggle("sidebar-collapsed");
+      localStorage.setItem("ftg_sidebar_collapsed", sidebar.classList.contains("collapsed"));
+    });
+  }
+
+  // Handle expandable nav sections (Financials, Jobs)
+  const sectionHeaders = document.querySelectorAll(".nav-section-header");
+  sectionHeaders.forEach(header => {
+    const childrenContainer = header.nextElementSibling;
+    if (childrenContainer && childrenContainer.classList.contains("nav-section-items")) {
+      // Initialize as expanded
+      header.classList.add("expanded");
+      childrenContainer.classList.add("expanded");
+      
+      header.addEventListener("click", () => {
+        header.classList.toggle("expanded");
+        childrenContainer.classList.toggle("expanded");
+      });
+    }
+  });
+
+  // Keep references for auto-expand logic
   const finStatementsParent = document.getElementById("navFinancialStatements");
   const finStatementsChildren = document.getElementById("navFinancialStatementsChildren");
-  
-  if (finStatementsParent && finStatementsChildren) {
-    finStatementsParent.addEventListener("click", () => {
-      finStatementsParent.classList.toggle("expanded");
-      finStatementsChildren.classList.toggle("expanded");
-    });
-  }
-
-  // Handle expandable Jobs parent
   const jobsParent = document.getElementById("navJobs");
   const jobsChildren = document.getElementById("navJobsChildren");
-  
-  if (jobsParent && jobsChildren) {
-    jobsParent.addEventListener("click", () => {
-      jobsParent.classList.toggle("expanded");
-      jobsChildren.classList.toggle("expanded");
-    });
-  }
 
   navItems.forEach(item => {
     item.addEventListener("click", () => {
