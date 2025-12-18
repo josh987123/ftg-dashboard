@@ -13563,6 +13563,68 @@ body.dark-mode #overUnderBilling .search-input {
   min-width: 140px;
 }
 
+/* Over/(Under) Billing - Compact Single Row Metrics */
+#overUnderBilling .job-metrics-row {
+  margin-bottom: 16px;
+}
+
+#overUnderBilling .job-metrics-container {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+#overUnderBilling .job-metric-card.compact {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+#overUnderBilling .job-metric-card.compact .metric-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+#overUnderBilling .job-metric-card.compact .metric-content {
+  min-width: 0;
+}
+
+#overUnderBilling .job-metric-card.compact .metric-value {
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+#overUnderBilling .job-metric-card.compact .metric-label {
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 900px) {
+  #overUnderBilling .job-metrics-container {
+    flex-wrap: wrap;
+  }
+  
+  #overUnderBilling .job-metric-card.compact {
+    flex: 1 1 calc(33% - 8px);
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 600px) {
+  #overUnderBilling .job-metric-card.compact {
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
 /* Over/(Under) Billing Table Polish */
 #oubTable {
   border-collapse: collapse;
