@@ -12852,10 +12852,14 @@ function initJobBudgetsColumnFilters() {
     
     dropdown.innerHTML = `
       <input type="text" class="filter-search-input" placeholder="Search ${columnLabel}..." data-filter="${col}">
+      <div class="filter-quick-links">
+        <span class="filter-quick-link" data-action="select-all">Select All</span>
+        <span class="filter-quick-link" data-action="clear-all">Clear All</span>
+      </div>
       <div class="filter-options-list"></div>
       <div class="filter-actions">
-        <button class="filter-select-all-btn" data-filter="${col}">All</button>
-        <button class="filter-clear-btn" data-filter="${col}">Clear</button>
+        <button class="filter-ok-btn" data-filter="${col}">OK</button>
+        <button class="filter-cancel-btn" data-filter="${col}">Cancel</button>
       </div>
     `;
     
@@ -12872,16 +12876,24 @@ function initJobBudgetsColumnFilters() {
     
     searchInput?.addEventListener('click', (e) => e.stopPropagation());
     
-    dropdown.querySelector('.filter-select-all-btn')?.addEventListener('click', (e) => {
+    dropdown.querySelector('.filter-quick-link[data-action="select-all"]')?.addEventListener('click', (e) => {
       e.stopPropagation();
       dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = true);
+    });
+    
+    dropdown.querySelector('.filter-quick-link[data-action="clear-all"]')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = false);
+    });
+    
+    dropdown.querySelector('.filter-ok-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
       applyColumnFilter(col);
     });
     
-    dropdown.querySelector('.filter-clear-btn')?.addEventListener('click', (e) => {
+    dropdown.querySelector('.filter-cancel-btn')?.addEventListener('click', (e) => {
       e.stopPropagation();
-      dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = false);
-      applyColumnFilter(col);
+      closeAllFilterDropdowns();
     });
   });
 }
@@ -14552,18 +14564,21 @@ function initJobActualsColumnFilters() {
     // Build dropdown HTML
     dropdown.innerHTML = `
       <input type="text" class="filter-search-input ja-filter-search" placeholder="Search..." data-filter="${col}">
+      <div class="filter-quick-links">
+        <span class="filter-quick-link" data-action="select-all">Select All</span>
+        <span class="filter-quick-link" data-action="clear-all">Clear All</span>
+      </div>
       <div class="filter-options-list ja-filter-options" data-filter="${col}">
         ${uniqueVals.map(val => `
           <label class="filter-option">
             <input type="checkbox" value="${val.replace(/"/g, '&quot;')}" checked>
-            <span>${val}</span>
+            <span class="filter-option-text">${val}</span>
           </label>
         `).join('')}
       </div>
       <div class="filter-actions">
-        <button class="filter-action-btn select-all-btn" data-filter="${col}">Select All</button>
-        <button class="filter-action-btn clear-all-btn" data-filter="${col}">Clear All</button>
-        <button class="filter-action-btn apply-btn" data-filter="${col}">Apply</button>
+        <button class="filter-ok-btn" data-filter="${col}">OK</button>
+        <button class="filter-cancel-btn" data-filter="${col}">Cancel</button>
       </div>
     `;
     
@@ -14590,26 +14605,25 @@ function initJobActualsColumnFilters() {
       const searchVal = e.target.value.toLowerCase();
       dropdown.querySelectorAll('.filter-option').forEach(opt => {
         const text = opt.textContent.toLowerCase();
-        opt.style.display = text.includes(searchVal) ? '' : 'none';
+        opt.classList.toggle('hidden', !text.includes(searchVal));
       });
     });
     
-    // Select All button
-    dropdown.querySelector('.select-all-btn')?.addEventListener('click', () => {
-      dropdown.querySelectorAll('.filter-option input[type="checkbox"]').forEach(cb => {
-        if (cb.closest('.filter-option').style.display !== 'none') cb.checked = true;
-      });
+    // Select All link
+    dropdown.querySelector('.filter-quick-link[data-action="select-all"]')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.querySelectorAll('.filter-option:not(.hidden) input[type="checkbox"]').forEach(cb => cb.checked = true);
     });
     
-    // Clear All button  
-    dropdown.querySelector('.clear-all-btn')?.addEventListener('click', () => {
-      dropdown.querySelectorAll('.filter-option input[type="checkbox"]').forEach(cb => {
-        if (cb.closest('.filter-option').style.display !== 'none') cb.checked = false;
-      });
+    // Clear All link
+    dropdown.querySelector('.filter-quick-link[data-action="clear-all"]')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.querySelectorAll('.filter-option:not(.hidden) input[type="checkbox"]').forEach(cb => cb.checked = false);
     });
     
-    // Apply button
-    dropdown.querySelector('.apply-btn')?.addEventListener('click', () => {
+    // OK button
+    dropdown.querySelector('.filter-ok-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
       const checkedValues = new Set();
       dropdown.querySelectorAll('.filter-option input[type="checkbox"]:checked').forEach(cb => {
         checkedValues.add(cb.value);
@@ -14625,6 +14639,12 @@ function initJobActualsColumnFilters() {
       
       dropdown.classList.remove('open');
       filterJobActuals();
+    });
+    
+    // Cancel button
+    dropdown.querySelector('.filter-cancel-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.remove('open');
     });
   });
   
@@ -16551,20 +16571,27 @@ function updatePaymentsKeyMetricsFromServer(metrics) {
   if (remainingEl) remainingEl.textContent = formatCurrency(metrics.totalRemaining || 0);
 }
 
-let paymentsColumnsExpanded = true;
+function getPaymentDisplayStatus(p) {
+  const remaining = p.remaining_balance || 0;
+  const retention = p.retention || 0;
+  if (p.status === 'Paid') return { status: 'Paid', class: 'status-paid' };
+  if (remaining > 0 && retention > 0 && Math.abs(remaining - retention) < 0.01) {
+    return { status: 'Retention Due', class: 'status-retention-due' };
+  }
+  return { status: p.status || '-', class: '' };
+}
 
 function renderPaymentsTableFromServer(payments, totals) {
   const tbody = document.getElementById('paymentsTableBody');
   if (!tbody) return;
   
-  const hiddenClass = paymentsColumnsExpanded ? '' : 'hidden';
   totals = totals || {};
   
   // Subtotal row (appears first, after header)
   const subtotalRow = `<tr class="totals-row">
     <td colspan="6"><strong>Totals (${paymentsTotal.toLocaleString()} invoices)</strong></td>
-    <td class="number-col collapsible-col ${hiddenClass}" data-group="invoice_amount"><strong>${formatCurrency(totals.non_retention || 0)}</strong></td>
-    <td class="number-col collapsible-col ${hiddenClass}" data-group="invoice_amount"><strong>${formatCurrency(totals.retention || 0)}</strong></td>
+    <td class="number-col retention-col"><strong>${formatCurrency(totals.non_retention || 0)}</strong></td>
+    <td class="number-col retention-col"><strong>${formatCurrency(totals.retention || 0)}</strong></td>
     <td class="number-col"><strong>${formatCurrency(totals.invoice_amount || 0)}</strong></td>
     <td class="number-col"><strong>${formatCurrency(totals.paid_to_date || 0)}</strong></td>
     <td class="number-col"><strong>${formatCurrency(totals.remaining_balance || 0)}</strong></td>
@@ -16574,7 +16601,9 @@ function renderPaymentsTableFromServer(payments, totals) {
   if (payments.length === 0) {
     tbody.innerHTML = subtotalRow + '<tr><td colspan="12" class="no-data-cell">No invoices found</td></tr>';
   } else {
-    const dataRows = payments.map(p => `
+    const dataRows = payments.map(p => {
+      const displayStatus = getPaymentDisplayStatus(p);
+      return `
       <tr>
         <td>${escapeHtml(p.vendor || '-')}</td>
         <td>${escapeHtml(p.invoice_no || '-')}</td>
@@ -16582,14 +16611,14 @@ function renderPaymentsTableFromServer(payments, totals) {
         <td>${escapeHtml(p.job_no || '-')}</td>
         <td>${escapeHtml(p.job_description || '-')}</td>
         <td>${escapeHtml(p.project_manager || '-')}</td>
-        <td class="number-col collapsible-col ${hiddenClass}" data-group="invoice_amount">${formatCurrency(p.non_retention)}</td>
-        <td class="number-col collapsible-col ${hiddenClass}" data-group="invoice_amount">${formatCurrency(p.retention)}</td>
+        <td class="number-col retention-col">${formatCurrency(p.non_retention)}</td>
+        <td class="number-col retention-col">${formatCurrency(p.retention)}</td>
         <td class="number-col">${formatCurrency(p.invoice_amount)}</td>
         <td class="number-col">${formatCurrency(p.paid_to_date)}</td>
         <td class="number-col">${formatCurrency(p.remaining_balance)}</td>
-        <td class="${p.status === 'Paid' ? 'status-paid' : ''}">${escapeHtml(p.status || '-')}</td>
+        <td class="${displayStatus.class}">${escapeHtml(displayStatus.status)}</td>
       </tr>
-    `).join('');
+    `}).join('');
     tbody.innerHTML = subtotalRow + dataRows;
   }
   
@@ -16600,33 +16629,6 @@ function renderPaymentsTableFromServer(payments, totals) {
   if (pageInfo) pageInfo.textContent = `Page ${paymentsCurrentPage} of ${paymentsTotalPages} (${paymentsTotal.toLocaleString()} records)`;
   if (prevBtn) prevBtn.disabled = paymentsCurrentPage <= 1;
   if (nextBtn) nextBtn.disabled = paymentsCurrentPage >= paymentsTotalPages;
-}
-
-function togglePaymentsColumnGroup(group) {
-  paymentsColumnsExpanded = !paymentsColumnsExpanded;
-  const table = document.getElementById('paymentsTable');
-  if (!table) return;
-  
-  const collapsibleCols = table.querySelectorAll(`[data-group="${group}"]`);
-  const toggleBtn = table.querySelector(`.expand-toggle-btn[data-group="${group}"]`);
-  const expandHint = document.getElementById('invoiceAmountExpandHint');
-  
-  collapsibleCols.forEach(col => {
-    if (paymentsColumnsExpanded) {
-      col.classList.remove('hidden');
-    } else {
-      col.classList.add('hidden');
-    }
-  });
-  
-  if (toggleBtn) {
-    toggleBtn.textContent = paymentsColumnsExpanded ? '−' : '+';
-    toggleBtn.title = paymentsColumnsExpanded ? 'Collapse breakdown' : 'Expand to show breakdown';
-  }
-  
-  if (expandHint) {
-    expandHint.textContent = paymentsColumnsExpanded ? 'collapse' : 'expand';
-  }
 }
 
 function initPaymentsColumnFiltersOptimized() {
@@ -16648,12 +16650,16 @@ function initPaymentsColumnFiltersOptimized() {
     
     dropdown.innerHTML = `
       <input type="text" class="filter-search-input" placeholder="Search ${columnLabels[col] || col}..." data-filter="${col}">
+      <div class="filter-quick-links">
+        <span class="filter-quick-link" data-action="select-all">Select All</span>
+        <span class="filter-quick-link" data-action="clear-all">Clear All</span>
+      </div>
       <div class="filter-options-list">
         <div class="filter-loading">Loading values...</div>
       </div>
       <div class="filter-actions">
-        <button class="filter-select-all-btn" data-filter="${col}">All</button>
-        <button class="filter-clear-btn" data-filter="${col}">Clear</button>
+        <button class="filter-ok-btn" data-filter="${col}">OK</button>
+        <button class="filter-cancel-btn" data-filter="${col}">Cancel</button>
       </div>
     `;
   });
@@ -16679,15 +16685,6 @@ function initPaymentsEventHandlers() {
       loadPaymentsPage();
     }, 400));
   }
-  
-  // Expand/collapse button for invoice amount breakdown
-  document.querySelectorAll('#paymentsTable .expand-toggle-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const group = btn.dataset.group;
-      if (group) togglePaymentsColumnGroup(group);
-    });
-  });
   
   document.querySelectorAll('#paymentsTable .sort-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -16802,31 +16799,41 @@ function populatePaymentsFilterDropdown(col, dropdown, values) {
     };
   }
   
-  const selectAllBtn = dropdown.querySelector('.filter-select-all-btn');
-  const clearBtn = dropdown.querySelector('.filter-clear-btn');
+  const selectAllLink = dropdown.querySelector('.filter-quick-link[data-action="select-all"]');
+  const clearAllLink = dropdown.querySelector('.filter-quick-link[data-action="clear-all"]');
+  const okBtn = dropdown.querySelector('.filter-ok-btn');
+  const cancelBtn = dropdown.querySelector('.filter-cancel-btn');
   
-  if (selectAllBtn) {
-    selectAllBtn.onclick = (e) => {
+  if (selectAllLink) {
+    selectAllLink.onclick = (e) => {
       e.stopPropagation();
       dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = true);
-      applyPaymentsFilter(col, dropdown);
     };
   }
   
-  if (clearBtn) {
-    clearBtn.onclick = (e) => {
+  if (clearAllLink) {
+    clearAllLink.onclick = (e) => {
       e.stopPropagation();
       dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = false);
-      applyPaymentsFilter(col, dropdown);
     };
   }
-}
-
-function applyPaymentsFilter(col, dropdown) {
-  collectPaymentsColumnFilter(col, dropdown);
-  closeAllPaymentsFilterDropdowns();
-  paymentsCurrentPage = 1;
-  loadPaymentsPage();
+  
+  if (okBtn) {
+    okBtn.onclick = (e) => {
+      e.stopPropagation();
+      collectPaymentsColumnFilter(col, dropdown);
+      closeAllPaymentsFilterDropdowns();
+      paymentsCurrentPage = 1;
+      loadPaymentsPage();
+    };
+  }
+  
+  if (cancelBtn) {
+    cancelBtn.onclick = (e) => {
+      e.stopPropagation();
+      closeAllPaymentsFilterDropdowns();
+    };
+  }
 }
 
 function collectPaymentsColumnFilter(col, dropdown) {
