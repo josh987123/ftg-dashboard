@@ -16731,18 +16731,26 @@ function updateCCPagination(total) {
 
 function updateCCTableTotals(data) {
   let totalCost = 0;
+  let totalRevPct = 0;
+  const uniqueJobs = new Set();
   
   data.forEach(cc => {
     totalCost += cc.total_cost;
+    totalRevPct += cc.pct_of_revenue || 0;
+    uniqueJobs.add(cc.job_no);
   });
   
   const totalCostCell = document.getElementById('ccTotalCostCell');
   if (totalCostCell) totalCostCell.textContent = formatCurrency(totalCost);
   
-  // Calculate % of Revenue as total cost / total earned revenue
+  // Calculate % of Revenue - if single job, sum percentages; otherwise use total cost / total earned revenue
   const totalRevPctCell = document.getElementById('ccTotalRevPctCell');
   if (totalRevPctCell) {
-    if (ccTotalEarnedRevenue > 0 && totalCost > 0) {
+    if (uniqueJobs.size === 1 && totalRevPct > 0) {
+      // Single job - sum the percentages (they should add up to the job's total)
+      totalRevPctCell.textContent = totalRevPct.toFixed(2) + '%';
+    } else if (ccTotalEarnedRevenue > 0 && totalCost > 0) {
+      // Multiple jobs - calculate as total cost / total earned revenue
       const revPct = (totalCost / ccTotalEarnedRevenue) * 100;
       totalRevPctCell.textContent = revPct.toFixed(2) + '%';
     } else {
