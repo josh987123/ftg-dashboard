@@ -9430,6 +9430,43 @@ body.dark-mode .job-metric-card.margin .metric-value.negative {
   color: #ef4444;
 }
 
+/* Compact Job Actuals Key Metrics */
+#jobActuals .job-key-metrics-section {
+  margin-bottom: 16px;
+}
+
+#jobActuals .job-key-metrics-section .section-title {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+#jobActuals .job-metrics-grid.five-col {
+  gap: 10px;
+}
+
+#jobActuals .job-metric-card {
+  padding: 10px 14px;
+  border-radius: 8px;
+  gap: 8px;
+}
+
+#jobActuals .job-metric-card .metric-icon {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  border-radius: 6px;
+}
+
+#jobActuals .job-metric-card .metric-value {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+#jobActuals .job-metric-card .metric-label {
+  font-size: 10px;
+  margin-bottom: 2px;
+}
+
 .metric-icon {
   font-size: 22px;
   width: 40px;
