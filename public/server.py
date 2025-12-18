@@ -3642,7 +3642,7 @@ def api_get_top_vendors():
         invoices = invoices_json.get('invoices', [])
         
         # Vendors to exclude from chart
-        excluded_vendors = {'Bridge Bank', 'Payroll4Construction', 'Bank of America', 'Employee Fiduciary, LLC', 'Department of the Treasury', 'Capital One', 'Rodney Terra', 'Robert Giancola', 'Kaiser Foundation Health', 'Greg Baba', 'Miscellaneous Vendor', 'Construction Strategies'}
+        excluded_vendors = {'Bridge Bank', 'Payroll4Construction', 'Bank of America', 'Employee Fiduciary, LLC', 'Department of the Treasury', 'Capital One', 'Rodney Terra', 'Robert Giancola', 'Kaiser Foundation Health', 'Greg Baba', 'Miscellaneous Vendor', 'Construction Strategies', 'Charles Schwab', ''}
         
         # Filter by year range and aggregate by vendor
         vendor_totals = {}
@@ -3656,9 +3656,10 @@ def api_get_top_vendors():
                         date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
                         year = date_obj.year
                         if start_year <= year <= end_year:
-                            vendor = inv.get('vendor_name', 'Unknown') or 'Unknown'
+                            vendor = (inv.get('vendor_name', '') or '').strip()
                             amount = float(inv.get('invoice_amount', 0) or 0)
-                            if vendor and vendor != 'Unknown' and vendor not in excluded_vendors:
+                            # Skip empty, dash-only, or excluded vendors
+                            if vendor and vendor not in excluded_vendors and vendor not in ('-', '--', '---', 'Unknown'):
                                 vendor_totals[vendor] = vendor_totals.get(vendor, 0) + amount
                 except (ValueError, TypeError):
                     pass
