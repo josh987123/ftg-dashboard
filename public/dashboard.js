@@ -15979,20 +15979,22 @@ async function initCostCodes() {
   }
 }
 
+// Store available options for CC search filters
+let ccCustomerOptions = [];
+let ccJobOptions = [];
+
 function populateCCFilters() {
   if (!jobBudgetsData || !Array.isArray(jobBudgetsData)) return;
   
   const pms = [...new Set(jobBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
-  const customers = [...new Set(jobBudgetsData.map(j => j.customer_name).filter(Boolean))].sort();
-  const jobs = [...new Set(jobBudgetsData.map(j => j.job_no).filter(Boolean))].sort((a, b) => {
+  ccCustomerOptions = [...new Set(jobBudgetsData.map(j => j.customer_name).filter(Boolean))].sort();
+  ccJobOptions = [...new Set(jobBudgetsData.map(j => j.job_no).filter(Boolean))].sort((a, b) => {
     const numA = parseInt(a) || 0;
     const numB = parseInt(b) || 0;
     return numB - numA;
   });
   
   const pmSelect = document.getElementById('ccPmFilter');
-  const custSelect = document.getElementById('ccCustomerFilter');
-  const jobSelect = document.getElementById('ccJobFilter');
   
   if (pmSelect) {
     pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
@@ -16006,19 +16008,87 @@ function populateCCFilters() {
     }
   }
   
-  if (custSelect) {
-    custSelect.innerHTML = '<option value="">All Clients</option>' + 
-      customers.map(c => `<option value="${c}">${c}</option>`).join('');
-  }
+  // Setup search-based filters for Customer and Job
+  setupCCSearchFilter('ccCustomerSearch', 'ccCustomerFilter', 'ccCustomerSuggestions', ccCustomerOptions, 'client');
+  setupCCSearchFilter('ccJobSearch', 'ccJobFilter', 'ccJobSuggestions', ccJobOptions, 'job');
+}
+
+function setupCCSearchFilter(searchId, hiddenId, suggestionsId, options, type) {
+  const searchInput = document.getElementById(searchId);
+  const hiddenInput = document.getElementById(hiddenId);
+  const suggestionsDiv = document.getElementById(suggestionsId);
   
-  if (jobSelect) {
-    jobSelect.innerHTML = '<option value="">All Jobs</option>' + 
-      jobs.slice(0, 500).map(j => {
-        const budget = jobBudgetsData.find(b => b.job_no === j);
+  if (!searchInput || !hiddenInput || !suggestionsDiv) return;
+  
+  searchInput.addEventListener('input', debounce(() => {
+    const query = searchInput.value.toLowerCase().trim();
+    
+    if (!query) {
+      suggestionsDiv.classList.remove('open');
+      return;
+    }
+    
+    let filtered = options.filter(opt => opt.toLowerCase().includes(query)).slice(0, 20);
+    
+    if (filtered.length === 0) {
+      suggestionsDiv.innerHTML = '<div class="search-suggestion-item" style="color:#999;">No matches found</div>';
+      suggestionsDiv.classList.add('open');
+      return;
+    }
+    
+    let html = '<div class="search-suggestion-item clear-filter" data-value="">Clear filter</div>';
+    
+    if (type === 'job') {
+      html += filtered.map(opt => {
+        const budget = jobBudgetsData.find(b => b.job_no === opt);
         const desc = budget ? budget.job_description : '';
-        return `<option value="${j}">${j}${desc ? ' - ' + desc.substring(0, 30) : ''}</option>`;
+        return `<div class="search-suggestion-item" data-value="${opt}">${opt}${desc ? ' - ' + desc.substring(0, 35) : ''}</div>`;
       }).join('');
-  }
+    } else {
+      html += filtered.map(opt => `<div class="search-suggestion-item" data-value="${opt}">${opt}</div>`).join('');
+    }
+    
+    suggestionsDiv.innerHTML = html;
+    suggestionsDiv.classList.add('open');
+    
+    // Add click handlers
+    suggestionsDiv.querySelectorAll('.search-suggestion-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const value = item.dataset.value;
+        hiddenInput.value = value;
+        searchInput.value = value || '';
+        suggestionsDiv.classList.remove('open');
+        updateCostCodes();
+      });
+    });
+  }, 200));
+  
+  // Show suggestions on focus if there's text
+  searchInput.addEventListener('focus', () => {
+    if (searchInput.value.trim()) {
+      searchInput.dispatchEvent(new Event('input'));
+    }
+  });
+  
+  // Hide suggestions on blur (with delay for click handling)
+  searchInput.addEventListener('blur', () => {
+    setTimeout(() => suggestionsDiv.classList.remove('open'), 200);
+  });
+  
+  // Handle Enter key to select first suggestion
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const firstItem = suggestionsDiv.querySelector('.search-suggestion-item:not(.clear-filter)');
+      if (firstItem) {
+        hiddenInput.value = firstItem.dataset.value;
+        searchInput.value = firstItem.dataset.value;
+        suggestionsDiv.classList.remove('open');
+        updateCostCodes();
+      }
+    } else if (e.key === 'Escape') {
+      suggestionsDiv.classList.remove('open');
+    }
+  });
 }
 
 function setupCCEventListeners() {
@@ -16027,8 +16097,7 @@ function setupCCEventListeners() {
   });
   
   document.getElementById('ccPmFilter')?.addEventListener('change', updateCostCodes);
-  document.getElementById('ccCustomerFilter')?.addEventListener('change', updateCostCodes);
-  document.getElementById('ccJobFilter')?.addEventListener('change', updateCostCodes);
+  // Customer and Job filters are now handled via search inputs in setupCCSearchFilter
   
   document.getElementById('ccSearchInput')?.addEventListener('input', debounce(filterAndRenderCC, 300));
   
@@ -16662,13 +16731,18 @@ function updateCCPagination(total) {
 
 function updateCCTableTotals(data) {
   let totalCost = 0;
+  let totalRevPct = 0;
   
   data.forEach(cc => {
     totalCost += cc.total_cost;
+    totalRevPct += cc.pct_of_revenue || 0;
   });
   
   const totalCostCell = document.getElementById('ccTotalCostCell');
   if (totalCostCell) totalCostCell.textContent = formatCurrency(totalCost);
+  
+  const totalRevPctCell = document.getElementById('ccTotalRevPctCell');
+  if (totalRevPctCell) totalRevPctCell.textContent = totalRevPct > 0 ? totalRevPct.toFixed(2) + '%' : '—';
 }
 
 function extractCostCodesData() {

@@ -2472,12 +2472,16 @@
                 <select id="ccPmFilter" class="filter-select">
                   <option value="">All Project Managers</option>
                 </select>
-                <select id="ccCustomerFilter" class="filter-select">
-                  <option value="">All Clients</option>
-                </select>
-                <select id="ccJobFilter" class="filter-select">
-                  <option value="">All Jobs</option>
-                </select>
+                <div class="search-filter-wrapper">
+                  <input type="text" id="ccCustomerSearch" class="filter-search-input" placeholder="Search clients...">
+                  <input type="hidden" id="ccCustomerFilter" value="">
+                  <div class="search-suggestions" id="ccCustomerSuggestions"></div>
+                </div>
+                <div class="search-filter-wrapper">
+                  <input type="text" id="ccJobSearch" class="filter-search-input" placeholder="Search jobs...">
+                  <input type="hidden" id="ccJobFilter" value="">
+                  <div class="search-suggestions" id="ccJobSuggestions"></div>
+                </div>
               </div>
 
             </div>
@@ -2570,7 +2574,7 @@
                 <td colspan="4"><strong>Totals</strong></td>
                 <td class="number-col" id="ccTotalCostCell">-</td>
                 <td class="number-col" id="ccTotalPctCell">100.00%</td>
-                <td class="number-col">—</td>
+                <td class="number-col" id="ccTotalRevPctCell">-</td>
               </tr>
             </tfoot>
           </table>
