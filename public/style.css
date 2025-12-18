@@ -13382,3 +13382,82 @@ body.dark-mode .skeleton-text,
     align-items: center;
   }
 }
+
+/* ========================================
+   OVER/(UNDER) BILLING STYLES
+======================================== */
+
+.oub-positive {
+  background-color: #dcfce7 !important;
+  color: #000 !important;
+}
+
+.oub-negative {
+  background-color: #fee2e2 !important;
+  color: #000 !important;
+}
+
+#oubTable .totals-row .oub-positive {
+  background-color: #dcfce7 !important;
+  color: #000 !important;
+}
+
+#oubTable .totals-row .oub-negative {
+  background-color: #fee2e2 !important;
+  color: #000 !important;
+}
+
+/* Dark mode - keep same light colors with black text */
+[data-theme="dark"] .oub-positive {
+  background-color: #dcfce7 !important;
+  color: #000 !important;
+}
+
+[data-theme="dark"] .oub-negative {
+  background-color: #fee2e2 !important;
+  color: #000 !important;
+}
+
+[data-theme="dark"] #oubTable .totals-row .oub-positive,
+[data-theme="dark"] #oubTable .totals-row .oub-negative {
+  color: #000 !important;
+}
+
+body.dark-mode .oub-positive {
+  background-color: #dcfce7 !important;
+  color: #000 !important;
+}
+
+body.dark-mode .oub-negative {
+  background-color: #fee2e2 !important;
+  color: #000 !important;
+}
+
+/* Over/(Under) Billing filters */
+#overUnderBilling .filter-group {
+  display: flex;
+  align-items: center;
+}
+
+#overUnderBilling .search-input {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+[data-theme="dark"] #overUnderBilling .search-input {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+body.dark-mode #overUnderBilling .search-input {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+#overUnderBilling .oub-metrics .tile {
+  min-width: 140px;
+}

@@ -16024,11 +16024,11 @@ function buildOubData() {
     jobBudgetsData.forEach(budget => {
       const actuals = actualsMap.get(budget.job_no) || { actual_cost: 0, billed_revenue: 0 };
       
-      // Contract Value = Original Contract + Change Orders (tot_income_adj)
-      const contractValue = (parseFloat(budget.original_contract) || 0) + (parseFloat(budget.tot_income_adj) || 0);
+      // Contract Value = revised_contract (already includes original + change orders)
+      const contractValue = parseFloat(budget.revised_contract) || 0;
       
-      // Est. Cost = Original Cost + Cost Adjustments (tot_cost_adj)
-      const estCost = (parseFloat(budget.original_cost) || 0) + (parseFloat(budget.tot_cost_adj) || 0);
+      // Est. Cost = revised_cost (already includes original + adjustments)
+      const estCost = parseFloat(budget.revised_cost) || 0;
       
       // Est. Profit = Contract Value - Est. Cost
       const estProfit = contractValue - estCost;
@@ -16036,7 +16036,7 @@ function buildOubData() {
       // Actual Cost from actuals
       const actualCost = actuals.actual_cost;
       
-      // % Complete = Actual Cost / Est. Cost
+      // % Complete = Actual Cost / Est. Cost (cost-based completion)
       const pctComplete = estCost > 0 ? (actualCost / estCost) * 100 : 0;
       
       // Billed Revenue from actuals
