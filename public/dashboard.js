@@ -17079,7 +17079,7 @@ function updateCostCodes() {
   // Show loading state immediately
   const tbody = document.getElementById('costCodesTableBody');
   if (tbody) {
-    tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Processing cost code data...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">Processing cost code data...</td></tr>';
   }
   
   // Use requestAnimationFrame to allow UI to update before heavy processing
@@ -17188,6 +17188,7 @@ function updateCostCodesSync() {
         jobCostCodeMap[key] = {
           job_no: jobNo,
           job_description: budget?.job_description || a.job_description || '',
+          project_manager: budget?.project_manager_name || '',
           cost_code: code,
           description: desc,
           total_cost: 0,
@@ -17517,7 +17518,7 @@ function renderCCTable() {
   if (!tbody) return;
   
   if (costCodeFiltered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">No cost codes found matching your filters</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">No cost codes found matching your filters</td></tr>';
     updateCCPagination(0);
     return;
   }
@@ -17547,6 +17548,7 @@ function renderCCTable() {
     <tr>
       <td>${escapeHtml(item.job_no)}</td>
       <td>${escapeHtml(item.job_description)}</td>
+      <td>${escapeHtml(item.project_manager || '')}</td>
       <td><span class="cc-code-badge">${escapeHtml(item.cost_code)}</span></td>
       <td>${escapeHtml(item.description)}</td>
       <td class="number-col">${formatCurrency(item.total_cost)}</td>
