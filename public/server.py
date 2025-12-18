@@ -3579,6 +3579,87 @@ def api_get_payments_filter_values():
         print(f"[PAYMENTS] Filter values error: {e}")
         return jsonify({'success': False, 'error': str(e), 'values': []}), 500
 
+@app.route('/api/payments/years', methods=['GET', 'OPTIONS'])
+def api_get_payments_years():
+    """Get available years from payments data"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = get_payments_data()
+        payments = data['payments']
+        
+        # Extract unique years from invoice_date
+        years = set()
+        for p in payments:
+            date_str = p.get('invoice_date', '')
+            if date_str:
+                try:
+                    # Parse date string (format: YYYY-MM-DD or similar)
+                    if isinstance(date_str, str) and len(date_str) >= 4:
+                        year = int(date_str[:4])
+                        if 2000 <= year <= 2100:
+                            years.add(year)
+                except (ValueError, TypeError):
+                    pass
+        
+        # Return sorted years
+        sorted_years = sorted(list(years)) if years else [2020, 2021, 2022, 2023, 2024, 2025]
+        
+        return jsonify({
+            'success': True,
+            'years': sorted_years
+        })
+        
+    except Exception as e:
+        print(f"[PAYMENTS] Years error: {e}")
+        return jsonify({'success': False, 'years': [2020, 2021, 2022, 2023, 2024, 2025]}), 500
+
+@app.route('/api/payments/top-vendors', methods=['GET', 'OPTIONS'])
+def api_get_top_vendors():
+    """Get top 10 vendors by spend within a year range"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        start_year = int(request.args.get('startYear', 2020))
+        end_year = int(request.args.get('endYear', 2025))
+        
+        data = get_payments_data()
+        payments = data['payments']
+        
+        # Filter by year range and aggregate by vendor
+        vendor_totals = {}
+        for p in payments:
+            date_str = p.get('invoice_date', '')
+            if date_str:
+                try:
+                    if isinstance(date_str, str) and len(date_str) >= 4:
+                        year = int(date_str[:4])
+                        if start_year <= year <= end_year:
+                            vendor = p.get('vendor', 'Unknown')
+                            amount = p.get('invoice_amount', 0) or 0
+                            if vendor:
+                                vendor_totals[vendor] = vendor_totals.get(vendor, 0) + amount
+                except (ValueError, TypeError):
+                    pass
+        
+        # Sort by total and get top 10
+        sorted_vendors = sorted(vendor_totals.items(), key=lambda x: x[1], reverse=True)[:10]
+        
+        return jsonify({
+            'success': True,
+            'vendors': [{'vendor': v[0], 'total': v[1]} for v in sorted_vendors],
+            'startYear': start_year,
+            'endYear': end_year
+        })
+        
+    except Exception as e:
+        print(f"[PAYMENTS] Top vendors error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'vendors': [], 'error': str(e)}), 500
+
 scheduler_thread = None
 
 def start_scheduler():

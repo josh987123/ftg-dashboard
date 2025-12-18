@@ -19219,6 +19219,8 @@ let paymentsInvoiceSearch = '';
 let paymentsJobSearch = '';
 let paymentsPmFilter = '';
 let paymentsTotal = 0;
+let topVendorsChart = null;
+let paymentsYearData = null;
 let paymentsTotalPages = 1;
 let paymentsFilterValuesCache = {};
 
@@ -19249,8 +19251,12 @@ function initPayments() {
   if (!paymentsInitialized) {
     initPaymentsEventHandlers();
     initPaymentsColumnFiltersOptimized();
+    initPaymentsYearRangeSlider();
     paymentsInitialized = true;
   }
+  
+  // Load top vendors chart
+  loadTopVendorsChart();
   
   // Apply My PM View filter (sync, before loading data)
   if (getMyPmViewEnabled() && isUserProjectManager()) {
@@ -19445,6 +19451,132 @@ function excelDateToDate(excelDate) {
 function formatPaymentDate(date) {
   if (!date || !(date instanceof Date) || isNaN(date)) return '-';
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function initPaymentsYearRangeSlider() {
+  const startSlider = document.getElementById('payYearStart');
+  const endSlider = document.getElementById('payYearEnd');
+  const startLabel = document.getElementById('payYearStartLabel');
+  const endLabel = document.getElementById('payYearEndLabel');
+  
+  if (!startSlider || !endSlider) return;
+  
+  // Fetch available years from the server
+  fetch('/api/payments/years')
+    .then(r => r.json())
+    .then(data => {
+      const years = data.years || [2020, 2021, 2022, 2023, 2024, 2025];
+      const minYear = Math.min(...years);
+      const maxYear = Math.max(...years);
+      
+      startSlider.min = endSlider.min = minYear;
+      startSlider.max = endSlider.max = maxYear;
+      startSlider.value = minYear;
+      endSlider.value = maxYear;
+      
+      if (startLabel) startLabel.textContent = minYear;
+      if (endLabel) endLabel.textContent = maxYear;
+    })
+    .catch(() => {
+      // Use defaults if API fails
+      if (startLabel) startLabel.textContent = startSlider.value;
+      if (endLabel) endLabel.textContent = endSlider.value;
+    });
+  
+  startSlider.oninput = () => {
+    if (+startSlider.value > +endSlider.value) startSlider.value = endSlider.value;
+    if (startLabel) startLabel.textContent = startSlider.value;
+  };
+  
+  endSlider.oninput = () => {
+    if (+endSlider.value < +startSlider.value) endSlider.value = startSlider.value;
+    if (endLabel) endLabel.textContent = endSlider.value;
+  };
+  
+  startSlider.onchange = () => loadTopVendorsChart();
+  endSlider.onchange = () => loadTopVendorsChart();
+}
+
+function loadTopVendorsChart() {
+  const startSlider = document.getElementById('payYearStart');
+  const endSlider = document.getElementById('payYearEnd');
+  const startYear = startSlider ? +startSlider.value : 2020;
+  const endYear = endSlider ? +endSlider.value : 2025;
+  
+  fetch(`/api/payments/top-vendors?startYear=${startYear}&endYear=${endYear}`)
+    .then(r => r.json())
+    .then(data => {
+      renderTopVendorsChart(data.vendors || []);
+    })
+    .catch(err => {
+      console.error('Error loading top vendors:', err);
+    });
+}
+
+function renderTopVendorsChart(vendors) {
+  const canvas = document.getElementById('topVendorsChart');
+  if (!canvas) return;
+  
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDark ? '#e2e8f0' : '#374151';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  
+  if (topVendorsChart) topVendorsChart.destroy();
+  
+  const ctx = canvas.getContext('2d');
+  topVendorsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: vendors.map(v => v.vendor.length > 25 ? v.vendor.substring(0, 25) + '...' : v.vendor),
+      datasets: [{
+        label: 'Total Spend',
+        data: vendors.map(v => v.total),
+        backgroundColor: '#3b82f6',
+        borderRadius: 4,
+        barPercentage: 0.7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const idx = items[0].dataIndex;
+              return vendors[idx] ? vendors[idx].vendor : '';
+            },
+            label: (ctx) => formatCurrency(ctx.raw)
+          }
+        },
+        datalabels: {
+          display: true,
+          anchor: 'end',
+          align: 'right',
+          color: textColor,
+          font: { size: 10, weight: 'bold' },
+          formatter: (val) => formatCurrencyCompact(val)
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: textColor,
+            font: { size: 10 },
+            callback: (val) => formatCurrencyCompact(val)
+          },
+          grid: { color: gridColor }
+        },
+        y: {
+          ticks: { color: textColor, font: { size: 10 } },
+          grid: { display: false }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
 }
 
 function initPaymentsEventHandlers() {

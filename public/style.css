@@ -13625,6 +13625,73 @@ body.dark-mode #overUnderBilling .search-input {
   }
 }
 
+/* Payments Chart Section */
+.payments-chart-section {
+  width: 80%;
+  margin: 0 auto 24px auto;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+body.dark-mode .payments-chart-section {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.payments-year-range {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.payments-year-range label {
+  font-weight: 500;
+  color: #374151;
+}
+
+body.dark-mode .payments-year-range label {
+  color: #e2e8f0;
+}
+
+.payments-year-range .year-slider {
+  width: 120px;
+  cursor: pointer;
+}
+
+.payments-year-range .year-label {
+  font-weight: 600;
+  color: #3b82f6;
+  min-width: 40px;
+  text-align: center;
+}
+
+.payments-year-range .range-separator {
+  color: #6b7280;
+}
+
+body.dark-mode .payments-year-range .range-separator {
+  color: #9ca3af;
+}
+
+.payments-chart-wrapper {
+  height: 280px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .payments-chart-section {
+    width: 100%;
+  }
+  
+  .payments-chart-wrapper {
+    height: 220px;
+  }
+}
+
 /* Over/(Under) Billing Key Metrics */
 .oub-key-metrics-section {
   width: 80%;
