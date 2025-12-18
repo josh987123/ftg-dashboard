@@ -48,6 +48,12 @@ The dashboard offers several key views:
 - **Balance Sheet**: Shows a full balance sheet with cumulative balances, various view and comparison modes, and detailed asset, liability, and equity breakdowns.
 - **Statement of Cash Flows**: Uses the indirect method, offering period types, comparison modes, detail levels, and AI analysis.
 - **Cash Balances**: Tracks cash position using both Google Sheets for daily data and Balance Sheet data for monthly/quarterly/annual views.
+- **Payments**: Displays AP invoice payment data with filtering by year range, vendor, job, and status. Features Top 10 Vendors by Spend chart (excludes banking/payroll vendors), column picker, and full export capabilities.
+- **AP Aging**: Shows outstanding AP balances aggregated by vendor with aging buckets:
+  - **Summary Metrics**: Total Outstanding, Current (0-30 days), 31-60 Days, 61-90 Days, 90+ Days, and Retainage
+  - **Vendor Table**: Sortable table with vendor details and aging breakdown
+  - **Retainage Separation**: Retainage amounts are tracked separately from standard aging buckets
+  - **Excludes Paid Invoices**: Only shows invoices with remaining balance or retainage
 
 ### Jobs Module
 The Jobs section in the sidebar contains job-related tracking views:
