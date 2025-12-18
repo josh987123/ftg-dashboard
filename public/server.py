@@ -3427,7 +3427,7 @@ def api_get_payments():
         
         # Individual filter parameters
         job_filter = request.args.get('job', '').lower().strip()
-        description_filter = request.args.get('description', '').lower().strip()
+        vendor_filter = request.args.get('vendor', '').lower().strip()
         invoice_filter = request.args.get('invoice', '').lower().strip()
         
         # Validate sort column
@@ -3444,8 +3444,8 @@ def api_get_payments():
         # Apply individual search filters
         if job_filter:
             payments = [p for p in payments if job_filter in str(p.get('job_no', '')).lower()]
-        if description_filter:
-            payments = [p for p in payments if description_filter in str(p.get('job_description', '')).lower()]
+        if vendor_filter:
+            payments = [p for p in payments if vendor_filter in str(p.get('vendor', '')).lower()]
         if invoice_filter:
             payments = [p for p in payments if invoice_filter in str(p.get('invoice_no', '')).lower()]
         
