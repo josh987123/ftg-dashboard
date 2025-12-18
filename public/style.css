@@ -8221,6 +8221,41 @@ body.dark-mode .config-label {
   gap: 16px;
 }
 
+/* Compact Job Budgets Configuration */
+#jobBudgets .job-budgets-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+#jobBudgets .job-budgets-controls .overview-config-box {
+  padding: 8px 12px;
+  margin-bottom: 0;
+}
+
+#jobBudgets .job-budgets-controls .config-label {
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+#jobBudgets .job-budgets-controls .checkbox-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+#jobBudgets .job-budgets-controls .checkbox-label {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#jobBudgets .job-budgets-controls .filter-select {
+  padding: 6px 10px;
+  font-size: 13px;
+  min-width: 160px;
+}
+
 .filter-select {
   width: 100%;
   max-width: 250px;

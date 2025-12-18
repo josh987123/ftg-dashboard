@@ -13333,6 +13333,9 @@ function setupJobBudgetsEventListeners() {
   // PM filter dropdown
   document.getElementById('jbPmFilter')?.addEventListener('change', filterJobBudgets);
   
+  // Client filter dropdown
+  document.getElementById('jbClientFilter')?.addEventListener('change', filterJobBudgets);
+  
   // Search input with debounce
   const searchInput = document.getElementById('jobSearchInput');
   let searchTimeout;
@@ -13487,8 +13490,9 @@ async function loadJobBudgetsData() {
     initJobBudgetsColumnFilters();
     updateJobBudgetsSortIndicators();
     
-    // Populate PM filter dropdown
+    // Populate filter dropdowns
     populateJbPmFilter();
+    populateJbClientFilter();
     
     // Apply My PM View to PM dropdown
     if (getMyPmViewEnabled() && isUserProjectManager()) {
@@ -13551,6 +13555,7 @@ function filterJobBudgets() {
   
   const searchTerm = (document.getElementById('jobSearchInput')?.value || '').toLowerCase().trim();
   const pmFilter = document.getElementById('jbPmFilter')?.value || '';
+  const clientFilter = document.getElementById('jbClientFilter')?.value || '';
   
   const allowedStatuses = [];
   if (showActive) allowedStatuses.push('A');
@@ -13564,6 +13569,9 @@ function filterJobBudgets() {
     
     // PM filter from config panel
     if (pmFilter && job.project_manager_name !== pmFilter) return false;
+    
+    // Client filter from config panel
+    if (clientFilter && job.customer_name !== clientFilter) return false;
     
     // Search filter
     if (searchTerm) {
@@ -13634,6 +13642,15 @@ function populateJbPmFilter() {
   if (pmSelect) {
     pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
       pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+  }
+}
+
+function populateJbClientFilter() {
+  const clients = [...new Set(jobBudgetsData.map(j => j.customer_name).filter(Boolean))].sort();
+  const clientSelect = document.getElementById('jbClientFilter');
+  if (clientSelect) {
+    clientSelect.innerHTML = '<option value="">All Clients</option>' + 
+      clients.map(c => `<option value="${c}">${c}</option>`).join('');
   }
 }
 
