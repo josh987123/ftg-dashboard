@@ -273,6 +273,9 @@ function refreshCurrentSection() {
     case 'jobActuals':
       if (typeof filterJobActuals === 'function') filterJobActuals();
       break;
+    case 'overUnderBilling':
+      if (typeof initOverUnderBilling === 'function') initOverUnderBilling();
+      break;
     case 'costCodes':
       if (typeof updateCostCodes === 'function') updateCostCodes();
       break;
@@ -15937,6 +15940,357 @@ function updateMbPagination(total) {
   document.getElementById('mbPageInfo').textContent = `Page ${mbCurrentPage} of ${totalPages}`;
   document.getElementById('mbPrevPage').disabled = mbCurrentPage <= 1;
   document.getElementById('mbNextPage').disabled = mbCurrentPage >= totalPages;
+}
+
+// ========================================
+// OVER/(UNDER) BILLING MODULE
+// ========================================
+
+let oubData = [];
+let oubFiltered = [];
+let oubCurrentPage = 1;
+let oubPageSize = 25;
+let oubSortField = 'over_under';
+let oubSortDir = 'asc';
+let oubInitialized = false;
+
+async function initOverUnderBilling() {
+  if (oubInitialized && oubData.length > 0) {
+    updateOverUnderBilling();
+    return;
+  }
+  
+  try {
+    if (!jobBudgetsData || jobBudgetsData.length === 0 || !jobActualsData || jobActualsData.length === 0) {
+      const resp = await fetch('data/financials_jobs.json');
+      const data = await resp.json();
+      
+      if (data.job_budgets && (!jobBudgetsData || jobBudgetsData.length === 0)) {
+        jobBudgetsData = (data.job_budgets || []).map(job => ({
+          ...job,
+          original_contract: parseFloat(job.original_contract) || 0,
+          tot_income_adj: parseFloat(job.tot_income_adj) || 0,
+          revised_contract: parseFloat(job.revised_contract) || 0,
+          original_cost: parseFloat(job.original_cost) || 0,
+          tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
+          revised_cost: parseFloat(job.revised_cost) || 0,
+          estimated_profit: (parseFloat(job.revised_contract) || 0) - (parseFloat(job.revised_cost) || 0)
+        }));
+      }
+      
+      if (data.generated_at) {
+        jobsDataAsOf = new Date(data.generated_at).toLocaleDateString();
+      }
+    }
+    
+    // Load job actuals if not already loaded
+    if (!jobActualsData || jobActualsData.length === 0) {
+      await loadJobActualsData();
+    }
+    
+    // Build OUB data by combining budgets and actuals
+    buildOubData();
+    populateOubFilters();
+    setupOubEventListeners();
+    updateOverUnderBilling();
+    oubInitialized = true;
+    
+    const dataAsOf = document.getElementById('oubDataAsOf');
+    if (dataAsOf && jobsDataAsOf) {
+      dataAsOf.textContent = jobsDataAsOf;
+    }
+  } catch (err) {
+    console.error('Error initializing Over/(Under) Billing:', err);
+    document.getElementById('oubTableBody').innerHTML = '<tr><td colspan="10" class="error-cell">Error loading data</td></tr>';
+  }
+}
+
+function buildOubData() {
+  oubData = [];
+  
+  // Create lookup for actuals by job number
+  const actualsMap = new Map();
+  if (jobActualsData && Array.isArray(jobActualsData)) {
+    jobActualsData.forEach(job => {
+      actualsMap.set(job.job_no, {
+        actual_cost: job.actual_cost || 0,
+        billed_revenue: job.billed_revenue || 0
+      });
+    });
+  }
+  
+  // Build combined data from budgets
+  if (jobBudgetsData && Array.isArray(jobBudgetsData)) {
+    jobBudgetsData.forEach(budget => {
+      const actuals = actualsMap.get(budget.job_no) || { actual_cost: 0, billed_revenue: 0 };
+      
+      // Contract Value = Original Contract + Change Orders (tot_income_adj)
+      const contractValue = (parseFloat(budget.original_contract) || 0) + (parseFloat(budget.tot_income_adj) || 0);
+      
+      // Est. Cost = Original Cost + Cost Adjustments (tot_cost_adj)
+      const estCost = (parseFloat(budget.original_cost) || 0) + (parseFloat(budget.tot_cost_adj) || 0);
+      
+      // Est. Profit = Contract Value - Est. Cost
+      const estProfit = contractValue - estCost;
+      
+      // Actual Cost from actuals
+      const actualCost = actuals.actual_cost;
+      
+      // % Complete = Actual Cost / Est. Cost
+      const pctComplete = estCost > 0 ? (actualCost / estCost) * 100 : 0;
+      
+      // Billed Revenue from actuals
+      const billedRevenue = actuals.billed_revenue;
+      
+      // Earned Revenue = % Complete × Contract Value
+      const earnedRevenue = (pctComplete / 100) * contractValue;
+      
+      // Over/(Under) = Billed Revenue - Earned Revenue
+      const overUnder = billedRevenue - earnedRevenue;
+      
+      oubData.push({
+        job_no: budget.job_no,
+        job_description: budget.job_description || '',
+        project_manager_name: budget.project_manager_name || '',
+        job_status: budget.job_status || '',
+        contract_value: contractValue,
+        est_cost: estCost,
+        est_profit: estProfit,
+        actual_cost: actualCost,
+        pct_complete: pctComplete,
+        billed_revenue: billedRevenue,
+        earned_revenue: earnedRevenue,
+        over_under: overUnder
+      });
+    });
+  }
+}
+
+function populateOubFilters() {
+  const pms = [...new Set(oubData.map(j => j.project_manager_name).filter(Boolean))].sort();
+  
+  const pmSelect = document.getElementById('oubPmFilter');
+  if (pmSelect) {
+    pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
+      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+    
+    // Apply My PM View filter if enabled
+    if (getMyPmViewEnabled() && isUserProjectManager()) {
+      const pmName = getCurrentUserPmName();
+      const option = Array.from(pmSelect.options).find(opt => opt.value === pmName);
+      if (option) pmSelect.value = option.value;
+    }
+  }
+}
+
+function setupOubEventListeners() {
+  // PM filter
+  const pmFilter = document.getElementById('oubPmFilter');
+  if (pmFilter) {
+    pmFilter.addEventListener('change', () => {
+      oubCurrentPage = 1;
+      updateOverUnderBilling();
+    });
+  }
+  
+  // Job search
+  const jobSearch = document.getElementById('oubJobSearch');
+  if (jobSearch) {
+    let searchTimeout;
+    jobSearch.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        oubCurrentPage = 1;
+        updateOverUnderBilling();
+      }, 300);
+    });
+  }
+  
+  // Sort buttons
+  document.querySelectorAll('.oub-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const col = btn.dataset.sort;
+      const dir = btn.dataset.dir;
+      oubSortField = col;
+      oubSortDir = dir;
+      updateOubSortIndicators();
+      updateOverUnderBilling();
+    });
+  });
+  
+  // Pagination
+  document.getElementById('oubPrevPage')?.addEventListener('click', () => {
+    if (oubCurrentPage > 1) {
+      oubCurrentPage--;
+      renderOubTable();
+    }
+  });
+  
+  document.getElementById('oubNextPage')?.addEventListener('click', () => {
+    const totalPages = Math.ceil(oubFiltered.length / oubPageSize);
+    if (oubCurrentPage < totalPages) {
+      oubCurrentPage++;
+      renderOubTable();
+    }
+  });
+  
+  document.getElementById('oubPageSize')?.addEventListener('change', (e) => {
+    oubPageSize = parseInt(e.target.value);
+    oubCurrentPage = 1;
+    renderOubTable();
+  });
+}
+
+function updateOubSortIndicators() {
+  document.querySelectorAll('.oub-sort-btn').forEach(btn => {
+    const isActive = btn.dataset.sort === oubSortField && btn.dataset.dir === oubSortDir;
+    btn.classList.toggle('active', isActive);
+  });
+}
+
+function updateOverUnderBilling() {
+  // Apply filters
+  const pmFilter = document.getElementById('oubPmFilter')?.value || '';
+  const jobSearch = (document.getElementById('oubJobSearch')?.value || '').toLowerCase().trim();
+  
+  oubFiltered = oubData.filter(job => {
+    // PM filter
+    if (pmFilter && job.project_manager_name !== pmFilter) return false;
+    
+    // Job search
+    if (jobSearch && !job.job_no.toLowerCase().includes(jobSearch)) return false;
+    
+    return true;
+  });
+  
+  // Sort
+  oubFiltered.sort((a, b) => {
+    const col = oubSortField;
+    let aVal = a[col];
+    let bVal = b[col];
+    
+    // Numeric columns
+    if (['contract_value', 'est_cost', 'est_profit', 'actual_cost', 'pct_complete', 'billed_revenue', 'earned_revenue', 'over_under'].includes(col)) {
+      aVal = parseFloat(aVal) || 0;
+      bVal = parseFloat(bVal) || 0;
+    }
+    
+    if (aVal < bVal) return oubSortDir === 'asc' ? -1 : 1;
+    if (aVal > bVal) return oubSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  oubCurrentPage = 1;
+  renderOubTable();
+  updateOubMetrics();
+}
+
+function renderOubTable() {
+  const tbody = document.getElementById('oubTableBody');
+  if (!tbody) return;
+  
+  const start = (oubCurrentPage - 1) * oubPageSize;
+  const end = start + oubPageSize;
+  const pageData = oubFiltered.slice(start, end);
+  
+  if (pageData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">No jobs found</td></tr>';
+    updateOubPagination();
+    updateOubTableFooter([]);
+    return;
+  }
+  
+  tbody.innerHTML = pageData.map(job => {
+    const overUnderClass = job.over_under >= 0 ? 'oub-positive' : 'oub-negative';
+    
+    return `<tr>
+      <td>${job.job_no}</td>
+      <td class="desc-col">${job.job_description}</td>
+      <td class="number-col">${formatCurrency(job.contract_value)}</td>
+      <td class="number-col">${formatCurrency(job.est_cost)}</td>
+      <td class="number-col">${formatCurrency(job.est_profit)}</td>
+      <td class="number-col">${formatCurrency(job.actual_cost)}</td>
+      <td class="number-col">${job.pct_complete.toFixed(1)}%</td>
+      <td class="number-col">${formatCurrency(job.billed_revenue)}</td>
+      <td class="number-col">${formatCurrency(job.earned_revenue)}</td>
+      <td class="number-col ${overUnderClass}">${formatCurrency(job.over_under)}</td>
+    </tr>`;
+  }).join('');
+  
+  updateOubPagination();
+  updateOubTableFooter(oubFiltered);
+}
+
+function updateOubPagination() {
+  const totalPages = Math.max(1, Math.ceil(oubFiltered.length / oubPageSize));
+  
+  const pageInfo = document.getElementById('oubPageInfo');
+  const prevBtn = document.getElementById('oubPrevPage');
+  const nextBtn = document.getElementById('oubNextPage');
+  
+  if (pageInfo) pageInfo.textContent = `Page ${oubCurrentPage} of ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = oubCurrentPage <= 1;
+  if (nextBtn) nextBtn.disabled = oubCurrentPage >= totalPages;
+}
+
+function updateOubTableFooter(data) {
+  const totals = data.reduce((acc, job) => {
+    acc.contract += job.contract_value;
+    acc.estCost += job.est_cost;
+    acc.estProfit += job.est_profit;
+    acc.actualCost += job.actual_cost;
+    acc.billed += job.billed_revenue;
+    acc.earned += job.earned_revenue;
+    acc.overUnder += job.over_under;
+    return acc;
+  }, { contract: 0, estCost: 0, estProfit: 0, actualCost: 0, billed: 0, earned: 0, overUnder: 0 });
+  
+  // Calculate overall % complete
+  const pctComplete = totals.estCost > 0 ? (totals.actualCost / totals.estCost) * 100 : 0;
+  
+  const footContract = document.getElementById('oubFootContract');
+  const footEstCost = document.getElementById('oubFootEstCost');
+  const footEstProfit = document.getElementById('oubFootEstProfit');
+  const footActualCost = document.getElementById('oubFootActualCost');
+  const footPctComplete = document.getElementById('oubFootPctComplete');
+  const footBilled = document.getElementById('oubFootBilled');
+  const footEarned = document.getElementById('oubFootEarned');
+  const footOverUnder = document.getElementById('oubFootOverUnder');
+  
+  if (footContract) footContract.textContent = formatCurrency(totals.contract);
+  if (footEstCost) footEstCost.textContent = formatCurrency(totals.estCost);
+  if (footEstProfit) footEstProfit.textContent = formatCurrency(totals.estProfit);
+  if (footActualCost) footActualCost.textContent = formatCurrency(totals.actualCost);
+  if (footPctComplete) footPctComplete.textContent = pctComplete.toFixed(1) + '%';
+  if (footBilled) footBilled.textContent = formatCurrency(totals.billed);
+  if (footEarned) footEarned.textContent = formatCurrency(totals.earned);
+  if (footOverUnder) {
+    footOverUnder.textContent = formatCurrency(totals.overUnder);
+    footOverUnder.className = 'number-col ' + (totals.overUnder >= 0 ? 'oub-positive' : 'oub-negative');
+  }
+}
+
+function updateOubMetrics() {
+  const totalJobs = oubFiltered.length;
+  const totalContract = oubFiltered.reduce((sum, j) => sum + j.contract_value, 0);
+  const totalBilled = oubFiltered.reduce((sum, j) => sum + j.billed_revenue, 0);
+  const totalEarned = oubFiltered.reduce((sum, j) => sum + j.earned_revenue, 0);
+  const netOverUnder = oubFiltered.reduce((sum, j) => sum + j.over_under, 0);
+  
+  const elTotalJobs = document.getElementById('oubTotalJobs');
+  const elTotalContract = document.getElementById('oubTotalContract');
+  const elTotalBilled = document.getElementById('oubTotalBilled');
+  const elTotalEarned = document.getElementById('oubTotalEarned');
+  const elNetOverUnder = document.getElementById('oubTotalOverUnder');
+  
+  if (elTotalJobs) elTotalJobs.textContent = totalJobs.toLocaleString();
+  if (elTotalContract) elTotalContract.textContent = formatCurrency(totalContract);
+  if (elTotalBilled) elTotalBilled.textContent = formatCurrency(totalBilled);
+  if (elTotalEarned) elTotalEarned.textContent = formatCurrency(totalEarned);
+  if (elNetOverUnder) {
+    elNetOverUnder.textContent = formatCurrency(netOverUnder);
+    elNetOverUnder.style.color = netOverUnder >= 0 ? '#10b981' : '#dc2626';
+  }
 }
 
 // ========================================
