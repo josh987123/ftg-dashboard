@@ -553,6 +553,7 @@
               <li class="nav-item nav-child" data-section="cashReports">Cash Balances</li>
               <li class="nav-item nav-child" data-section="accounts">Account Detail</li>
               <li class="nav-item nav-child" data-section="payments">Payments</li>
+              <li class="nav-item nav-child" data-section="apAging">AP Aging</li>
               <li class="nav-item nav-child placeholder" data-section="receivablesPayables">Receivables/Payables</li>
             </ul>
           </li>
@@ -3071,6 +3072,128 @@
             <option value="100">100 per page</option>
             <option value="250">250 per page</option>
           </select>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           AP AGING REPORT
+      ============================================================= -->
+      <section id="apAging" class="dashboard-section">
+        <h2>Accounts Payable Aging Report</h2>
+        <div class="data-as-of">Data as of: <span id="apAgingDataAsOf">-</span></div>
+
+        <!-- Summary Metrics -->
+        <div class="ap-aging-summary">
+          <div class="summary-card">
+            <div class="summary-label">Total Due (excl. Retainage)</div>
+            <div class="summary-value" id="apAgingTotalDue">$0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Current (0-30 Days)</div>
+            <div class="summary-value" id="apAgingCurrent">$0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">31-60 Days</div>
+            <div class="summary-value" id="apAging31to60">$0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">61-90 Days</div>
+            <div class="summary-value" id="apAging61to90">$0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">90+ Days</div>
+            <div class="summary-value negative" id="apAging90plus">$0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Total Retainage</div>
+            <div class="summary-value" id="apAgingRetainage">$0.00</div>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="ap-aging-controls">
+          <div class="search-container">
+            <input type="text" id="apAgingSearch" placeholder="Search vendor..." class="search-input">
+          </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="apAgingLoadingOverlay" class="loading-overlay hidden">
+          <div class="loading-spinner"></div>
+          <span>Loading AP aging data...</span>
+        </div>
+
+        <!-- AP Aging Table -->
+        <div class="table-wrapper">
+          <table class="data-table ap-aging-table" id="apAgingTable">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="vendor_name">
+                  <span class="column-header-text">Vendor</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="vendor_name" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="vendor_name" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="total_due">
+                  <span class="column-header-text">Total Due</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="total_due" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="total_due" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="current">
+                  <span class="column-header-text">0-30 Days</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="current" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="current" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="days_31_60">
+                  <span class="column-header-text">31-60 Days</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="days_31_60" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="days_31_60" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="days_61_90">
+                  <span class="column-header-text">61-90 Days</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="days_61_90" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="days_61_90" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="days_90_plus">
+                  <span class="column-header-text">90+ Days</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="days_90_plus" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="days_90_plus" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="retainage">
+                  <span class="column-header-text">Retainage</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="retainage" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="retainage" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="apAgingTableBody">
+              <tr><td colspan="7" class="loading-cell">Loading AP aging data...</td></tr>
+            </tbody>
+            <tfoot id="apAgingTableFooter">
+              <tr class="totals-row">
+                <td><strong>Total</strong></td>
+                <td class="text-right" id="apAgingFooterTotal">$0.00</td>
+                <td class="text-right" id="apAgingFooterCurrent">$0.00</td>
+                <td class="text-right" id="apAgingFooter31to60">$0.00</td>
+                <td class="text-right" id="apAgingFooter61to90">$0.00</td>
+                <td class="text-right" id="apAgingFooter90plus">$0.00</td>
+                <td class="text-right" id="apAgingFooterRetainage">$0.00</td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </section>
 
