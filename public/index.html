@@ -2524,10 +2524,17 @@
               </div>
             </div>
             <div class="job-metric-card">
+              <div class="metric-icon">💰</div>
+              <div class="metric-content">
+                <div class="metric-value" id="paymentsTotalPaid">-</div>
+                <div class="metric-label">Total Paid</div>
+              </div>
+            </div>
+            <div class="job-metric-card">
               <div class="metric-icon">📊</div>
               <div class="metric-content">
-                <div class="metric-value" id="paymentsAvgAmount">-</div>
-                <div class="metric-label">Avg Amount</div>
+                <div class="metric-value" id="paymentsTotalRemaining">-</div>
+                <div class="metric-label">Total Remaining</div>
               </div>
             </div>
           </div>
@@ -2535,7 +2542,7 @@
 
         <!-- Search Bar -->
         <div class="job-search-bar">
-          <input type="text" id="paymentsSearchInput" placeholder="Search by voucher, vendor, job, description, or account..." class="job-search-input">
+          <input type="text" id="paymentsSearchInput" placeholder="Search by vendor, invoice, job, or project manager..." class="job-search-input">
           <span class="job-search-icon">🔍</span>
         </div>
 
@@ -2548,38 +2555,27 @@
           <table class="job-budgets-table" id="paymentsTable">
             <thead>
               <tr>
-                <th class="filterable" data-sort="voucher_no" data-filter="voucher_no">
-                  <span class="column-header-text">Voucher #</span>
+                <th class="filterable" data-sort="vendor" data-filter="vendor">
+                  <span class="column-header-text">Vendor</span>
                   <div class="column-controls">
                     <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="voucher_no" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="voucher_no" data-dir="desc" title="Sort descending">▼</button>
+                      <button class="sort-btn sort-asc-btn" data-sort="vendor" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="vendor" data-dir="desc" title="Sort descending">▼</button>
                     </div>
-                    <button class="filter-btn" data-filter="voucher_no" title="Filter">▼</button>
+                    <button class="filter-btn" data-filter="vendor" title="Filter">▼</button>
                   </div>
-                  <div class="column-filter-dropdown" data-filter="voucher_no"></div>
+                  <div class="column-filter-dropdown" data-filter="vendor"></div>
                 </th>
-                <th class="filterable" data-sort="vendor_no" data-filter="vendor_no">
-                  <span class="column-header-text">Vendor #</span>
+                <th class="filterable" data-sort="invoice_no" data-filter="invoice_no">
+                  <span class="column-header-text">Invoice #</span>
                   <div class="column-controls">
                     <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="vendor_no" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="vendor_no" data-dir="desc" title="Sort descending">▼</button>
+                      <button class="sort-btn sort-asc-btn" data-sort="invoice_no" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="invoice_no" data-dir="desc" title="Sort descending">▼</button>
                     </div>
-                    <button class="filter-btn" data-filter="vendor_no" title="Filter">▼</button>
+                    <button class="filter-btn" data-filter="invoice_no" title="Filter">▼</button>
                   </div>
-                  <div class="column-filter-dropdown" data-filter="vendor_no"></div>
-                </th>
-                <th class="filterable" data-sort="description" data-filter="description">
-                  <span class="column-header-text">Description</span>
-                  <div class="column-controls">
-                    <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="description" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="description" data-dir="desc" title="Sort descending">▼</button>
-                    </div>
-                    <button class="filter-btn" data-filter="description" title="Filter">▼</button>
-                  </div>
-                  <div class="column-filter-dropdown" data-filter="description"></div>
+                  <div class="column-filter-dropdown" data-filter="invoice_no"></div>
                 </th>
                 <th data-sort="invoice_date">
                   <span class="column-header-text">Invoice Date</span>
@@ -2588,13 +2584,6 @@
                       <button class="sort-btn sort-asc-btn" data-sort="invoice_date" data-dir="asc" title="Sort ascending">▲</button>
                       <button class="sort-btn sort-desc-btn" data-sort="invoice_date" data-dir="desc" title="Sort descending">▼</button>
                     </div>
-                  </div>
-                </th>
-                <th class="number-col" data-sort="invoice_amount">
-                  <span class="column-header-text">Amount</span>
-                  <div class="sort-controls inline-sort">
-                    <button class="sort-btn sort-asc-btn" data-sort="invoice_amount" data-dir="asc" title="Sort ascending">▲</button>
-                    <button class="sort-btn sort-desc-btn" data-sort="invoice_amount" data-dir="desc" title="Sort descending">▼</button>
                   </div>
                 </th>
                 <th class="filterable" data-sort="job_no" data-filter="job_no">
@@ -2608,6 +2597,17 @@
                   </div>
                   <div class="column-filter-dropdown" data-filter="job_no"></div>
                 </th>
+                <th class="filterable" data-sort="job_description" data-filter="job_description">
+                  <span class="column-header-text">Job Desc.</span>
+                  <div class="column-controls">
+                    <div class="sort-controls">
+                      <button class="sort-btn sort-asc-btn" data-sort="job_description" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="job_description" data-dir="desc" title="Sort descending">▼</button>
+                    </div>
+                    <button class="filter-btn" data-filter="job_description" title="Filter">▼</button>
+                  </div>
+                  <div class="column-filter-dropdown" data-filter="job_description"></div>
+                </th>
                 <th class="filterable" data-sort="project_manager" data-filter="project_manager">
                   <span class="column-header-text">Project Manager</span>
                   <div class="column-controls">
@@ -2619,32 +2619,57 @@
                   </div>
                   <div class="column-filter-dropdown" data-filter="project_manager"></div>
                 </th>
-                <th class="filterable" data-sort="account_no" data-filter="account_no">
-                  <span class="column-header-text">Account #</span>
-                  <div class="column-controls">
-                    <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="account_no" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="account_no" data-dir="desc" title="Sort descending">▼</button>
-                    </div>
-                    <button class="filter-btn" data-filter="account_no" title="Filter">▼</button>
+                <th class="number-col collapsible-col hidden" data-sort="non_retention" data-group="invoice_amount">
+                  <span class="column-header-text">Non-Retention</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="non_retention" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="non_retention" data-dir="desc" title="Sort descending">▼</button>
                   </div>
-                  <div class="column-filter-dropdown" data-filter="account_no"></div>
                 </th>
-                <th class="filterable" data-sort="account_description" data-filter="account_description">
-                  <span class="column-header-text">Account</span>
+                <th class="number-col collapsible-col hidden" data-sort="retention" data-group="invoice_amount">
+                  <span class="column-header-text">Retention</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="retention" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="retention" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col expandable-col" data-sort="invoice_amount" data-expand-group="invoice_amount">
+                  <span class="column-header-text">Invoice Amount</span>
+                  <button class="expand-toggle-btn" data-group="invoice_amount" title="Expand to show breakdown">+</button>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="invoice_amount" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="invoice_amount" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col" data-sort="paid_to_date">
+                  <span class="column-header-text">Paid-to-Date</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="paid_to_date" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="paid_to_date" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col" data-sort="remaining_balance">
+                  <span class="column-header-text">Remaining</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="remaining_balance" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="remaining_balance" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="filterable" data-sort="status" data-filter="status">
+                  <span class="column-header-text">Status</span>
                   <div class="column-controls">
                     <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="account_description" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="account_description" data-dir="desc" title="Sort descending">▼</button>
+                      <button class="sort-btn sort-asc-btn" data-sort="status" data-dir="asc" title="Sort ascending">▲</button>
+                      <button class="sort-btn sort-desc-btn" data-sort="status" data-dir="desc" title="Sort descending">▼</button>
                     </div>
-                    <button class="filter-btn" data-filter="account_description" title="Filter">▼</button>
+                    <button class="filter-btn" data-filter="status" title="Filter">▼</button>
                   </div>
-                  <div class="column-filter-dropdown" data-filter="account_description"></div>
+                  <div class="column-filter-dropdown" data-filter="status"></div>
                 </th>
               </tr>
             </thead>
             <tbody id="paymentsTableBody">
-              <tr><td colspan="9" class="loading-cell">Loading payment data...</td></tr>
+              <tr><td colspan="12" class="loading-cell">Loading invoice data...</td></tr>
             </tbody>
           </table>
         </div>

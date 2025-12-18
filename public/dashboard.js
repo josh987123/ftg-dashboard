@@ -16452,11 +16452,12 @@ function initPayments() {
   const loadingOverlay = document.getElementById('paymentsLoadingOverlay');
   if (loadingOverlay) loadingOverlay.classList.remove('hidden');
   
-  // Show skeleton loading in table
+  // Show skeleton loading in table (10 visible columns when collapsed)
   const tbody = document.getElementById('paymentsTableBody');
   if (tbody) {
     tbody.innerHTML = Array(10).fill().map(() => `
       <tr class="skeleton-row">
+        <td><div class="skeleton-text"></div></td>
         <td><div class="skeleton-text"></div></td>
         <td><div class="skeleton-text"></div></td>
         <td><div class="skeleton-text"></div></td>
@@ -16550,32 +16551,41 @@ function updatePaymentsKeyMetricsFromServer(metrics) {
   const countEl = document.getElementById('paymentsTotalCount');
   const amountEl = document.getElementById('paymentsTotalAmount');
   const vendorsEl = document.getElementById('paymentsUniqueVendors');
-  const avgEl = document.getElementById('paymentsAvgAmount');
+  const paidEl = document.getElementById('paymentsTotalPaid');
+  const remainingEl = document.getElementById('paymentsTotalRemaining');
   
-  if (countEl) countEl.textContent = metrics.totalCount.toLocaleString();
-  if (amountEl) amountEl.textContent = formatCurrency(metrics.totalAmount);
-  if (vendorsEl) vendorsEl.textContent = metrics.uniqueVendors.toLocaleString();
-  if (avgEl) avgEl.textContent = formatCurrency(metrics.avgAmount);
+  if (countEl) countEl.textContent = (metrics.totalCount || 0).toLocaleString();
+  if (amountEl) amountEl.textContent = formatCurrency(metrics.totalInvoiceAmount || 0);
+  if (vendorsEl) vendorsEl.textContent = (metrics.uniqueVendors || 0).toLocaleString();
+  if (paidEl) paidEl.textContent = formatCurrency(metrics.totalPaid || 0);
+  if (remainingEl) remainingEl.textContent = formatCurrency(metrics.totalRemaining || 0);
 }
+
+let paymentsColumnsExpanded = false;
 
 function renderPaymentsTableFromServer(payments) {
   const tbody = document.getElementById('paymentsTableBody');
   if (!tbody) return;
   
+  const hiddenClass = paymentsColumnsExpanded ? '' : 'hidden';
+  
   if (payments.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="no-data-cell">No payments found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="no-data-cell">No invoices found</td></tr>';
   } else {
     tbody.innerHTML = payments.map(p => `
       <tr>
-        <td>${escapeHtml(p.voucher_no || '-')}</td>
-        <td>${escapeHtml(p.vendor_no || '-')}</td>
-        <td>${escapeHtml(p.description || '-')}</td>
+        <td>${escapeHtml(p.vendor || '-')}</td>
+        <td>${escapeHtml(p.invoice_no || '-')}</td>
         <td>${escapeHtml(p.invoice_date || '-')}</td>
-        <td class="number-col">${formatCurrency(p.invoice_amount)}</td>
         <td>${escapeHtml(p.job_no || '-')}</td>
+        <td>${escapeHtml(p.job_description || '-')}</td>
         <td>${escapeHtml(p.project_manager || '-')}</td>
-        <td>${escapeHtml(p.account_no || '-')}</td>
-        <td>${escapeHtml(p.account_description || '-')}</td>
+        <td class="number-col collapsible-col ${hiddenClass}" data-group="invoice_amount">${formatCurrency(p.non_retention)}</td>
+        <td class="number-col collapsible-col ${hiddenClass}" data-group="invoice_amount">${formatCurrency(p.retention)}</td>
+        <td class="number-col">${formatCurrency(p.invoice_amount)}</td>
+        <td class="number-col">${formatCurrency(p.paid_to_date)}</td>
+        <td class="number-col">${formatCurrency(p.remaining_balance)}</td>
+        <td>${escapeHtml(p.status || '-')}</td>
       </tr>
     `).join('');
   }
@@ -16589,8 +16599,30 @@ function renderPaymentsTableFromServer(payments) {
   if (nextBtn) nextBtn.disabled = paymentsCurrentPage >= paymentsTotalPages;
 }
 
+function togglePaymentsColumnGroup(group) {
+  paymentsColumnsExpanded = !paymentsColumnsExpanded;
+  const table = document.getElementById('paymentsTable');
+  if (!table) return;
+  
+  const collapsibleCols = table.querySelectorAll(`[data-group="${group}"]`);
+  const toggleBtn = table.querySelector(`.expand-toggle-btn[data-group="${group}"]`);
+  
+  collapsibleCols.forEach(col => {
+    if (paymentsColumnsExpanded) {
+      col.classList.remove('hidden');
+    } else {
+      col.classList.add('hidden');
+    }
+  });
+  
+  if (toggleBtn) {
+    toggleBtn.textContent = paymentsColumnsExpanded ? '-' : '+';
+    toggleBtn.title = paymentsColumnsExpanded ? 'Collapse breakdown' : 'Expand to show breakdown';
+  }
+}
+
 function initPaymentsColumnFiltersOptimized() {
-  const filterableColumns = ['voucher_no', 'vendor_no', 'description', 'job_no', 'project_manager', 'account_no', 'account_description'];
+  const filterableColumns = ['vendor', 'invoice_no', 'job_no', 'job_description', 'project_manager', 'status'];
   
   filterableColumns.forEach(col => {
     const dropdown = document.querySelector(`#paymentsTable .column-filter-dropdown[data-filter="${col}"]`);
@@ -16637,6 +16669,15 @@ function initPaymentsEventHandlers() {
       loadPaymentsPage();
     }, 400));
   }
+  
+  // Expand/collapse button for invoice amount breakdown
+  document.querySelectorAll('#paymentsTable .expand-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const group = btn.dataset.group;
+      if (group) togglePaymentsColumnGroup(group);
+    });
+  });
   
   document.querySelectorAll('#paymentsTable .sort-btn').forEach(btn => {
     btn.addEventListener('click', () => {

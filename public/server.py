@@ -3122,7 +3122,7 @@ _payments_cache = None
 _payments_cache_lock = threading.Lock()
 
 def get_payments_data():
-    """Load and cache payments data with PM lookup - only loads once"""
+    """Load and cache AP invoices data - only loads once"""
     global _payments_cache
     
     if _payments_cache is not None:
@@ -3133,26 +3133,23 @@ def get_payments_data():
             return _payments_cache
         
         try:
-            # Load payments and jobs data
-            payments_path = os.path.join(os.path.dirname(__file__), 'data', 'payments.json')
-            jobs_path = os.path.join(os.path.dirname(__file__), 'data', 'financials_jobs.json')
+            # Load AP invoices data
+            invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ap_invoices.json')
             
-            with open(payments_path, 'r') as f:
-                payments_json = json.load(f)
+            with open(invoices_path, 'r') as f:
+                invoices_json = json.load(f)
             
-            with open(jobs_path, 'r') as f:
-                jobs_json = json.load(f)
+            # Process invoices - convert dates and calculate fields
+            invoices = []
+            total_invoice_amount = 0
+            total_retention = 0
+            total_paid = 0
+            total_remaining = 0
+            unique_vendors = set()
             
-            # Build PM lookup
-            pm_lookup = {}
-            for job in jobs_json.get('job_budgets', []):
-                pm_lookup[job.get('job_no', '')] = job.get('project_manager_name', '')
-            
-            # Process payments - convert dates and add PM
-            payments = []
-            for p in payments_json.get('payments', []):
+            for inv in invoices_json.get('invoices', []):
                 try:
-                    excel_date = float(p.get('invoice_date', 0))
+                    excel_date = float(inv.get('invoice_date', 0))
                     if excel_date > 0:
                         date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
                         date_str = date_obj.strftime('%b %d, %Y')
@@ -3164,50 +3161,74 @@ def get_payments_data():
                     date_str = '-'
                 
                 try:
-                    amount = float(p.get('invoice_amount', 0))
+                    invoice_amount = float(inv.get('invoice_amount', 0) or 0)
                 except:
-                    amount = 0
+                    invoice_amount = 0
                 
-                job_no = p.get('job_no', '')
+                try:
+                    retention = float(inv.get('retainage_amount', 0) or 0)
+                except:
+                    retention = 0
                 
-                payments.append({
-                    'voucher_no': p.get('voucher_no', ''),
-                    'vendor_no': p.get('vendor_no', ''),
-                    'description': p.get('description', ''),
+                try:
+                    paid_to_date = float(inv.get('amount_paid_to_date', 0) or 0)
+                except:
+                    paid_to_date = 0
+                
+                try:
+                    remaining = float(inv.get('remaining_balance', 0) or 0)
+                except:
+                    remaining = 0
+                
+                non_retention = invoice_amount - retention
+                vendor = inv.get('vendor_name', '')
+                
+                if vendor:
+                    unique_vendors.add(vendor)
+                
+                total_invoice_amount += invoice_amount
+                total_retention += retention
+                total_paid += paid_to_date
+                total_remaining += remaining
+                
+                invoices.append({
+                    'vendor': vendor,
+                    'invoice_no': inv.get('invoice_no', '').strip(),
                     'invoice_date': date_str,
                     'invoice_date_sort': date_obj.timestamp() if date_obj else 0,
-                    'invoice_amount': amount,
-                    'job_no': job_no,
-                    'project_manager': pm_lookup.get(job_no, ''),
-                    'account_no': p.get('account_no', ''),
-                    'account_description': p.get('account_description', '')
+                    'job_no': inv.get('job_no', ''),
+                    'job_description': inv.get('job_description', ''),
+                    'project_manager': inv.get('project_manager_name', ''),
+                    'non_retention': non_retention,
+                    'retention': retention,
+                    'invoice_amount': invoice_amount,
+                    'paid_to_date': paid_to_date,
+                    'remaining_balance': remaining,
+                    'status': inv.get('payment_status', '')
                 })
             
-            # Calculate summary metrics
-            total_amount = sum(p['invoice_amount'] for p in payments)
-            unique_vendors = len(set(p['vendor_no'] for p in payments if p['vendor_no']))
-            avg_amount = total_amount / len(payments) if payments else 0
-            
             _payments_cache = {
-                'payments': payments,
+                'payments': invoices,
                 'metrics': {
-                    'totalCount': len(payments),
-                    'totalAmount': total_amount,
-                    'uniqueVendors': unique_vendors,
-                    'avgAmount': avg_amount
+                    'totalCount': len(invoices),
+                    'totalInvoiceAmount': total_invoice_amount,
+                    'totalRetention': total_retention,
+                    'totalPaid': total_paid,
+                    'totalRemaining': total_remaining,
+                    'uniqueVendors': len(unique_vendors)
                 }
             }
             
-            print(f"[PAYMENTS] Loaded and cached {len(payments)} payment records")
+            print(f"[PAYMENTS] Loaded and cached {len(invoices)} AP invoice records")
             return _payments_cache
             
         except Exception as e:
             print(f"[PAYMENTS] Error loading data: {e}")
             import traceback
             traceback.print_exc()
-            return {'payments': [], 'metrics': {'totalCount': 0, 'totalAmount': 0, 'uniqueVendors': 0, 'avgAmount': 0}}
+            return {'payments': [], 'metrics': {'totalCount': 0, 'totalInvoiceAmount': 0, 'totalRetention': 0, 'totalPaid': 0, 'totalRemaining': 0, 'uniqueVendors': 0}}
 
-PAYMENTS_VALID_COLUMNS = {'voucher_no', 'vendor_no', 'description', 'invoice_date', 'invoice_amount', 'job_no', 'project_manager', 'account_no', 'account_description'}
+PAYMENTS_VALID_COLUMNS = {'vendor', 'invoice_no', 'invoice_date', 'job_no', 'job_description', 'project_manager', 'non_retention', 'retention', 'invoice_amount', 'paid_to_date', 'remaining_balance', 'status'}
 
 @app.route('/api/payments', methods=['GET', 'OPTIONS'])
 def api_get_payments():
@@ -3240,13 +3261,12 @@ def api_get_payments():
         # Apply search filter
         if search:
             payments = [p for p in payments if 
-                search in str(p['voucher_no']).lower() or
-                search in str(p['vendor_no']).lower() or
-                search in str(p['description']).lower() or
-                search in str(p['job_no']).lower() or
-                search in str(p['project_manager']).lower() or
-                search in str(p['account_no']).lower() or
-                search in str(p['account_description']).lower()
+                search in str(p.get('vendor', '')).lower() or
+                search in str(p.get('invoice_no', '')).lower() or
+                search in str(p.get('job_no', '')).lower() or
+                search in str(p.get('job_description', '')).lower() or
+                search in str(p.get('project_manager', '')).lower() or
+                search in str(p.get('status', '')).lower()
             ]
         
         # Apply column filters (validate column names)
