@@ -16894,6 +16894,7 @@ function updateOubMetrics() {
   const elTotalBilled = document.getElementById('oubTotalBilled');
   const elTotalEarned = document.getElementById('oubTotalEarned');
   const elNetOverUnder = document.getElementById('oubTotalOverUnder');
+  const oubOverUnderCard = document.getElementById('oubOverUnderCard');
   
   if (elTotalJobs) elTotalJobs.textContent = totalJobs.toLocaleString();
   if (elTotalContract) elTotalContract.textContent = formatCurrency(totalContract);
@@ -16902,6 +16903,12 @@ function updateOubMetrics() {
   if (elNetOverUnder) {
     elNetOverUnder.textContent = formatCurrency(netOverUnder);
     elNetOverUnder.style.color = netOverUnder >= 0 ? '#10b981' : '#dc2626';
+  }
+  
+  // Apply conditional styling to Over/Under card
+  if (oubOverUnderCard) {
+    oubOverUnderCard.classList.remove('positive', 'negative');
+    oubOverUnderCard.classList.add(netOverUnder >= 0 ? 'positive' : 'negative');
   }
 }
 
