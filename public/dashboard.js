@@ -4535,7 +4535,7 @@ async function deleteScheduledReport(id) {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "receivablesPayables", "jobAnalytics", "admin"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "overUnderBilling", "costCodes", "missingBudgets", "payments", "receivablesPayables", "jobAnalytics", "admin"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -4628,6 +4628,46 @@ function getReportData() {
       subtitle: getJobActualsSubtitle(),
       tableHtml: getJobActualsTableHtml(),
       csvData: getJobActualsCsvData(),
+      isWide: true
+    };
+  } else if (view === "overUnderBilling") {
+    return {
+      title: "Over/(Under) Billing Report",
+      subtitle: getOverUnderBillingSubtitle(),
+      tableHtml: getOverUnderBillingTableHtml(),
+      csvData: getOverUnderBillingCsvData(),
+      isWide: true
+    };
+  } else if (view === "costCodes") {
+    return {
+      title: "Cost Codes Report",
+      subtitle: getCostCodesSubtitle(),
+      tableHtml: getCostCodesTableHtml(),
+      csvData: getCostCodesCsvData(),
+      isWide: true
+    };
+  } else if (view === "missingBudgets") {
+    return {
+      title: "Missing Budgets Report",
+      subtitle: getMissingBudgetsSubtitle(),
+      tableHtml: getMissingBudgetsTableHtml(),
+      csvData: getMissingBudgetsCsvData(),
+      isWide: true
+    };
+  } else if (view === "payments") {
+    return {
+      title: "Payments Report",
+      subtitle: getPaymentsSubtitle(),
+      tableHtml: getPaymentsTableHtml(),
+      csvData: getPaymentsCsvData(),
+      isWide: true
+    };
+  } else if (view === "receivablesPayables") {
+    return {
+      title: "Receivables & Payables Report",
+      subtitle: getReceivablesPayablesSubtitle(),
+      tableHtml: getReceivablesPayablesTableHtml(),
+      csvData: getReceivablesPayablesCsvData(),
       isWide: true
     };
   }
@@ -5380,6 +5420,388 @@ function getIncomeStatementAiAnalysis() {
   return content.innerHTML;
 }
 
+// Over/(Under) Billing Export Helpers
+function getOverUnderBillingSubtitle() {
+  const statusActive = document.getElementById('oubStatusActive')?.checked;
+  const statusInactive = document.getElementById('oubStatusInactive')?.checked;
+  const statusClosed = document.getElementById('oubStatusClosed')?.checked;
+  const pm = document.getElementById('oubPmFilter')?.value || 'All';
+  
+  let statuses = [];
+  if (statusActive) statuses.push('Active');
+  if (statusInactive) statuses.push('Inactive');
+  if (statusClosed) statuses.push('Closed');
+  
+  let subtitle = statuses.length > 0 ? statuses.join(', ') + ' Jobs' : 'All Jobs';
+  if (pm && pm !== 'All') subtitle += ` | PM: ${pm}`;
+  return subtitle;
+}
+
+function getOverUnderBillingTableHtml() {
+  if (typeof oubFiltered === 'undefined' || oubFiltered.length === 0) {
+    return "<p>No data available</p>";
+  }
+  
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:10pt;">
+    <thead>
+      <tr style="background:#1e3a5f;color:#fff;">
+        <th style="padding:8px;text-align:left;">Job #</th>
+        <th style="padding:8px;text-align:left;">Description</th>
+        <th style="padding:8px;text-align:left;">Customer</th>
+        <th style="padding:8px;text-align:right;">Contract Value</th>
+        <th style="padding:8px;text-align:right;">Est. Cost</th>
+        <th style="padding:8px;text-align:right;">% Complete</th>
+        <th style="padding:8px;text-align:right;">Earned Revenue</th>
+        <th style="padding:8px;text-align:right;">Billed Revenue</th>
+        <th style="padding:8px;text-align:right;">Over/(Under)</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  
+  const topJobs = oubFiltered.slice(0, 20);
+  topJobs.forEach(job => {
+    const overUnder = job.over_under || 0;
+    const ouColor = overUnder >= 0 ? '#059669' : '#dc2626';
+    const desc = (job.job_description || '').substring(0, 35) + ((job.job_description || '').length > 35 ? '...' : '');
+    
+    html += `<tr>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${job.job_no}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${desc}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${(job.customer_name || '').substring(0, 20)}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(job.contract_value || 0)}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(job.estimated_cost || 0)}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${(job.percent_complete || 0).toFixed(0)}%</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(job.earned_revenue || 0)}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(job.billed_revenue || 0)}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;color:${ouColor};">${formatCurrency(overUnder)}</td>
+    </tr>`;
+  });
+  
+  html += `</tbody></table>`;
+  
+  if (oubFiltered.length > 20) {
+    html += `<p style="margin-top:12px;font-size:11px;color:#6b7280;font-style:italic;">Showing top 20 of ${oubFiltered.length} jobs. Use CSV or Excel export for complete data.</p>`;
+  }
+  
+  return html;
+}
+
+function getOverUnderBillingCsvData() {
+  if (typeof oubFiltered === 'undefined' || oubFiltered.length === 0) {
+    return "";
+  }
+  
+  let csv = "Job #,Description,Customer,Status,Project Manager,Contract Value,Est. Cost,% Complete,Earned Revenue,Billed Revenue,Over/(Under)\n";
+  
+  oubFiltered.forEach(job => {
+    const status = getJobStatusLabel(job.job_status);
+    const overUnder = job.over_under || 0;
+    
+    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.contract_value || 0},${job.estimated_cost || 0},${(job.percent_complete || 0).toFixed(1)},${job.earned_revenue || 0},${job.billed_revenue || 0},${overUnder}\n`;
+  });
+  
+  return csv;
+}
+
+// Cost Codes Export Helpers
+function getCostCodesSubtitle() {
+  const statusActive = document.getElementById('ccStatusActive')?.checked;
+  const statusInactive = document.getElementById('ccStatusInactive')?.checked;
+  const statusClosed = document.getElementById('ccStatusClosed')?.checked;
+  const pm = document.getElementById('ccPmFilter')?.value || 'All';
+  
+  let statuses = [];
+  if (statusActive) statuses.push('Active');
+  if (statusInactive) statuses.push('Inactive');
+  if (statusClosed) statuses.push('Closed');
+  
+  let subtitle = statuses.length > 0 ? statuses.join(', ') + ' Jobs' : 'All Jobs';
+  if (pm && pm !== 'All') subtitle += ` | PM: ${pm}`;
+  return subtitle;
+}
+
+function getCostCodesTableHtml() {
+  if (typeof ccFilteredActualsCache === 'undefined' || ccFilteredActualsCache.length === 0) {
+    return "<p>No data available</p>";
+  }
+  
+  // Aggregate by cost code
+  const costCodeMap = {};
+  ccFilteredActualsCache.forEach(a => {
+    const key = a.cost_code || 'Unknown';
+    if (!costCodeMap[key]) {
+      costCodeMap[key] = { cost_code: key, description: a.cost_code_description || '', total_cost: 0 };
+    }
+    costCodeMap[key].total_cost += parseFloat(a.actual_cost) || 0;
+  });
+  
+  const costCodes = Object.values(costCodeMap).sort((a, b) => b.total_cost - a.total_cost);
+  
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:10pt;">
+    <thead>
+      <tr style="background:#1e3a5f;color:#fff;">
+        <th style="padding:8px;text-align:left;">Cost Code</th>
+        <th style="padding:8px;text-align:left;">Description</th>
+        <th style="padding:8px;text-align:right;">Total Cost</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  
+  const topCodes = costCodes.slice(0, 20);
+  topCodes.forEach(cc => {
+    html += `<tr>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${cc.cost_code}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${cc.description}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(cc.total_cost)}</td>
+    </tr>`;
+  });
+  
+  html += `</tbody></table>`;
+  
+  if (costCodes.length > 20) {
+    html += `<p style="margin-top:12px;font-size:11px;color:#6b7280;font-style:italic;">Showing top 20 of ${costCodes.length} cost codes. Use CSV or Excel export for complete data.</p>`;
+  }
+  
+  return html;
+}
+
+function getCostCodesCsvData() {
+  if (typeof ccFilteredActualsCache === 'undefined' || ccFilteredActualsCache.length === 0) {
+    return "";
+  }
+  
+  let csv = "Job #,Job Description,Cost Code,Cost Code Description,Total Cost\n";
+  
+  ccFilteredActualsCache.forEach(a => {
+    csv += `"${a.job_no || ''}","${(a.job_description || '').replace(/"/g, '""')}","${a.cost_code || ''}","${(a.cost_code_description || '').replace(/"/g, '""')}",${parseFloat(a.actual_cost) || 0}\n`;
+  });
+  
+  return csv;
+}
+
+// Missing Budgets Export Helpers
+function getMissingBudgetsSubtitle() {
+  const activeTab = document.querySelector('#missingBudgets .mb-tab.active');
+  const tabName = activeTab?.dataset.tab === 'no-cost' ? 'No Estimated Cost' : 'No Contract Value';
+  
+  const statusActive = document.getElementById('mbStatusActive')?.checked;
+  const statusInactive = document.getElementById('mbStatusInactive')?.checked;
+  const statusClosed = document.getElementById('mbStatusClosed')?.checked;
+  
+  let statuses = [];
+  if (statusActive) statuses.push('Active');
+  if (statusInactive) statuses.push('Inactive');
+  if (statusClosed) statuses.push('Closed');
+  
+  return `${tabName} | ${statuses.length > 0 ? statuses.join(', ') : 'All'} Jobs`;
+}
+
+function getMissingBudgetsTableHtml() {
+  if (typeof missingBudgetsFiltered === 'undefined' || missingBudgetsFiltered.length === 0) {
+    return "<p>No data available</p>";
+  }
+  
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:10pt;">
+    <thead>
+      <tr style="background:#1e3a5f;color:#fff;">
+        <th style="padding:8px;text-align:left;">Job #</th>
+        <th style="padding:8px;text-align:left;">Description</th>
+        <th style="padding:8px;text-align:left;">Customer</th>
+        <th style="padding:8px;text-align:left;">Status</th>
+        <th style="padding:8px;text-align:left;">Project Manager</th>
+        <th style="padding:8px;text-align:right;">Revised Contract</th>
+        <th style="padding:8px;text-align:right;">Revised Cost</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  
+  const topJobs = missingBudgetsFiltered.slice(0, 20);
+  topJobs.forEach(job => {
+    const status = getJobStatusLabel(job.job_status);
+    const desc = (job.job_description || '').substring(0, 35) + ((job.job_description || '').length > 35 ? '...' : '');
+    
+    html += `<tr>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${job.job_no}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${desc}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${(job.customer_name || '').substring(0, 20)}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${status.label}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${job.project_manager_name || ''}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(job.revised_contract || 0)}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(job.revised_cost || 0)}</td>
+    </tr>`;
+  });
+  
+  html += `</tbody></table>`;
+  
+  if (missingBudgetsFiltered.length > 20) {
+    html += `<p style="margin-top:12px;font-size:11px;color:#6b7280;font-style:italic;">Showing top 20 of ${missingBudgetsFiltered.length} jobs. Use CSV or Excel export for complete data.</p>`;
+  }
+  
+  return html;
+}
+
+function getMissingBudgetsCsvData() {
+  if (typeof missingBudgetsFiltered === 'undefined' || missingBudgetsFiltered.length === 0) {
+    return "";
+  }
+  
+  let csv = "Job #,Description,Customer,Status,Project Manager,Revised Contract,Revised Cost\n";
+  
+  missingBudgetsFiltered.forEach(job => {
+    const status = getJobStatusLabel(job.job_status);
+    
+    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.revised_contract || 0},${job.revised_cost || 0}\n`;
+  });
+  
+  return csv;
+}
+
+// Payments Export Helpers
+function getPaymentsSubtitle() {
+  const dateFrom = document.getElementById('paymentsDateFrom')?.value || '';
+  const dateTo = document.getElementById('paymentsDateTo')?.value || '';
+  
+  if (dateFrom && dateTo) {
+    return `${dateFrom} to ${dateTo}`;
+  } else if (dateFrom) {
+    return `From ${dateFrom}`;
+  } else if (dateTo) {
+    return `Through ${dateTo}`;
+  }
+  return 'All Payments';
+}
+
+function getPaymentsTableHtml() {
+  const tbody = document.getElementById('paymentsTableBody');
+  if (!tbody || tbody.children.length === 0) {
+    return "<p>No payment data available</p>";
+  }
+  
+  const thead = document.getElementById('paymentsTableHead');
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:10pt;">`;
+  
+  if (thead) {
+    html += `<thead><tr style="background:#1e3a5f;color:#fff;">`;
+    thead.querySelectorAll('th').forEach(th => {
+      if (!th.classList.contains('hidden')) {
+        html += `<th style="padding:8px;text-align:left;">${th.textContent.trim()}</th>`;
+      }
+    });
+    html += `</tr></thead>`;
+  }
+  
+  html += `<tbody>`;
+  Array.from(tbody.children).slice(0, 20).forEach(tr => {
+    html += `<tr>`;
+    tr.querySelectorAll('td').forEach(td => {
+      if (!td.classList.contains('hidden')) {
+        html += `<td style="padding:6px;border-bottom:1px solid #e5e7eb;">${td.textContent.trim()}</td>`;
+      }
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+  
+  if (tbody.children.length > 20) {
+    html += `<p style="margin-top:12px;font-size:11px;color:#6b7280;font-style:italic;">Showing top 20 of ${tbody.children.length} payments. Use CSV or Excel export for complete data.</p>`;
+  }
+  
+  return html;
+}
+
+function getPaymentsCsvData() {
+  const table = document.getElementById('paymentsTable');
+  if (!table) return "";
+  
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  if (!tbody || tbody.children.length === 0) return "";
+  
+  let csv = "";
+  
+  // Headers
+  if (thead) {
+    const headers = [];
+    thead.querySelectorAll('th').forEach(th => {
+      if (!th.classList.contains('hidden')) {
+        headers.push(`"${th.textContent.trim().replace(/"/g, '""')}"`);
+      }
+    });
+    csv += headers.join(',') + '\n';
+  }
+  
+  // Data rows
+  Array.from(tbody.children).forEach(tr => {
+    const cells = [];
+    tr.querySelectorAll('td').forEach(td => {
+      if (!td.classList.contains('hidden')) {
+        cells.push(`"${td.textContent.trim().replace(/"/g, '""')}"`);
+      }
+    });
+    csv += cells.join(',') + '\n';
+  });
+  
+  return csv;
+}
+
+// Receivables & Payables Export Helpers
+function getReceivablesPayablesSubtitle() {
+  return 'Current Receivables and Payables Summary';
+}
+
+function getReceivablesPayablesTableHtml() {
+  const section = document.getElementById('receivablesPayables');
+  if (!section) return "<p>No data available</p>";
+  
+  // Extract any visible tables from the section
+  const tables = section.querySelectorAll('table');
+  if (tables.length === 0) return "<p>No table data available</p>";
+  
+  let html = '';
+  tables.forEach(table => {
+    html += table.outerHTML;
+  });
+  
+  return html || "<p>No data available</p>";
+}
+
+function getReceivablesPayablesCsvData() {
+  const section = document.getElementById('receivablesPayables');
+  if (!section) return "";
+  
+  const tables = section.querySelectorAll('table');
+  if (tables.length === 0) return "";
+  
+  let csv = "";
+  
+  tables.forEach((table, tableIdx) => {
+    if (tableIdx > 0) csv += '\n\n';
+    
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    
+    if (thead) {
+      const headers = [];
+      thead.querySelectorAll('th').forEach(th => {
+        headers.push(`"${th.textContent.trim().replace(/"/g, '""')}"`);
+      });
+      csv += headers.join(',') + '\n';
+    }
+    
+    if (tbody) {
+      Array.from(tbody.children).forEach(tr => {
+        const cells = [];
+        tr.querySelectorAll('td').forEach(td => {
+          cells.push(`"${td.textContent.trim().replace(/"/g, '""')}"`);
+        });
+        csv += cells.join(',') + '\n';
+      });
+    }
+  });
+  
+  return csv;
+}
+
 function generateReportHtml(data, forEmail = false) {
   const orientation = data.isWide ? "landscape" : "portrait";
   const pageSize = data.isWide ? "11in 8.5in" : "8.5in 11in";
@@ -5736,7 +6158,13 @@ async function universalExportToExcel() {
     "incomeStatement": "#incomeStatement .is-table",
     "balanceSheet": "#balanceSheet .bs-table",
     "cashFlows": "#cashFlowTable",
-    "cashReports": ".daily-balance-table"
+    "cashReports": ".daily-balance-table",
+    "jobBudgets": "#jobBudgetsTable",
+    "jobActuals": "#jobActualsTable",
+    "overUnderBilling": "#oubTable",
+    "costCodes": "#costCodesTable",
+    "missingBudgets": "#missingBudgetsTable",
+    "payments": "#paymentsTable"
   };
   
   let rows = [];
@@ -6540,6 +6968,31 @@ function setupRevenueUI(data) {
     updateRevenueView(data);
     saveRevenueConfig();
   };
+  
+  // Setup expand button for revenue table
+  const revExpandBtn = document.querySelector('#revenue .breakdown-expand-btn[data-target="revTableWrapper"]');
+  if (revExpandBtn && !revExpandBtn.dataset.listenerAttached) {
+    revExpandBtn.dataset.listenerAttached = 'true';
+    revExpandBtn.addEventListener('click', () => {
+      const tableWrapper = document.getElementById('revTableWrapper');
+      const textSpan = revExpandBtn.querySelector('.expand-text');
+      const chartBox = revExpandBtn.closest('.chart-box');
+      
+      if (tableWrapper) {
+        const isCollapsed = tableWrapper.classList.contains('collapsed');
+        tableWrapper.classList.toggle('collapsed');
+        revExpandBtn.classList.toggle('expanded');
+        
+        if (chartBox) {
+          chartBox.classList.toggle('table-expanded', isCollapsed);
+        }
+        
+        if (textSpan) {
+          textSpan.textContent = isCollapsed ? 'Collapse' : 'Expand';
+        }
+      }
+    });
+  }
   } catch (err) {
     console.error("Error setting up revenue UI:", err);
   }
@@ -7283,6 +7736,31 @@ function setupAccountUI(data) {
   document.getElementById("acctTrendline").onchange = () => { updateAccountView(data); saveAccountConfig(); };
   document.getElementById("acctDataLabels").onchange = () => { updateAccountView(data); saveAccountConfig(); };
   document.getElementById("acctExcludeCurrent").onchange = () => { updateAccountView(data); saveAccountConfig(); };
+  
+  // Setup expand button for account table
+  const acctExpandBtn = document.querySelector('#accounts .breakdown-expand-btn[data-target="acctTableWrapper"]');
+  if (acctExpandBtn && !acctExpandBtn.dataset.listenerAttached) {
+    acctExpandBtn.dataset.listenerAttached = 'true';
+    acctExpandBtn.addEventListener('click', () => {
+      const tableWrapper = document.getElementById('acctTableWrapper');
+      const textSpan = acctExpandBtn.querySelector('.expand-text');
+      const chartBox = acctExpandBtn.closest('.chart-box');
+      
+      if (tableWrapper) {
+        const isCollapsed = tableWrapper.classList.contains('collapsed');
+        tableWrapper.classList.toggle('collapsed');
+        acctExpandBtn.classList.toggle('expanded');
+        
+        if (chartBox) {
+          chartBox.classList.toggle('table-expanded', isCollapsed);
+        }
+        
+        if (textSpan) {
+          textSpan.textContent = isCollapsed ? 'Collapse' : 'Expand';
+        }
+      }
+    });
+  }
   } catch (err) {
     console.error("Error setting up account UI:", err);
   }
