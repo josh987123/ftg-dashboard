@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ftg-dashboard-v5';
+const CACHE_NAME = 'ftg-dashboard-v6';
 
 // Only cache truly static assets - NOT versioned CSS/JS or API routes
 const ASSETS_TO_CACHE = [
@@ -7,7 +7,7 @@ const ASSETS_TO_CACHE = [
 
 // Install - cache only static assets and skip waiting immediately
 self.addEventListener('install', (event) => {
-  console.log('SW v5: Installing');
+  console.log('SW v6: Installing');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(ASSETS_TO_CACHE))
@@ -17,13 +17,13 @@ self.addEventListener('install', (event) => {
 
 // Activate - delete ALL old caches immediately
 self.addEventListener('activate', (event) => {
-  console.log('SW v5: Activating');
+  console.log('SW v6: Activating');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((name) => {
           if (name !== CACHE_NAME) {
-            console.log('SW v5: Deleting cache:', name);
+            console.log('SW v6: Deleting cache:', name);
             return caches.delete(name);
           }
         })

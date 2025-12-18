@@ -3558,11 +3558,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251216o"></script>
+  <script src="dashboard.js?v=20251218a"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251216o';
+    const APP_VERSION = '20251218a';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {
@@ -3570,8 +3570,8 @@
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const reg of registrations) {
-          // Unregister any worker that's not our new v5
-          if (reg.active && !reg.active.scriptURL.includes('sw-v5.js')) {
+          // Unregister any worker that's not our new v6
+          if (reg.active && !reg.active.scriptURL.includes('sw-v6.js')) {
             await reg.unregister();
             console.log('Unregistered old service worker');
           }
@@ -3600,7 +3600,7 @@
       window.addEventListener('load', async () => {
         try {
           // Register NEW service worker at NEW path - forces Safari to get fresh worker
-          const registration = await navigator.serviceWorker.register('/sw-v5.js');
+          const registration = await navigator.serviceWorker.register('/sw-v6.js');
           console.log('SW registered:', registration.scope);
           
           // Check for updates every 5 minutes
