@@ -17000,8 +17000,33 @@ function updateCCSortIndicators() {
 
 let ccTotalEarnedRevenue = 0;
 let ccJobCostCodeData = []; // Job + cost code level data for the table
+let ccBudgetLookupCache = null; // Cache for budget lookup
+let ccIsProcessing = false;
 
 function updateCostCodes() {
+  // Prevent multiple simultaneous updates
+  if (ccIsProcessing) return;
+  ccIsProcessing = true;
+  
+  // Show loading state immediately
+  const tbody = document.getElementById('costCodesTableBody');
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Processing cost code data...</td></tr>';
+  }
+  
+  // Use requestAnimationFrame to allow UI to update before heavy processing
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      try {
+        updateCostCodesSync();
+      } finally {
+        ccIsProcessing = false;
+      }
+    }, 10);
+  });
+}
+
+function updateCostCodesSync() {
   try {
     if (!jobActualsData || !Array.isArray(jobActualsData)) {
       console.log('Cost codes: No actuals data available');
@@ -17021,43 +17046,52 @@ function updateCostCodes() {
     const customerFilter = document.getElementById('ccCustomerFilter')?.value || '';
     const jobFilter = document.getElementById('ccJobFilter')?.value || '';
     
-    const budgetLookup = {};
-    if (jobBudgetsData) {
-      jobBudgetsData.forEach(b => {
-        budgetLookup[b.job_no] = b;
-      });
+    // Build budget lookup once and cache it
+    if (!ccBudgetLookupCache && jobBudgetsData) {
+      ccBudgetLookupCache = {};
+      for (let i = 0; i < jobBudgetsData.length; i++) {
+        const b = jobBudgetsData[i];
+        ccBudgetLookupCache[b.job_no] = b;
+      }
     }
+    const budgetLookup = ccBudgetLookupCache || {};
     
-    const filteredActuals = jobActualsData.filter(a => {
+    // Pre-compute allowed statuses for faster checking
+    const allowedStatuses = new Set();
+    if (statusActive) allowedStatuses.add('A');
+    if (statusInactive) allowedStatuses.add('I');
+    if (statusClosed) allowedStatuses.add('C');
+    if (statusOverhead) allowedStatuses.add('O');
+    
+    // Filter actuals in a single pass with optimized checks
+    const filteredActuals = [];
+    const jobCosts = {};
+    
+    for (let i = 0; i < jobActualsData.length; i++) {
+      const a = jobActualsData[i];
       const budget = budgetLookup[a.job_no];
-      if (!budget) return false;
+      if (!budget) continue;
       
       const status = budget.job_status || a.job_status || '';
-      let statusMatch = false;
-      if (statusActive && status === 'A') statusMatch = true;
-      if (statusInactive && status === 'I') statusMatch = true;
-      if (statusClosed && status === 'C') statusMatch = true;
-      if (statusOverhead && status === 'O') statusMatch = true;
-      if (!statusMatch) return false;
+      if (!allowedStatuses.has(status)) continue;
+      if (pmFilter && budget.project_manager_name !== pmFilter) continue;
+      if (customerFilter && budget.customer_name !== customerFilter) continue;
+      if (jobFilter && a.job_no !== jobFilter) continue;
       
-      if (pmFilter && budget.project_manager_name !== pmFilter) return false;
-      if (customerFilter && budget.customer_name !== customerFilter) return false;
-      if (jobFilter && a.job_no !== jobFilter) return false;
+      filteredActuals.push(a);
       
-      return true;
-    });
+      // Accumulate job costs in same loop
+      const cost = parseFloat(a.actual_cost) || 0;
+      if (!jobCosts[a.job_no]) jobCosts[a.job_no] = 0;
+      jobCosts[a.job_no] += cost;
+    }
     
-    // Calculate earned revenue for filtered jobs and total costs per job
-    const jobCosts = {};
-    filteredActuals.forEach(a => {
-      const jobNo = a.job_no;
-      if (!jobCosts[jobNo]) jobCosts[jobNo] = 0;
-      jobCosts[jobNo] += parseFloat(a.actual_cost) || 0;
-    });
-    
+    // Calculate earned revenue
     ccTotalEarnedRevenue = 0;
     const jobEarnedRevenue = {};
-    Object.keys(jobCosts).forEach(jobNo => {
+    const jobNos = Object.keys(jobCosts);
+    for (let i = 0; i < jobNos.length; i++) {
+      const jobNo = jobNos[i];
       const budget = budgetLookup[jobNo];
       if (budget && budget.revised_cost > 0 && budget.revised_contract > 0) {
         const pctComplete = jobCosts[jobNo] / budget.revised_cost;
@@ -17065,13 +17099,15 @@ function updateCostCodes() {
         ccTotalEarnedRevenue += earnedRev;
         jobEarnedRevenue[jobNo] = earnedRev;
       }
-    });
+    }
     
-    // Aggregate by job + cost code for the table
+    // Aggregate by job + cost code for the table (single pass)
     const jobCostCodeMap = {};
+    const costCodeMap = {};
     let totalCost = 0;
     
-    filteredActuals.forEach(a => {
+    for (let i = 0; i < filteredActuals.length; i++) {
+      const a = filteredActuals[i];
       const jobNo = a.job_no;
       const code = a.cost_code_no || 'Unknown';
       const desc = a.cost_code_description || 'Uncategorized';
@@ -17079,6 +17115,7 @@ function updateCostCodes() {
       const budget = budgetLookup[jobNo];
       const key = `${jobNo}|${code}`;
       
+      // Job + cost code aggregation
       if (!jobCostCodeMap[key]) {
         jobCostCodeMap[key] = {
           job_no: jobNo,
@@ -17089,36 +17126,30 @@ function updateCostCodes() {
           job_earned_revenue: jobEarnedRevenue[jobNo] || 0
         };
       }
-      
       jobCostCodeMap[key].total_cost += cost;
-      totalCost += cost;
-    });
-    
-    // Convert to array and calculate % of job's earned revenue
-    ccJobCostCodeData = Object.values(jobCostCodeMap).map(item => ({
-      ...item,
-      pct_of_revenue: item.job_earned_revenue > 0 ? (item.total_cost / item.job_earned_revenue) * 100 : 0
-    }));
-    
-    ccJobCostCodeData.sort((a, b) => b.total_cost - a.total_cost);
-    
-    // Also build aggregated cost code data for the chart
-    const costCodeMap = {};
-    filteredActuals.forEach(a => {
-      const code = a.cost_code_no || 'Unknown';
-      const desc = a.cost_code_description || 'Uncategorized';
-      const cost = parseFloat(a.actual_cost) || 0;
       
+      // Cost code aggregation for chart
       if (!costCodeMap[code]) {
         costCodeMap[code] = { cost_code: code, description: desc, total_cost: 0 };
       }
       costCodeMap[code].total_cost += cost;
-    });
+      
+      totalCost += cost;
+    }
     
-    costCodeData = Object.values(costCodeMap).map(cc => ({
-      ...cc,
-      pct_of_revenue: ccTotalEarnedRevenue > 0 ? (cc.total_cost / ccTotalEarnedRevenue) * 100 : 0
-    }));
+    // Convert to array and calculate percentages
+    ccJobCostCodeData = Object.values(jobCostCodeMap);
+    for (let i = 0; i < ccJobCostCodeData.length; i++) {
+      const item = ccJobCostCodeData[i];
+      item.pct_of_revenue = item.job_earned_revenue > 0 ? (item.total_cost / item.job_earned_revenue) * 100 : 0;
+    }
+    ccJobCostCodeData.sort((a, b) => b.total_cost - a.total_cost);
+    
+    // Build cost code data for chart
+    costCodeData = Object.values(costCodeMap);
+    for (let i = 0; i < costCodeData.length; i++) {
+      costCodeData[i].pct_of_revenue = ccTotalEarnedRevenue > 0 ? (costCodeData[i].total_cost / ccTotalEarnedRevenue) * 100 : 0;
+    }
     costCodeData.sort((a, b) => b.total_cost - a.total_cost);
     
     // Cache filtered actuals
