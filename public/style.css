@@ -13824,7 +13824,8 @@ body.dark-mode .oub-chart-title {
 /* Totals row at top of table body */
 #oubTable .oub-totals-row {
   background: #f1f5f9 !important;
-  border-bottom: 2px solid #cbd5e1 !important;
+  border-top: 3px solid #3b82f6 !important;
+  border-bottom: 3px solid #3b82f6 !important;
   font-weight: 600;
 }
 
@@ -13870,7 +13871,8 @@ body.dark-mode #oubTable tbody tr:hover {
 [data-theme="dark"] #oubTable .oub-totals-row,
 body.dark-mode #oubTable .oub-totals-row {
   background: #1e293b !important;
-  border-bottom-color: #475569 !important;
+  border-top-color: #60a5fa !important;
+  border-bottom-color: #60a5fa !important;
 }
 
 [data-theme="dark"] #oubTable .shaded-col,
