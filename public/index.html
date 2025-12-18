@@ -1827,41 +1827,6 @@
         <h2>Job Budgets</h2>
         <div class="data-as-of">Data as of: <span id="jobBudgetsDataAsOf">-</span></div>
 
-        <!-- Configuration Panel -->
-        <div class="config-panel">
-          <div class="config-header collapsed" data-target="jobBudgetsConfigBody">
-            <span class="config-toggle">▼</span>
-            <span class="config-title">Configuration Options</span>
-            <button class="config-expand-btn">Expand ▼</button>
-          </div>
-          <div class="config-body collapsed" id="jobBudgetsConfigBody">
-            <div class="job-budgets-controls">
-              <div class="overview-config-box">
-                <div class="config-label">Job Status:</div>
-                <div class="checkbox-stack">
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusActive" checked>
-                    Active
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusInactive">
-                    Inactive
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusClosed">
-                    Closed
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusOverhead">
-                    Overhead
-                  </label>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
         <!-- AI Analysis Panel -->
         <div id="jbAiAnalysisPanel" class="ai-analysis-panel">
           <div class="ai-analysis-header" id="jbAiAnalysisHeader">
@@ -1878,7 +1843,7 @@
 
         <!-- Key Metrics Dashboard -->
         <div class="job-key-metrics-section">
-          <h3 class="section-title">Key Metrics</h3>
+          <h3 class="section-title">Key Metrics (Active Jobs)</h3>
           <div class="job-metrics-grid five-col">
             <div class="job-metric-card primary">
               <div class="metric-icon">📋</div>
@@ -1914,6 +1879,41 @@
                 <div class="metric-value" id="jobAvgMargin">-</div>
                 <div class="metric-label">Avg Margin</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configuration Panel -->
+        <div class="config-panel">
+          <div class="config-header collapsed" data-target="jobBudgetsConfigBody">
+            <span class="config-toggle">▼</span>
+            <span class="config-title">Configuration Options</span>
+            <button class="config-expand-btn">Expand ▼</button>
+          </div>
+          <div class="config-body collapsed" id="jobBudgetsConfigBody">
+            <div class="job-budgets-controls">
+              <div class="overview-config-box">
+                <div class="config-label">Job Status:</div>
+                <div class="checkbox-stack">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusActive" checked>
+                    Active
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusInactive">
+                    Inactive
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusClosed">
+                    Closed
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="jobStatusOverhead">
+                    Overhead
+                  </label>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -2201,7 +2201,7 @@
 
         <!-- Key Metrics Dashboard -->
         <div class="job-key-metrics-section">
-          <h3 class="section-title">Key Metrics</h3>
+          <h3 class="section-title">Key Metrics (Active Jobs)</h3>
           <div class="job-metrics-grid">
             <div class="job-metric-card primary">
               <div class="metric-icon">📋</div>

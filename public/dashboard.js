@@ -13004,15 +13004,16 @@ function updateJobBudgetsSortIndicators() {
 }
 
 function updateJobSummaryMetrics() {
-  // Use unfiltered data so key metrics always reflect all jobs
-  const totalJobs = jobBudgetsData.length;
-  const totalContract = jobBudgetsData.reduce((sum, j) => sum + j.revised_contract, 0);
-  const totalCost = jobBudgetsData.reduce((sum, j) => sum + j.revised_cost, 0);
-  const totalProfit = jobBudgetsData.reduce((sum, j) => sum + j.estimated_profit, 0);
+  // Filter to Active jobs only for key metrics
+  const activeJobs = jobBudgetsData.filter(j => j.job_status === 'A');
+  const totalJobs = activeJobs.length;
+  const totalContract = activeJobs.reduce((sum, j) => sum + j.revised_contract, 0);
+  const totalCost = activeJobs.reduce((sum, j) => sum + j.revised_cost, 0);
+  const totalProfit = activeJobs.reduce((sum, j) => sum + j.estimated_profit, 0);
   
   // Calculate avg margin excluding jobs with zero revised_contract OR zero revised_cost
   // Use weighted average (total profit / total contract) to match Job Overview calculation
-  const jobsWithValidMargin = jobBudgetsData.filter(j => 
+  const jobsWithValidMargin = activeJobs.filter(j => 
     parseFloat(j.revised_contract) > 0 && parseFloat(j.revised_cost) > 0
   );
   let avgMargin = 0;
@@ -13078,9 +13079,10 @@ function renderPmDonutChart() {
   const canvas = document.getElementById('pmDonutChart');
   if (!canvas) return;
   
-  // Aggregate by Project Manager - use unfiltered data so charts always show all PMs
+  // Aggregate by Project Manager - use Active jobs only
+  const activeJobs = jobBudgetsData.filter(j => j.job_status === 'A');
   const pmMap = new Map();
-  jobBudgetsData.forEach(job => {
+  activeJobs.forEach(job => {
     const pm = job.project_manager_name || 'Unassigned';
     if (!pmMap.has(pm)) {
       pmMap.set(pm, 0);
@@ -13152,9 +13154,10 @@ function renderCustomerDonutChart() {
   const canvas = document.getElementById('customerDonutChart');
   if (!canvas) return;
   
-  // Aggregate by Customer - use unfiltered data so charts always show all clients
+  // Aggregate by Customer - use Active jobs only
+  const activeJobs = jobBudgetsData.filter(j => j.job_status === 'A');
   const custMap = new Map();
-  jobBudgetsData.forEach(job => {
+  activeJobs.forEach(job => {
     const cust = job.customer_name || 'Unknown';
     if (!custMap.has(cust)) {
       custMap.set(cust, 0);
@@ -13226,9 +13229,10 @@ function renderJobBreakdownByPm() {
   const tbody = document.getElementById('jobPmBreakdownBody');
   if (!tbody) return;
   
-  // Aggregate by Project Manager
+  // Aggregate by Project Manager - use Active jobs only
+  const activeJobs = jobBudgetsData.filter(j => j.job_status === 'A');
   const pmMap = new Map();
-  jobBudgetsFiltered.forEach(job => {
+  activeJobs.forEach(job => {
     const pm = job.project_manager_name || 'Unassigned';
     if (!pmMap.has(pm)) {
       pmMap.set(pm, { jobs: 0, contract: 0, cost: 0, profit: 0 });
@@ -13315,9 +13319,10 @@ function renderJobBreakdownByCustomer() {
   const tbody = document.getElementById('jobCustomerBreakdownBody');
   if (!tbody) return;
   
-  // Aggregate by Customer
+  // Aggregate by Customer - use Active jobs only
+  const activeJobs = jobBudgetsData.filter(j => j.job_status === 'A');
   const custMap = new Map();
-  jobBudgetsFiltered.forEach(job => {
+  activeJobs.forEach(job => {
     const cust = job.customer_name || 'Unknown';
     if (!custMap.has(cust)) {
       custMap.set(cust, { jobs: 0, contract: 0, cost: 0, profit: 0 });
@@ -14758,11 +14763,12 @@ function sortJobActuals() {
 }
 
 function updateJobActualsSummaryMetrics() {
-  // Use unfiltered data so key metrics always reflect all jobs
-  const totalJobs = jobActualsData.length;
-  const totalBilledRevenue = jobActualsData.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
-  const totalEarnedRevenue = jobActualsData.reduce((sum, j) => sum + j.earned_revenue, 0);
-  const totalActualCost = jobActualsData.reduce((sum, j) => sum + j.actual_cost, 0);
+  // Filter to Active jobs only for key metrics
+  const activeJobs = jobActualsData.filter(j => j.job_status === 'A');
+  const totalJobs = activeJobs.length;
+  const totalBilledRevenue = activeJobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const totalEarnedRevenue = activeJobs.reduce((sum, j) => sum + j.earned_revenue, 0);
+  const totalActualCost = activeJobs.reduce((sum, j) => sum + j.actual_cost, 0);
   const totalOverUnder = totalBilledRevenue - totalEarnedRevenue;
   
   document.getElementById('jaTotalCount').textContent = totalJobs.toLocaleString();
