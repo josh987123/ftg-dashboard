@@ -8251,10 +8251,11 @@ body.dark-mode .config-label {
 #jobOverview .job-budgets-controls .checkbox-stack,
 #jobBudgets .job-budgets-controls .checkbox-stack,
 #jobActuals .job-budgets-controls .checkbox-stack,
+#costCodes .job-budgets-controls .checkbox-stack,
 #missingBudgets .job-budgets-controls .checkbox-stack {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 2px 16px;
 }
 
 #jobOverview .job-budgets-controls .checkbox-label,

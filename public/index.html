@@ -2682,17 +2682,21 @@
           </div>
         </div>
 
-        <!-- Filter Bar (PM dropdown + Job # search) -->
-        <div class="cc-filter-bar" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
+        <!-- Filter Bar -->
+        <div class="page-filter-bar">
           <div class="filter-group">
-            <label for="ccPmFilterBar" style="font-weight: 500; margin-right: 8px;">Project Manager:</label>
-            <select id="ccPmFilterBar" class="filter-select" style="min-width: 200px;">
+            <label for="ccPmFilterBar">PM:</label>
+            <select id="ccPmFilterBar" class="filter-select" style="min-width: 180px;">
               <option value="">All Project Managers</option>
             </select>
           </div>
-          <div class="filter-group" style="flex: 1; max-width: 300px;">
-            <label for="ccJobSearchBar" style="font-weight: 500; margin-right: 8px;">Job #:</label>
-            <input type="text" id="ccJobSearchBar" class="search-input" placeholder="Search by job number..." style="width: 100%;">
+          <div class="filter-group">
+            <label for="ccClientSearchBar">Client:</label>
+            <input type="text" id="ccClientSearchBar" class="filter-input" placeholder="Search client..." style="width: 150px;">
+          </div>
+          <div class="filter-group">
+            <label for="ccJobSearchBar">Job #:</label>
+            <input type="text" id="ccJobSearchBar" class="filter-input" placeholder="Search job..." style="width: 120px;">
           </div>
         </div>
 

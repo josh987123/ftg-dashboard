@@ -17105,6 +17105,9 @@ function setupCCEventListeners() {
   // Filter bar Job # search (above table)
   document.getElementById('ccJobSearchBar')?.addEventListener('input', debounce(filterAndRenderCC, 300));
   
+  // Filter bar Client search (above table)
+  document.getElementById('ccClientSearchBar')?.addEventListener('input', debounce(filterAndRenderCC, 300));
+  
   document.querySelectorAll('.cc-sort-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       ccSortField = btn.dataset.sort;
@@ -17571,11 +17574,13 @@ function renderCCBreakdowns(filteredActuals, budgetLookup, totalCost) {
 
 function filterAndRenderCC() {
   const jobSearch = (document.getElementById('ccJobSearchBar')?.value || '').toLowerCase().trim();
+  const clientSearch = (document.getElementById('ccClientSearchBar')?.value || '').toLowerCase().trim();
   
-  // Filter job+cost code level data by job number
+  // Filter job+cost code level data by job number and client
   costCodeFiltered = ccJobCostCodeData.filter(item => {
-    if (!jobSearch) return true;
-    return item.job_no.toLowerCase().includes(jobSearch);
+    if (jobSearch && !item.job_no.toLowerCase().includes(jobSearch)) return false;
+    if (clientSearch && !(item.customer_name || '').toLowerCase().includes(clientSearch)) return false;
+    return true;
   });
   
   costCodeFiltered.sort((a, b) => {
