@@ -13558,6 +13558,113 @@ body.dark-mode #overUnderBilling .search-input {
   min-width: 140px;
 }
 
+/* Over/(Under) Billing Table Polish */
+#oubTable {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#oubTable thead th {
+  background: #1e293b;
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 10px;
+  border-bottom: 2px solid #334155;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+#oubTable tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+#oubTable tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+#oubTable tbody td {
+  padding: 10px;
+  font-size: 13px;
+}
+
+#oubTable .desc-col {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Totals row at top of table body */
+#oubTable .oub-totals-row {
+  background: #f1f5f9 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  font-weight: 600;
+}
+
+#oubTable .oub-totals-row td {
+  padding: 12px 10px;
+}
+
+/* Shaded columns (Est Profit and % Complete) */
+#oubTable .shaded-col {
+  background-color: #f8fafc;
+}
+
+#oubTable tbody tr:hover .shaded-col {
+  background-color: #e2e8f0;
+}
+
+#oubTable .oub-totals-row .shaded-col {
+  background-color: #e2e8f0;
+}
+
+/* Hide the tfoot since we now use tbody totals row */
+#oubTable tfoot {
+  display: none;
+}
+
+/* Dark mode for OUB table */
+[data-theme="dark"] #oubTable thead th,
+body.dark-mode #oubTable thead th {
+  background: #0f172a;
+  border-bottom-color: #475569;
+}
+
+[data-theme="dark"] #oubTable tbody tr,
+body.dark-mode #oubTable tbody tr {
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] #oubTable tbody tr:hover,
+body.dark-mode #oubTable tbody tr:hover {
+  background-color: #1e293b;
+}
+
+[data-theme="dark"] #oubTable .oub-totals-row,
+body.dark-mode #oubTable .oub-totals-row {
+  background: #1e293b !important;
+  border-bottom-color: #475569 !important;
+}
+
+[data-theme="dark"] #oubTable .shaded-col,
+body.dark-mode #oubTable .shaded-col {
+  background-color: #1e293b;
+}
+
+[data-theme="dark"] #oubTable tbody tr:hover .shaded-col,
+body.dark-mode #oubTable tbody tr:hover .shaded-col {
+  background-color: #334155;
+}
+
+[data-theme="dark"] #oubTable .oub-totals-row .shaded-col,
+body.dark-mode #oubTable .oub-totals-row .shaded-col {
+  background-color: #334155;
+}
+
 /* ===== Unified Page Filter Bar Styles ===== */
 .page-filter-bar {
   display: flex;

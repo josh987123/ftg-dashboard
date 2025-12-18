@@ -16778,7 +16778,36 @@ function renderOubTable() {
     return;
   }
   
-  tbody.innerHTML = pageData.map(job => {
+  // Calculate totals for the totals row
+  const totals = oubFiltered.reduce((acc, job) => {
+    acc.contract += job.contract_value;
+    acc.estCost += job.est_cost;
+    acc.estProfit += job.est_profit;
+    acc.actualCost += job.actual_cost;
+    acc.billed += job.billed_revenue;
+    acc.earned += job.earned_revenue;
+    acc.overUnder += job.over_under;
+    return acc;
+  }, { contract: 0, estCost: 0, estProfit: 0, actualCost: 0, billed: 0, earned: 0, overUnder: 0 });
+  
+  const totalPctComplete = totals.estCost > 0 ? (totals.actualCost / totals.estCost) * 100 : 0;
+  const totalsOverUnderClass = totals.overUnder >= 0 ? 'oub-positive' : 'oub-negative';
+  
+  // Build totals row first
+  const totalsRow = `<tr class="totals-row oub-totals-row">
+    <td colspan="2"><strong>Totals (${oubFiltered.length.toLocaleString()} jobs)</strong></td>
+    <td class="number-col"><strong>${formatCurrency(totals.contract)}</strong></td>
+    <td class="number-col"><strong>${formatCurrency(totals.estCost)}</strong></td>
+    <td class="number-col shaded-col"><strong>${formatCurrency(totals.estProfit)}</strong></td>
+    <td class="number-col"><strong>${formatCurrency(totals.actualCost)}</strong></td>
+    <td class="number-col shaded-col"><strong>${totalPctComplete.toFixed(1)}%</strong></td>
+    <td class="number-col"><strong>${formatCurrency(totals.billed)}</strong></td>
+    <td class="number-col"><strong>${formatCurrency(totals.earned)}</strong></td>
+    <td class="number-col ${totalsOverUnderClass}"><strong>${formatCurrency(totals.overUnder)}</strong></td>
+  </tr>`;
+  
+  // Build data rows
+  const dataRows = pageData.map(job => {
     const overUnderClass = job.over_under >= 0 ? 'oub-positive' : 'oub-negative';
     
     return `<tr>
@@ -16786,14 +16815,16 @@ function renderOubTable() {
       <td class="desc-col">${job.job_description}</td>
       <td class="number-col">${formatCurrency(job.contract_value)}</td>
       <td class="number-col">${formatCurrency(job.est_cost)}</td>
-      <td class="number-col">${formatCurrency(job.est_profit)}</td>
+      <td class="number-col shaded-col">${formatCurrency(job.est_profit)}</td>
       <td class="number-col">${formatCurrency(job.actual_cost)}</td>
-      <td class="number-col">${job.pct_complete.toFixed(1)}%</td>
+      <td class="number-col shaded-col">${job.pct_complete.toFixed(1)}%</td>
       <td class="number-col">${formatCurrency(job.billed_revenue)}</td>
       <td class="number-col">${formatCurrency(job.earned_revenue)}</td>
       <td class="number-col ${overUnderClass}">${formatCurrency(job.over_under)}</td>
     </tr>`;
   }).join('');
+  
+  tbody.innerHTML = totalsRow + dataRows;
   
   updateOubPagination();
   updateOubTableFooter(oubFiltered);
