@@ -13199,11 +13199,12 @@ function initJobBudgetsColumnFilters() {
     dropdown.querySelector('.filter-ok-btn')?.addEventListener('click', (e) => {
       e.stopPropagation();
       applyColumnFilter(col);
+      closeAllColumnFilterDropdowns();
     });
     
     dropdown.querySelector('.filter-cancel-btn')?.addEventListener('click', (e) => {
       e.stopPropagation();
-      closeAllFilterDropdowns();
+      closeAllColumnFilterDropdowns();
     });
   });
 }
