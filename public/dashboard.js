@@ -16531,6 +16531,7 @@ let oubPageSize = 25;
 let oubSortField = 'over_under';
 let oubSortDir = 'asc';
 let oubInitialized = false;
+let oubBilledRevenueMap = new Map();
 
 async function initOverUnderBilling() {
   if (oubInitialized && oubData.length > 0) {
@@ -16539,26 +16540,36 @@ async function initOverUnderBilling() {
   }
   
   try {
-    if (!jobBudgetsData || jobBudgetsData.length === 0 || !jobActualsData || jobActualsData.length === 0) {
-      const resp = await fetch('data/financials_jobs.json');
-      const data = await resp.json();
-      
-      if (data.job_budgets && (!jobBudgetsData || jobBudgetsData.length === 0)) {
-        jobBudgetsData = (data.job_budgets || []).map(job => ({
-          ...job,
-          original_contract: parseFloat(job.original_contract) || 0,
-          tot_income_adj: parseFloat(job.tot_income_adj) || 0,
-          revised_contract: parseFloat(job.revised_contract) || 0,
-          original_cost: parseFloat(job.original_cost) || 0,
-          tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
-          revised_cost: parseFloat(job.revised_cost) || 0,
-          estimated_profit: (parseFloat(job.revised_contract) || 0) - (parseFloat(job.revised_cost) || 0)
-        }));
+    const resp = await fetch('data/financials_jobs.json');
+    const text = await resp.text();
+    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+    
+    if (data.job_budgets && (!jobBudgetsData || jobBudgetsData.length === 0)) {
+      jobBudgetsData = (data.job_budgets || []).map(job => ({
+        ...job,
+        original_contract: parseFloat(job.original_contract) || 0,
+        tot_income_adj: parseFloat(job.tot_income_adj) || 0,
+        revised_contract: parseFloat(job.revised_contract) || 0,
+        original_cost: parseFloat(job.original_cost) || 0,
+        tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
+        revised_cost: parseFloat(job.revised_cost) || 0,
+        estimated_profit: (parseFloat(job.revised_contract) || 0) - (parseFloat(job.revised_cost) || 0)
+      }));
+    }
+    
+    // Load billed revenue data directly
+    oubBilledRevenueMap = new Map();
+    const billedRevenueRaw = data.job_billed_revenue || [];
+    billedRevenueRaw.forEach(row => {
+      const jobNo = row.Job_No || row.job_no;
+      if (jobNo) {
+        const billedRev = parseFloat(row.Billed_Revenue || row.billed_revenue) || 0;
+        oubBilledRevenueMap.set(jobNo, billedRev);
       }
-      
-      if (data.generated_at) {
-        jobsDataAsOf = new Date(data.generated_at).toLocaleDateString();
-      }
+    });
+    
+    if (data.generated_at) {
+      jobsDataAsOf = new Date(data.generated_at).toLocaleDateString();
     }
     
     // Load job actuals if not already loaded
@@ -16566,7 +16577,7 @@ async function initOverUnderBilling() {
       await loadJobActualsData();
     }
     
-    // Build OUB data by combining budgets and actuals
+    // Build OUB data by combining budgets, actuals, and billed revenue
     buildOubData();
     populateOubFilters();
     setupOubEventListeners();
@@ -16586,13 +16597,12 @@ async function initOverUnderBilling() {
 function buildOubData() {
   oubData = [];
   
-  // Create lookup for actuals by job number
+  // Create lookup for actuals by job number (for actual costs)
   const actualsMap = new Map();
   if (jobActualsData && Array.isArray(jobActualsData)) {
     jobActualsData.forEach(job => {
       actualsMap.set(job.job_no, {
-        actual_cost: job.actual_cost || 0,
-        billed_revenue: job.billed_revenue || 0
+        actual_cost: job.actual_cost || 0
       });
     });
   }
@@ -16603,7 +16613,7 @@ function buildOubData() {
       // Only include Active jobs (status 'A')
       if (budget.job_status !== 'A') return;
       
-      const actuals = actualsMap.get(budget.job_no) || { actual_cost: 0, billed_revenue: 0 };
+      const actuals = actualsMap.get(budget.job_no) || { actual_cost: 0 };
       
       // Contract Value = revised_contract (already includes original + change orders)
       const contractValue = parseFloat(budget.revised_contract) || 0;
@@ -16620,8 +16630,8 @@ function buildOubData() {
       // % Complete = Actual Cost / Est. Cost (cost-based completion)
       const pctComplete = estCost > 0 ? (actualCost / estCost) * 100 : 0;
       
-      // Billed Revenue from actuals
-      const billedRevenue = actuals.billed_revenue;
+      // Billed Revenue from the directly loaded billed revenue map
+      const billedRevenue = oubBilledRevenueMap.get(budget.job_no) || 0;
       
       // Earned Revenue = % Complete × Contract Value
       const earnedRevenue = (pctComplete / 100) * contractValue;
