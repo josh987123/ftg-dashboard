@@ -2935,115 +2935,89 @@
           <table class="job-budgets-table" id="paymentsTable">
             <thead>
               <tr>
-                <th class="filterable" data-sort="vendor" data-filter="vendor">
+                <th class="sortable" data-sort="vendor">
                   <span class="column-header-text">Vendor</span>
-                  <div class="column-controls">
-                    <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="vendor" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="vendor" data-dir="desc" title="Sort descending">▼</button>
-                    </div>
-                    <button class="filter-btn" data-filter="vendor" title="Filter">▼</button>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="vendor" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="vendor" data-dir="desc" title="Sort descending">▼</button>
                   </div>
-                  <div class="column-filter-dropdown" data-filter="vendor"></div>
                 </th>
-                <th class="filterable" data-sort="invoice_no" data-filter="invoice_no">
+                <th class="sortable" data-sort="invoice_no">
                   <span class="column-header-text">Invoice #</span>
-                  <div class="column-controls">
-                    <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="invoice_no" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="invoice_no" data-dir="desc" title="Sort descending">▼</button>
-                    </div>
-                    <button class="filter-btn" data-filter="invoice_no" title="Filter">▼</button>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="invoice_no" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="invoice_no" data-dir="desc" title="Sort descending">▼</button>
                   </div>
-                  <div class="column-filter-dropdown" data-filter="invoice_no"></div>
                 </th>
-                <th data-sort="invoice_date">
+                <th class="sortable" data-sort="invoice_date">
                   <span class="column-header-text">Invoice Date</span>
-                  <div class="column-controls">
-                    <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="invoice_date" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="invoice_date" data-dir="desc" title="Sort descending">▼</button>
-                    </div>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="invoice_date" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="invoice_date" data-dir="desc" title="Sort descending">▼</button>
                   </div>
                 </th>
-                <th class="filterable" data-sort="job_no" data-filter="job_no">
+                <th class="sortable" data-sort="job_no">
                   <span class="column-header-text">Job #</span>
-                  <div class="column-controls">
-                    <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="job_no" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="job_no" data-dir="desc" title="Sort descending">▼</button>
-                    </div>
-                    <button class="filter-btn" data-filter="job_no" title="Filter">▼</button>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="job_no" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="job_no" data-dir="desc" title="Sort descending">▼</button>
                   </div>
-                  <div class="column-filter-dropdown" data-filter="job_no"></div>
                 </th>
-                <th class="filterable" data-sort="job_description" data-filter="job_description">
+                <th class="sortable" data-sort="job_description">
                   <span class="column-header-text">Job Desc.</span>
-                  <div class="column-controls">
-                    <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="job_description" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="job_description" data-dir="desc" title="Sort descending">▼</button>
-                    </div>
-                    <button class="filter-btn" data-filter="job_description" title="Filter">▼</button>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="job_description" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="job_description" data-dir="desc" title="Sort descending">▼</button>
                   </div>
-                  <div class="column-filter-dropdown" data-filter="job_description"></div>
                 </th>
-                <th class="filterable" data-sort="project_manager" data-filter="project_manager">
+                <th class="sortable" data-sort="project_manager">
                   <span class="column-header-text">Project Manager</span>
-                  <div class="column-controls">
-                    <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="project_manager" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="project_manager" data-dir="desc" title="Sort descending">▼</button>
-                    </div>
-                    <button class="filter-btn" data-filter="project_manager" title="Filter">▼</button>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="project_manager" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="project_manager" data-dir="desc" title="Sort descending">▼</button>
                   </div>
-                  <div class="column-filter-dropdown" data-filter="project_manager"></div>
                 </th>
-                <th class="number-col retention-col" data-sort="non_retention">
+                <th class="number-col retention-col sortable" data-sort="non_retention">
                   <span class="column-header-text">Non-Retention</span>
                   <div class="sort-controls inline-sort">
                     <button class="sort-btn sort-asc-btn" data-sort="non_retention" data-dir="asc" title="Sort ascending">▲</button>
                     <button class="sort-btn sort-desc-btn" data-sort="non_retention" data-dir="desc" title="Sort descending">▼</button>
                   </div>
                 </th>
-                <th class="number-col retention-col" data-sort="retention">
+                <th class="number-col retention-col sortable" data-sort="retention">
                   <span class="column-header-text">Retention</span>
                   <div class="sort-controls inline-sort">
                     <button class="sort-btn sort-asc-btn" data-sort="retention" data-dir="asc" title="Sort ascending">▲</button>
                     <button class="sort-btn sort-desc-btn" data-sort="retention" data-dir="desc" title="Sort descending">▼</button>
                   </div>
                 </th>
-                <th class="number-col" data-sort="invoice_amount">
+                <th class="number-col sortable" data-sort="invoice_amount">
                   <span class="column-header-text">Invoice Amount</span>
                   <div class="sort-controls inline-sort">
                     <button class="sort-btn sort-asc-btn" data-sort="invoice_amount" data-dir="asc" title="Sort ascending">▲</button>
                     <button class="sort-btn sort-desc-btn" data-sort="invoice_amount" data-dir="desc" title="Sort descending">▼</button>
                   </div>
                 </th>
-                <th class="number-col" data-sort="paid_to_date">
+                <th class="number-col sortable" data-sort="paid_to_date">
                   <span class="column-header-text">Paid-to-Date</span>
                   <div class="sort-controls inline-sort">
                     <button class="sort-btn sort-asc-btn" data-sort="paid_to_date" data-dir="asc" title="Sort ascending">▲</button>
                     <button class="sort-btn sort-desc-btn" data-sort="paid_to_date" data-dir="desc" title="Sort descending">▼</button>
                   </div>
                 </th>
-                <th class="number-col" data-sort="remaining_balance">
+                <th class="number-col sortable" data-sort="remaining_balance">
                   <span class="column-header-text">Remaining</span>
                   <div class="sort-controls inline-sort">
                     <button class="sort-btn sort-asc-btn" data-sort="remaining_balance" data-dir="asc" title="Sort ascending">▲</button>
                     <button class="sort-btn sort-desc-btn" data-sort="remaining_balance" data-dir="desc" title="Sort descending">▼</button>
                   </div>
                 </th>
-                <th class="filterable" data-sort="status" data-filter="status">
+                <th class="sortable" data-sort="status">
                   <span class="column-header-text">Status</span>
-                  <div class="column-controls">
-                    <div class="sort-controls">
-                      <button class="sort-btn sort-asc-btn" data-sort="status" data-dir="asc" title="Sort ascending">▲</button>
-                      <button class="sort-btn sort-desc-btn" data-sort="status" data-dir="desc" title="Sort descending">▼</button>
-                    </div>
-                    <button class="filter-btn" data-filter="status" title="Filter">▼</button>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="status" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="status" data-dir="desc" title="Sort descending">▼</button>
                   </div>
-                  <div class="column-filter-dropdown" data-filter="status"></div>
                 </th>
               </tr>
             </thead>
