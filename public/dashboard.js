@@ -12320,10 +12320,45 @@ function renderCashCurrentHeader() {
     accountsHtml += `</div>`;
   }
   
+  // Build accounts list for right side (in columns, no toggle)
+  let accountsListHtml = '';
+  if (displayEntries.length > 1) {
+    accountsListHtml = '<div class="cash-header-accounts-grid">';
+    displayEntries.forEach(a => {
+      let shortName = a.name;
+      const acctMatch = a.name.match(/\((\d+)\)$/);
+      if (acctMatch) {
+        const acctNum = acctMatch[1];
+        const namePart = a.name.replace(/\s*\(\d+\)$/, '');
+        shortName = namePart.length > 20 ? namePart.substring(0, 20) + '..' : namePart;
+        shortName += ' (' + acctNum + ')';
+      }
+      
+      let balanceDisplay = formatCurrency(a.balance);
+      if (Math.abs(a.balance) >= 1000000) {
+        balanceDisplay = '$' + (a.balance / 1000000).toFixed(2) + 'M';
+      } else if (Math.abs(a.balance) >= 1000) {
+        balanceDisplay = '$' + (a.balance / 1000).toFixed(1) + 'K';
+      }
+      
+      accountsListHtml += `
+        <div class="cash-header-account-item">
+          <span class="cash-acct-name" title="${a.name}">${shortName}</span>
+          <span class="cash-acct-value">${balanceDisplay}</span>
+        </div>
+      `;
+    });
+    accountsListHtml += '</div>';
+  }
+  
   container.innerHTML = `
-    <div class="cash-header-title">Current Total${displayEntries.length > 1 ? ' (' + displayEntries.length + ' accounts)' : ''}</div>
-    <div class="cash-header-total">${formatCurrency(total)}</div>
-    ${accountsHtml}
+    <div class="cash-header-left">
+      <div class="cash-header-title">Current Total${displayEntries.length > 1 ? ' (' + displayEntries.length + ' accounts)' : ''}</div>
+      <div class="cash-header-total">${formatCurrency(total)}</div>
+    </div>
+    <div class="cash-header-right">
+      ${accountsListHtml}
+    </div>
   `;
   
   // Add toggle event listener
@@ -12499,7 +12534,7 @@ function renderCashChart() {
       label: "Trendline",
       data: trendData,
       type: "line",
-      borderColor: "#10b981",
+      borderColor: "#1e3a5f",
       backgroundColor: "transparent",
       borderWidth: 2,
       borderDash: [5, 5],
