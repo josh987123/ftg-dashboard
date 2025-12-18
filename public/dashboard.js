@@ -6314,7 +6314,7 @@ function formatTileValue(val) {
 }
 
 function formatCurrency(value) {
-  if (value === null || value === undefined) return "-";
+  if (value === null || value === undefined || value === 0) return "-";
   const absVal = Math.abs(value);
   const formatted = absVal.toLocaleString(undefined, {
     minimumFractionDigits: 0,
