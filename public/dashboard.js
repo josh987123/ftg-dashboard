@@ -12552,6 +12552,7 @@ function initJobBudgets() {
   
   loadJobBudgetsData();
   setupJobBudgetsEventListeners();
+  initBudgetsColumnPicker();
   jobBudgetsInitialized = true;
 }
 
@@ -13510,6 +13511,11 @@ function renderJobBudgetsTable() {
   // Apply dark mode styles after rendering
   const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
   applyJobBudgetsDarkModeStyles(currentTheme);
+  
+  // Apply column visibility
+  if (typeof applyBudgetsColumnVisibility === 'function') {
+    applyBudgetsColumnVisibility();
+  }
 }
 
 function updateJobPagination(total) {
@@ -14359,6 +14365,7 @@ function initJobActuals() {
   
   loadJobActualsData();
   setupJobActualsEventListeners();
+  initActualsColumnPicker();
   jaInitialized = true;
 }
 
@@ -15046,6 +15053,11 @@ function renderJobActualsTable() {
   tbody.innerHTML = totalsRowHtml + dataRowsHtml;
   
   updateJaPagination(jobActualsFiltered.length);
+  
+  // Apply column visibility
+  if (typeof applyActualsColumnVisibility === 'function') {
+    applyActualsColumnVisibility();
+  }
 }
 
 function updateJaPagination(total) {
@@ -16622,6 +16634,10 @@ function renderPaymentsTableFromServer(payments, totals) {
     tbody.innerHTML = subtotalRow + dataRows;
   }
   
+  if (typeof applyPaymentsColumnVisibility === 'function') {
+    applyPaymentsColumnVisibility();
+  }
+  
   const pageInfo = document.getElementById('paymentsPageInfo');
   const prevBtn = document.getElementById('paymentsPrevPage');
   const nextBtn = document.getElementById('paymentsNextPage');
@@ -16744,6 +16760,354 @@ function initPaymentsEventHandlers() {
     paymentsPageSize = parseInt(pageSizeSelect.value);
     paymentsCurrentPage = 1;
     loadPaymentsPage();
+  });
+  
+  initPaymentsColumnPicker();
+}
+
+const paymentsColumnConfig = [
+  { id: 'vendor', label: 'Vendor', required: false },
+  { id: 'invoice_no', label: 'Invoice #', required: false },
+  { id: 'invoice_date', label: 'Invoice Date', required: false },
+  { id: 'job_no', label: 'Job #', required: false },
+  { id: 'job_description', label: 'Job Description', required: false },
+  { id: 'project_manager', label: 'Project Manager', required: false },
+  { id: 'non_retention', label: 'Non-Retention', required: true },
+  { id: 'retention', label: 'Retention', required: true },
+  { id: 'invoice_amount', label: 'Invoice Amount', required: true },
+  { id: 'paid_to_date', label: 'Paid to Date', required: false },
+  { id: 'remaining_balance', label: 'Remaining Balance', required: false },
+  { id: 'status', label: 'Status', required: false }
+];
+
+let paymentsVisibleColumns = null;
+
+function getPaymentsVisibleColumns() {
+  if (paymentsVisibleColumns) return paymentsVisibleColumns;
+  
+  const saved = localStorage.getItem('ftg_payments_visible_columns');
+  if (saved) {
+    try {
+      paymentsVisibleColumns = new Set(JSON.parse(saved));
+    } catch (e) {
+      paymentsVisibleColumns = new Set(paymentsColumnConfig.map(c => c.id));
+    }
+  } else {
+    paymentsVisibleColumns = new Set(paymentsColumnConfig.map(c => c.id));
+  }
+  return paymentsVisibleColumns;
+}
+
+function savePaymentsVisibleColumns() {
+  localStorage.setItem('ftg_payments_visible_columns', JSON.stringify([...paymentsVisibleColumns]));
+}
+
+function initPaymentsColumnPicker() {
+  const btn = document.getElementById('paymentsColumnPickerBtn');
+  const dropdown = document.getElementById('paymentsColumnPickerDropdown');
+  const body = document.getElementById('paymentsColumnPickerBody');
+  const closeBtn = document.getElementById('paymentsColumnPickerClose');
+  const resetBtn = document.getElementById('paymentsColumnPickerReset');
+  const applyBtn = document.getElementById('paymentsColumnPickerApply');
+  
+  if (!btn || !dropdown || !body) return;
+  
+  getPaymentsVisibleColumns();
+  applyPaymentsColumnVisibility();
+  
+  body.innerHTML = paymentsColumnConfig.map(col => `
+    <div class="column-picker-item ${col.required ? 'disabled' : ''}" data-col="${col.id}">
+      <input type="checkbox" id="col-pick-${col.id}" ${paymentsVisibleColumns.has(col.id) ? 'checked' : ''} ${col.required ? 'disabled' : ''}>
+      <label for="col-pick-${col.id}">${col.label}${col.required ? ' (required)' : ''}</label>
+    </div>
+  `).join('');
+  
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+  });
+  
+  closeBtn.addEventListener('click', () => {
+    dropdown.classList.remove('open');
+  });
+  
+  resetBtn.addEventListener('click', () => {
+    paymentsVisibleColumns = new Set(paymentsColumnConfig.map(c => c.id));
+    body.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.checked = true;
+    });
+  });
+  
+  applyBtn.addEventListener('click', () => {
+    paymentsVisibleColumns.clear();
+    body.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+      const item = cb.closest('.column-picker-item');
+      if (item && item.dataset.col) {
+        paymentsVisibleColumns.add(item.dataset.col);
+      }
+    });
+    paymentsColumnConfig.filter(c => c.required).forEach(c => {
+      paymentsVisibleColumns.add(c.id);
+    });
+    savePaymentsVisibleColumns();
+    applyPaymentsColumnVisibility();
+    dropdown.classList.remove('open');
+  });
+  
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.column-picker-container')) {
+      dropdown.classList.remove('open');
+    }
+  });
+}
+
+function applyPaymentsColumnVisibility() {
+  const table = document.getElementById('paymentsTable');
+  if (!table) return;
+  
+  const visibleCols = getPaymentsVisibleColumns();
+  
+  paymentsColumnConfig.forEach((col, idx) => {
+    const isVisible = visibleCols.has(col.id);
+    const headerCells = table.querySelectorAll(`thead th:nth-child(${idx + 1})`);
+    const bodyCells = table.querySelectorAll(`tbody td:nth-child(${idx + 1})`);
+    
+    headerCells.forEach(cell => {
+      cell.style.display = isVisible ? '' : 'none';
+    });
+    bodyCells.forEach(cell => {
+      cell.style.display = isVisible ? '' : 'none';
+    });
+  });
+}
+
+// ========================================
+// JOB BUDGETS COLUMN PICKER
+// ========================================
+
+const budgetsColumnConfig = [
+  { id: 'job_no', label: 'Job #', required: true },
+  { id: 'job_description', label: 'Description', required: false },
+  { id: 'customer_name', label: 'Client', required: false },
+  { id: 'job_status', label: 'Status', required: false },
+  { id: 'project_manager_name', label: 'Project Manager', required: false },
+  { id: 'original_contract', label: 'Original Contract', required: false },
+  { id: 'change_orders', label: 'Change Orders', required: false },
+  { id: 'revised_contract', label: 'Revised Contract', required: false },
+  { id: 'original_cost', label: 'Original Cost', required: false },
+  { id: 'cost_adjustments', label: 'Cost Adjustments', required: false },
+  { id: 'revised_cost', label: 'Revised Cost', required: false },
+  { id: 'estimated_profit', label: 'Estimated Profit', required: false }
+];
+
+let budgetsVisibleColumns = null;
+
+function getBudgetsVisibleColumns() {
+  if (budgetsVisibleColumns) return budgetsVisibleColumns;
+  
+  const saved = localStorage.getItem('ftg_budgets_visible_columns');
+  if (saved) {
+    try {
+      budgetsVisibleColumns = new Set(JSON.parse(saved));
+    } catch (e) {
+      budgetsVisibleColumns = new Set(budgetsColumnConfig.map(c => c.id));
+    }
+  } else {
+    budgetsVisibleColumns = new Set(budgetsColumnConfig.map(c => c.id));
+  }
+  return budgetsVisibleColumns;
+}
+
+function saveBudgetsVisibleColumns() {
+  localStorage.setItem('ftg_budgets_visible_columns', JSON.stringify([...budgetsVisibleColumns]));
+}
+
+function initBudgetsColumnPicker() {
+  const btn = document.getElementById('budgetsColumnPickerBtn');
+  const dropdown = document.getElementById('budgetsColumnPickerDropdown');
+  const body = document.getElementById('budgetsColumnPickerBody');
+  const closeBtn = document.getElementById('budgetsColumnPickerClose');
+  const resetBtn = document.getElementById('budgetsColumnPickerReset');
+  const applyBtn = document.getElementById('budgetsColumnPickerApply');
+  
+  if (!btn || !dropdown || !body) return;
+  
+  getBudgetsVisibleColumns();
+  applyBudgetsColumnVisibility();
+  
+  body.innerHTML = budgetsColumnConfig.map(col => `
+    <div class="column-picker-item ${col.required ? 'disabled' : ''}" data-col="${col.id}">
+      <input type="checkbox" id="budgets-col-pick-${col.id}" ${budgetsVisibleColumns.has(col.id) ? 'checked' : ''} ${col.required ? 'disabled' : ''}>
+      <label for="budgets-col-pick-${col.id}">${col.label}${col.required ? ' (required)' : ''}</label>
+    </div>
+  `).join('');
+  
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+  });
+  
+  closeBtn.addEventListener('click', () => {
+    dropdown.classList.remove('open');
+  });
+  
+  resetBtn.addEventListener('click', () => {
+    budgetsVisibleColumns = new Set(budgetsColumnConfig.map(c => c.id));
+    body.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.checked = true;
+    });
+  });
+  
+  applyBtn.addEventListener('click', () => {
+    budgetsVisibleColumns.clear();
+    body.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+      const item = cb.closest('.column-picker-item');
+      if (item && item.dataset.col) {
+        budgetsVisibleColumns.add(item.dataset.col);
+      }
+    });
+    budgetsColumnConfig.filter(c => c.required).forEach(c => {
+      budgetsVisibleColumns.add(c.id);
+    });
+    saveBudgetsVisibleColumns();
+    applyBudgetsColumnVisibility();
+    dropdown.classList.remove('open');
+  });
+}
+
+function applyBudgetsColumnVisibility() {
+  const table = document.getElementById('jobBudgetsTable');
+  if (!table) return;
+  
+  const visibleCols = getBudgetsVisibleColumns();
+  
+  budgetsColumnConfig.forEach((col, idx) => {
+    const isVisible = visibleCols.has(col.id);
+    const headerCells = table.querySelectorAll(`thead th:nth-child(${idx + 1})`);
+    const bodyCells = table.querySelectorAll(`tbody td:nth-child(${idx + 1})`);
+    
+    headerCells.forEach(cell => {
+      cell.style.display = isVisible ? '' : 'none';
+    });
+    bodyCells.forEach(cell => {
+      cell.style.display = isVisible ? '' : 'none';
+    });
+  });
+}
+
+// ========================================
+// JOB ACTUALS COLUMN PICKER
+// ========================================
+
+const actualsColumnConfig = [
+  { id: 'job_no', label: 'Job #', required: true },
+  { id: 'job_description', label: 'Description', required: false },
+  { id: 'customer_name', label: 'Client', required: false },
+  { id: 'job_status', label: 'Status', required: false },
+  { id: 'project_manager_name', label: 'Project Manager', required: false },
+  { id: 'revised_contract', label: 'Revised Contract', required: false },
+  { id: 'revised_cost', label: 'Revised Cost', required: false },
+  { id: 'actual_cost', label: 'Actual Cost', required: false },
+  { id: 'percent_complete', label: '% Complete', required: false },
+  { id: 'earned_revenue', label: 'Earned Revenue', required: false },
+  { id: 'billed_revenue', label: 'Billed Revenue', required: false },
+  { id: 'over_under', label: 'Over/(Under)', required: false },
+  { id: 'actual_profit', label: 'Actual Profit', required: false },
+  { id: 'actual_margin', label: 'Actual Margin', required: false }
+];
+
+let actualsVisibleColumns = null;
+
+function getActualsVisibleColumns() {
+  if (actualsVisibleColumns) return actualsVisibleColumns;
+  
+  const saved = localStorage.getItem('ftg_actuals_visible_columns');
+  if (saved) {
+    try {
+      actualsVisibleColumns = new Set(JSON.parse(saved));
+    } catch (e) {
+      actualsVisibleColumns = new Set(actualsColumnConfig.map(c => c.id));
+    }
+  } else {
+    actualsVisibleColumns = new Set(actualsColumnConfig.map(c => c.id));
+  }
+  return actualsVisibleColumns;
+}
+
+function saveActualsVisibleColumns() {
+  localStorage.setItem('ftg_actuals_visible_columns', JSON.stringify([...actualsVisibleColumns]));
+}
+
+function initActualsColumnPicker() {
+  const btn = document.getElementById('actualsColumnPickerBtn');
+  const dropdown = document.getElementById('actualsColumnPickerDropdown');
+  const body = document.getElementById('actualsColumnPickerBody');
+  const closeBtn = document.getElementById('actualsColumnPickerClose');
+  const resetBtn = document.getElementById('actualsColumnPickerReset');
+  const applyBtn = document.getElementById('actualsColumnPickerApply');
+  
+  if (!btn || !dropdown || !body) return;
+  
+  getActualsVisibleColumns();
+  applyActualsColumnVisibility();
+  
+  body.innerHTML = actualsColumnConfig.map(col => `
+    <div class="column-picker-item ${col.required ? 'disabled' : ''}" data-col="${col.id}">
+      <input type="checkbox" id="actuals-col-pick-${col.id}" ${actualsVisibleColumns.has(col.id) ? 'checked' : ''} ${col.required ? 'disabled' : ''}>
+      <label for="actuals-col-pick-${col.id}">${col.label}${col.required ? ' (required)' : ''}</label>
+    </div>
+  `).join('');
+  
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+  });
+  
+  closeBtn.addEventListener('click', () => {
+    dropdown.classList.remove('open');
+  });
+  
+  resetBtn.addEventListener('click', () => {
+    actualsVisibleColumns = new Set(actualsColumnConfig.map(c => c.id));
+    body.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.checked = true;
+    });
+  });
+  
+  applyBtn.addEventListener('click', () => {
+    actualsVisibleColumns.clear();
+    body.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+      const item = cb.closest('.column-picker-item');
+      if (item && item.dataset.col) {
+        actualsVisibleColumns.add(item.dataset.col);
+      }
+    });
+    actualsColumnConfig.filter(c => c.required).forEach(c => {
+      actualsVisibleColumns.add(c.id);
+    });
+    saveActualsVisibleColumns();
+    applyActualsColumnVisibility();
+    dropdown.classList.remove('open');
+  });
+}
+
+function applyActualsColumnVisibility() {
+  const table = document.getElementById('jobActualsTable');
+  if (!table) return;
+  
+  const visibleCols = getActualsVisibleColumns();
+  
+  actualsColumnConfig.forEach((col, idx) => {
+    const isVisible = visibleCols.has(col.id);
+    const headerCells = table.querySelectorAll(`thead th:nth-child(${idx + 1})`);
+    const bodyCells = table.querySelectorAll(`tbody td:nth-child(${idx + 1})`);
+    
+    headerCells.forEach(cell => {
+      cell.style.display = isVisible ? '' : 'none';
+    });
+    bodyCells.forEach(cell => {
+      cell.style.display = isVisible ? '' : 'none';
+    });
   });
 }
 

@@ -1984,10 +1984,35 @@
           </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="job-search-bar">
-          <input type="text" id="jobSearchInput" placeholder="Search by job number, description, or client..." class="job-search-input">
-          <span class="job-search-icon">🔍</span>
+        <!-- Search Bar and Column Picker -->
+        <div class="table-toolbar">
+          <div class="job-search-bar">
+            <input type="text" id="jobSearchInput" placeholder="Search by job number, description, or client..." class="job-search-input">
+            <span class="job-search-icon">🔍</span>
+          </div>
+          <div class="column-picker-container">
+            <button class="column-picker-btn" id="budgetsColumnPickerBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+              </svg>
+              <span>Columns</span>
+            </button>
+            <div class="column-picker-dropdown" id="budgetsColumnPickerDropdown">
+              <div class="column-picker-header">
+                <span class="column-picker-title">Show/Hide Columns</span>
+                <button class="column-picker-close" id="budgetsColumnPickerClose">&times;</button>
+              </div>
+              <div class="column-picker-body" id="budgetsColumnPickerBody">
+              </div>
+              <div class="column-picker-footer">
+                <button class="column-picker-reset" id="budgetsColumnPickerReset">Reset</button>
+                <button class="column-picker-apply" id="budgetsColumnPickerApply">Apply</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Quick Sort Buttons -->
@@ -2216,10 +2241,35 @@
           </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="job-search-bar">
-          <input type="text" id="jaSearchInput" placeholder="Search by job number, description, or client..." class="job-search-input">
-          <span class="job-search-icon">🔍</span>
+        <!-- Search Bar and Column Picker -->
+        <div class="table-toolbar">
+          <div class="job-search-bar">
+            <input type="text" id="jaSearchInput" placeholder="Search by job number, description, or client..." class="job-search-input">
+            <span class="job-search-icon">🔍</span>
+          </div>
+          <div class="column-picker-container">
+            <button class="column-picker-btn" id="actualsColumnPickerBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+              </svg>
+              <span>Columns</span>
+            </button>
+            <div class="column-picker-dropdown" id="actualsColumnPickerDropdown">
+              <div class="column-picker-header">
+                <span class="column-picker-title">Show/Hide Columns</span>
+                <button class="column-picker-close" id="actualsColumnPickerClose">&times;</button>
+              </div>
+              <div class="column-picker-body" id="actualsColumnPickerBody">
+              </div>
+              <div class="column-picker-footer">
+                <button class="column-picker-reset" id="actualsColumnPickerReset">Reset</button>
+                <button class="column-picker-apply" id="actualsColumnPickerApply">Apply</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Quick Sort Buttons -->
@@ -2463,10 +2513,35 @@
         <h2>Payments</h2>
         <div class="data-as-of">Data as of: <span id="paymentsDataAsOf">-</span></div>
 
-        <!-- Search Bar -->
-        <div class="job-search-bar">
-          <input type="text" id="paymentsSearchInput" placeholder="Search by vendor, invoice, job, or project manager..." class="job-search-input">
-          <span class="job-search-icon">🔍</span>
+        <!-- Search Bar and Column Picker -->
+        <div class="table-toolbar">
+          <div class="job-search-bar">
+            <input type="text" id="paymentsSearchInput" placeholder="Search by vendor, invoice, job, or project manager..." class="job-search-input">
+            <span class="job-search-icon">🔍</span>
+          </div>
+          <div class="column-picker-container">
+            <button class="column-picker-btn" id="paymentsColumnPickerBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+              </svg>
+              <span>Columns</span>
+            </button>
+            <div class="column-picker-dropdown" id="paymentsColumnPickerDropdown">
+              <div class="column-picker-header">
+                <span class="column-picker-title">Show/Hide Columns</span>
+                <button class="column-picker-close" id="paymentsColumnPickerClose">&times;</button>
+              </div>
+              <div class="column-picker-body" id="paymentsColumnPickerBody">
+              </div>
+              <div class="column-picker-footer">
+                <button class="column-picker-reset" id="paymentsColumnPickerReset">Reset</button>
+                <button class="column-picker-apply" id="paymentsColumnPickerApply">Apply</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Payments Table -->
