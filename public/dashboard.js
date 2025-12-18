@@ -16163,7 +16163,8 @@ function updateCostCodes() {
           job_description: budget?.job_description || a.job_description || '',
           cost_code: code,
           description: desc,
-          total_cost: 0
+          total_cost: 0,
+          job_earned_revenue: jobEarnedRevenue[jobNo] || 0
         };
       }
       
@@ -16171,10 +16172,10 @@ function updateCostCodes() {
       totalCost += cost;
     });
     
-    // Convert to array and calculate % of revenue
+    // Convert to array and calculate % of job's earned revenue
     ccJobCostCodeData = Object.values(jobCostCodeMap).map(item => ({
       ...item,
-      pct_of_revenue: ccTotalEarnedRevenue > 0 ? (item.total_cost / ccTotalEarnedRevenue) * 100 : 0
+      pct_of_revenue: item.job_earned_revenue > 0 ? (item.total_cost / item.job_earned_revenue) * 100 : 0
     }));
     
     ccJobCostCodeData.sort((a, b) => b.total_cost - a.total_cost);
@@ -16498,7 +16499,7 @@ function renderCCTable() {
   if (!tbody) return;
   
   if (costCodeFiltered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">No cost codes found matching your filters</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">No cost codes found matching your filters</td></tr>';
     updateCCPagination(0);
     return;
   }
@@ -16520,8 +16521,10 @@ function renderCCTable() {
   }
   
   tbody.innerHTML = displayData.map(item => {
-    // Calculate percentage as portion of filtered total
-    const pctOfFilteredTotal = filteredTotalCost > 0 ? (item.total_cost / filteredTotalCost) * 100 : 0;
+    // Calculate percentage as portion of filtered total cost
+    const pctOfTotal = filteredTotalCost > 0 ? (item.total_cost / filteredTotalCost) * 100 : 0;
+    // pct_of_revenue is calculated per job's earned revenue
+    const pctOfRevenue = item.pct_of_revenue || 0;
     return `
     <tr>
       <td>${escapeHtml(item.job_no)}</td>
@@ -16529,7 +16532,8 @@ function renderCCTable() {
       <td><span class="cc-code-badge">${escapeHtml(item.cost_code)}</span></td>
       <td>${escapeHtml(item.description)}</td>
       <td class="number-col">${formatCurrency(item.total_cost)}</td>
-      <td class="number-col">${pctOfFilteredTotal.toFixed(2)}%</td>
+      <td class="number-col">${pctOfTotal.toFixed(2)}%</td>
+      <td class="number-col">${pctOfRevenue > 0 ? pctOfRevenue.toFixed(2) + '%' : '—'}</td>
     </tr>
   `}).join('');
   
@@ -16665,9 +16669,6 @@ function updateCCTableTotals(data) {
   
   const totalCostCell = document.getElementById('ccTotalCostCell');
   if (totalCostCell) totalCostCell.textContent = formatCurrency(totalCost);
-  
-  const totalPctCell = document.getElementById('ccTotalPctCell');
-  if (totalPctCell) totalPctCell.textContent = '100.00%';
 }
 
 function extractCostCodesData() {
@@ -16693,13 +16694,20 @@ function exportCostCodesCsv() {
     return;
   }
   
-  const headers = ['Cost Code', 'Description', 'Total Cost', '% of Revenue'];
-  const rows = costCodeFiltered.map(cc => [
-    cc.cost_code,
-    `"${cc.description.replace(/"/g, '""')}"`,
-    cc.total_cost.toFixed(2),
-    cc.pct_of_revenue.toFixed(1)
-  ]);
+  const totalCost = costCodeFiltered.reduce((sum, cc) => sum + cc.total_cost, 0);
+  const headers = ['Job #', 'Job Description', 'Cost Code', 'Description', 'Total Cost', '% of Total', '% of Revenue'];
+  const rows = costCodeFiltered.map(cc => {
+    const pctOfTotal = totalCost > 0 ? (cc.total_cost / totalCost) * 100 : 0;
+    return [
+      cc.job_no,
+      `"${(cc.job_description || '').replace(/"/g, '""')}"`,
+      cc.cost_code,
+      `"${cc.description.replace(/"/g, '""')}"`,
+      cc.total_cost.toFixed(2),
+      pctOfTotal.toFixed(2),
+      cc.pct_of_revenue > 0 ? cc.pct_of_revenue.toFixed(2) : ''
+    ];
+  });
   
   const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
@@ -16763,21 +16771,29 @@ function exportCostCodesPdf() {
       <table>
         <thead>
           <tr>
+            <th>Job #</th>
+            <th>Job Description</th>
             <th>Cost Code</th>
             <th>Description</th>
             <th class="number-col">Total Cost</th>
+            <th class="number-col">% of Total</th>
             <th class="number-col">% of Revenue</th>
           </tr>
         </thead>
         <tbody>
-          ${costCodeFiltered.map(cc => `
+          ${costCodeFiltered.map(cc => {
+            const pctOfTotal = totalCost > 0 ? (cc.total_cost / totalCost) * 100 : 0;
+            return `
             <tr>
+              <td>${cc.job_no}</td>
+              <td>${cc.job_description || ''}</td>
               <td>${cc.cost_code}</td>
               <td>${cc.description}</td>
               <td class="number-col">${formatCurrency(cc.total_cost)}</td>
-              <td class="number-col">${cc.pct_of_revenue.toFixed(1)}%</td>
+              <td class="number-col">${pctOfTotal.toFixed(2)}%</td>
+              <td class="number-col">${cc.pct_of_revenue > 0 ? cc.pct_of_revenue.toFixed(2) + '%' : '—'}</td>
             </tr>
-          `).join('')}
+          `}).join('')}
         </tbody>
       </table>
       

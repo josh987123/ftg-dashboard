@@ -2546,6 +2546,13 @@
                     <button class="sort-btn sort-desc-btn cc-sort-btn" data-sort="total_cost" data-dir="desc" title="Sort descending">▼</button>
                   </div>
                 </th>
+                <th class="sortable number-col" data-sort="pct_of_total">
+                  <span class="column-header-text">% of Total</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn cc-sort-btn" data-sort="pct_of_total" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn cc-sort-btn" data-sort="pct_of_total" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
                 <th class="sortable number-col" data-sort="pct_of_revenue">
                   <span class="column-header-text">% of Revenue</span>
                   <div class="sort-controls inline-sort">
@@ -2556,13 +2563,14 @@
               </tr>
             </thead>
             <tbody id="costCodesTableBody">
-              <tr><td colspan="6" class="loading-cell">Loading cost code data...</td></tr>
+              <tr><td colspan="7" class="loading-cell">Loading cost code data...</td></tr>
             </tbody>
             <tfoot id="costCodesTableFoot">
               <tr class="totals-row">
                 <td colspan="4"><strong>Totals</strong></td>
                 <td class="number-col" id="ccTotalCostCell">-</td>
-                <td class="number-col" id="ccTotalPctCell">-</td>
+                <td class="number-col" id="ccTotalPctCell">100.00%</td>
+                <td class="number-col">—</td>
               </tr>
             </tfoot>
           </table>
