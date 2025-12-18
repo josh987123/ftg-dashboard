@@ -3680,6 +3680,104 @@ def api_get_top_vendors():
         traceback.print_exc()
         return jsonify({'success': False, 'vendors': [], 'error': str(e)}), 500
 
+@app.route('/api/ap-aging', methods=['GET', 'OPTIONS'])
+def api_get_ap_aging():
+    """Get AP aging report grouped by vendor with aging buckets"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        search = request.args.get('search', '').strip().lower()
+        sort_column = request.args.get('sortColumn', 'total_due')
+        sort_direction = request.args.get('sortDirection', 'desc')
+        
+        # Load invoices data
+        invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ap_invoices.json')
+        with open(invoices_path, 'r', encoding='utf-8-sig') as f:
+            invoices_json = json.load(f)
+        
+        invoices = invoices_json.get('invoices', [])
+        
+        # Group by vendor and calculate aging buckets
+        vendor_aging = {}
+        
+        for inv in invoices:
+            remaining = float(inv.get('remaining_balance', 0) or 0)
+            if remaining <= 0:
+                continue  # Skip fully paid invoices
+            
+            vendor = (inv.get('vendor_name', '') or '').strip()
+            if not vendor:
+                vendor = 'Unknown Vendor'
+            
+            if vendor not in vendor_aging:
+                vendor_aging[vendor] = {
+                    'vendor_name': vendor,
+                    'total_due': 0,
+                    'current': 0,
+                    'days_31_60': 0,
+                    'days_61_90': 0,
+                    'days_90_plus': 0,
+                    'retainage': 0
+                }
+            
+            retainage = float(inv.get('retainage_amount', 0) or 0)
+            # Amount due excluding retainage
+            amount_ex_ret = remaining - retainage if retainage > 0 else remaining
+            
+            # Get days outstanding
+            days = int(float(inv.get('days_outstanding', 0) or 0))
+            
+            # Add to appropriate bucket
+            if days <= 30:
+                vendor_aging[vendor]['current'] += amount_ex_ret
+            elif days <= 60:
+                vendor_aging[vendor]['days_31_60'] += amount_ex_ret
+            elif days <= 90:
+                vendor_aging[vendor]['days_61_90'] += amount_ex_ret
+            else:
+                vendor_aging[vendor]['days_90_plus'] += amount_ex_ret
+            
+            vendor_aging[vendor]['total_due'] += amount_ex_ret
+            vendor_aging[vendor]['retainage'] += retainage
+        
+        # Convert to list
+        vendors_list = list(vendor_aging.values())
+        
+        # Apply search filter
+        if search:
+            vendors_list = [v for v in vendors_list if search in v['vendor_name'].lower()]
+        
+        # Sort
+        reverse = sort_direction.lower() == 'desc'
+        if sort_column in ['vendor_name']:
+            vendors_list.sort(key=lambda x: x.get(sort_column, '').lower(), reverse=reverse)
+        else:
+            vendors_list.sort(key=lambda x: x.get(sort_column, 0), reverse=reverse)
+        
+        # Calculate totals
+        totals = {
+            'total_due': sum(v['total_due'] for v in vendors_list),
+            'current': sum(v['current'] for v in vendors_list),
+            'days_31_60': sum(v['days_31_60'] for v in vendors_list),
+            'days_61_90': sum(v['days_61_90'] for v in vendors_list),
+            'days_90_plus': sum(v['days_90_plus'] for v in vendors_list),
+            'retainage': sum(v['retainage'] for v in vendors_list)
+        }
+        
+        return jsonify({
+            'success': True,
+            'vendors': vendors_list,
+            'totals': totals,
+            'count': len(vendors_list)
+        })
+        
+    except Exception as e:
+        print(f"[AP-AGING] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'vendors': [], 'totals': {}, 'error': str(e)}), 500
+
 scheduler_thread = None
 
 def start_scheduler():
