@@ -1183,7 +1183,7 @@ function initNavigation() {
       
       // Auto-expand Jobs if child is clicked
       if (item.classList.contains("nav-child") && jobsParent && jobsChildren) {
-        const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'missingBudgets', 'payments', 'jobAnalytics'];
+        const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'costCodes', 'missingBudgets', 'payments', 'jobAnalytics'];
         if (jobsChildItems.includes(id)) {
           jobsParent.classList.add("expanded");
           jobsChildren.classList.add("expanded");
@@ -1210,6 +1210,7 @@ function initNavigation() {
       if (id === "jobOverview") initJobOverview();
       if (id === "jobBudgets") initJobBudgets();
       if (id === "jobActuals") initJobActuals();
+      if (id === "costCodes") initCostCodes();
       if (id === "missingBudgets") initMissingBudgets();
       if (id === "payments") initPayments();
     });
@@ -15611,6 +15612,591 @@ function updateMbPagination(total) {
 }
 
 // ========================================
+// COST CODE ANALYSIS MODULE
+// ========================================
+
+let costCodeData = [];
+let costCodeFiltered = [];
+let ccCurrentPage = 1;
+let ccPageSize = 25;
+let ccSortField = 'total_cost';
+let ccSortDir = 'desc';
+let ccMainChart = null;
+let ccTopCategoriesChart = null;
+
+function initCostCodes() {
+  try {
+    populateCCFilters();
+    setupCCEventListeners();
+    updateCostCodes();
+  } catch (err) {
+    console.error('Error initializing cost codes:', err);
+  }
+}
+
+function populateCCFilters() {
+  if (!jobBudgetsData || !Array.isArray(jobBudgetsData)) return;
+  
+  const pms = [...new Set(jobBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+  const customers = [...new Set(jobBudgetsData.map(j => j.customer_name).filter(Boolean))].sort();
+  const jobs = [...new Set(jobBudgetsData.map(j => j.job_no).filter(Boolean))].sort((a, b) => {
+    const numA = parseInt(a) || 0;
+    const numB = parseInt(b) || 0;
+    return numB - numA;
+  });
+  
+  const pmSelect = document.getElementById('ccPmFilter');
+  const custSelect = document.getElementById('ccCustomerFilter');
+  const jobSelect = document.getElementById('ccJobFilter');
+  
+  if (pmSelect) {
+    pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
+      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+  }
+  
+  if (custSelect) {
+    custSelect.innerHTML = '<option value="">All Clients</option>' + 
+      customers.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+  
+  if (jobSelect) {
+    jobSelect.innerHTML = '<option value="">All Jobs</option>' + 
+      jobs.slice(0, 500).map(j => {
+        const budget = jobBudgetsData.find(b => b.job_no === j);
+        const desc = budget ? budget.job_description : '';
+        return `<option value="${j}">${j}${desc ? ' - ' + desc.substring(0, 30) : ''}</option>`;
+      }).join('');
+  }
+}
+
+function setupCCEventListeners() {
+  ['ccStatusActive', 'ccStatusInactive', 'ccStatusClosed', 'ccStatusOverhead'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', updateCostCodes);
+  });
+  
+  document.getElementById('ccPmFilter')?.addEventListener('change', updateCostCodes);
+  document.getElementById('ccCustomerFilter')?.addEventListener('change', updateCostCodes);
+  document.getElementById('ccJobFilter')?.addEventListener('change', updateCostCodes);
+  document.getElementById('ccChartType')?.addEventListener('change', renderCCCharts);
+  
+  document.querySelectorAll('input[name="ccViewType"]').forEach(radio => {
+    radio.addEventListener('change', updateCostCodes);
+  });
+  
+  document.getElementById('ccSearchInput')?.addEventListener('input', debounce(filterAndRenderCC, 300));
+  
+  document.querySelectorAll('.cc-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      ccSortField = btn.dataset.sort;
+      ccSortDir = btn.dataset.dir;
+      updateCCSortIndicators();
+      filterAndRenderCC();
+    });
+  });
+  
+  document.getElementById('ccPrevPage')?.addEventListener('click', () => {
+    if (ccCurrentPage > 1) {
+      ccCurrentPage--;
+      renderCCTable();
+    }
+  });
+  
+  document.getElementById('ccNextPage')?.addEventListener('click', () => {
+    const totalPages = ccPageSize === 'all' ? 1 : Math.ceil(costCodeFiltered.length / ccPageSize);
+    if (ccCurrentPage < totalPages) {
+      ccCurrentPage++;
+      renderCCTable();
+    }
+  });
+  
+  document.getElementById('ccPageSize')?.addEventListener('change', (e) => {
+    ccPageSize = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
+    ccCurrentPage = 1;
+    renderCCTable();
+  });
+  
+  document.querySelectorAll('.cc-breakdown-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const targetId = header.querySelector('.cc-breakdown-toggle')?.dataset.target;
+      const body = document.getElementById(targetId);
+      const toggle = header.querySelector('.cc-breakdown-toggle');
+      if (body && toggle) {
+        body.classList.toggle('collapsed');
+        toggle.textContent = body.classList.contains('collapsed') ? '▶' : '▼';
+      }
+    });
+  });
+  
+  document.getElementById('ccAiAnalysisBtn')?.addEventListener('click', () => {
+    if (typeof openAIAnalysisModal === 'function') {
+      openAIAnalysisModal('costCodes');
+    }
+  });
+}
+
+function updateCCSortIndicators() {
+  document.querySelectorAll('.cc-sort-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.sort === ccSortField && btn.dataset.dir === ccSortDir) {
+      btn.classList.add('active');
+    }
+  });
+}
+
+function updateCostCodes() {
+  try {
+    if (!jobActualsData || !Array.isArray(jobActualsData)) {
+      console.log('Cost codes: No actuals data available');
+      return;
+    }
+    
+    const dateEl = document.getElementById('costCodesDataAsOf');
+    if (dateEl && jobsDataAsOf) {
+      dateEl.textContent = jobsDataAsOf;
+    }
+    
+    const statusActive = document.getElementById('ccStatusActive')?.checked;
+    const statusInactive = document.getElementById('ccStatusInactive')?.checked;
+    const statusClosed = document.getElementById('ccStatusClosed')?.checked;
+    const statusOverhead = document.getElementById('ccStatusOverhead')?.checked;
+    const pmFilter = document.getElementById('ccPmFilter')?.value || '';
+    const customerFilter = document.getElementById('ccCustomerFilter')?.value || '';
+    const jobFilter = document.getElementById('ccJobFilter')?.value || '';
+    
+    const budgetLookup = {};
+    if (jobBudgetsData) {
+      jobBudgetsData.forEach(b => {
+        budgetLookup[b.job_no] = b;
+      });
+    }
+    
+    const filteredActuals = jobActualsData.filter(a => {
+      const budget = budgetLookup[a.job_no];
+      if (!budget) return false;
+      
+      const status = budget.job_status || a.job_status || '';
+      let statusMatch = false;
+      if (statusActive && status === 'A') statusMatch = true;
+      if (statusInactive && status === 'I') statusMatch = true;
+      if (statusClosed && status === 'C') statusMatch = true;
+      if (statusOverhead && status === 'O') statusMatch = true;
+      if (!statusMatch) return false;
+      
+      if (pmFilter && budget.project_manager_name !== pmFilter) return false;
+      if (customerFilter && budget.customer_name !== customerFilter) return false;
+      if (jobFilter && a.job_no !== jobFilter) return false;
+      
+      return true;
+    });
+    
+    const costCodeMap = {};
+    const jobsSet = new Set();
+    let totalCost = 0;
+    
+    filteredActuals.forEach(a => {
+      const code = a.cost_code_no || 'Unknown';
+      const desc = a.cost_code_description || 'Uncategorized';
+      const cost = parseFloat(a.actual_cost) || 0;
+      
+      if (!costCodeMap[code]) {
+        costCodeMap[code] = {
+          cost_code: code,
+          description: desc,
+          total_cost: 0,
+          entry_count: 0,
+          jobs: new Set()
+        };
+      }
+      
+      costCodeMap[code].total_cost += cost;
+      costCodeMap[code].entry_count += 1;
+      costCodeMap[code].jobs.add(a.job_no);
+      jobsSet.add(a.job_no);
+      totalCost += cost;
+    });
+    
+    costCodeData = Object.values(costCodeMap).map(cc => ({
+      ...cc,
+      job_count: cc.jobs.size,
+      avg_per_job: cc.jobs.size > 0 ? cc.total_cost / cc.jobs.size : 0,
+      pct_of_total: totalCost > 0 ? (cc.total_cost / totalCost) * 100 : 0
+    }));
+    
+    costCodeData.sort((a, b) => b.total_cost - a.total_cost);
+    
+    updateCCMetrics(totalCost, costCodeData.length, jobsSet.size, costCodeData[0]);
+    renderCCCharts();
+    renderCCBreakdowns(filteredActuals, budgetLookup, totalCost);
+    filterAndRenderCC();
+    
+  } catch (err) {
+    console.error('Error updating cost codes:', err);
+  }
+}
+
+function updateCCMetrics(totalCost, categoryCount, jobCount, topCategory) {
+  const totalCostEl = document.getElementById('ccTotalCost');
+  const totalCategoriesEl = document.getElementById('ccTotalCategories');
+  const totalJobsEl = document.getElementById('ccTotalJobs');
+  const topCategoryEl = document.getElementById('ccTopCategory');
+  const topCategoryPctEl = document.getElementById('ccTopCategoryPct');
+  
+  if (totalCostEl) totalCostEl.textContent = formatCurrency(totalCost);
+  if (totalCategoriesEl) totalCategoriesEl.textContent = categoryCount.toLocaleString();
+  if (totalJobsEl) totalJobsEl.textContent = jobCount.toLocaleString();
+  
+  if (topCategoryEl && topCategory) {
+    const shortDesc = topCategory.description.length > 20 
+      ? topCategory.description.substring(0, 18) + '...' 
+      : topCategory.description;
+    topCategoryEl.textContent = shortDesc;
+  }
+  
+  if (topCategoryPctEl && topCategory) {
+    topCategoryPctEl.textContent = `${topCategory.pct_of_total.toFixed(1)}% of total`;
+  }
+}
+
+function renderCCCharts() {
+  const chartType = document.getElementById('ccChartType')?.value || 'bar';
+  const top10 = costCodeData.slice(0, 10);
+  const labels = top10.map(cc => cc.description.length > 25 ? cc.description.substring(0, 23) + '...' : cc.description);
+  const values = top10.map(cc => cc.total_cost);
+  const pcts = top10.map(cc => cc.pct_of_total);
+  
+  const colors = [
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+  ];
+  
+  const mainCtx = document.getElementById('ccMainChart')?.getContext('2d');
+  if (mainCtx) {
+    if (ccMainChart) ccMainChart.destroy();
+    
+    if (chartType === 'pie') {
+      ccMainChart = new Chart(mainCtx, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { boxWidth: 12, font: { size: 11 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.raw;
+                  const pct = pcts[context.dataIndex];
+                  return `${context.label}: ${formatCurrency(value)} (${pct.toFixed(1)}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    } else {
+      ccMainChart = new Chart(mainCtx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Total Cost',
+            data: values,
+            backgroundColor: colors,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const pct = pcts[context.dataIndex];
+                  return `${formatCurrency(context.raw)} (${pct.toFixed(1)}%)`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                callback: function(value) {
+                  if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
+                  if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'K';
+                  return '$' + value;
+                }
+              }
+            },
+            y: {
+              ticks: { font: { size: 11 } }
+            }
+          }
+        }
+      });
+    }
+  }
+  
+  const topCtx = document.getElementById('ccTopCategoriesChart')?.getContext('2d');
+  if (topCtx) {
+    if (ccTopCategoriesChart) ccTopCategoriesChart.destroy();
+    
+    ccTopCategoriesChart = new Chart(topCtx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: pcts,
+          backgroundColor: colors,
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { boxWidth: 12, font: { size: 11 } }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const idx = context.dataIndex;
+                return `${context.label}: ${pcts[idx].toFixed(1)}% (${formatCurrency(values[idx])})`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+function renderCCBreakdowns(filteredActuals, budgetLookup, totalCost) {
+  const pmMap = {};
+  const clientMap = {};
+  
+  filteredActuals.forEach(a => {
+    const budget = budgetLookup[a.job_no];
+    if (!budget) return;
+    
+    const pm = budget.project_manager_name || 'Unknown';
+    const client = budget.customer_name || 'Unknown';
+    const cost = parseFloat(a.actual_cost) || 0;
+    
+    if (!pmMap[pm]) pmMap[pm] = { name: pm, total: 0, jobs: new Set() };
+    pmMap[pm].total += cost;
+    pmMap[pm].jobs.add(a.job_no);
+    
+    if (!clientMap[client]) clientMap[client] = { name: client, total: 0, jobs: new Set() };
+    clientMap[client].total += cost;
+    clientMap[client].jobs.add(a.job_no);
+  });
+  
+  const pmData = Object.values(pmMap).sort((a, b) => b.total - a.total).slice(0, 10);
+  const clientData = Object.values(clientMap).sort((a, b) => b.total - a.total).slice(0, 10);
+  
+  const pmBody = document.getElementById('ccPmBreakdownBody');
+  if (pmBody) {
+    if (pmData.length === 0) {
+      pmBody.innerHTML = '<tr><td colspan="4" class="loading-cell">No data</td></tr>';
+    } else {
+      pmBody.innerHTML = pmData.map(pm => `
+        <tr>
+          <td>${pm.name}</td>
+          <td class="number-col">${pm.jobs.size}</td>
+          <td class="number-col">${formatCurrency(pm.total)}</td>
+          <td class="number-col">${totalCost > 0 ? ((pm.total / totalCost) * 100).toFixed(1) : 0}%</td>
+        </tr>
+      `).join('');
+    }
+  }
+  
+  const clientBody = document.getElementById('ccClientBreakdownBody');
+  if (clientBody) {
+    if (clientData.length === 0) {
+      clientBody.innerHTML = '<tr><td colspan="4" class="loading-cell">No data</td></tr>';
+    } else {
+      clientBody.innerHTML = clientData.map(c => `
+        <tr>
+          <td>${c.name}</td>
+          <td class="number-col">${c.jobs.size}</td>
+          <td class="number-col">${formatCurrency(c.total)}</td>
+          <td class="number-col">${totalCost > 0 ? ((c.total / totalCost) * 100).toFixed(1) : 0}%</td>
+        </tr>
+      `).join('');
+    }
+  }
+}
+
+function filterAndRenderCC() {
+  const search = (document.getElementById('ccSearchInput')?.value || '').toLowerCase().trim();
+  
+  costCodeFiltered = costCodeData.filter(cc => {
+    if (!search) return true;
+    return cc.cost_code.toLowerCase().includes(search) ||
+           cc.description.toLowerCase().includes(search);
+  });
+  
+  costCodeFiltered.sort((a, b) => {
+    let valA = a[ccSortField];
+    let valB = b[ccSortField];
+    
+    if (typeof valA === 'string') valA = valA.toLowerCase();
+    if (typeof valB === 'string') valB = valB.toLowerCase();
+    
+    if (ccSortDir === 'asc') {
+      return valA > valB ? 1 : valA < valB ? -1 : 0;
+    } else {
+      return valA < valB ? 1 : valA > valB ? -1 : 0;
+    }
+  });
+  
+  ccCurrentPage = 1;
+  renderCCTable();
+}
+
+function renderCCTable() {
+  const tbody = document.getElementById('costCodesTableBody');
+  if (!tbody) return;
+  
+  if (costCodeFiltered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">No cost codes found matching your filters</td></tr>';
+    updateCCPagination(0);
+    updateCCTableTotals([]);
+    return;
+  }
+  
+  let displayData;
+  let totalPages;
+  
+  if (ccPageSize === 'all') {
+    displayData = costCodeFiltered;
+    totalPages = 1;
+  } else {
+    const start = (ccCurrentPage - 1) * ccPageSize;
+    const end = start + ccPageSize;
+    displayData = costCodeFiltered.slice(start, end);
+    totalPages = Math.ceil(costCodeFiltered.length / ccPageSize);
+  }
+  
+  const maxPct = Math.max(...costCodeFiltered.map(cc => cc.pct_of_total), 1);
+  
+  tbody.innerHTML = displayData.map(cc => {
+    const barWidth = (cc.pct_of_total / maxPct) * 100;
+    return `
+      <tr>
+        <td><span class="cc-code-badge">${cc.cost_code}</span></td>
+        <td>${cc.description}</td>
+        <td class="number-col">${cc.job_count.toLocaleString()}</td>
+        <td class="number-col">${cc.entry_count.toLocaleString()}</td>
+        <td class="number-col">${formatCurrency(cc.total_cost)}</td>
+        <td class="number-col">${formatCurrency(cc.avg_per_job)}</td>
+        <td class="number-col">${cc.pct_of_total.toFixed(1)}%</td>
+        <td>
+          <div class="distribution-bar">
+            <div class="distribution-bar-bg">
+              <div class="distribution-bar-fill" style="width: ${barWidth}%"></div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  
+  updateCCPagination(costCodeFiltered.length);
+  updateCCTableTotals(costCodeFiltered);
+}
+
+function updateCCPagination(total) {
+  const totalPages = ccPageSize === 'all' ? 1 : Math.max(1, Math.ceil(total / ccPageSize));
+  
+  const pageInfo = document.getElementById('ccPageInfo');
+  if (pageInfo) {
+    pageInfo.textContent = ccPageSize === 'all' 
+      ? `Showing all ${total} categories`
+      : `Page ${ccCurrentPage} of ${totalPages}`;
+  }
+  
+  const prevBtn = document.getElementById('ccPrevPage');
+  const nextBtn = document.getElementById('ccNextPage');
+  
+  if (prevBtn) prevBtn.disabled = ccCurrentPage <= 1;
+  if (nextBtn) nextBtn.disabled = ccCurrentPage >= totalPages;
+}
+
+function updateCCTableTotals(data) {
+  const totalJobs = new Set();
+  let totalEntries = 0;
+  let totalCost = 0;
+  
+  data.forEach(cc => {
+    totalEntries += cc.entry_count;
+    totalCost += cc.total_cost;
+  });
+  
+  const totalJobsCell = document.getElementById('ccTotalJobsCell');
+  const totalEntriesCell = document.getElementById('ccTotalEntriesCell');
+  const totalCostCell = document.getElementById('ccTotalCostCell');
+  
+  if (totalJobsCell) totalJobsCell.textContent = data.reduce((sum, cc) => sum + cc.job_count, 0).toLocaleString();
+  if (totalEntriesCell) totalEntriesCell.textContent = totalEntries.toLocaleString();
+  if (totalCostCell) totalCostCell.textContent = formatCurrency(totalCost);
+}
+
+function extractCostCodesData() {
+  let text = "Cost Code Analysis:\n\n";
+  
+  text += "Summary Metrics:\n";
+  text += `  Total Cost: ${document.getElementById('ccTotalCost')?.textContent || '-'}\n`;
+  text += `  Cost Categories: ${document.getElementById('ccTotalCategories')?.textContent || '-'}\n`;
+  text += `  Jobs Analyzed: ${document.getElementById('ccTotalJobs')?.textContent || '-'}\n`;
+  text += `  Top Category: ${document.getElementById('ccTopCategory')?.textContent || '-'}\n\n`;
+  
+  text += "Top 15 Cost Categories by Spend:\n";
+  costCodeData.slice(0, 15).forEach((cc, i) => {
+    text += `  ${i + 1}. ${cc.cost_code} - ${cc.description}: ${formatCurrency(cc.total_cost)} (${cc.pct_of_total.toFixed(1)}% of total, ${cc.job_count} jobs)\n`;
+  });
+  
+  text += "\nBreakdown by Project Manager:\n";
+  const pmRows = document.querySelectorAll('#ccPmBreakdownBody tr');
+  pmRows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 4) {
+      text += `  ${cells[0].textContent}: ${cells[2].textContent} (${cells[3].textContent})\n`;
+    }
+  });
+  
+  text += "\nBreakdown by Client:\n";
+  const clientRows = document.querySelectorAll('#ccClientBreakdownBody tr');
+  clientRows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 4) {
+      text += `  ${cells[0].textContent}: ${cells[2].textContent} (${cells[3].textContent})\n`;
+    }
+  });
+  
+  return text || "No cost code data available";
+}
+
+// ========================================
 // ADMIN MODULE
 // ========================================
 
@@ -16008,7 +16594,7 @@ async function openRoleModal(roleId = null) {
 function renderGroupedPermissions(permissions, selectedPerms, roleId, prefix) {
   const permissionGroups = {
     'Financials': ['overview', 'revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'payments', 'receivables'],
-    'Job Reports': ['job_overview', 'job_budgets', 'job_actuals', 'missing_budgets', 'job_analytics'],
+    'Job Reports': ['job_overview', 'job_budgets', 'job_actuals', 'cost_codes', 'missing_budgets', 'job_analytics'],
     'Admin': ['admin']
   };
   
@@ -16256,7 +16842,9 @@ const sectionToPermission = {
   'jobOverview': 'job_overview',
   'jobBudgets': 'job_budgets',
   'jobActuals': 'job_actuals',
+  'costCodes': 'cost_codes',
   'missingBudgets': 'missing_budgets',
+  'payments': 'payments',
   'cashReports': 'cash_balances',
   'admin': 'admin'
 };
@@ -16264,7 +16852,7 @@ const sectionToPermission = {
 // Order of sections for default page selection
 const sectionOrder = [
   'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
-  'cashReports', 'accounts', 'receivablesPayables', 'jobOverview', 'jobBudgets', 'jobActuals', 'missingBudgets', 'jobAnalytics'
+  'cashReports', 'accounts', 'receivablesPayables', 'jobOverview', 'jobBudgets', 'jobActuals', 'costCodes', 'missingBudgets', 'jobAnalytics'
 ];
 
 // Check permissions and show/hide nav items based on user role
