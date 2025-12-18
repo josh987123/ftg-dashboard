@@ -3633,6 +3633,9 @@ def api_get_top_vendors():
         
         invoices = invoices_json.get('invoices', [])
         
+        # Vendors to exclude from chart
+        excluded_vendors = {'Bridge Bank', 'Payroll4Construction', 'Bank of America'}
+        
         # Filter by year range and aggregate by vendor
         vendor_totals = {}
         for inv in invoices:
@@ -3647,7 +3650,7 @@ def api_get_top_vendors():
                         if start_year <= year <= end_year:
                             vendor = inv.get('vendor_name', 'Unknown') or 'Unknown'
                             amount = float(inv.get('invoice_amount', 0) or 0)
-                            if vendor and vendor != 'Unknown':
+                            if vendor and vendor != 'Unknown' and vendor not in excluded_vendors:
                                 vendor_totals[vendor] = vendor_totals.get(vendor, 0) + amount
                 except (ValueError, TypeError):
                     pass

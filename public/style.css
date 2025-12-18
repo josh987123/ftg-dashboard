@@ -13714,6 +13714,18 @@ body.dark-mode .payments-chart-section {
   border-color: #334155;
 }
 
+.chart-footnote {
+  font-size: 10px;
+  color: #6b7280;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+body.dark-mode .chart-footnote,
+[data-theme="dark"] .chart-footnote {
+  color: #9ca3af;
+}
+
 .payments-year-range {
   display: flex;
   align-items: center;
