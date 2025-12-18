@@ -12846,7 +12846,7 @@ function initJobBudgetsColumnFilters() {
     const dropdown = document.querySelector(`#jobBudgetsTable .column-filter-dropdown[data-filter="${col}"]`);
     if (!dropdown) return;
     
-    const uniqueValues = getUniqueColumnValues(col);
+    const allUniqueValues = getUniqueColumnValues(col);
     jobBudgetsColumnFilters[col] = new Set();
     
     const columnLabel = getColumnLabel(col);
@@ -12864,15 +12864,35 @@ function initJobBudgetsColumnFilters() {
       </div>
     `;
     
-    populateFilterOptions(col, uniqueValues);
+    function renderFilteredOptions(searchTerm = '') {
+      const optionsList = dropdown.querySelector('.filter-options-list');
+      if (!optionsList) return;
+      
+      const searchVal = searchTerm.toLowerCase();
+      const filteredValues = searchVal
+        ? allUniqueValues.filter(val => String(val).toLowerCase().includes(searchVal))
+        : allUniqueValues;
+      
+      const displayValues = filteredValues.slice(0, 200);
+      const remaining = filteredValues.length - displayValues.length;
+      
+      optionsList.innerHTML = displayValues.map(val => `
+        <label class="filter-option">
+          <input type="checkbox" value="${val}" checked>
+          <span class="filter-option-text">${val}</span>
+        </label>
+      `).join('') + (remaining > 0 ? `<div class="filter-truncated-notice">${remaining} more values not shown. Use search to narrow down.</div>` : '');
+      
+      optionsList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('click', (e) => e.stopPropagation());
+      });
+    }
+    
+    renderFilteredOptions();
     
     const searchInput = dropdown.querySelector('.filter-search-input');
     searchInput?.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      dropdown.querySelectorAll('.filter-option').forEach(opt => {
-        const text = opt.querySelector('.filter-option-text')?.textContent.toLowerCase() || '';
-        opt.classList.toggle('hidden', !text.includes(query));
-      });
+      renderFilteredOptions(e.target.value);
     });
     
     searchInput?.addEventListener('click', (e) => e.stopPropagation());
@@ -14564,14 +14584,11 @@ function initJobActualsColumnFilters() {
     
     if (!dropdown || !filterBtn) return;
     
-    // Get unique values for this column
-    let uniqueVals = [...new Set(jobActualsData.map(job => {
+    // Get all unique values for this column (no limit)
+    const allUniqueVals = [...new Set(jobActualsData.map(job => {
       if (col === 'job_status') return getJobStatusLabel(job[col]).label;
       return String(job[col] || '');
     }))].filter(Boolean).sort();
-    
-    // Limit to 100 for performance
-    if (uniqueVals.length > 100) uniqueVals = uniqueVals.slice(0, 100);
     
     // Build dropdown HTML
     dropdown.innerHTML = `
@@ -14580,19 +14597,34 @@ function initJobActualsColumnFilters() {
         <span class="filter-quick-link" data-action="select-all">Select All</span>
         <span class="filter-quick-link" data-action="clear-all">Clear All</span>
       </div>
-      <div class="filter-options-list ja-filter-options" data-filter="${col}">
-        ${uniqueVals.map(val => `
-          <label class="filter-option">
-            <input type="checkbox" value="${val.replace(/"/g, '&quot;')}" checked>
-            <span class="filter-option-text">${val}</span>
-          </label>
-        `).join('')}
-      </div>
+      <div class="filter-options-list ja-filter-options" data-filter="${col}"></div>
       <div class="filter-actions">
         <button class="filter-ok-btn" data-filter="${col}">OK</button>
         <button class="filter-cancel-btn" data-filter="${col}">Cancel</button>
       </div>
     `;
+    
+    function renderFilteredOptions(searchTerm = '') {
+      const optionsList = dropdown.querySelector('.filter-options-list');
+      if (!optionsList) return;
+      
+      const searchVal = searchTerm.toLowerCase();
+      const filteredValues = searchVal
+        ? allUniqueVals.filter(val => String(val).toLowerCase().includes(searchVal))
+        : allUniqueVals;
+      
+      const displayValues = filteredValues.slice(0, 200);
+      const remaining = filteredValues.length - displayValues.length;
+      
+      optionsList.innerHTML = displayValues.map(val => `
+        <label class="filter-option">
+          <input type="checkbox" value="${val.replace(/"/g, '&quot;')}" checked>
+          <span class="filter-option-text">${val}</span>
+        </label>
+      `).join('') + (remaining > 0 ? `<div class="filter-truncated-notice">${remaining} more values not shown. Use search to narrow down.</div>` : '');
+    }
+    
+    renderFilteredOptions();
     
     // Filter button click handler
     filterBtn.addEventListener('click', (e) => {
@@ -14611,26 +14643,22 @@ function initJobActualsColumnFilters() {
       }
     });
     
-    // Search within filter
+    // Search within filter - now re-renders with filtered values
     const searchInput = dropdown.querySelector('.ja-filter-search');
     searchInput?.addEventListener('input', (e) => {
-      const searchVal = e.target.value.toLowerCase();
-      dropdown.querySelectorAll('.filter-option').forEach(opt => {
-        const text = opt.textContent.toLowerCase();
-        opt.classList.toggle('hidden', !text.includes(searchVal));
-      });
+      renderFilteredOptions(e.target.value);
     });
     
     // Select All link
     dropdown.querySelector('.filter-quick-link[data-action="select-all"]')?.addEventListener('click', (e) => {
       e.stopPropagation();
-      dropdown.querySelectorAll('.filter-option:not(.hidden) input[type="checkbox"]').forEach(cb => cb.checked = true);
+      dropdown.querySelectorAll('.filter-option input[type="checkbox"]').forEach(cb => cb.checked = true);
     });
     
     // Clear All link
     dropdown.querySelector('.filter-quick-link[data-action="clear-all"]')?.addEventListener('click', (e) => {
       e.stopPropagation();
-      dropdown.querySelectorAll('.filter-option:not(.hidden) input[type="checkbox"]').forEach(cb => cb.checked = false);
+      dropdown.querySelectorAll('.filter-option input[type="checkbox"]').forEach(cb => cb.checked = false);
     });
     
     // OK button
@@ -14641,7 +14669,8 @@ function initJobActualsColumnFilters() {
         checkedValues.add(cb.value);
       });
       
-      if (checkedValues.size === uniqueVals.length) {
+      const allCheckboxes = dropdown.querySelectorAll('.filter-option input[type="checkbox"]');
+      if (checkedValues.size === allCheckboxes.length || checkedValues.size === 0) {
         delete jobActualsColumnFilters[col];
         filterBtn.classList.remove('has-filter');
       } else {
@@ -17150,25 +17179,33 @@ function populatePaymentsFilterDropdown(col, dropdown, values) {
   const currentFilter = paymentsColumnFilters[col] || new Set();
   const hasActiveFilter = currentFilter.size > 0;
   
-  optionsList.innerHTML = values.slice(0, 200).map(val => {
-    const isChecked = hasActiveFilter ? currentFilter.has(val) : true;
-    return `
-      <label class="filter-option">
-        <input type="checkbox" value="${escapeHtml(val)}" ${isChecked ? 'checked' : ''}>
-        <span class="filter-option-text">${escapeHtml(val) || '(empty)'}</span>
-      </label>
-    `;
-  }).join('') + (values.length > 200 ? `<div class="filter-truncated-notice">${values.length - 200} more values not shown</div>` : '');
+  function renderFilteredOptions(searchTerm = '') {
+    const searchVal = searchTerm.toLowerCase();
+    const filteredValues = searchVal 
+      ? values.filter(val => String(val).toLowerCase().includes(searchVal))
+      : values;
+    
+    const displayValues = filteredValues.slice(0, 200);
+    const remaining = filteredValues.length - displayValues.length;
+    
+    optionsList.innerHTML = displayValues.map(val => {
+      const isChecked = hasActiveFilter ? currentFilter.has(val) : true;
+      return `
+        <label class="filter-option">
+          <input type="checkbox" value="${escapeHtml(val)}" ${isChecked ? 'checked' : ''}>
+          <span class="filter-option-text">${escapeHtml(val) || '(empty)'}</span>
+        </label>
+      `;
+    }).join('') + (remaining > 0 ? `<div class="filter-truncated-notice">${remaining} more values not shown. Use search to narrow down.</div>` : '');
+  }
+  
+  renderFilteredOptions();
   
   const searchInput = dropdown.querySelector('.filter-search-input');
   if (searchInput) {
     searchInput.onclick = (e) => e.stopPropagation();
     searchInput.oninput = () => {
-      const searchVal = searchInput.value.toLowerCase();
-      dropdown.querySelectorAll('.filter-option').forEach(opt => {
-        const text = opt.querySelector('.filter-option-text')?.textContent.toLowerCase() || '';
-        opt.classList.toggle('hidden', !text.includes(searchVal));
-      });
+      renderFilteredOptions(searchInput.value);
     };
   }
   
