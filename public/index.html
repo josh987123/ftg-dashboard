@@ -2464,18 +2464,6 @@
           </div>
         </div>
 
-        <!-- Export Buttons -->
-        <div class="cc-actions-bar">
-          <div class="cc-export-btns">
-            <button class="cc-export-btn" id="ccExportCsv" title="Export to CSV">
-              <span>📄</span> CSV
-            </button>
-            <button class="cc-export-btn" id="ccExportPdf" title="Export to PDF">
-              <span>📑</span> PDF
-            </button>
-          </div>
-        </div>
-
         <!-- Charts Row - Cost as % of Earned Revenue -->
         <div class="cc-charts-row">
           <div class="cc-chart-container full-width">
@@ -2494,16 +2482,29 @@
           <input type="text" id="ccSearchInput" placeholder="Search by cost code or description..." class="job-search-input">
         </div>
 
-        <!-- Cost Codes Hierarchical Table -->
+        <!-- Cost Codes Table -->
         <div class="job-table-container">
           <div class="loading-overlay hidden" id="costCodesLoadingOverlay">
             <div class="loading-spinner"></div>
             <div class="loading-text">Loading cost code data...</div>
           </div>
-          <table class="cc-hierarchical-table" id="costCodesTable">
+          <table class="job-table" id="costCodesTable">
             <thead>
               <tr id="ccTableHeaderRow">
-                <th style="width: 40px;"></th>
+                <th class="sortable" data-sort="job_no">
+                  <span class="column-header-text">Job #</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn cc-sort-btn" data-sort="job_no" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn cc-sort-btn" data-sort="job_no" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable" data-sort="job_description">
+                  <span class="column-header-text">Job Description</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn cc-sort-btn" data-sort="job_description" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn cc-sort-btn" data-sort="job_description" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
                 <th class="sortable" data-sort="cost_code">
                   <span class="column-header-text">Cost Code</span>
                   <div class="sort-controls inline-sort">
@@ -2535,12 +2536,11 @@
               </tr>
             </thead>
             <tbody id="costCodesTableBody">
-              <tr><td colspan="5" class="loading-cell">Loading cost code data...</td></tr>
+              <tr><td colspan="6" class="loading-cell">Loading cost code data...</td></tr>
             </tbody>
             <tfoot id="costCodesTableFoot">
               <tr class="totals-row">
-                <td></td>
-                <td colspan="2"><strong>Totals</strong></td>
+                <td colspan="4"><strong>Totals</strong></td>
                 <td class="number-col" id="ccTotalCostCell">-</td>
                 <td class="number-col">100%</td>
               </tr>

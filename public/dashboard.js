@@ -16058,6 +16058,7 @@ function updateCCSortIndicators() {
 }
 
 let ccTotalEarnedRevenue = 0;
+let ccJobCostCodeData = []; // Job + cost code level data for the table
 
 function updateCostCodes() {
   try {
@@ -16105,7 +16106,7 @@ function updateCostCodes() {
       return true;
     });
     
-    // Calculate earned revenue for filtered jobs
+    // Calculate earned revenue for filtered jobs and total costs per job
     const jobCosts = {};
     filteredActuals.forEach(a => {
       const jobNo = a.job_no;
@@ -16114,63 +16115,71 @@ function updateCostCodes() {
     });
     
     ccTotalEarnedRevenue = 0;
+    const jobEarnedRevenue = {};
     Object.keys(jobCosts).forEach(jobNo => {
       const budget = budgetLookup[jobNo];
       if (budget && budget.revised_cost > 0 && budget.revised_contract > 0) {
         const pctComplete = jobCosts[jobNo] / budget.revised_cost;
-        ccTotalEarnedRevenue += pctComplete * budget.revised_contract;
+        const earnedRev = pctComplete * budget.revised_contract;
+        ccTotalEarnedRevenue += earnedRev;
+        jobEarnedRevenue[jobNo] = earnedRev;
       }
     });
     
-    const costCodeMap = {};
-    const jobsSet = new Set();
+    // Aggregate by job + cost code for the table
+    const jobCostCodeMap = {};
     let totalCost = 0;
     
+    filteredActuals.forEach(a => {
+      const jobNo = a.job_no;
+      const code = a.cost_code_no || 'Unknown';
+      const desc = a.cost_code_description || 'Uncategorized';
+      const cost = parseFloat(a.actual_cost) || 0;
+      const budget = budgetLookup[jobNo];
+      const key = `${jobNo}|${code}`;
+      
+      if (!jobCostCodeMap[key]) {
+        jobCostCodeMap[key] = {
+          job_no: jobNo,
+          job_description: budget?.job_description || a.job_description || '',
+          cost_code: code,
+          description: desc,
+          total_cost: 0
+        };
+      }
+      
+      jobCostCodeMap[key].total_cost += cost;
+      totalCost += cost;
+    });
+    
+    // Convert to array and calculate % of revenue
+    ccJobCostCodeData = Object.values(jobCostCodeMap).map(item => ({
+      ...item,
+      pct_of_revenue: ccTotalEarnedRevenue > 0 ? (item.total_cost / ccTotalEarnedRevenue) * 100 : 0
+    }));
+    
+    ccJobCostCodeData.sort((a, b) => b.total_cost - a.total_cost);
+    
+    // Also build aggregated cost code data for the chart
+    const costCodeMap = {};
     filteredActuals.forEach(a => {
       const code = a.cost_code_no || 'Unknown';
       const desc = a.cost_code_description || 'Uncategorized';
       const cost = parseFloat(a.actual_cost) || 0;
-      const vendor = a.vendor_name || a.vendor || 'Unknown Vendor';
       
       if (!costCodeMap[code]) {
-        costCodeMap[code] = {
-          cost_code: code,
-          description: desc,
-          total_cost: 0,
-          entry_count: 0,
-          jobs: new Set(),
-          vendors: {},
-          entries: []
-        };
+        costCodeMap[code] = { cost_code: code, description: desc, total_cost: 0 };
       }
-      
       costCodeMap[code].total_cost += cost;
-      costCodeMap[code].entry_count += 1;
-      costCodeMap[code].jobs.add(a.job_no);
-      costCodeMap[code].entries.push(a);
-      
-      // Track vendors
-      if (!costCodeMap[code].vendors[vendor]) {
-        costCodeMap[code].vendors[vendor] = { name: vendor, total_cost: 0, entries: [] };
-      }
-      costCodeMap[code].vendors[vendor].total_cost += cost;
-      costCodeMap[code].vendors[vendor].entries.push(a);
-      
-      jobsSet.add(a.job_no);
-      totalCost += cost;
     });
     
     costCodeData = Object.values(costCodeMap).map(cc => ({
       ...cc,
-      job_count: cc.jobs.size,
-      pct_of_total: totalCost > 0 ? (cc.total_cost / totalCost) * 100 : 0,
-      pct_of_revenue: ccTotalEarnedRevenue > 0 ? (cc.total_cost / ccTotalEarnedRevenue) * 100 : 0,
-      vendorList: Object.values(cc.vendors).sort((a, b) => b.total_cost - a.total_cost)
+      pct_of_revenue: ccTotalEarnedRevenue > 0 ? (cc.total_cost / ccTotalEarnedRevenue) * 100 : 0
     }));
-    
     costCodeData.sort((a, b) => b.total_cost - a.total_cost);
     
-    // Cache filtered actuals for drill-down
+    // Cache filtered actuals
     ccFilteredActualsCache = filteredActuals;
     
     // Update footer total
@@ -16438,22 +16447,13 @@ function renderCCBreakdowns(filteredActuals, budgetLookup, totalCost) {
 function filterAndRenderCC() {
   const search = (document.getElementById('ccSearchInput')?.value || '').toLowerCase().trim();
   
-  costCodeFiltered = costCodeData.filter(cc => {
-    // Apply quick filter first
-    if (ccQuickFilter === 'top10') {
-      const top10Codes = costCodeData.slice(0, 10).map(c => c.cost_code);
-      if (!top10Codes.includes(cc.cost_code)) return false;
-    } else if (ccQuickFilter === 'high-cost') {
-      if (cc.total_cost < 100000) return false;
-    } else if (ccQuickFilter === 'frequent') {
-      const avgEntries = costCodeData.reduce((sum, c) => sum + c.entry_count, 0) / costCodeData.length;
-      if (cc.entry_count < avgEntries * 1.5) return false;
-    }
-    
-    // Then apply search
+  // Filter job+cost code level data
+  costCodeFiltered = ccJobCostCodeData.filter(item => {
     if (!search) return true;
-    return cc.cost_code.toLowerCase().includes(search) ||
-           cc.description.toLowerCase().includes(search);
+    return item.job_no.toLowerCase().includes(search) ||
+           item.job_description.toLowerCase().includes(search) ||
+           item.cost_code.toLowerCase().includes(search) ||
+           item.description.toLowerCase().includes(search);
   });
   
   costCodeFiltered.sort((a, b) => {
@@ -16479,7 +16479,7 @@ function renderCCTable() {
   if (!tbody) return;
   
   if (costCodeFiltered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">No cost codes found matching your filters</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">No cost codes found matching your filters</td></tr>';
     updateCCPagination(0);
     return;
   }
@@ -16497,28 +16497,16 @@ function renderCCTable() {
     totalPages = Math.ceil(costCodeFiltered.length / ccPageSize);
   }
   
-  tbody.innerHTML = displayData.map((cc, idx) => {
-    const hasVendors = cc.vendorList && cc.vendorList.length > 0;
-    return `
-      <tr class="cc-parent-row ${hasVendors ? 'expandable' : ''}" data-idx="${idx}" data-costcode="${escapeHtml(cc.cost_code)}">
-        <td class="cc-expand-cell">
-          ${hasVendors ? '<span class="cc-expand-icon">▶</span>' : ''}
-        </td>
-        <td><span class="cc-code-badge">${escapeHtml(cc.cost_code)}</span></td>
-        <td>${escapeHtml(cc.description)}</td>
-        <td class="number-col">${formatCurrency(cc.total_cost)}</td>
-        <td class="number-col">${cc.pct_of_revenue.toFixed(1)}%</td>
-      </tr>
-    `;
-  }).join('');
-  
-  // Add click handlers for expandable rows
-  tbody.querySelectorAll('.cc-parent-row.expandable').forEach(row => {
-    row.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleCCVendorExpand(row);
-    });
-  });
+  tbody.innerHTML = displayData.map(item => `
+    <tr>
+      <td>${escapeHtml(item.job_no)}</td>
+      <td>${escapeHtml(item.job_description)}</td>
+      <td><span class="cc-code-badge">${escapeHtml(item.cost_code)}</span></td>
+      <td>${escapeHtml(item.description)}</td>
+      <td class="number-col">${formatCurrency(item.total_cost)}</td>
+      <td class="number-col">${item.pct_of_revenue.toFixed(2)}%</td>
+    </tr>
+  `).join('');
   
   updateCCPagination(costCodeFiltered.length);
   updateCCTableTotals(costCodeFiltered);
