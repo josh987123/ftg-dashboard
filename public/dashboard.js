@@ -15623,6 +15623,9 @@ let ccSortField = 'total_cost';
 let ccSortDir = 'desc';
 let ccMainChart = null;
 let ccTopCategoriesChart = null;
+let ccTrendChart = null;
+let ccQuickFilter = 'all';
+let ccFilteredActualsCache = [];
 
 function initCostCodes() {
   try {
@@ -15732,6 +15735,30 @@ function setupCCEventListeners() {
       openAIAnalysisModal('costCodes');
     }
   });
+  
+  // Quick filter badges
+  document.querySelectorAll('.cc-filter-badge').forEach(badge => {
+    badge.addEventListener('click', () => {
+      document.querySelectorAll('.cc-filter-badge').forEach(b => b.classList.remove('active'));
+      badge.classList.add('active');
+      ccQuickFilter = badge.dataset.filter;
+      filterAndRenderCC();
+    });
+  });
+  
+  // Export buttons
+  document.getElementById('ccExportCsv')?.addEventListener('click', exportCostCodesCsv);
+  document.getElementById('ccExportPdf')?.addEventListener('click', exportCostCodesPdf);
+  
+  // Trend chart controls
+  document.getElementById('ccTrendPeriod')?.addEventListener('change', renderCCTrendChart);
+  document.getElementById('ccTrendDisplay')?.addEventListener('change', renderCCTrendChart);
+  
+  // Modal close handlers
+  document.getElementById('ccModalClose')?.addEventListener('click', closeCCDrilldownModal);
+  document.getElementById('ccDrilldownModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'ccDrilldownModal') closeCCDrilldownModal();
+  });
 }
 
 function updateCCSortIndicators() {
@@ -15824,8 +15851,12 @@ function updateCostCodes() {
     
     costCodeData.sort((a, b) => b.total_cost - a.total_cost);
     
+    // Cache filtered actuals for trend chart and drill-down
+    ccFilteredActualsCache = filteredActuals;
+    
     updateCCMetrics(totalCost, costCodeData.length, jobsSet.size, costCodeData[0]);
     renderCCCharts();
+    renderCCTrendChart();
     renderCCBreakdowns(filteredActuals, budgetLookup, totalCost);
     filterAndRenderCC();
     
@@ -15873,16 +15904,17 @@ function renderCCCharts() {
   if (mainCtx) {
     if (ccMainChart) ccMainChart.destroy();
     
-    if (chartType === 'pie') {
+    if (chartType === 'pie' || chartType === 'doughnut') {
       ccMainChart = new Chart(mainCtx, {
-        type: 'pie',
+        type: chartType,
         data: {
           labels: labels,
           datasets: [{
             data: values,
             backgroundColor: colors,
             borderWidth: 2,
-            borderColor: '#fff'
+            borderColor: '#fff',
+            cutout: chartType === 'doughnut' ? '50%' : 0
           }]
         },
         options: {
@@ -16050,6 +16082,18 @@ function filterAndRenderCC() {
   const search = (document.getElementById('ccSearchInput')?.value || '').toLowerCase().trim();
   
   costCodeFiltered = costCodeData.filter(cc => {
+    // Apply quick filter first
+    if (ccQuickFilter === 'top10') {
+      const top10Codes = costCodeData.slice(0, 10).map(c => c.cost_code);
+      if (!top10Codes.includes(cc.cost_code)) return false;
+    } else if (ccQuickFilter === 'high-cost') {
+      if (cc.total_cost < 100000) return false;
+    } else if (ccQuickFilter === 'frequent') {
+      const avgEntries = costCodeData.reduce((sum, c) => sum + c.entry_count, 0) / costCodeData.length;
+      if (cc.entry_count < avgEntries * 1.5) return false;
+    }
+    
+    // Then apply search
     if (!search) return true;
     return cc.cost_code.toLowerCase().includes(search) ||
            cc.description.toLowerCase().includes(search);
@@ -16102,9 +16146,9 @@ function renderCCTable() {
   tbody.innerHTML = displayData.map(cc => {
     const barWidth = (cc.pct_of_total / maxPct) * 100;
     return `
-      <tr>
-        <td><span class="cc-code-badge">${cc.cost_code}</span></td>
-        <td>${cc.description}</td>
+      <tr class="cc-clickable-row" data-costcode="${escapeHtml(cc.cost_code)}" data-desc="${escapeHtml(cc.description)}">
+        <td><span class="cc-code-badge">${escapeHtml(cc.cost_code)}</span></td>
+        <td>${escapeHtml(cc.description)}</td>
         <td class="number-col">${cc.job_count.toLocaleString()}</td>
         <td class="number-col">${cc.entry_count.toLocaleString()}</td>
         <td class="number-col">${formatCurrency(cc.total_cost)}</td>
@@ -16120,6 +16164,15 @@ function renderCCTable() {
       </tr>
     `;
   }).join('');
+  
+  // Add click handlers for drill-down
+  tbody.querySelectorAll('.cc-clickable-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const code = row.dataset.costcode;
+      const desc = row.dataset.desc;
+      openCCDrilldownModal(code, desc);
+    });
+  });
   
   updateCCPagination(costCodeFiltered.length);
   updateCCTableTotals(costCodeFiltered);
@@ -16194,6 +16247,293 @@ function extractCostCodesData() {
   });
   
   return text || "No cost code data available";
+}
+
+// Export cost codes to CSV
+function exportCostCodesCsv() {
+  if (costCodeFiltered.length === 0) {
+    alert('No data to export');
+    return;
+  }
+  
+  const headers = ['Cost Code', 'Description', 'Jobs', 'Entries', 'Total Cost', 'Avg/Job', '% of Total'];
+  const rows = costCodeFiltered.map(cc => [
+    cc.cost_code,
+    `"${cc.description.replace(/"/g, '""')}"`,
+    cc.job_count,
+    cc.entry_count,
+    cc.total_cost.toFixed(2),
+    cc.avg_per_job.toFixed(2),
+    cc.pct_of_total.toFixed(1)
+  ]);
+  
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cost_codes_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Export cost codes to PDF (print-friendly format)
+function exportCostCodesPdf() {
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Please allow pop-ups to export PDF');
+    return;
+  }
+  
+  const totalCost = costCodeFiltered.reduce((sum, cc) => sum + cc.total_cost, 0);
+  
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Cost Code Analysis Report</title>
+      <style>
+        body { font-family: 'Inter', Arial, sans-serif; padding: 20px; color: #333; }
+        h1 { color: #1e40af; margin-bottom: 5px; }
+        .subtitle { color: #6b7280; margin-bottom: 20px; }
+        .metrics { display: flex; gap: 20px; margin-bottom: 20px; }
+        .metric { background: #f3f4f6; padding: 15px; border-radius: 8px; }
+        .metric-label { font-size: 12px; color: #6b7280; }
+        .metric-value { font-size: 24px; font-weight: bold; color: #111; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f9fafb; font-weight: 600; }
+        .number-col { text-align: right; }
+        .footer { margin-top: 30px; font-size: 12px; color: #9ca3af; }
+      </style>
+    </head>
+    <body>
+      <h1>Cost Code Analysis Report</h1>
+      <div class="subtitle">Generated on ${new Date().toLocaleDateString()}</div>
+      
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Total Cost</div>
+          <div class="metric-value">${formatCurrency(totalCost)}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Categories</div>
+          <div class="metric-value">${costCodeFiltered.length}</div>
+        </div>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Cost Code</th>
+            <th>Description</th>
+            <th class="number-col">Jobs</th>
+            <th class="number-col">Entries</th>
+            <th class="number-col">Total Cost</th>
+            <th class="number-col">% of Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${costCodeFiltered.map(cc => `
+            <tr>
+              <td>${cc.cost_code}</td>
+              <td>${cc.description}</td>
+              <td class="number-col">${cc.job_count}</td>
+              <td class="number-col">${cc.entry_count}</td>
+              <td class="number-col">${formatCurrency(cc.total_cost)}</td>
+              <td class="number-col">${cc.pct_of_total.toFixed(1)}%</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      
+      <div class="footer">FTG Dashboard - Cost Code Analysis</div>
+    </body>
+    </html>
+  `);
+  
+  printWindow.document.close();
+  setTimeout(() => printWindow.print(), 500);
+}
+
+// Render trend chart
+function renderCCTrendChart() {
+  const canvas = document.getElementById('ccTrendChart');
+  if (!canvas) return;
+  
+  const period = document.getElementById('ccTrendPeriod')?.value || 'monthly';
+  const display = document.getElementById('ccTrendDisplay')?.value || 'top5';
+  
+  if (ccTrendChart) {
+    ccTrendChart.destroy();
+    ccTrendChart = null;
+  }
+  
+  if (!ccFilteredActualsCache || ccFilteredActualsCache.length === 0) return;
+  
+  // Group actuals by period and cost code
+  const periodData = {};
+  const costCodeTotals = {};
+  
+  ccFilteredActualsCache.forEach(a => {
+    const cost = parseFloat(a.actual_cost) || 0;
+    const code = a.cost_code_no || 'Unknown';
+    const date = a.transaction_date || a.date || '';
+    
+    if (!date) return;
+    
+    let periodKey;
+    const dateParts = date.split('-');
+    if (dateParts.length >= 2) {
+      const year = dateParts[0];
+      const month = dateParts[1];
+      
+      if (period === 'yearly') {
+        periodKey = year;
+      } else if (period === 'quarterly') {
+        const quarter = Math.ceil(parseInt(month) / 3);
+        periodKey = `${year}-Q${quarter}`;
+      } else {
+        periodKey = `${year}-${month}`;
+      }
+    } else {
+      periodKey = 'Unknown';
+    }
+    
+    if (!periodData[periodKey]) periodData[periodKey] = {};
+    if (!periodData[periodKey][code]) periodData[periodKey][code] = 0;
+    periodData[periodKey][code] += cost;
+    
+    if (!costCodeTotals[code]) costCodeTotals[code] = 0;
+    costCodeTotals[code] += cost;
+  });
+  
+  // Get top cost codes
+  const sortedCodes = Object.entries(costCodeTotals)
+    .sort((a, b) => b[1] - a[1])
+    .map(([code]) => code);
+  
+  const topN = display === 'top10' ? 10 : display === 'top5' ? 5 : 0;
+  const codesToShow = display === 'total' ? [] : sortedCodes.slice(0, topN);
+  
+  // Sort periods chronologically
+  const periods = Object.keys(periodData).sort();
+  
+  // Generate chart colors
+  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'];
+  
+  const datasets = [];
+  
+  if (display === 'total') {
+    datasets.push({
+      label: 'Total Cost',
+      data: periods.map(p => Object.values(periodData[p]).reduce((sum, v) => sum + v, 0)),
+      borderColor: colors[0],
+      backgroundColor: colors[0] + '20',
+      fill: true,
+      tension: 0.3
+    });
+  } else {
+    codesToShow.forEach((code, i) => {
+      datasets.push({
+        label: code,
+        data: periods.map(p => periodData[p]?.[code] || 0),
+        borderColor: colors[i % colors.length],
+        backgroundColor: colors[i % colors.length] + '40',
+        tension: 0.3,
+        fill: false
+      });
+    });
+  }
+  
+  ccTrendChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: { labels: periods, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => formatCurrency(v) }
+        }
+      }
+    }
+  });
+}
+
+// Drill-down modal functions
+function openCCDrilldownModal(costCode, description) {
+  const modal = document.getElementById('ccDrilldownModal');
+  if (!modal) return;
+  
+  document.getElementById('ccModalTitle').textContent = `${costCode} - ${description}`;
+  
+  // Get jobs for this cost code from cached actuals
+  const jobData = {};
+  let totalCost = 0;
+  let totalEntries = 0;
+  
+  ccFilteredActualsCache.forEach(a => {
+    if (a.cost_code_no !== costCode) return;
+    
+    const jobNo = a.job_no;
+    if (!jobData[jobNo]) {
+      const budget = jobBudgetsData?.find(b => b.job_no === jobNo) || {};
+      jobData[jobNo] = {
+        job_no: jobNo,
+        description: budget.job_description || a.job_description || '-',
+        client: budget.customer_name || '-',
+        pm: budget.project_manager_name || '-',
+        entries: 0,
+        cost: 0
+      };
+    }
+    
+    const cost = parseFloat(a.actual_cost) || 0;
+    jobData[jobNo].entries++;
+    jobData[jobNo].cost += cost;
+    totalCost += cost;
+    totalEntries++;
+  });
+  
+  const jobs = Object.values(jobData).sort((a, b) => b.cost - a.cost);
+  
+  document.getElementById('ccModalTotalCost').textContent = formatCurrency(totalCost);
+  document.getElementById('ccModalJobCount').textContent = jobs.length.toLocaleString();
+  document.getElementById('ccModalEntryCount').textContent = totalEntries.toLocaleString();
+  
+  const tbody = document.getElementById('ccModalTableBody');
+  if (jobs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">No jobs found for this cost code</td></tr>';
+  } else {
+    tbody.innerHTML = jobs.map(job => `
+      <tr>
+        <td><strong>${escapeHtml(job.job_no)}</strong></td>
+        <td>${escapeHtml(job.description)}</td>
+        <td>${escapeHtml(job.client)}</td>
+        <td>${escapeHtml(job.pm)}</td>
+        <td class="number-col">${job.entries.toLocaleString()}</td>
+        <td class="number-col">${formatCurrency(job.cost)}</td>
+      </tr>
+    `).join('');
+  }
+  
+  modal.classList.remove('hidden');
+}
+
+function closeCCDrilldownModal() {
+  const modal = document.getElementById('ccDrilldownModal');
+  if (modal) modal.classList.add('hidden');
 }
 
 // ========================================
