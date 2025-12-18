@@ -3582,30 +3582,38 @@ def api_get_payments_filter_values():
 
 @app.route('/api/payments/years', methods=['GET', 'OPTIONS'])
 def api_get_payments_years():
-    """Get available years from payments data"""
+    """Get available years from AP invoices data (for Top 10 Vendors chart)"""
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'})
     
     try:
-        data = get_payments_data()
-        payments = data['payments']
+        # Load AP invoices data (same source as top vendors chart)
+        invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ap_invoices.json')
+        with open(invoices_path, 'r', encoding='utf-8-sig') as f:
+            invoices_json = json.load(f)
         
-        # Extract unique years from invoice_date
+        invoices = invoices_json.get('invoices', [])
+        
+        # Extract unique years from invoice_date (Excel serial dates)
         years = set()
-        for p in payments:
-            date_str = p.get('invoice_date', '')
-            if date_str:
+        for inv in invoices:
+            date_val = inv.get('invoice_date', '')
+            if date_val:
                 try:
-                    # Parse date string (format: YYYY-MM-DD or similar)
-                    if isinstance(date_str, str) and len(date_str) >= 4:
-                        year = int(date_str[:4])
+                    # Convert Excel serial date to year
+                    excel_date = float(date_val)
+                    if excel_date > 0:
+                        from datetime import datetime, timedelta
+                        base_date = datetime(1899, 12, 30)
+                        actual_date = base_date + timedelta(days=excel_date)
+                        year = actual_date.year
                         if 2000 <= year <= 2100:
                             years.add(year)
                 except (ValueError, TypeError):
                     pass
         
         # Return sorted years
-        sorted_years = sorted(list(years)) if years else [2020, 2021, 2022, 2023, 2024, 2025]
+        sorted_years = sorted(list(years)) if years else [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
         
         return jsonify({
             'success': True,
@@ -3614,7 +3622,7 @@ def api_get_payments_years():
         
     except Exception as e:
         print(f"[PAYMENTS] Years error: {e}")
-        return jsonify({'success': False, 'years': [2020, 2021, 2022, 2023, 2024, 2025]}), 500
+        return jsonify({'success': False, 'years': [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]}), 500
 
 @app.route('/api/payments/top-vendors', methods=['GET', 'OPTIONS'])
 def api_get_top_vendors():
