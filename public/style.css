@@ -14038,3 +14038,130 @@ body.dark-mode .page-filter-bar .filter-input:focus {
 body.dark-mode .page-filter-bar .filter-input::placeholder {
   color: #64748b;
 }
+
+/* ============================================================
+   AP AGING REPORT STYLES
+============================================================ */
+.ap-aging-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ap-aging-summary .summary-card {
+  flex: 1;
+  min-width: 140px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.ap-aging-summary .summary-label {
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.ap-aging-summary .summary-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.ap-aging-summary .summary-value.negative {
+  color: #dc2626;
+}
+
+.ap-aging-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ap-aging-controls .search-container {
+  flex: 0 0 300px;
+}
+
+.ap-aging-controls .search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.ap-aging-controls .search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.ap-aging-table tfoot .totals-row {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.ap-aging-table tfoot .totals-row td {
+  border-top: 2px solid #e2e8f0;
+}
+
+/* Dark mode for AP Aging */
+[data-theme="dark"] .ap-aging-summary .summary-card,
+body.dark-mode .ap-aging-summary .summary-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .ap-aging-summary .summary-label,
+body.dark-mode .ap-aging-summary .summary-label {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .ap-aging-summary .summary-value,
+body.dark-mode .ap-aging-summary .summary-value {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .ap-aging-controls .search-input,
+body.dark-mode .ap-aging-controls .search-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .ap-aging-controls .search-input:focus,
+body.dark-mode .ap-aging-controls .search-input:focus {
+  border-color: #3b82f6;
+}
+
+[data-theme="dark"] .ap-aging-table tfoot .totals-row,
+body.dark-mode .ap-aging-table tfoot .totals-row {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .ap-aging-table tfoot .totals-row td,
+body.dark-mode .ap-aging-table tfoot .totals-row td {
+  border-top-color: #334155;
+}
+
+@media (max-width: 768px) {
+  .ap-aging-summary .summary-card {
+    flex: 1 1 calc(50% - 6px);
+    min-width: unset;
+    padding: 12px;
+  }
+  
+  .ap-aging-summary .summary-value {
+    font-size: 16px;
+  }
+  
+  .ap-aging-controls .search-container {
+    flex: 1;
+  }
+}
