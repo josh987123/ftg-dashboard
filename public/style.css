@@ -5936,36 +5936,36 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 /* Cash Current Header */
-.cash-current-header {
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
-  border-radius: 8px;
-  padding: 16px 20px;
-  margin-bottom: 16px;
-  color: #fff;
-  width: 80%;
-  max-width: 80%;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 30px;
+#cashReports .cash-current-header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%) !important;
+  border-radius: 8px !important;
+  padding: 16px 20px !important;
+  margin-bottom: 16px !important;
+  color: #fff !important;
+  width: 80% !important;
+  max-width: 80% !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 30px !important;
 }
 
-.cash-header-left {
+#cashReports .cash-header-left {
   flex-shrink: 0;
 }
 
-.cash-header-right {
+#cashReports .cash-header-right {
   flex: 1;
   min-width: 0;
 }
 
-.cash-header-accounts-grid {
+#cashReports .cash-header-accounts-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 6px 20px;
 }
 
-.cash-header-account-item {
+#cashReports .cash-header-account-item {
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -5973,13 +5973,13 @@ body.dark-mode .nav-item.nav-parent.expanded {
   opacity: 0.9;
 }
 
-.cash-acct-name {
+#cashReports .cash-acct-name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.cash-acct-value {
+#cashReports .cash-acct-value {
   white-space: nowrap;
   font-weight: 500;
 }
@@ -6198,15 +6198,16 @@ body.dark-mode .nav-item.nav-parent.expanded {
   }
   
   /* Cash Balances - 100% width elements on mobile */
-  .cash-current-header {
-    width: 100%;
-    box-sizing: border-box;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+  #cashReports .cash-current-header {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
   }
   
-  .cash-header-accounts-grid {
+  #cashReports .cash-header-accounts-grid {
     grid-template-columns: 1fr;
   }
   
