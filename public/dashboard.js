@@ -16597,9 +16597,12 @@ function buildOubData() {
     });
   }
   
-  // Build combined data from budgets
+  // Build combined data from budgets - ONLY ACTIVE JOBS
   if (jobBudgetsData && Array.isArray(jobBudgetsData)) {
     jobBudgetsData.forEach(budget => {
+      // Only include Active jobs (status 'A')
+      if (budget.job_status !== 'A') return;
+      
       const actuals = actualsMap.get(budget.job_no) || { actual_cost: 0, billed_revenue: 0 };
       
       // Contract Value = revised_contract (already includes original + change orders)
