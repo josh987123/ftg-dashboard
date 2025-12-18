@@ -3430,6 +3430,7 @@ def api_get_payments():
         job_filter = request.args.get('job', '').lower().strip()
         vendor_filter = request.args.get('vendor', '').lower().strip()
         invoice_filter = request.args.get('invoice', '').lower().strip()
+        pm_filter = request.args.get('pm', '').strip()
         
         # Validate sort column
         if sort_column not in PAYMENTS_VALID_COLUMNS:
@@ -3449,6 +3450,8 @@ def api_get_payments():
             payments = [p for p in payments if vendor_filter in str(p.get('vendor', '')).lower()]
         if invoice_filter:
             payments = [p for p in payments if invoice_filter in str(p.get('invoice_no', '')).lower()]
+        if pm_filter:
+            payments = [p for p in payments if p.get('project_manager', '') == pm_filter]
         
         # Apply column filters (validate column names)
         for col, values in column_filters.items():

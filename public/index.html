@@ -2934,6 +2934,12 @@
             <label for="payInvoiceSearch">Invoice #:</label>
             <input type="text" id="payInvoiceSearch" class="filter-input" placeholder="Search invoice..." style="width: 120px;">
           </div>
+          <div class="filter-group">
+            <label for="payPmFilter">Project Manager:</label>
+            <select id="payPmFilter" class="filter-input" style="width: 180px;">
+              <option value="">All Project Managers</option>
+            </select>
+          </div>
           <div class="filter-spacer"></div>
           <div class="column-picker-container">
             <button class="column-picker-btn" id="paymentsColumnPickerBtn">
@@ -3681,7 +3687,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251218b"></script>
+  <script src="dashboard.js?v=20251218c"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>

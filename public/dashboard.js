@@ -19357,6 +19357,7 @@ function loadPaymentsPage(retryCount = 0) {
   if (paymentsJobSearch) params.set('job', paymentsJobSearch);
   if (paymentsVendorSearch) params.set('vendor', paymentsVendorSearch);
   if (paymentsInvoiceSearch) params.set('invoice', paymentsInvoiceSearch);
+  if (paymentsPmFilter) params.set('pm', paymentsPmFilter);
   
   // Add column filters
   const activeFilters = {};
@@ -19684,6 +19685,16 @@ function initPaymentsEventHandlers() {
       paymentsCurrentPage = 1;
       loadPaymentsPage();
     }, 400));
+  }
+  
+  // PM dropdown filter
+  const pmFilter = document.getElementById('payPmFilter');
+  if (pmFilter) {
+    pmFilter.addEventListener('change', () => {
+      paymentsPmFilter = pmFilter.value;
+      paymentsCurrentPage = 1;
+      loadPaymentsPage();
+    });
   }
   
   document.querySelectorAll('#paymentsTable .sort-btn').forEach(btn => {
