@@ -13700,7 +13700,7 @@ body.dark-mode .payments-year-range .range-separator {
 /* Over/(Under) Billing Key Metrics */
 .oub-key-metrics-section {
   width: 80%;
-  margin: 0 auto 20px auto;
+  margin: 0 0 20px 0;
 }
 
 .oub-metrics-row {
@@ -13724,8 +13724,6 @@ body.dark-mode .payments-year-range .range-separator {
   gap: 16px;
   margin-bottom: 20px;
   width: 80%;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .oub-chart-container {
