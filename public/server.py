@@ -249,7 +249,8 @@ def init_database():
         # Seed default roles
         default_roles = [
             ('admin', 'Full access to all features including user management'),
-            ('manager', 'Access to all dashboard pages but not admin functions')
+            ('manager', 'Access to all dashboard pages but not admin functions'),
+            ('project_manager', 'Access to job reports and payments')
         ]
         for role_name, description in default_roles:
             cur.execute("""
@@ -310,6 +311,16 @@ def init_database():
                         ON CONFLICT DO NOTHING
                     """, (roles['manager'], perm_id))
         
+        # Project Manager role gets job reports and payments
+        if 'project_manager' in roles:
+            pm_permissions = ['job_overview', 'job_budgets', 'job_actuals', 'missing_budgets', 'payments', 'job_analytics']
+            for page_key in pm_permissions:
+                if page_key in perms:
+                    cur.execute("""
+                        INSERT INTO role_permissions (role_id, permission_id)
+                        VALUES (%s, %s)
+                        ON CONFLICT DO NOTHING
+                    """, (roles['project_manager'], perms[page_key]))
         
         # Seed default users if they don't exist
         default_users = [

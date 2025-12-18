@@ -15972,8 +15972,8 @@ async function openRoleModal(roleId = null) {
 
 function renderGroupedPermissions(permissions, selectedPerms, roleId, prefix) {
   const permissionGroups = {
-    'Financials': ['overview', 'revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'receivables'],
-    'Job Reports': ['job_overview', 'job_budgets', 'job_actuals', 'cost_detail', 'missing_budgets', 'job_analytics'],
+    'Financials': ['overview', 'revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'payments', 'receivables'],
+    'Job Reports': ['job_overview', 'job_budgets', 'job_actuals', 'missing_budgets', 'job_analytics'],
     'Admin': ['admin']
   };
   
@@ -16354,9 +16354,13 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
   // Determine which section to show
   let targetSection = null;
   
-  // For Project Managers (manager role), default to Job Budgets if they have access
+  // Role-based default landing pages
   const roleLower = userRole.toLowerCase();
-  if (roleLower === 'manager' && (isAdmin || userPerms.includes('job_budgets'))) {
+  if (roleLower === 'project_manager' && (isAdmin || userPerms.includes('job_overview'))) {
+    // Project Managers default to Job Overview
+    targetSection = 'jobOverview';
+  } else if (roleLower === 'manager' && (isAdmin || userPerms.includes('job_budgets'))) {
+    // Managers default to Job Budgets
     targetSection = 'jobBudgets';
   } else if (isAdmin) {
     // Admins default to overview
@@ -16400,8 +16404,8 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     const jobsParent = document.getElementById("navJobs");
     const jobsChildren = document.getElementById("navJobsChildren");
     
-    const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
-    const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'payments', 'jobAnalytics'];
+    const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'payments', 'receivablesPayables'];
+    const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'missingBudgets', 'jobAnalytics'];
     
     if (fsChildren.includes(targetSection) && finStatementsParent && finStatementsChildren) {
       finStatementsParent.classList.add("expanded");
