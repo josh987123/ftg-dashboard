@@ -16010,11 +16010,6 @@ function setupCCEventListeners() {
   document.getElementById('ccPmFilter')?.addEventListener('change', updateCostCodes);
   document.getElementById('ccCustomerFilter')?.addEventListener('change', updateCostCodes);
   document.getElementById('ccJobFilter')?.addEventListener('change', updateCostCodes);
-  document.getElementById('ccChartType')?.addEventListener('change', renderCCCharts);
-  
-  document.querySelectorAll('input[name="ccViewType"]').forEach(radio => {
-    radio.addEventListener('change', updateCostCodes);
-  });
   
   document.getElementById('ccSearchInput')?.addEventListener('input', debounce(filterAndRenderCC, 300));
   
@@ -16048,47 +16043,9 @@ function setupCCEventListeners() {
     renderCCTable();
   });
   
-  document.querySelectorAll('.cc-breakdown-header').forEach(header => {
-    header.addEventListener('click', () => {
-      const targetId = header.querySelector('.cc-breakdown-toggle')?.dataset.target;
-      const body = document.getElementById(targetId);
-      const toggle = header.querySelector('.cc-breakdown-toggle');
-      if (body && toggle) {
-        body.classList.toggle('collapsed');
-        toggle.textContent = body.classList.contains('collapsed') ? '▶' : '▼';
-      }
-    });
-  });
-  
-  document.getElementById('ccAiAnalysisBtn')?.addEventListener('click', () => {
-    if (typeof openAIAnalysisModal === 'function') {
-      openAIAnalysisModal('costCodes');
-    }
-  });
-  
-  // Quick filter badges
-  document.querySelectorAll('.cc-filter-badge').forEach(badge => {
-    badge.addEventListener('click', () => {
-      document.querySelectorAll('.cc-filter-badge').forEach(b => b.classList.remove('active'));
-      badge.classList.add('active');
-      ccQuickFilter = badge.dataset.filter;
-      filterAndRenderCC();
-    });
-  });
-  
   // Export buttons
   document.getElementById('ccExportCsv')?.addEventListener('click', exportCostCodesCsv);
   document.getElementById('ccExportPdf')?.addEventListener('click', exportCostCodesPdf);
-  
-  // Trend chart controls
-  document.getElementById('ccTrendPeriod')?.addEventListener('change', renderCCTrendChart);
-  document.getElementById('ccTrendDisplay')?.addEventListener('change', renderCCTrendChart);
-  
-  // Modal close handlers
-  document.getElementById('ccModalClose')?.addEventListener('click', closeCCDrilldownModal);
-  document.getElementById('ccDrilldownModal')?.addEventListener('click', (e) => {
-    if (e.target.id === 'ccDrilldownModal') closeCCDrilldownModal();
-  });
 }
 
 function updateCCSortIndicators() {
@@ -16099,6 +16056,8 @@ function updateCCSortIndicators() {
     }
   });
 }
+
+let ccTotalEarnedRevenue = 0;
 
 function updateCostCodes() {
   try {
@@ -16146,6 +16105,23 @@ function updateCostCodes() {
       return true;
     });
     
+    // Calculate earned revenue for filtered jobs
+    const jobCosts = {};
+    filteredActuals.forEach(a => {
+      const jobNo = a.job_no;
+      if (!jobCosts[jobNo]) jobCosts[jobNo] = 0;
+      jobCosts[jobNo] += parseFloat(a.actual_cost) || 0;
+    });
+    
+    ccTotalEarnedRevenue = 0;
+    Object.keys(jobCosts).forEach(jobNo => {
+      const budget = budgetLookup[jobNo];
+      if (budget && budget.revised_cost > 0 && budget.revised_contract > 0) {
+        const pctComplete = jobCosts[jobNo] / budget.revised_cost;
+        ccTotalEarnedRevenue += pctComplete * budget.revised_contract;
+      }
+    });
+    
     const costCodeMap = {};
     const jobsSet = new Set();
     let totalCost = 0;
@@ -16154,6 +16130,7 @@ function updateCostCodes() {
       const code = a.cost_code_no || 'Unknown';
       const desc = a.cost_code_description || 'Uncategorized';
       const cost = parseFloat(a.actual_cost) || 0;
+      const vendor = a.vendor_name || a.vendor || 'Unknown Vendor';
       
       if (!costCodeMap[code]) {
         costCodeMap[code] = {
@@ -16161,13 +16138,24 @@ function updateCostCodes() {
           description: desc,
           total_cost: 0,
           entry_count: 0,
-          jobs: new Set()
+          jobs: new Set(),
+          vendors: {},
+          entries: []
         };
       }
       
       costCodeMap[code].total_cost += cost;
       costCodeMap[code].entry_count += 1;
       costCodeMap[code].jobs.add(a.job_no);
+      costCodeMap[code].entries.push(a);
+      
+      // Track vendors
+      if (!costCodeMap[code].vendors[vendor]) {
+        costCodeMap[code].vendors[vendor] = { name: vendor, total_cost: 0, entries: [] };
+      }
+      costCodeMap[code].vendors[vendor].total_cost += cost;
+      costCodeMap[code].vendors[vendor].entries.push(a);
+      
       jobsSet.add(a.job_no);
       totalCost += cost;
     });
@@ -16175,19 +16163,21 @@ function updateCostCodes() {
     costCodeData = Object.values(costCodeMap).map(cc => ({
       ...cc,
       job_count: cc.jobs.size,
-      avg_per_job: cc.jobs.size > 0 ? cc.total_cost / cc.jobs.size : 0,
-      pct_of_total: totalCost > 0 ? (cc.total_cost / totalCost) * 100 : 0
+      pct_of_total: totalCost > 0 ? (cc.total_cost / totalCost) * 100 : 0,
+      pct_of_revenue: ccTotalEarnedRevenue > 0 ? (cc.total_cost / ccTotalEarnedRevenue) * 100 : 0,
+      vendorList: Object.values(cc.vendors).sort((a, b) => b.total_cost - a.total_cost)
     }));
     
     costCodeData.sort((a, b) => b.total_cost - a.total_cost);
     
-    // Cache filtered actuals for trend chart and drill-down
+    // Cache filtered actuals for drill-down
     ccFilteredActualsCache = filteredActuals;
     
-    updateCCMetrics(totalCost, costCodeData.length, jobsSet.size, costCodeData[0]);
-    renderCCCharts();
-    renderCCTrendChart();
-    renderCCBreakdowns(filteredActuals, budgetLookup, totalCost);
+    // Update footer total
+    const totalCostCell = document.getElementById('ccTotalCostCell');
+    if (totalCostCell) totalCostCell.textContent = formatCurrency(totalCost);
+    
+    renderCCRevenueChart();
     filterAndRenderCC();
     
   } catch (err) {
@@ -16195,27 +16185,64 @@ function updateCostCodes() {
   }
 }
 
-function updateCCMetrics(totalCost, categoryCount, jobCount, topCategory) {
-  const totalCostEl = document.getElementById('ccTotalCost');
-  const totalCategoriesEl = document.getElementById('ccTotalCategories');
-  const totalJobsEl = document.getElementById('ccTotalJobs');
-  const topCategoryEl = document.getElementById('ccTopCategory');
-  const topCategoryPctEl = document.getElementById('ccTopCategoryPct');
+let ccRevenueChart = null;
+
+function renderCCRevenueChart() {
+  const ctx = document.getElementById('ccRevenueChart')?.getContext('2d');
+  if (!ctx) return;
   
-  if (totalCostEl) totalCostEl.textContent = formatCurrency(totalCost);
-  if (totalCategoriesEl) totalCategoriesEl.textContent = categoryCount.toLocaleString();
-  if (totalJobsEl) totalJobsEl.textContent = jobCount.toLocaleString();
+  if (ccRevenueChart) ccRevenueChart.destroy();
   
-  if (topCategoryEl && topCategory) {
-    const shortDesc = topCategory.description.length > 20 
-      ? topCategory.description.substring(0, 18) + '...' 
-      : topCategory.description;
-    topCategoryEl.textContent = shortDesc;
-  }
+  const top10 = costCodeData.slice(0, 10);
+  const labels = top10.map(cc => cc.description.length > 30 ? cc.description.substring(0, 28) + '...' : cc.description);
+  const values = top10.map(cc => cc.pct_of_revenue);
   
-  if (topCategoryPctEl && topCategory) {
-    topCategoryPctEl.textContent = `${topCategory.pct_of_total.toFixed(1)}% of total`;
-  }
+  const colors = [
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+  ];
+  
+  ccRevenueChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '% of Earned Revenue',
+        data: values,
+        backgroundColor: colors,
+        borderRadius: 4,
+        maxBarThickness: 50
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const cc = top10[context.dataIndex];
+              return [`${context.raw.toFixed(1)}% of revenue`, `Cost: ${formatCurrency(cc.total_cost)}`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          title: { display: true, text: '% of Earned Revenue' },
+          ticks: {
+            callback: value => value + '%'
+          }
+        },
+        y: {
+          ticks: { font: { size: 11 } }
+        }
+      }
+    }
+  });
 }
 
 function renderCCCharts() {
@@ -16452,9 +16479,8 @@ function renderCCTable() {
   if (!tbody) return;
   
   if (costCodeFiltered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">No cost codes found matching your filters</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">No cost codes found matching your filters</td></tr>';
     updateCCPagination(0);
-    updateCCTableTotals([]);
     return;
   }
   
@@ -16471,41 +16497,132 @@ function renderCCTable() {
     totalPages = Math.ceil(costCodeFiltered.length / ccPageSize);
   }
   
-  const maxPct = Math.max(...costCodeFiltered.map(cc => cc.pct_of_total), 1);
-  
-  tbody.innerHTML = displayData.map(cc => {
-    const barWidth = (cc.pct_of_total / maxPct) * 100;
+  tbody.innerHTML = displayData.map((cc, idx) => {
+    const hasVendors = cc.vendorList && cc.vendorList.length > 0;
     return `
-      <tr class="cc-clickable-row" data-costcode="${escapeHtml(cc.cost_code)}" data-desc="${escapeHtml(cc.description)}">
+      <tr class="cc-parent-row ${hasVendors ? 'expandable' : ''}" data-idx="${idx}" data-costcode="${escapeHtml(cc.cost_code)}">
+        <td class="cc-expand-cell">
+          ${hasVendors ? '<span class="cc-expand-icon">▶</span>' : ''}
+        </td>
         <td><span class="cc-code-badge">${escapeHtml(cc.cost_code)}</span></td>
         <td>${escapeHtml(cc.description)}</td>
-        <td class="number-col">${cc.job_count.toLocaleString()}</td>
-        <td class="number-col">${cc.entry_count.toLocaleString()}</td>
         <td class="number-col">${formatCurrency(cc.total_cost)}</td>
-        <td class="number-col">${formatCurrency(cc.avg_per_job)}</td>
-        <td class="number-col">${cc.pct_of_total.toFixed(1)}%</td>
-        <td>
-          <div class="distribution-bar">
-            <div class="distribution-bar-bg">
-              <div class="distribution-bar-fill" style="width: ${barWidth}%"></div>
-            </div>
-          </div>
-        </td>
+        <td class="number-col">${cc.pct_of_revenue.toFixed(1)}%</td>
       </tr>
     `;
   }).join('');
   
-  // Add click handlers for drill-down
-  tbody.querySelectorAll('.cc-clickable-row').forEach(row => {
-    row.addEventListener('click', () => {
-      const code = row.dataset.costcode;
-      const desc = row.dataset.desc;
-      openCCDrilldownModal(code, desc);
+  // Add click handlers for expandable rows
+  tbody.querySelectorAll('.cc-parent-row.expandable').forEach(row => {
+    row.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleCCVendorExpand(row);
     });
   });
   
   updateCCPagination(costCodeFiltered.length);
-  updateCCTableTotals(costCodeFiltered);
+}
+
+function toggleCCVendorExpand(row) {
+  const idx = parseInt(row.dataset.idx);
+  const costCode = row.dataset.costcode;
+  const cc = costCodeFiltered[idx];
+  const icon = row.querySelector('.cc-expand-icon');
+  const isExpanded = row.classList.contains('expanded');
+  
+  // Remove any existing vendor/invoice rows for this cost code
+  const existingVendorRows = document.querySelectorAll(`.cc-vendor-row[data-parent="${costCode}"], .cc-invoice-row[data-parent="${costCode}"]`);
+  existingVendorRows.forEach(r => r.remove());
+  
+  if (isExpanded) {
+    row.classList.remove('expanded');
+    if (icon) icon.textContent = '▶';
+    return;
+  }
+  
+  row.classList.add('expanded');
+  if (icon) icon.textContent = '▼';
+  
+  // Insert vendor rows after this row
+  const vendorRows = cc.vendorList.map((vendor, vIdx) => {
+    const hasInvoices = vendor.entries && vendor.entries.length > 0;
+    return `
+      <tr class="cc-vendor-row ${hasInvoices ? 'expandable' : ''}" data-parent="${escapeHtml(costCode)}" data-vidx="${vIdx}">
+        <td class="cc-expand-cell" style="padding-left: 24px;">
+          ${hasInvoices ? '<span class="cc-expand-icon">▶</span>' : ''}
+        </td>
+        <td colspan="2" style="padding-left: 24px;">
+          <span class="cc-vendor-badge">${escapeHtml(vendor.name)}</span>
+        </td>
+        <td class="number-col">${formatCurrency(vendor.total_cost)}</td>
+        <td class="number-col">${ccTotalEarnedRevenue > 0 ? ((vendor.total_cost / ccTotalEarnedRevenue) * 100).toFixed(2) + '%' : '-'}</td>
+      </tr>
+    `;
+  }).join('');
+  
+  row.insertAdjacentHTML('afterend', vendorRows);
+  
+  // Add click handlers for vendor rows
+  document.querySelectorAll(`.cc-vendor-row[data-parent="${costCode}"].expandable`).forEach(vRow => {
+    vRow.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleCCInvoiceExpand(vRow, cc);
+    });
+  });
+}
+
+function toggleCCInvoiceExpand(vRow, cc) {
+  const costCode = vRow.dataset.parent;
+  const vIdx = parseInt(vRow.dataset.vidx);
+  const vendor = cc.vendorList[vIdx];
+  const icon = vRow.querySelector('.cc-expand-icon');
+  const isExpanded = vRow.classList.contains('expanded');
+  
+  // Remove any existing invoice rows for this vendor
+  const existingInvoiceRows = document.querySelectorAll(`.cc-invoice-row[data-parent="${costCode}"][data-vidx="${vIdx}"]`);
+  existingInvoiceRows.forEach(r => r.remove());
+  
+  if (isExpanded) {
+    vRow.classList.remove('expanded');
+    if (icon) icon.textContent = '▶';
+    return;
+  }
+  
+  vRow.classList.add('expanded');
+  if (icon) icon.textContent = '▼';
+  
+  // Insert invoice rows
+  const invoiceRows = vendor.entries.slice(0, 50).map(entry => {
+    const date = entry.date || entry.invoice_date || '-';
+    const invoiceNo = entry.invoice_no || entry.reference || '-';
+    const amount = parseFloat(entry.actual_cost) || 0;
+    const jobNo = entry.job_no || '-';
+    return `
+      <tr class="cc-invoice-row" data-parent="${escapeHtml(costCode)}" data-vidx="${vIdx}">
+        <td></td>
+        <td style="padding-left: 48px; font-size: 0.85em; color: #666;">
+          ${escapeHtml(invoiceNo)} | Job: ${escapeHtml(jobNo)} | ${escapeHtml(date)}
+        </td>
+        <td></td>
+        <td class="number-col" style="font-size: 0.85em;">${formatCurrency(amount)}</td>
+        <td></td>
+      </tr>
+    `;
+  }).join('');
+  
+  if (vendor.entries.length > 50) {
+    const moreCount = vendor.entries.length - 50;
+    vRow.insertAdjacentHTML('afterend', invoiceRows + `
+      <tr class="cc-invoice-row" data-parent="${escapeHtml(costCode)}" data-vidx="${vIdx}">
+        <td></td>
+        <td colspan="4" style="padding-left: 48px; font-size: 0.85em; color: #999; font-style: italic;">
+          ... and ${moreCount} more entries
+        </td>
+      </tr>
+    `);
+  } else {
+    vRow.insertAdjacentHTML('afterend', invoiceRows);
+  }
 }
 
 function updateCCPagination(total) {

@@ -2460,52 +2460,12 @@
                 </select>
               </div>
 
-              <div class="overview-config-box">
-                <div class="config-label">View Type:</div>
-                <div class="radio-stack">
-                  <label class="radio-label">
-                    <input type="radio" name="ccViewType" id="ccViewSummary" value="summary" checked>
-                    Summary by Category
-                  </label>
-                  <label class="radio-label">
-                    <input type="radio" name="ccViewType" id="ccViewDetailed" value="detailed">
-                    Detailed by Job
-                  </label>
-                </div>
-              </div>
             </div>
           </div>
         </div>
 
-        <!-- Key Metrics Row -->
-        <div class="cc-metrics-row">
-          <div class="cc-metric-card">
-            <div class="cc-metric-label">Total Cost</div>
-            <div class="cc-metric-value" id="ccTotalCost">$0</div>
-          </div>
-          <div class="cc-metric-card">
-            <div class="cc-metric-label">Cost Categories</div>
-            <div class="cc-metric-value" id="ccTotalCategories">0</div>
-          </div>
-          <div class="cc-metric-card">
-            <div class="cc-metric-label">Jobs Analyzed</div>
-            <div class="cc-metric-value" id="ccTotalJobs">0</div>
-          </div>
-          <div class="cc-metric-card highlight">
-            <div class="cc-metric-label">Top Category</div>
-            <div class="cc-metric-value" id="ccTopCategory">-</div>
-            <div class="cc-metric-sub" id="ccTopCategoryPct">0% of total</div>
-          </div>
-        </div>
-
-        <!-- Quick Actions Bar -->
+        <!-- Export Buttons -->
         <div class="cc-actions-bar">
-          <div class="cc-quick-filters">
-            <button class="cc-filter-badge active" data-filter="all">All Categories</button>
-            <button class="cc-filter-badge" data-filter="top10">Top 10</button>
-            <button class="cc-filter-badge" data-filter="high-cost">High Cost (&gt;$100K)</button>
-            <button class="cc-filter-badge" data-filter="frequent">Most Used</button>
-          </div>
           <div class="cc-export-btns">
             <button class="cc-export-btn" id="ccExportCsv" title="Export to CSV">
               <span>📄</span> CSV
@@ -2516,126 +2476,34 @@
           </div>
         </div>
 
-        <!-- Charts Row -->
+        <!-- Charts Row - Cost as % of Earned Revenue -->
         <div class="cc-charts-row">
-          <div class="cc-chart-container">
-            <div class="cc-chart-header">
-              <h3 class="cc-chart-title">Cost Distribution by Category</h3>
-              <div class="cc-chart-controls">
-                <select id="ccChartType" class="filter-select compact">
-                  <option value="bar">Bar Chart</option>
-                  <option value="pie">Pie Chart</option>
-                  <option value="doughnut">Donut Chart</option>
-                </select>
-              </div>
-            </div>
-            <div class="cc-chart-wrapper clickable" id="ccMainChartWrapper">
-              <canvas id="ccMainChart"></canvas>
-            </div>
-            <div class="cc-chart-hint">Click a segment to filter the table</div>
-          </div>
-          <div class="cc-chart-container">
-            <div class="cc-chart-header">
-              <h3 class="cc-chart-title">Top 10 Categories</h3>
-            </div>
-            <div class="cc-chart-wrapper">
-              <canvas id="ccTopCategoriesChart"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- Cost Trend Chart -->
-        <div class="cc-trend-section">
           <div class="cc-chart-container full-width">
             <div class="cc-chart-header">
-              <h3 class="cc-chart-title">Cost Trend Over Time</h3>
-              <div class="cc-chart-controls">
-                <select id="ccTrendPeriod" class="filter-select compact">
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-                <select id="ccTrendDisplay" class="filter-select compact">
-                  <option value="top5">Top 5 Categories</option>
-                  <option value="top10">Top 10 Categories</option>
-                  <option value="total">Total Only</option>
-                </select>
-              </div>
+              <h3 class="cc-chart-title">Cost as % of Earned Revenue</h3>
             </div>
-            <div class="cc-chart-wrapper tall">
-              <canvas id="ccTrendChart"></canvas>
+            <div class="cc-chart-wrapper" id="ccRevenueChartWrapper">
+              <canvas id="ccRevenueChart"></canvas>
             </div>
+            <div class="cc-chart-hint">Shows which cost categories consume the largest share of earned revenue</div>
           </div>
         </div>
 
-        <!-- Breakdown Analysis -->
-        <div class="cc-breakdown-section">
-          <h3 class="cc-section-title">Cost Breakdown Analysis</h3>
-          
-          <div class="cc-breakdown-grid">
-            <!-- By Project Manager -->
-            <div class="cc-breakdown-card">
-              <div class="cc-breakdown-header">
-                <h4>By Project Manager</h4>
-                <span class="cc-breakdown-toggle" data-target="ccPmBreakdown">▼</span>
-              </div>
-              <div class="cc-breakdown-body" id="ccPmBreakdown">
-                <table class="cc-breakdown-table">
-                  <thead>
-                    <tr>
-                      <th>Project Manager</th>
-                      <th class="number-col">Jobs</th>
-                      <th class="number-col">Total Cost</th>
-                      <th class="number-col">% of Total</th>
-                    </tr>
-                  </thead>
-                  <tbody id="ccPmBreakdownBody">
-                    <tr><td colspan="4" class="loading-cell">Loading...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- By Client -->
-            <div class="cc-breakdown-card">
-              <div class="cc-breakdown-header">
-                <h4>By Client</h4>
-                <span class="cc-breakdown-toggle" data-target="ccClientBreakdown">▼</span>
-              </div>
-              <div class="cc-breakdown-body" id="ccClientBreakdown">
-                <table class="cc-breakdown-table">
-                  <thead>
-                    <tr>
-                      <th>Client</th>
-                      <th class="number-col">Jobs</th>
-                      <th class="number-col">Total Cost</th>
-                      <th class="number-col">% of Total</th>
-                    </tr>
-                  </thead>
-                  <tbody id="ccClientBreakdownBody">
-                    <tr><td colspan="4" class="loading-cell">Loading...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+        <!-- Search and Filter Bar -->
+        <div class="cc-filter-bar">
+          <input type="text" id="ccSearchInput" placeholder="Search by cost code or description..." class="job-search-input">
         </div>
 
-        <!-- Search Bar -->
-        <div class="job-search-bar">
-          <input type="text" id="ccSearchInput" placeholder="Search by cost code, description, job, or project manager..." class="job-search-input">
-          <span class="job-search-icon">🔍</span>
-        </div>
-
-        <!-- Cost Codes Table -->
+        <!-- Cost Codes Hierarchical Table -->
         <div class="job-table-container">
           <div class="loading-overlay hidden" id="costCodesLoadingOverlay">
             <div class="loading-spinner"></div>
             <div class="loading-text">Loading cost code data...</div>
           </div>
-          <table class="job-budgets-table" id="costCodesTable">
+          <table class="cc-hierarchical-table" id="costCodesTable">
             <thead>
               <tr id="ccTableHeaderRow">
+                <th style="width: 40px;"></th>
                 <th class="sortable" data-sort="cost_code">
                   <span class="column-header-text">Cost Code</span>
                   <div class="sort-controls inline-sort">
@@ -2650,20 +2518,6 @@
                     <button class="sort-btn sort-desc-btn cc-sort-btn" data-sort="description" data-dir="desc" title="Sort descending">▼</button>
                   </div>
                 </th>
-                <th class="sortable number-col" data-sort="job_count">
-                  <span class="column-header-text">Jobs</span>
-                  <div class="sort-controls inline-sort">
-                    <button class="sort-btn sort-asc-btn cc-sort-btn" data-sort="job_count" data-dir="asc" title="Sort ascending">▲</button>
-                    <button class="sort-btn sort-desc-btn cc-sort-btn" data-sort="job_count" data-dir="desc" title="Sort descending">▼</button>
-                  </div>
-                </th>
-                <th class="sortable number-col" data-sort="entry_count">
-                  <span class="column-header-text">Entries</span>
-                  <div class="sort-controls inline-sort">
-                    <button class="sort-btn sort-asc-btn cc-sort-btn" data-sort="entry_count" data-dir="asc" title="Sort ascending">▲</button>
-                    <button class="sort-btn sort-desc-btn cc-sort-btn" data-sort="entry_count" data-dir="desc" title="Sort descending">▼</button>
-                  </div>
-                </th>
                 <th class="sortable number-col" data-sort="total_cost">
                   <span class="column-header-text">Total Cost</span>
                   <div class="sort-controls inline-sort">
@@ -2671,35 +2525,24 @@
                     <button class="sort-btn sort-desc-btn cc-sort-btn" data-sort="total_cost" data-dir="desc" title="Sort descending">▼</button>
                   </div>
                 </th>
-                <th class="sortable number-col" data-sort="avg_per_job">
-                  <span class="column-header-text">Avg/Job</span>
+                <th class="sortable number-col" data-sort="pct_of_revenue">
+                  <span class="column-header-text">% of Revenue</span>
                   <div class="sort-controls inline-sort">
-                    <button class="sort-btn sort-asc-btn cc-sort-btn" data-sort="avg_per_job" data-dir="asc" title="Sort ascending">▲</button>
-                    <button class="sort-btn sort-desc-btn cc-sort-btn" data-sort="avg_per_job" data-dir="desc" title="Sort descending">▼</button>
+                    <button class="sort-btn sort-asc-btn cc-sort-btn" data-sort="pct_of_revenue" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn cc-sort-btn" data-sort="pct_of_revenue" data-dir="desc" title="Sort descending">▼</button>
                   </div>
                 </th>
-                <th class="sortable number-col" data-sort="pct_of_total">
-                  <span class="column-header-text">% of Total</span>
-                  <div class="sort-controls inline-sort">
-                    <button class="sort-btn sort-asc-btn cc-sort-btn" data-sort="pct_of_total" data-dir="asc" title="Sort ascending">▲</button>
-                    <button class="sort-btn sort-desc-btn cc-sort-btn" data-sort="pct_of_total" data-dir="desc" title="Sort descending">▼</button>
-                  </div>
-                </th>
-                <th class="number-col">Distribution</th>
               </tr>
             </thead>
             <tbody id="costCodesTableBody">
-              <tr><td colspan="8" class="loading-cell">Loading cost code data...</td></tr>
+              <tr><td colspan="5" class="loading-cell">Loading cost code data...</td></tr>
             </tbody>
             <tfoot id="costCodesTableFoot">
               <tr class="totals-row">
-                <td colspan="2"><strong>Totals</strong></td>
-                <td class="number-col" id="ccTotalJobsCell">-</td>
-                <td class="number-col" id="ccTotalEntriesCell">-</td>
-                <td class="number-col" id="ccTotalCostCell">-</td>
-                <td class="number-col">-</td>
-                <td class="number-col">100%</td>
                 <td></td>
+                <td colspan="2"><strong>Totals</strong></td>
+                <td class="number-col" id="ccTotalCostCell">-</td>
+                <td class="number-col">100%</td>
               </tr>
             </tfoot>
           </table>
@@ -2716,55 +2559,6 @@
             <option value="100">100 per page</option>
             <option value="all">Show All</option>
           </select>
-        </div>
-
-        <!-- AI Analysis Button -->
-        <div class="ai-analysis-section">
-          <button class="ai-analysis-btn" id="ccAiAnalysisBtn">
-            <span class="ai-icon">🤖</span>
-            Analyze Cost Codes with AI
-          </button>
-        </div>
-
-        <!-- Drill-Down Modal for Cost Code Jobs -->
-        <div class="cc-modal-overlay hidden" id="ccDrilldownModal">
-          <div class="cc-modal">
-            <div class="cc-modal-header">
-              <h3><span id="ccModalTitle">Cost Code Details</span></h3>
-              <button class="cc-modal-close" id="ccModalClose">&times;</button>
-            </div>
-            <div class="cc-modal-summary">
-              <div class="cc-modal-stat">
-                <span class="cc-modal-stat-label">Total Cost</span>
-                <span class="cc-modal-stat-value" id="ccModalTotalCost">$0</span>
-              </div>
-              <div class="cc-modal-stat">
-                <span class="cc-modal-stat-label">Jobs</span>
-                <span class="cc-modal-stat-value" id="ccModalJobCount">0</span>
-              </div>
-              <div class="cc-modal-stat">
-                <span class="cc-modal-stat-label">Entries</span>
-                <span class="cc-modal-stat-value" id="ccModalEntryCount">0</span>
-              </div>
-            </div>
-            <div class="cc-modal-body">
-              <table class="cc-modal-table">
-                <thead>
-                  <tr>
-                    <th>Job #</th>
-                    <th>Description</th>
-                    <th>Client</th>
-                    <th>Project Manager</th>
-                    <th class="number-col">Entries</th>
-                    <th class="number-col">Cost</th>
-                  </tr>
-                </thead>
-                <tbody id="ccModalTableBody">
-                  <tr><td colspan="6" class="loading-cell">Loading...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       </section>
 

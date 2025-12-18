@@ -12585,14 +12585,134 @@ body.dark-mode .skeleton-text,
   border-bottom: none;
 }
 
-/* Clickable cost code row */
-.cc-clickable-row {
+/* Hierarchical cost code table */
+.cc-hierarchical-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cc-hierarchical-table th,
+.cc-hierarchical-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.cc-hierarchical-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.cc-expand-cell {
+  width: 40px;
+  text-align: center;
+}
+
+.cc-expand-icon {
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 12px;
+  user-select: none;
+}
+
+.cc-parent-row.expandable {
   cursor: pointer;
 }
 
-.cc-clickable-row:hover .cc-code-badge {
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(67, 56, 202, 0.2);
+.cc-parent-row.expandable:hover {
+  background: #f0f9ff;
+}
+
+.cc-parent-row.expanded {
+  background: #eff6ff;
+}
+
+.cc-vendor-row {
+  background: #f8fafc;
+}
+
+.cc-vendor-row.expandable {
+  cursor: pointer;
+}
+
+.cc-vendor-row.expandable:hover {
+  background: #e0f2fe;
+}
+
+.cc-vendor-row.expanded {
+  background: #dbeafe;
+}
+
+.cc-vendor-badge {
+  background: #e0e7ff;
+  color: #4338ca;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.cc-invoice-row {
+  background: #fefce8;
+}
+
+.cc-invoice-row td {
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.cc-filter-bar {
+  margin-bottom: 16px;
+}
+
+.cc-filter-bar .job-search-input {
+  max-width: 400px;
+}
+
+[data-theme="dark"] .cc-hierarchical-table th {
+  background: #1e293b;
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .cc-hierarchical-table td {
+  border-color: #334155;
+}
+
+[data-theme="dark"] .cc-parent-row.expandable:hover {
+  background: #1e3a5f;
+}
+
+[data-theme="dark"] .cc-parent-row.expanded {
+  background: #1e3a5f;
+}
+
+[data-theme="dark"] .cc-vendor-row {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .cc-vendor-row.expandable:hover {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .cc-vendor-row.expanded {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .cc-vendor-badge {
+  background: #312e81;
+  color: #a5b4fc;
+}
+
+[data-theme="dark"] .cc-invoice-row {
+  background: #1c1917;
+}
+
+[data-theme="dark"] .cc-invoice-row td {
+  border-color: #44403c;
+  color: #a8a29e;
 }
 
 /* Dark mode for new components */
