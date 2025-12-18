@@ -6127,7 +6127,7 @@ async function universalExportToPdf() {
 
 function universalExportToCsv() {
   const data = getReportData();
-  if (!data) return alert("Please navigate to a report view (Revenue, Account, Income Statement, or Balance Sheet) to export.");
+  if (!data) return alert("Please navigate to a supported report view to export CSV.");
   
   const view = getCurrentView();
   const filename = `ftg_${view}_${new Date().toISOString().split("T")[0]}.csv`;
@@ -6299,7 +6299,7 @@ async function universalExportToExcel() {
 
 function openEmailModal() {
   const data = getReportData();
-  if (!data) return alert("Please navigate to a report view (Revenue, Account, Income Statement, or Balance Sheet) to email.");
+  if (!data) return alert("Please navigate to a supported report view to send email.");
   
   const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   setElValue("emailSubject", `FTG Dashboard - ${data.title} - ${dateStr}`);
