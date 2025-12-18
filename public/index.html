@@ -2430,20 +2430,6 @@
         <div class="section-subtitle">Job Billing Status Analysis</div>
         <div class="data-as-of">Data as of: <span id="oubDataAsOf">-</span></div>
 
-        <!-- Filters -->
-        <div class="oub-filters" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
-          <div class="filter-group">
-            <label for="oubPmFilter" style="font-weight: 500; margin-right: 8px;">Project Manager:</label>
-            <select id="oubPmFilter" class="filter-select" style="min-width: 200px;">
-              <option value="">All Project Managers</option>
-            </select>
-          </div>
-          <div class="filter-group" style="flex: 1; max-width: 300px;">
-            <label for="oubJobSearch" style="font-weight: 500; margin-right: 8px;">Job #:</label>
-            <input type="text" id="oubJobSearch" class="search-input" placeholder="Search by job number..." style="width: 100%;">
-          </div>
-        </div>
-
         <!-- Key Metrics Section -->
         <div class="oub-key-metrics-section">
           <h3 class="metrics-section-header">Key Metrics</h3>
@@ -2501,6 +2487,20 @@
             <div class="oub-chart-wrapper">
               <canvas id="oubUnderbilledChart"></canvas>
             </div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="page-filter-bar">
+          <div class="filter-group">
+            <label for="oubPmFilter">PM:</label>
+            <select id="oubPmFilter" class="filter-select" style="min-width: 180px;">
+              <option value="">All Project Managers</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="oubJobSearch">Job #:</label>
+            <input type="text" id="oubJobSearch" class="filter-input" placeholder="Search job..." style="width: 120px;">
           </div>
         </div>
 
