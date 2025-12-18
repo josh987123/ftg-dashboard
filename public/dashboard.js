@@ -16532,6 +16532,8 @@ let oubSortField = 'over_under';
 let oubSortDir = 'asc';
 let oubInitialized = false;
 let oubBilledRevenueMap = new Map();
+let oubOverbilledChart = null;
+let oubUnderbilledChart = null;
 
 async function initOverUnderBilling() {
   if (oubInitialized && oubData.length > 0) {
@@ -16919,6 +16921,123 @@ function updateOubMetrics() {
   if (oubOverUnderCard) {
     oubOverUnderCard.classList.remove('positive', 'negative');
     oubOverUnderCard.classList.add(netOverUnder >= 0 ? 'positive' : 'negative');
+  }
+  
+  // Render the over/under charts
+  renderOubCharts();
+}
+
+function renderOubCharts() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDark ? '#e2e8f0' : '#374151';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  
+  // Get top 10 overbilled jobs (over_under > 0, sorted descending)
+  const overbilled = oubFiltered
+    .filter(j => j.over_under > 0)
+    .sort((a, b) => b.over_under - a.over_under)
+    .slice(0, 10);
+  
+  // Get top 10 underbilled jobs (over_under < 0, sorted by most underbilled)
+  const underbilled = oubFiltered
+    .filter(j => j.over_under < 0)
+    .sort((a, b) => a.over_under - b.over_under)
+    .slice(0, 10);
+  
+  // Render overbilled chart
+  const overbilledCanvas = document.getElementById('oubOverbilledChart');
+  if (overbilledCanvas) {
+    if (oubOverbilledChart) oubOverbilledChart.destroy();
+    
+    const ctx = overbilledCanvas.getContext('2d');
+    oubOverbilledChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: overbilled.map(j => j.job_no),
+        datasets: [{
+          label: 'Overbilled Amount',
+          data: overbilled.map(j => j.over_under),
+          backgroundColor: '#10b981',
+          borderRadius: 4,
+          barPercentage: 0.8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'x',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => formatCurrency(ctx.raw)
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: textColor, font: { size: 10 } },
+            grid: { display: false }
+          },
+          y: {
+            ticks: {
+              color: textColor,
+              font: { size: 10 },
+              callback: (val) => formatCurrencyCompact(val)
+            },
+            grid: { color: gridColor }
+          }
+        }
+      }
+    });
+  }
+  
+  // Render underbilled chart (show absolute values, red bars)
+  const underbilledCanvas = document.getElementById('oubUnderbilledChart');
+  if (underbilledCanvas) {
+    if (oubUnderbilledChart) oubUnderbilledChart.destroy();
+    
+    const ctx = underbilledCanvas.getContext('2d');
+    oubUnderbilledChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: underbilled.map(j => j.job_no),
+        datasets: [{
+          label: 'Underbilled Amount',
+          data: underbilled.map(j => Math.abs(j.over_under)),
+          backgroundColor: '#dc2626',
+          borderRadius: 4,
+          barPercentage: 0.8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'x',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => formatCurrency(ctx.raw)
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: textColor, font: { size: 10 } },
+            grid: { display: false }
+          },
+          y: {
+            ticks: {
+              color: textColor,
+              font: { size: 10 },
+              callback: (val) => formatCurrencyCompact(val)
+            },
+            grid: { color: gridColor }
+          }
+        }
+      }
+    });
   }
 }
 

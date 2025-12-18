@@ -13625,6 +13625,53 @@ body.dark-mode #overUnderBilling .search-input {
   }
 }
 
+/* Over/(Under) Billing Charts */
+.oub-charts-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.oub-chart-container {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+body.dark-mode .oub-chart-container {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.oub-chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+  text-align: center;
+}
+
+body.dark-mode .oub-chart-title {
+  color: #f1f5f9;
+}
+
+.oub-chart-wrapper {
+  height: 220px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .oub-charts-row {
+    flex-direction: column;
+  }
+  
+  .oub-chart-wrapper {
+    height: 180px;
+  }
+}
+
 /* Over/(Under) Billing Table Polish */
 #oubTable {
   border-collapse: collapse;
