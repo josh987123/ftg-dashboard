@@ -16587,7 +16587,7 @@ function renderPaymentsTableFromServer(payments, totals) {
         <td class="number-col">${formatCurrency(p.invoice_amount)}</td>
         <td class="number-col">${formatCurrency(p.paid_to_date)}</td>
         <td class="number-col">${formatCurrency(p.remaining_balance)}</td>
-        <td>${escapeHtml(p.status || '-')}</td>
+        <td class="${p.status === 'Paid' ? 'status-paid' : ''}">${escapeHtml(p.status || '-')}</td>
       </tr>
     `).join('');
     tbody.innerHTML = subtotalRow + dataRows;

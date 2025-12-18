@@ -11493,3 +11493,8 @@ body.dark-mode .skeleton-text,
 #paymentsTable .totals-row .collapsible-col {
   background-color: #e8ecf1;
 }
+
+#paymentsTable .status-paid {
+  background-color: #dcfce7;
+  color: #000000 !important;
+}
