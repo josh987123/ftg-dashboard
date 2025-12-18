@@ -15923,8 +15923,35 @@ let ccTrendChart = null;
 let ccQuickFilter = 'all';
 let ccFilteredActualsCache = [];
 
-function initCostCodes() {
+async function initCostCodes() {
   try {
+    // Load job data if not already loaded
+    if (!jobBudgetsData || jobBudgetsData.length === 0 || !jobActualsData || jobActualsData.length === 0) {
+      const resp = await fetch('data/financials_jobs.json');
+      const data = await resp.json();
+      
+      if (data.job_budgets && (!jobBudgetsData || jobBudgetsData.length === 0)) {
+        jobBudgetsData = (data.job_budgets || []).map(job => ({
+          ...job,
+          original_contract: parseFloat(job.original_contract) || 0,
+          tot_income_adj: parseFloat(job.tot_income_adj) || 0,
+          revised_contract: parseFloat(job.revised_contract) || 0,
+          original_cost: parseFloat(job.original_cost) || 0,
+          tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
+          revised_cost: parseFloat(job.revised_cost) || 0,
+          estimated_profit: (parseFloat(job.revised_contract) || 0) - (parseFloat(job.revised_cost) || 0)
+        }));
+      }
+      
+      if (data.job_actuals && (!jobActualsData || jobActualsData.length === 0)) {
+        jobActualsData = data.job_actuals || [];
+      }
+      
+      if (data.generated_at) {
+        jobsDataAsOf = new Date(data.generated_at).toLocaleDateString();
+      }
+    }
+    
     populateCCFilters();
     setupCCEventListeners();
     updateCostCodes();
