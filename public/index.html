@@ -2876,12 +2876,31 @@
         <h2>Payments</h2>
         <div class="data-as-of">Data as of: <span id="paymentsDataAsOf">-</span></div>
 
-        <!-- Search Bar and Column Picker -->
-        <div class="table-toolbar">
-          <div class="job-search-bar">
-            <input type="text" id="paymentsSearchInput" placeholder="Search by vendor, invoice, job, or project manager..." class="job-search-input">
-            <span class="job-search-icon">🔍</span>
+        <!-- Filter Bar -->
+        <div class="payments-filter-bar" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
+          <div class="filter-group">
+            <label for="payVendorSearch" style="font-weight: 500; margin-right: 8px;">Vendor:</label>
+            <input type="text" id="payVendorSearch" class="search-input" placeholder="Search vendor..." style="width: 150px;">
           </div>
+          <div class="filter-group">
+            <label for="payInvoiceSearch" style="font-weight: 500; margin-right: 8px;">Invoice #:</label>
+            <input type="text" id="payInvoiceSearch" class="search-input" placeholder="Search invoice..." style="width: 120px;">
+          </div>
+          <div class="filter-group">
+            <label for="payJobSearch" style="font-weight: 500; margin-right: 8px;">Job #:</label>
+            <input type="text" id="payJobSearch" class="search-input" placeholder="Search job..." style="width: 120px;">
+          </div>
+          <div class="filter-group">
+            <label for="payPmFilter" style="font-weight: 500; margin-right: 8px;">Project Manager:</label>
+            <select id="payPmFilter" class="filter-select" style="min-width: 180px;">
+              <option value="">All Project Managers</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Column Picker -->
+        <div class="table-toolbar">
+          <div></div>
           <div class="column-picker-container">
             <button class="column-picker-btn" id="paymentsColumnPickerBtn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

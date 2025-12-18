@@ -18972,7 +18972,10 @@ let paymentsPageSize = 25;
 let paymentsSortColumn = 'invoice_date';
 let paymentsSortDirection = 'desc';
 let paymentsColumnFilters = {};
-let paymentsSearchTerm = '';
+let paymentsVendorSearch = '';
+let paymentsInvoiceSearch = '';
+let paymentsJobSearch = '';
+let paymentsPmFilter = '';
 let paymentsTotal = 0;
 let paymentsTotalPages = 1;
 let paymentsFilterValuesCache = {};
@@ -19041,9 +19044,11 @@ function loadPaymentsPage() {
     sortDirection: paymentsSortDirection
   });
   
-  if (paymentsSearchTerm) {
-    params.set('search', paymentsSearchTerm);
-  }
+  // Add individual search filters
+  if (paymentsVendorSearch) params.set('vendor', paymentsVendorSearch);
+  if (paymentsInvoiceSearch) params.set('invoice', paymentsInvoiceSearch);
+  if (paymentsJobSearch) params.set('job', paymentsJobSearch);
+  if (paymentsPmFilter) params.set('pm', paymentsPmFilter);
   
   // Add column filters
   const activeFilters = {};
@@ -19202,13 +19207,44 @@ function formatPaymentDate(date) {
 }
 
 function initPaymentsEventHandlers() {
-  const searchInput = document.getElementById('paymentsSearchInput');
-  if (searchInput) {
-    searchInput.addEventListener('input', debounce(() => {
-      paymentsSearchTerm = searchInput.value.toLowerCase().trim();
+  // Vendor search filter
+  const vendorSearch = document.getElementById('payVendorSearch');
+  if (vendorSearch) {
+    vendorSearch.addEventListener('input', debounce(() => {
+      paymentsVendorSearch = vendorSearch.value.toLowerCase().trim();
       paymentsCurrentPage = 1;
       loadPaymentsPage();
     }, 400));
+  }
+  
+  // Invoice search filter
+  const invoiceSearch = document.getElementById('payInvoiceSearch');
+  if (invoiceSearch) {
+    invoiceSearch.addEventListener('input', debounce(() => {
+      paymentsInvoiceSearch = invoiceSearch.value.toLowerCase().trim();
+      paymentsCurrentPage = 1;
+      loadPaymentsPage();
+    }, 400));
+  }
+  
+  // Job search filter
+  const jobSearch = document.getElementById('payJobSearch');
+  if (jobSearch) {
+    jobSearch.addEventListener('input', debounce(() => {
+      paymentsJobSearch = jobSearch.value.toLowerCase().trim();
+      paymentsCurrentPage = 1;
+      loadPaymentsPage();
+    }, 400));
+  }
+  
+  // PM dropdown filter
+  const pmFilter = document.getElementById('payPmFilter');
+  if (pmFilter) {
+    pmFilter.addEventListener('change', () => {
+      paymentsPmFilter = pmFilter.value;
+      paymentsCurrentPage = 1;
+      loadPaymentsPage();
+    });
   }
   
   document.querySelectorAll('#paymentsTable .sort-btn').forEach(btn => {
@@ -19272,6 +19308,21 @@ function initPaymentsEventHandlers() {
   });
   
   initPaymentsColumnPicker();
+  populatePaymentsPmFilter();
+}
+
+function populatePaymentsPmFilter() {
+  // Fetch unique PM values from server
+  fetch('/api/payments/pms')
+    .then(r => r.json())
+    .then(pms => {
+      const pmSelect = document.getElementById('payPmFilter');
+      if (pmSelect && Array.isArray(pms)) {
+        pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
+          pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+      }
+    })
+    .catch(err => console.error('Error loading PM list:', err));
 }
 
 const paymentsColumnConfig = [

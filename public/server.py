@@ -3424,7 +3424,12 @@ def api_get_payments():
         page_size = min(request.args.get('pageSize', 25, type=int), 250)  # Cap at 250
         sort_column = request.args.get('sortColumn', 'invoice_date')
         sort_direction = request.args.get('sortDirection', 'desc')
-        search = request.args.get('search', '').lower().strip()
+        
+        # Individual filter parameters
+        vendor_filter = request.args.get('vendor', '').lower().strip()
+        invoice_filter = request.args.get('invoice', '').lower().strip()
+        job_filter = request.args.get('job', '').lower().strip()
+        pm_filter = request.args.get('pm', '').strip()
         
         # Validate sort column
         if sort_column not in PAYMENTS_VALID_COLUMNS:
@@ -3437,16 +3442,15 @@ def api_get_payments():
         except:
             column_filters = {}
         
-        # Apply search filter
-        if search:
-            payments = [p for p in payments if 
-                search in str(p.get('vendor', '')).lower() or
-                search in str(p.get('invoice_no', '')).lower() or
-                search in str(p.get('job_no', '')).lower() or
-                search in str(p.get('job_description', '')).lower() or
-                search in str(p.get('project_manager', '')).lower() or
-                search in str(p.get('status', '')).lower()
-            ]
+        # Apply individual search filters
+        if vendor_filter:
+            payments = [p for p in payments if vendor_filter in str(p.get('vendor', '')).lower()]
+        if invoice_filter:
+            payments = [p for p in payments if invoice_filter in str(p.get('invoice_no', '')).lower()]
+        if job_filter:
+            payments = [p for p in payments if job_filter in str(p.get('job_no', '')).lower()]
+        if pm_filter:
+            payments = [p for p in payments if str(p.get('project_manager', '')) == pm_filter]
         
         # Apply column filters (validate column names)
         for col, values in column_filters.items():
@@ -3516,6 +3520,28 @@ def api_get_payments_metrics():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/payments/pms', methods=['GET', 'OPTIONS'])
+def api_get_payments_pms():
+    """Get unique project manager values for filter dropdown"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = get_payments_data()
+        payments = data['payments']
+        
+        # Get unique PM values
+        pms = set()
+        for p in payments:
+            pm = p.get('project_manager', '')
+            if pm:
+                pms.add(pm)
+        
+        return jsonify(sorted(list(pms)))
+    except Exception as e:
+        print(f"[PAYMENTS] PMs error: {e}")
+        return jsonify([]), 500
 
 @app.route('/api/payments/filter-values', methods=['GET', 'OPTIONS'])
 def api_get_payments_filter_values():
