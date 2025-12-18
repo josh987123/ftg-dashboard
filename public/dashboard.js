@@ -19340,7 +19340,7 @@ function initPayments() {
   }
 }
 
-function loadPaymentsPage() {
+function loadPaymentsPage(retryCount = 0) {
   const loadingOverlay = document.getElementById('paymentsLoadingOverlay');
   if (loadingOverlay) loadingOverlay.classList.remove('hidden');
   
@@ -19369,7 +19369,10 @@ function loadPaymentsPage() {
   }
   
   fetch(`/api/payments?${params.toString()}`)
-    .then(r => r.json())
+    .then(r => {
+      if (!r.ok) throw new Error('Network response not ok');
+      return r.json();
+    })
     .then(data => {
       paymentsTotal = data.total || 0;
       paymentsTotalPages = data.totalPages || 1;
@@ -19378,6 +19381,11 @@ function loadPaymentsPage() {
     })
     .catch(err => {
       console.error('Error loading payments:', err);
+      // Retry up to 2 times with delay
+      if (retryCount < 2) {
+        setTimeout(() => loadPaymentsPage(retryCount + 1), 500);
+        return;
+      }
       const tbody = document.getElementById('paymentsTableBody');
       if (tbody) {
         tbody.innerHTML = `<tr><td colspan="9" class="error-cell">Error loading payment data. <button onclick="loadPaymentsPage()" class="retry-btn">Retry</button></td></tr>`;
@@ -19557,19 +19565,26 @@ function initPaymentsYearRangeSlider() {
   endSlider.onchange = () => loadTopVendorsChart();
 }
 
-function loadTopVendorsChart() {
+function loadTopVendorsChart(retryCount = 0) {
   const startSlider = document.getElementById('payYearStart');
   const endSlider = document.getElementById('payYearEnd');
-  const startYear = startSlider ? +startSlider.value : 2020;
+  const startYear = startSlider ? +startSlider.value : 2015;
   const endYear = endSlider ? +endSlider.value : 2025;
   
   fetch(`/api/payments/top-vendors?startYear=${startYear}&endYear=${endYear}`)
-    .then(r => r.json())
+    .then(r => {
+      if (!r.ok) throw new Error('Network response not ok');
+      return r.json();
+    })
     .then(data => {
       renderTopVendorsChart(data.vendors || []);
     })
     .catch(err => {
       console.error('Error loading top vendors:', err);
+      // Retry up to 2 times with delay
+      if (retryCount < 2) {
+        setTimeout(() => loadTopVendorsChart(retryCount + 1), 500);
+      }
     });
 }
 
@@ -19577,9 +19592,9 @@ function renderTopVendorsChart(vendors) {
   const canvas = document.getElementById('topVendorsChart');
   if (!canvas) return;
   
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const textColor = isDark ? '#e2e8f0' : '#374151';
-  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#374151';
+  const gridColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)';
   
   if (topVendorsChart) topVendorsChart.destroy();
   
