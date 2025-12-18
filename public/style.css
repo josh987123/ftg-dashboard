@@ -13706,7 +13706,7 @@ body.dark-mode #overUnderBilling .search-input {
 
 /* Payments Chart Section */
 .payments-chart-section {
-  width: 80%;
+  width: 50%;
   margin: 0 0 24px 0;
   background: #fff;
   border: 1px solid #e2e8f0;
@@ -13714,7 +13714,8 @@ body.dark-mode #overUnderBilling .search-input {
   padding: 20px;
 }
 
-body.dark-mode .payments-chart-section {
+body.dark-mode .payments-chart-section,
+[data-theme="dark"] .payments-chart-section {
   background: #1e293b;
   border-color: #334155;
 }
