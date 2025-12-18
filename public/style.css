@@ -13498,6 +13498,16 @@ body.dark-mode .skeleton-text,
   color: #000 !important;
 }
 
+#oubTable .totals-row {
+  border-top: 3px solid #3b82f6;
+  border-bottom: 3px solid #3b82f6;
+}
+
+#oubTable .totals-row td {
+  border-top: none !important;
+  border-bottom: none !important;
+}
+
 #oubTable .totals-row .oub-positive {
   background-color: #dcfce7 !important;
   color: #000 !important;
@@ -13517,6 +13527,11 @@ body.dark-mode .skeleton-text,
 [data-theme="dark"] .oub-negative {
   background-color: #fee2e2 !important;
   color: #000 !important;
+}
+
+[data-theme="dark"] #oubTable .totals-row {
+  border-top-color: #60a5fa;
+  border-bottom-color: #60a5fa;
 }
 
 [data-theme="dark"] #oubTable .totals-row .oub-positive,
