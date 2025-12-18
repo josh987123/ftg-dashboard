@@ -289,6 +289,7 @@ def init_database():
             ('cost_codes', 'Cost Codes', 'View cost code analysis and breakdowns'),
             ('missing_budgets', 'Missing Budgets', 'View jobs with missing budget data'),
             ('payments', 'Payments', 'View AP invoices and payment status'),
+            ('ap_aging', 'AP Aging', 'View AP aging report by vendor'),
             ('job_analytics', 'Job Analytics', 'View job performance metrics'),
                         ('receivables', 'Receivables/Payables', 'View AR/AP tracking'),
             ('admin', 'Admin', 'Access user management and settings')
@@ -329,7 +330,7 @@ def init_database():
         
         # Project Manager role gets job reports and payments
         if 'project_manager' in roles:
-            pm_permissions = ['job_overview', 'job_budgets', 'job_actuals', 'over_under_billing', 'cost_codes', 'missing_budgets', 'payments', 'job_analytics']
+            pm_permissions = ['job_overview', 'job_budgets', 'job_actuals', 'over_under_billing', 'cost_codes', 'missing_budgets', 'payments', 'ap_aging', 'job_analytics']
             for page_key in pm_permissions:
                 if page_key in perms:
                     cur.execute("""
@@ -3676,6 +3677,100 @@ def api_get_top_vendors():
         
     except Exception as e:
         print(f"[PAYMENTS] Top vendors error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'vendors': [], 'error': str(e)}), 500
+
+@app.route('/api/ap-aging', methods=['GET', 'OPTIONS'])
+def api_get_ap_aging():
+    """Get AP Aging report data aggregated by vendor"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        # Load AP invoices data
+        invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ap_invoices.json')
+        with open(invoices_path, 'r', encoding='utf-8-sig') as f:
+            invoices_json = json.load(f)
+        
+        invoices = invoices_json.get('invoices', [])
+        
+        # Aggregate by vendor
+        vendor_data = {}
+        vendor_id_counter = 1
+        
+        for inv in invoices:
+            vendor = (inv.get('vendor_name', '') or '').strip()
+            if not vendor or vendor in ('-', '--', '---', '.', ''):
+                continue
+            
+            # Skip fully paid invoices (remaining_balance = 0 and no retainage)
+            remaining = float(inv.get('remaining_balance', 0) or 0)
+            retainage = float(inv.get('retainage_amount', 0) or 0)
+            
+            if remaining == 0 and retainage == 0:
+                continue  # Fully paid, skip
+            
+            # Initialize vendor if not exists
+            if vendor not in vendor_data:
+                vendor_data[vendor] = {
+                    'vendor_id': vendor_id_counter,
+                    'vendor_name': vendor,
+                    'total_due': 0,
+                    'current': 0,  # 0-30 days
+                    'days_31_60': 0,
+                    'days_61_90': 0,
+                    'days_90_plus': 0,
+                    'retainage': 0
+                }
+                vendor_id_counter += 1
+            
+            vd = vendor_data[vendor]
+            
+            # Add retainage separately
+            vd['retainage'] += retainage
+            
+            # Calculate amount due excluding retainage
+            amount_due_excl_ret = remaining - retainage
+            
+            if amount_due_excl_ret > 0:
+                # Determine aging bucket based on days_outstanding
+                days = int(inv.get('days_outstanding', 0) or 0)
+                
+                if days <= 30:
+                    vd['current'] += amount_due_excl_ret
+                elif days <= 60:
+                    vd['days_31_60'] += amount_due_excl_ret
+                elif days <= 90:
+                    vd['days_61_90'] += amount_due_excl_ret
+                else:
+                    vd['days_90_plus'] += amount_due_excl_ret
+            
+            # Total due is remaining balance (includes retainage)
+            vd['total_due'] += remaining
+        
+        # Convert to list and sort by total due descending
+        vendors_list = sorted(vendor_data.values(), key=lambda x: x['total_due'], reverse=True)
+        
+        # Calculate totals
+        totals = {
+            'total_due': sum(v['total_due'] for v in vendors_list),
+            'current': sum(v['current'] for v in vendors_list),
+            'days_31_60': sum(v['days_31_60'] for v in vendors_list),
+            'days_61_90': sum(v['days_61_90'] for v in vendors_list),
+            'days_90_plus': sum(v['days_90_plus'] for v in vendors_list),
+            'retainage': sum(v['retainage'] for v in vendors_list)
+        }
+        
+        return jsonify({
+            'success': True,
+            'vendors': vendors_list,
+            'totals': totals,
+            'count': len(vendors_list)
+        })
+        
+    except Exception as e:
+        print(f"[AP AGING] Error: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'vendors': [], 'error': str(e)}), 500

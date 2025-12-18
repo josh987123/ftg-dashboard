@@ -553,6 +553,7 @@
               <li class="nav-item nav-child" data-section="cashReports">Cash Balances</li>
               <li class="nav-item nav-child" data-section="accounts">Account Detail</li>
               <li class="nav-item nav-child" data-section="payments">Payments</li>
+              <li class="nav-item nav-child" data-section="apAging">AP Aging</li>
               <li class="nav-item nav-child placeholder" data-section="receivablesPayables">Receivables/Payables</li>
             </ul>
           </li>
@@ -3249,6 +3250,100 @@
               <div class="loading-spinner">Loading transactions...</div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           AP AGING REPORT
+      ============================================================= -->
+      <section id="apAging" class="dashboard-section">
+        <h2>AP Aging Report</h2>
+        <div class="data-as-of">Data as of: <span id="apAgingDataAsOf">-</span></div>
+
+        <!-- Summary Metrics -->
+        <div class="ap-aging-summary">
+          <div class="summary-tile">
+            <div class="tile-label">Total Outstanding</div>
+            <div class="tile-value" id="apAgingTotalDue">-</div>
+          </div>
+          <div class="summary-tile">
+            <div class="tile-label">Current (0-30)</div>
+            <div class="tile-value" id="apAgingCurrent">-</div>
+          </div>
+          <div class="summary-tile">
+            <div class="tile-label">31-60 Days</div>
+            <div class="tile-value" id="apAging31to60">-</div>
+          </div>
+          <div class="summary-tile">
+            <div class="tile-label">61-90 Days</div>
+            <div class="tile-value" id="apAging61to90">-</div>
+          </div>
+          <div class="summary-tile">
+            <div class="tile-label">90+ Days</div>
+            <div class="tile-value negative" id="apAging90Plus">-</div>
+          </div>
+          <div class="summary-tile">
+            <div class="tile-label">Retainage</div>
+            <div class="tile-value" id="apAgingRetainage">-</div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="page-filter-bar">
+          <div class="filter-group">
+            <label for="apAgingSearch">Search:</label>
+            <input type="text" id="apAgingSearch" class="filter-input" placeholder="Search vendor..." style="width: 200px;">
+          </div>
+        </div>
+
+        <!-- AP Aging Table -->
+        <div class="job-table-container">
+          <div class="loading-overlay hidden" id="apAgingLoadingOverlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading...</div>
+          </div>
+          <table class="job-budgets-table" id="apAgingTable">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="vendor_id">Vendor #</th>
+                <th class="sortable" data-sort="vendor_name">Vendor Name</th>
+                <th class="sortable number-col" data-sort="total_due">Total Due</th>
+                <th class="sortable number-col" data-sort="current">0-30 Days</th>
+                <th class="sortable number-col" data-sort="days_31_60">31-60 Days</th>
+                <th class="sortable number-col" data-sort="days_61_90">61-90 Days</th>
+                <th class="sortable number-col" data-sort="days_90_plus">90+ Days</th>
+                <th class="sortable number-col" data-sort="retainage">Retainage</th>
+              </tr>
+            </thead>
+            <tbody id="apAgingTableBody">
+              <tr><td colspan="8" class="loading-cell">Loading AP aging data...</td></tr>
+            </tbody>
+            <tfoot id="apAgingTableFoot">
+              <tr class="totals-row">
+                <td colspan="2"><strong>Totals</strong></td>
+                <td class="number-col" id="apAgingFootTotal">-</td>
+                <td class="number-col" id="apAgingFootCurrent">-</td>
+                <td class="number-col" id="apAgingFoot31to60">-</td>
+                <td class="number-col" id="apAgingFoot61to90">-</td>
+                <td class="number-col" id="apAgingFoot90Plus">-</td>
+                <td class="number-col" id="apAgingFootRetainage">-</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="job-pagination" id="apAgingPagination">
+          <button id="apAgingPrevPage" class="pagination-btn" disabled>← Previous</button>
+          <span id="apAgingPageInfo" class="page-info">Page 1 of 1</span>
+          <button id="apAgingNextPage" class="pagination-btn" disabled>Next →</button>
+          <select id="apAgingPageSize" class="page-size-select">
+            <option value="25" selected>25 per page</option>
+            <option value="50">50 per page</option>
+            <option value="100">100 per page</option>
+            <option value="250">250 per page</option>
+          </select>
+          <span id="apAgingCount" class="record-count"></span>
         </div>
       </section>
 
