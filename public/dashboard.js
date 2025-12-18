@@ -3761,7 +3761,8 @@ function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend,
       borderDash: [5, 5],
       fill: false,
       pointRadius: 0,
-      tension: 0
+      tension: 0,
+      order: 0
     });
   }
   
@@ -7281,6 +7282,7 @@ function updateRevenueView(data) {
         borderDash: [5, 5],
         pointRadius: 0,
         tension: 0,
+        order: 0,
         datalabels: { display: false }
       });
     });
@@ -7997,6 +7999,7 @@ function updateAccountView(data) {
           borderDash: [5, 5],
           pointRadius: 0,
           tension: 0,
+          order: 0,
           datalabels: { display: false }
         });
       }
