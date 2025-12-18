@@ -10023,50 +10023,50 @@ body.dark-mode .donut-legend-value {
   }
 }
 
-/* Child nav items in Financials and Jobs - dull dark green theme */
+/* Child nav items in Financials and Jobs - true dark green theme */
 #navFinancialStatementsChildren .nav-child,
 #navJobsChildren .nav-child {
-  background: #d1e7dd;
-  border-left: 3px solid #4a7c59;
-  color: #2d4a3e;
+  background: #e0e8d8;
+  border-left: 3px solid #4a5d23;
+  color: #3a4a2a;
   opacity: 1;
   font-weight: 500;
 }
 
 #navFinancialStatementsChildren .nav-child:hover,
 #navJobsChildren .nav-child:hover {
-  background: #b8d4c8;
-  color: #1f3d32;
+  background: #cdd8c0;
+  color: #2d3a1f;
 }
 
 #navFinancialStatementsChildren .nav-child.active,
 #navJobsChildren .nav-child.active {
-  background: #9fc5b0;
-  border-left-color: #3d6b4f;
-  color: #1a3328;
+  background: #b8c8a0;
+  border-left-color: #3d4d1c;
+  color: #252f18;
   font-weight: 600;
 }
 
-/* Dark mode adjustments - dull dark green theme */
+/* Dark mode adjustments - true dark green theme */
 body.dark-mode #navFinancialStatementsChildren .nav-child,
 body.dark-mode #navJobsChildren .nav-child {
-  background: #2d4a3e;
-  border-left-color: #5a9a6e;
-  color: #d1e7dd;
+  background: #3a4a2a;
+  border-left-color: #6b8b3a;
+  color: #e0e8d8;
   opacity: 1;
   font-weight: 500;
 }
 
 body.dark-mode #navFinancialStatementsChildren .nav-child:hover,
 body.dark-mode #navJobsChildren .nav-child:hover {
-  background: #3a5f4f;
-  color: #e8f5ed;
+  background: #4a5d35;
+  color: #f0f5e8;
 }
 
 body.dark-mode #navFinancialStatementsChildren .nav-child.active,
 body.dark-mode #navJobsChildren .nav-child.active {
-  background: #4a7c59;
-  border-left-color: #7bc68e;
+  background: #5a7030;
+  border-left-color: #8ab050;
   color: #ffffff;
   font-weight: 600;
 }
