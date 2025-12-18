@@ -186,28 +186,16 @@ function applyMyPmViewFilters() {
     }
   });
   
-  // Column-based filters (Job Actuals)
-  if (typeof jobActualsColumnFilters !== 'undefined') {
+  // Job Actuals PM dropdown filter
+  const jaPmSelect = document.getElementById('jaPmFilter');
+  if (jaPmSelect) {
     if (enabled && pmName) {
-      jobActualsColumnFilters['project_manager_name'] = new Set([pmName]);
-      // Update dropdown checkboxes
-      const dropdown = document.querySelector('#jobActualsTable .ja-filter-dropdown[data-filter="project_manager_name"]');
-      const filterBtn = document.querySelector('#jobActualsTable .ja-filter-btn[data-filter="project_manager_name"]');
-      if (dropdown) {
-        dropdown.querySelectorAll('.filter-option input').forEach(cb => {
-          cb.checked = (cb.value === pmName);
-        });
+      const option = Array.from(jaPmSelect.options).find(opt => opt.value === pmName);
+      if (option) {
+        jaPmSelect.value = pmName;
       }
-      if (filterBtn) filterBtn.classList.add('has-filter');
     } else {
-      delete jobActualsColumnFilters['project_manager_name'];
-      // Check all in dropdown
-      const dropdown = document.querySelector('#jobActualsTable .ja-filter-dropdown[data-filter="project_manager_name"]');
-      const filterBtn = document.querySelector('#jobActualsTable .ja-filter-btn[data-filter="project_manager_name"]');
-      if (dropdown) {
-        dropdown.querySelectorAll('.filter-option input').forEach(cb => cb.checked = true);
-      }
-      if (filterBtn) filterBtn.classList.remove('has-filter');
+      jaPmSelect.value = '';
     }
     if (typeof filterJobActuals === 'function') {
       try { filterJobActuals(); } catch(e) { console.log('Job Actuals filter not ready'); }
@@ -15167,6 +15155,7 @@ function setupJobActualsEventListeners() {
   document.getElementById('jaStatusInactive')?.addEventListener('change', filterJobActuals);
   document.getElementById('jaStatusClosed')?.addEventListener('change', filterJobActuals);
   document.getElementById('jaStatusOverhead')?.addEventListener('change', filterJobActuals);
+  document.getElementById('jaPmFilter')?.addEventListener('change', filterJobActuals);
   
   const searchInput = document.getElementById('jaSearchInput');
   let searchTimeout;
@@ -15328,20 +15317,17 @@ async function loadJobActualsData() {
     initJobActualsColumnFilters();
     updateJobActualsSortIndicators();
     
-    // Apply My PM View to column filters (sync, after checkboxes exist)
+    // Populate PM filter dropdown
+    populateJaPmFilter();
+    
+    // Apply My PM View to PM dropdown (sync, after dropdown is populated)
     if (getMyPmViewEnabled() && isUserProjectManager()) {
       const pmName = getCurrentUserPmName();
-      if (pmName) {
-        const dropdown = document.querySelector('#jobActualsTable .ja-filter-dropdown[data-filter="project_manager_name"]');
-        const filterBtn = document.querySelector('#jobActualsTable .ja-filter-btn[data-filter="project_manager_name"]');
-        if (dropdown) {
-          // Uncheck all, check only PM
-          dropdown.querySelectorAll('.filter-option input').forEach(cb => {
-            cb.checked = (cb.value === pmName);
-          });
-          // Set the column filter
-          jobActualsColumnFilters['project_manager_name'] = new Set([pmName]);
-          if (filterBtn) filterBtn.classList.add('has-filter');
+      const pmSelect = document.getElementById('jaPmFilter');
+      if (pmName && pmSelect) {
+        const option = Array.from(pmSelect.options).find(opt => opt.value === pmName);
+        if (option) {
+          pmSelect.value = pmName;
         }
       }
     }
@@ -15362,7 +15348,7 @@ async function loadJobActualsData() {
 }
 
 function initJobActualsColumnFilters() {
-  const filterColumns = ['job_no', 'job_description', 'customer_name', 'job_status', 'project_manager_name'];
+  const filterColumns = ['job_no', 'job_description', 'customer_name', 'job_status'];
   
   filterColumns.forEach(col => {
     const dropdown = document.querySelector(`#jobActualsTable .ja-filter-dropdown[data-filter="${col}"]`);
@@ -15513,6 +15499,7 @@ function filterJobActuals() {
   const showInactive = document.getElementById('jaStatusInactive')?.checked;
   const showClosed = document.getElementById('jaStatusClosed')?.checked;
   const showOverhead = document.getElementById('jaStatusOverhead')?.checked;
+  const pmFilter = document.getElementById('jaPmFilter')?.value || '';
   
   const searchTerm = (document.getElementById('jaSearchInput')?.value || '').toLowerCase().trim();
   
@@ -15525,6 +15512,9 @@ function filterJobActuals() {
   jobActualsFiltered = jobActualsData.filter(job => {
     // Status filter from config panel
     if (allowedStatuses.length > 0 && !allowedStatuses.includes(job.job_status)) return false;
+    
+    // PM filter from config panel
+    if (pmFilter && job.project_manager_name !== pmFilter) return false;
     
     // Search filter
     if (searchTerm) {
@@ -15578,8 +15568,13 @@ function sortJobActuals() {
 }
 
 function updateJobActualsSummaryMetrics() {
-  // Filter to Active jobs only for key metrics
-  const activeJobs = jobActualsData.filter(j => j.job_status === 'A');
+  // Filter to Active jobs only for key metrics, also respect PM filter
+  const pmFilter = document.getElementById('jaPmFilter')?.value || '';
+  const activeJobs = jobActualsData.filter(j => {
+    if (j.job_status !== 'A') return false;
+    if (pmFilter && j.project_manager_name !== pmFilter) return false;
+    return true;
+  });
   const totalJobs = activeJobs.length;
   const totalBilledRevenue = activeJobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
   const totalEarnedRevenue = activeJobs.reduce((sum, j) => sum + j.earned_revenue, 0);
@@ -15604,6 +15599,29 @@ function updateJobActualsSummaryMetrics() {
 
 function renderJobActualsBreakdowns() {
   // Donut charts removed per user request
+}
+
+function populateJaPmFilter() {
+  const pms = [...new Set(jobActualsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+  const pmSelect = document.getElementById('jaPmFilter');
+  if (!pmSelect) return;
+  
+  // Save current value
+  const currentValue = pmSelect.value;
+  
+  // Clear and repopulate
+  pmSelect.innerHTML = '<option value="">All Project Managers</option>';
+  pms.forEach(pm => {
+    const option = document.createElement('option');
+    option.value = pm;
+    option.textContent = pm;
+    pmSelect.appendChild(option);
+  });
+  
+  // Restore value if still valid
+  if (currentValue && pms.includes(currentValue)) {
+    pmSelect.value = currentValue;
+  }
 }
 
 function renderJaPmDonutChart() {
