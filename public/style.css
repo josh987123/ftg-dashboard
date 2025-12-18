@@ -11869,3 +11869,400 @@ body.dark-mode .skeleton-text,
 #paymentsTable .totals-row .retention-col {
   background-color: #e8ecf1;
 }
+
+/* ============================================================
+   COST CODE ANALYSIS STYLES
+============================================================ */
+.cc-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.cc-metric-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.cc-metric-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.cc-metric-card.highlight {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.cc-metric-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.cc-metric-card.highlight .cc-metric-label {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.cc-metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.cc-metric-card.highlight .cc-metric-value {
+  color: white;
+  font-size: 22px;
+}
+
+.cc-metric-sub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 4px;
+}
+
+.cc-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.cc-chart-container {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.cc-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cc-chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.cc-chart-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.cc-chart-wrapper {
+  height: 300px;
+  position: relative;
+}
+
+.cc-breakdown-section {
+  margin-bottom: 24px;
+}
+
+.cc-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.cc-breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.cc-breakdown-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cc-breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.cc-breakdown-header h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.cc-breakdown-toggle {
+  color: #6b7280;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.cc-breakdown-body {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cc-breakdown-body.collapsed {
+  display: none;
+}
+
+.cc-breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.cc-breakdown-table th,
+.cc-breakdown-table td {
+  padding: 10px 16px;
+  text-align: left;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.cc-breakdown-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #4b5563;
+  position: sticky;
+  top: 0;
+}
+
+.cc-breakdown-table td.number-col,
+.cc-breakdown-table th.number-col {
+  text-align: right;
+}
+
+.cc-breakdown-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.cc-breakdown-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.distribution-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.distribution-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.distribution-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.distribution-pct {
+  font-size: 12px;
+  color: #6b7280;
+  min-width: 40px;
+  text-align: right;
+}
+
+.filter-select.compact {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.radio-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+  accent-color: #3b82f6;
+}
+
+#costCodesTable .totals-row {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+#costCodesTable .totals-row td {
+  border-top: 2px solid #cbd5e1;
+}
+
+.cc-cost-positive {
+  color: #10b981;
+}
+
+.cc-cost-negative {
+  color: #dc2626;
+}
+
+.ai-analysis-section {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.ai-analysis-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ai-analysis-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.ai-analysis-btn:active {
+  transform: translateY(0);
+}
+
+.ai-icon {
+  font-size: 18px;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .cc-metric-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .cc-metric-label {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .cc-metric-value {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .cc-chart-container,
+[data-theme="dark"] .cc-breakdown-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .cc-chart-title,
+[data-theme="dark"] .cc-section-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .cc-breakdown-header {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .cc-breakdown-header h4 {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .cc-breakdown-table th {
+  background: #0f172a;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .cc-breakdown-table td {
+  border-color: #334155;
+}
+
+[data-theme="dark"] .cc-breakdown-table tbody tr:hover {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .distribution-bar-bg {
+  background: #334155;
+}
+
+[data-theme="dark"] #costCodesTable .totals-row {
+  background: #0f172a;
+}
+
+[data-theme="dark"] #costCodesTable .totals-row td {
+  border-top-color: #475569;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .cc-metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .cc-metric-card {
+    padding: 14px;
+  }
+  
+  .cc-metric-value {
+    font-size: 22px;
+  }
+  
+  .cc-metric-card.highlight .cc-metric-value {
+    font-size: 18px;
+  }
+  
+  .cc-charts-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .cc-chart-wrapper {
+    height: 250px;
+  }
+  
+  .cc-breakdown-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .cc-chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .cc-breakdown-table th,
+  .cc-breakdown-table td {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
