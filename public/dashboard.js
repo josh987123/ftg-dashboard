@@ -1770,15 +1770,27 @@ async function performJobActualsAiAnalysis() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({statementData, periodInfo: 'Job Actuals Analysis'})
     });
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMsg = `Server error (${response.status})`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMsg = errorJson.error || errorMsg;
+      } catch (parseErr) {
+        if (errorText) errorMsg = errorText;
+      }
+      content.innerHTML = `<div style="color: #dc2626;">Error: ${errorMsg}</div>`;
+      return;
+    }
     const result = await response.json();
     if (result.success) {
       content.innerHTML = formatMarkdown(result.analysis);
       panel.classList.add('has-analysis');
     } else {
-      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error || 'Unknown error'}</div>`;
     }
   } catch (e) {
-    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
+    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message || 'Failed to analyze. Please try again.'}</div>`;
   } finally {
     btn.disabled = false;
     btn.textContent = 'Run Analysis';
