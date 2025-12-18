@@ -16503,6 +16503,9 @@ function renderCCTable() {
     return;
   }
   
+  // Calculate total cost for the filtered data to use for percentage calculation
+  const filteredTotalCost = costCodeFiltered.reduce((sum, item) => sum + item.total_cost, 0);
+  
   let displayData;
   let totalPages;
   
@@ -16516,16 +16519,19 @@ function renderCCTable() {
     totalPages = Math.ceil(costCodeFiltered.length / ccPageSize);
   }
   
-  tbody.innerHTML = displayData.map(item => `
+  tbody.innerHTML = displayData.map(item => {
+    // Calculate percentage as portion of filtered total
+    const pctOfFilteredTotal = filteredTotalCost > 0 ? (item.total_cost / filteredTotalCost) * 100 : 0;
+    return `
     <tr>
       <td>${escapeHtml(item.job_no)}</td>
       <td>${escapeHtml(item.job_description)}</td>
       <td><span class="cc-code-badge">${escapeHtml(item.cost_code)}</span></td>
       <td>${escapeHtml(item.description)}</td>
       <td class="number-col">${formatCurrency(item.total_cost)}</td>
-      <td class="number-col">${item.pct_of_revenue.toFixed(2)}%</td>
+      <td class="number-col">${pctOfFilteredTotal.toFixed(2)}%</td>
     </tr>
-  `).join('');
+  `}).join('');
   
   updateCCPagination(costCodeFiltered.length);
   updateCCTableTotals(costCodeFiltered);
@@ -16652,18 +16658,16 @@ function updateCCPagination(total) {
 
 function updateCCTableTotals(data) {
   let totalCost = 0;
-  let totalPct = 0;
   
   data.forEach(cc => {
     totalCost += cc.total_cost;
-    totalPct += cc.pct_of_revenue || 0;
   });
   
   const totalCostCell = document.getElementById('ccTotalCostCell');
   if (totalCostCell) totalCostCell.textContent = formatCurrency(totalCost);
   
   const totalPctCell = document.getElementById('ccTotalPctCell');
-  if (totalPctCell) totalPctCell.textContent = totalPct.toFixed(2) + '%';
+  if (totalPctCell) totalPctCell.textContent = '100.00%';
 }
 
 function extractCostCodesData() {
