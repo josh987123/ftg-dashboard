@@ -1183,7 +1183,7 @@ function initNavigation() {
       
       // Auto-expand Jobs if child is clicked
       if (item.classList.contains("nav-child") && jobsParent && jobsChildren) {
-        const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'payments', 'jobAnalytics'];
+        const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'missingBudgets', 'payments', 'jobAnalytics'];
         if (jobsChildItems.includes(id)) {
           jobsParent.classList.add("expanded");
           jobsChildren.classList.add("expanded");
@@ -16221,7 +16221,6 @@ const sectionToPermission = {
   'jobOverview': 'job_overview',
   'jobBudgets': 'job_budgets',
   'jobActuals': 'job_actuals',
-  'costDetail': 'cost_detail',
   'missingBudgets': 'missing_budgets',
   'cashReports': 'cash_balances',
   'admin': 'admin'
@@ -16230,7 +16229,7 @@ const sectionToPermission = {
 // Order of sections for default page selection
 const sectionOrder = [
   'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
-  'cashReports', 'accounts', 'receivablesPayables', 'jobOverview', 'jobBudgets', 'jobActuals', 'costDetail', 'missingBudgets', 'jobAnalytics'
+  'cashReports', 'accounts', 'receivablesPayables', 'jobOverview', 'jobBudgets', 'jobActuals', 'missingBudgets', 'jobAnalytics'
 ];
 
 // Check permissions and show/hide nav items based on user role
