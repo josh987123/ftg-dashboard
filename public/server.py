@@ -270,8 +270,8 @@ def init_database():
             ('job_overview', 'Job Overview', 'View job summary metrics and charts'),
             ('job_budgets', 'Budgets', 'View job budget tracking'),
             ('job_actuals', 'Actuals', 'View job actuals and earned revenue'),
-            ('cost_detail', 'Cost Detail', 'View job cost details'),
             ('missing_budgets', 'Missing Budgets', 'View jobs with missing budget data'),
+            ('payments', 'Payments', 'View AP invoices and payment status'),
             ('job_analytics', 'Job Analytics', 'View job performance metrics'),
                         ('receivables', 'Receivables/Payables', 'View AR/AP tracking'),
             ('admin', 'Admin', 'Access user management and settings')
@@ -3292,6 +3292,15 @@ def api_get_payments():
         except Exception as sort_err:
             print(f"[PAYMENTS] Sort error: {sort_err}")
         
+        # Calculate totals for all filtered data
+        totals = {
+            'non_retention': sum(p.get('non_retention', 0) for p in payments),
+            'retention': sum(p.get('retention', 0) for p in payments),
+            'invoice_amount': sum(p.get('invoice_amount', 0) for p in payments),
+            'paid_to_date': sum(p.get('paid_to_date', 0) for p in payments),
+            'remaining_balance': sum(p.get('remaining_balance', 0) for p in payments)
+        }
+        
         # Paginate
         total = len(payments)
         start_idx = max(0, (page - 1) * page_size)
@@ -3302,6 +3311,7 @@ def api_get_payments():
             'success': True,
             'payments': page_data,
             'total': total,
+            'totals': totals,
             'page': page,
             'pageSize': page_size,
             'totalPages': max(1, (total + page_size - 1) // page_size)

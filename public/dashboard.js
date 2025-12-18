@@ -16520,7 +16520,7 @@ function loadPaymentsPage() {
     .then(data => {
       paymentsTotal = data.total || 0;
       paymentsTotalPages = data.totalPages || 1;
-      renderPaymentsTableFromServer(data.payments || []);
+      renderPaymentsTableFromServer(data.payments || [], data.totals || {});
       if (loadingOverlay) loadingOverlay.classList.add('hidden');
     })
     .catch(err => {
@@ -16553,16 +16553,28 @@ function updatePaymentsKeyMetricsFromServer(metrics) {
 
 let paymentsColumnsExpanded = false;
 
-function renderPaymentsTableFromServer(payments) {
+function renderPaymentsTableFromServer(payments, totals) {
   const tbody = document.getElementById('paymentsTableBody');
   if (!tbody) return;
   
   const hiddenClass = paymentsColumnsExpanded ? '' : 'hidden';
+  totals = totals || {};
+  
+  // Subtotal row (appears first, after header)
+  const subtotalRow = `<tr class="totals-row">
+    <td colspan="6"><strong>Totals (${paymentsTotal.toLocaleString()} invoices)</strong></td>
+    <td class="number-col collapsible-col ${hiddenClass}" data-group="invoice_amount"><strong>${formatCurrency(totals.non_retention || 0)}</strong></td>
+    <td class="number-col collapsible-col ${hiddenClass}" data-group="invoice_amount"><strong>${formatCurrency(totals.retention || 0)}</strong></td>
+    <td class="number-col"><strong>${formatCurrency(totals.invoice_amount || 0)}</strong></td>
+    <td class="number-col"><strong>${formatCurrency(totals.paid_to_date || 0)}</strong></td>
+    <td class="number-col"><strong>${formatCurrency(totals.remaining_balance || 0)}</strong></td>
+    <td></td>
+  </tr>`;
   
   if (payments.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="12" class="no-data-cell">No invoices found</td></tr>';
+    tbody.innerHTML = subtotalRow + '<tr><td colspan="12" class="no-data-cell">No invoices found</td></tr>';
   } else {
-    tbody.innerHTML = payments.map(p => `
+    const dataRows = payments.map(p => `
       <tr>
         <td>${escapeHtml(p.vendor || '-')}</td>
         <td>${escapeHtml(p.invoice_no || '-')}</td>
@@ -16578,6 +16590,7 @@ function renderPaymentsTableFromServer(payments) {
         <td>${escapeHtml(p.status || '-')}</td>
       </tr>
     `).join('');
+    tbody.innerHTML = subtotalRow + dataRows;
   }
   
   const pageInfo = document.getElementById('paymentsPageInfo');
