@@ -6030,7 +6030,8 @@ async function universalExportToPdf() {
   loadingOverlay.querySelector('.pdf-loading-content').style.cssText = 'background:#fff;padding:30px 50px;border-radius:12px;text-align:center;font-size:16px;color:#1f2937;';
   document.body.appendChild(loadingOverlay);
   
-  const elementsToHide = visibleSection.querySelectorAll('.config-panel, .config-header, .config-body, .ai-analysis-panel:not(.has-analysis), .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn');
+  // Hide UI elements that shouldn't appear in the PDF
+  const elementsToHide = visibleSection.querySelectorAll('.config-panel, .config-header, .config-body, .ai-analysis-panel:not(.has-analysis), .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay, .loading-spinner, [class*="LoadingOverlay"]');
   const hiddenElements = [];
   elementsToHide.forEach(el => {
     if (el.style.display !== 'none') {
@@ -6039,8 +6040,17 @@ async function universalExportToPdf() {
     }
   });
   
+  // Also ensure any loading overlays with 'hidden' class stay hidden
+  const loadingOverlays = visibleSection.querySelectorAll('.loading-overlay');
+  loadingOverlays.forEach(overlay => {
+    if (!overlay.classList.contains('hidden')) {
+      overlay.classList.add('hidden');
+      hiddenElements.push({ el: overlay, removeClass: 'hidden' });
+    }
+  });
+  
   try {
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 150));
     
     const canvas = await html2canvas(visibleSection, {
       scale: 2,
@@ -6049,7 +6059,15 @@ async function universalExportToPdf() {
       backgroundColor: '#ffffff',
       logging: false,
       windowWidth: visibleSection.scrollWidth,
-      windowHeight: visibleSection.scrollHeight
+      windowHeight: visibleSection.scrollHeight,
+      ignoreElements: (el) => {
+        // Ignore loading overlays and spinners
+        return el.classList && (
+          el.classList.contains('loading-overlay') ||
+          el.classList.contains('loading-spinner') ||
+          el.id?.includes('Loading')
+        );
+      }
     });
     
     const imgData = canvas.toDataURL('image/png');
@@ -6105,7 +6123,11 @@ async function universalExportToPdf() {
     alert('Error generating PDF. Please try again.');
   } finally {
     hiddenElements.forEach(item => {
-      item.el.style.display = item.display;
+      if (item.removeClass) {
+        item.el.classList.remove(item.removeClass);
+      } else {
+        item.el.style.display = item.display;
+      }
     });
     
     const overlay = document.getElementById('pdfLoadingOverlay');
@@ -6701,17 +6723,27 @@ async function captureVisibleSectionAsImage() {
   const visibleSection = document.querySelector('.dashboard-section.visible');
   if (!visibleSection) return null;
   
-  const elementsToHide = visibleSection.querySelectorAll('.config-panel, .config-header, .config-body, .ai-analysis-panel:not(.has-analysis), .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn');
+  // Hide UI elements that shouldn't appear in the screenshot
+  const elementsToHide = visibleSection.querySelectorAll('.config-panel, .config-header, .config-body, .ai-analysis-panel:not(.has-analysis), .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay, .loading-spinner, [class*="LoadingOverlay"]');
   const hiddenElements = [];
   elementsToHide.forEach(el => {
     if (el.style.display !== 'none') {
-      hiddenElements.push({ el, display: el.style.display });
+      hiddenElements.push({ el, display: el.style.display, opacity: el.style.opacity });
       el.style.display = 'none';
     }
   });
   
+  // Also ensure any loading overlays with 'hidden' class stay hidden
+  const loadingOverlays = visibleSection.querySelectorAll('.loading-overlay');
+  loadingOverlays.forEach(overlay => {
+    if (!overlay.classList.contains('hidden')) {
+      overlay.classList.add('hidden');
+      hiddenElements.push({ el: overlay, removeClass: 'hidden' });
+    }
+  });
+  
   try {
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 150));
     
     const canvas = await html2canvas(visibleSection, {
       scale: 1.5,
@@ -6720,7 +6752,15 @@ async function captureVisibleSectionAsImage() {
       backgroundColor: '#ffffff',
       logging: false,
       windowWidth: visibleSection.scrollWidth,
-      windowHeight: visibleSection.scrollHeight
+      windowHeight: visibleSection.scrollHeight,
+      ignoreElements: (el) => {
+        // Ignore loading overlays and spinners
+        return el.classList && (
+          el.classList.contains('loading-overlay') ||
+          el.classList.contains('loading-spinner') ||
+          el.id?.includes('Loading')
+        );
+      }
     });
     
     const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
@@ -6734,7 +6774,11 @@ async function captureVisibleSectionAsImage() {
     return null;
   } finally {
     hiddenElements.forEach(item => {
-      item.el.style.display = item.display;
+      if (item.removeClass) {
+        item.el.classList.remove(item.removeClass);
+      } else {
+        item.el.style.display = item.display;
+      }
     });
   }
 }
@@ -6797,12 +6841,17 @@ async function sendReportEmail() {
     
     statusEl.textContent = "Sending...";
     
+    // Generate proper filename based on current view
+    const viewFilename = `${view.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '')}-${new Date().toISOString().split('T')[0]}`;
+    
     const templateParams = {
       to_email: toEmail,
       subject: subject,
       message_html: messageHtml,
       report_title: data.title,
-      chart_attachment: screenshotImage ? "data:image/jpeg;base64," + screenshotImage : ""
+      chart_attachment: screenshotImage ? "data:image/jpeg;base64," + screenshotImage : "",
+      attachment_name: `${viewFilename}.jpg`,
+      chart_filename: `${viewFilename}.jpg`
     };
     
     const response = await emailjs.send(
