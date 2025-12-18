@@ -11470,3 +11470,26 @@ body.dark-mode .skeleton-text,
 .expandable-col {
   white-space: nowrap;
 }
+
+.expand-hint {
+  font-size: 10px;
+  color: #64748b;
+  font-weight: normal;
+  margin-top: 2px;
+}
+
+#paymentsTable {
+  width: auto;
+}
+
+#paymentsTable .collapsible-col {
+  background-color: #f1f5f9;
+}
+
+#paymentsTable thead .collapsible-col {
+  background-color: #e2e8f0;
+}
+
+#paymentsTable .totals-row .collapsible-col {
+  background-color: #e8ecf1;
+}

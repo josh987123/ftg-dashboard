@@ -16551,7 +16551,7 @@ function updatePaymentsKeyMetricsFromServer(metrics) {
   if (remainingEl) remainingEl.textContent = formatCurrency(metrics.totalRemaining || 0);
 }
 
-let paymentsColumnsExpanded = false;
+let paymentsColumnsExpanded = true;
 
 function renderPaymentsTableFromServer(payments, totals) {
   const tbody = document.getElementById('paymentsTableBody');
@@ -16609,6 +16609,7 @@ function togglePaymentsColumnGroup(group) {
   
   const collapsibleCols = table.querySelectorAll(`[data-group="${group}"]`);
   const toggleBtn = table.querySelector(`.expand-toggle-btn[data-group="${group}"]`);
+  const expandHint = document.getElementById('invoiceAmountExpandHint');
   
   collapsibleCols.forEach(col => {
     if (paymentsColumnsExpanded) {
@@ -16619,8 +16620,12 @@ function togglePaymentsColumnGroup(group) {
   });
   
   if (toggleBtn) {
-    toggleBtn.textContent = paymentsColumnsExpanded ? '-' : '+';
+    toggleBtn.textContent = paymentsColumnsExpanded ? '−' : '+';
     toggleBtn.title = paymentsColumnsExpanded ? 'Collapse breakdown' : 'Expand to show breakdown';
+  }
+  
+  if (expandHint) {
+    expandHint.textContent = paymentsColumnsExpanded ? 'collapse' : 'expand';
   }
 }
 
