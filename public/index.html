@@ -568,6 +568,7 @@
               <li class="nav-item nav-child" data-section="jobOverview">Overview</li>
               <li class="nav-item nav-child" data-section="jobBudgets">Budgets</li>
               <li class="nav-item nav-child" data-section="jobActuals">Actuals</li>
+              <li class="nav-item nav-child" data-section="overUnderBilling">Over/(Under) Billing</li>
               <li class="nav-item nav-child" data-section="costCodes">Cost Codes</li>
               <li class="nav-item nav-child" data-section="missingBudgets">Missing Budgets</li>
               <li class="nav-item nav-child placeholder" data-section="jobAnalytics">Job Analytics</li>
@@ -2421,6 +2422,162 @@
           <span id="jaPageInfo" class="page-info">Page 1 of 1</span>
           <button id="jaNextPage" class="pagination-btn" disabled>Next →</button>
           <select id="jaPageSize" class="page-size-select">
+            <option value="25" selected>25 per page</option>
+            <option value="50">50 per page</option>
+            <option value="100">100 per page</option>
+            <option value="250">250 per page</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           OVER/(UNDER) BILLING
+      ============================================================= -->
+      <section id="overUnderBilling" class="dashboard-section">
+        <h2>Over/(Under) Billing</h2>
+        <div class="section-subtitle">Job Billing Status Analysis</div>
+        <div class="data-as-of">Data as of: <span id="oubDataAsOf">-</span></div>
+
+        <!-- Filters -->
+        <div class="oub-filters" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
+          <div class="filter-group">
+            <label for="oubPmFilter" style="font-weight: 500; margin-right: 8px;">Project Manager:</label>
+            <select id="oubPmFilter" class="filter-select" style="min-width: 200px;">
+              <option value="">All Project Managers</option>
+            </select>
+          </div>
+          <div class="filter-group" style="flex: 1; max-width: 300px;">
+            <label for="oubJobSearch" style="font-weight: 500; margin-right: 8px;">Job #:</label>
+            <input type="text" id="oubJobSearch" class="search-input" placeholder="Search by job number..." style="width: 100%;">
+          </div>
+        </div>
+
+        <!-- Summary Metrics -->
+        <div class="oub-metrics" style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+          <div class="tile">
+            <div class="tile-value" id="oubTotalJobs">0</div>
+            <div class="tile-label">Total Jobs</div>
+          </div>
+          <div class="tile">
+            <div class="tile-value" id="oubTotalContract">$0</div>
+            <div class="tile-label">Total Contract Value</div>
+          </div>
+          <div class="tile">
+            <div class="tile-value" id="oubTotalBilled">$0</div>
+            <div class="tile-label">Total Billed</div>
+          </div>
+          <div class="tile">
+            <div class="tile-value" id="oubTotalEarned">$0</div>
+            <div class="tile-label">Total Earned</div>
+          </div>
+          <div class="tile">
+            <div class="tile-value" id="oubTotalOverUnder">$0</div>
+            <div class="tile-label">Net Over/(Under)</div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+          <table id="oubTable" class="data-table">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="job_no">
+                  <span class="column-header-text">Job #</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn oub-sort-btn" data-sort="job_no" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn oub-sort-btn" data-sort="job_no" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable" data-sort="job_description">
+                  <span class="column-header-text">Description</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn oub-sort-btn" data-sort="job_description" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn oub-sort-btn" data-sort="job_description" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col sortable-number" data-sort="contract_value">
+                  <span class="column-header-text">Contract Value</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn oub-sort-btn" data-sort="contract_value" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn oub-sort-btn" data-sort="contract_value" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col sortable-number" data-sort="est_cost">
+                  <span class="column-header-text">Est. Cost</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn oub-sort-btn" data-sort="est_cost" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn oub-sort-btn" data-sort="est_cost" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col sortable-number" data-sort="est_profit">
+                  <span class="column-header-text">Est. Profit</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn oub-sort-btn" data-sort="est_profit" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn oub-sort-btn" data-sort="est_profit" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col sortable-number" data-sort="actual_cost">
+                  <span class="column-header-text">Actual Cost</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn oub-sort-btn" data-sort="actual_cost" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn oub-sort-btn" data-sort="actual_cost" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col sortable-number" data-sort="pct_complete">
+                  <span class="column-header-text">% Complete</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn oub-sort-btn" data-sort="pct_complete" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn oub-sort-btn" data-sort="pct_complete" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col sortable-number" data-sort="billed_revenue">
+                  <span class="column-header-text">Billed Revenue</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn oub-sort-btn" data-sort="billed_revenue" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn oub-sort-btn" data-sort="billed_revenue" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col sortable-number" data-sort="earned_revenue">
+                  <span class="column-header-text">Earned Revenue</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn oub-sort-btn" data-sort="earned_revenue" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn oub-sort-btn" data-sort="earned_revenue" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="number-col sortable-number" data-sort="over_under">
+                  <span class="column-header-text">Over/(Under)</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn oub-sort-btn" data-sort="over_under" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn oub-sort-btn" data-sort="over_under" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="oubTableBody">
+              <tr><td colspan="10" class="loading-cell">Loading data...</td></tr>
+            </tbody>
+            <tfoot id="oubTableFoot">
+              <tr class="totals-row">
+                <td colspan="2"><strong>Totals</strong></td>
+                <td class="number-col" id="oubFootContract">-</td>
+                <td class="number-col" id="oubFootEstCost">-</td>
+                <td class="number-col" id="oubFootEstProfit">-</td>
+                <td class="number-col" id="oubFootActualCost">-</td>
+                <td class="number-col" id="oubFootPctComplete">-</td>
+                <td class="number-col" id="oubFootBilled">-</td>
+                <td class="number-col" id="oubFootEarned">-</td>
+                <td class="number-col" id="oubFootOverUnder">-</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="job-pagination" id="oubPagination">
+          <button id="oubPrevPage" class="pagination-btn" disabled>← Previous</button>
+          <span id="oubPageInfo" class="page-info">Page 1 of 1</span>
+          <button id="oubNextPage" class="pagination-btn" disabled>Next →</button>
+          <select id="oubPageSize" class="page-size-select">
             <option value="25" selected>25 per page</option>
             <option value="50">50 per page</option>
             <option value="100">100 per page</option>
