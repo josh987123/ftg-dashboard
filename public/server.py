@@ -285,6 +285,7 @@ def init_database():
             ('job_overview', 'Job Overview', 'View job summary metrics and charts'),
             ('job_budgets', 'Budgets', 'View job budget tracking'),
             ('job_actuals', 'Actuals', 'View job actuals and earned revenue'),
+            ('over_under_billing', 'Over/Under Billing', 'View job billing status analysis'),
             ('cost_codes', 'Cost Codes', 'View cost code analysis and breakdowns'),
             ('missing_budgets', 'Missing Budgets', 'View jobs with missing budget data'),
             ('payments', 'Payments', 'View AP invoices and payment status'),
@@ -328,7 +329,7 @@ def init_database():
         
         # Project Manager role gets job reports and payments
         if 'project_manager' in roles:
-            pm_permissions = ['job_overview', 'job_budgets', 'job_actuals', 'cost_codes', 'missing_budgets', 'payments', 'job_analytics']
+            pm_permissions = ['job_overview', 'job_budgets', 'job_actuals', 'over_under_billing', 'cost_codes', 'missing_budgets', 'payments', 'job_analytics']
             for page_key in pm_permissions:
                 if page_key in perms:
                     cur.execute("""

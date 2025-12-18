@@ -18685,7 +18685,7 @@ async function openRoleModal(roleId = null) {
 function renderGroupedPermissions(permissions, selectedPerms, roleId, prefix) {
   const permissionGroups = {
     'Financials': ['overview', 'revenue', 'account', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'payments', 'receivables'],
-    'Job Reports': ['job_overview', 'job_budgets', 'job_actuals', 'cost_codes', 'missing_budgets', 'job_analytics'],
+    'Job Reports': ['job_overview', 'job_budgets', 'job_actuals', 'over_under_billing', 'cost_codes', 'missing_budgets', 'job_analytics'],
     'Admin': ['admin']
   };
   
@@ -18955,6 +18955,7 @@ const sectionToPermission = {
   'jobOverview': 'job_overview',
   'jobBudgets': 'job_budgets',
   'jobActuals': 'job_actuals',
+  'overUnderBilling': 'over_under_billing',
   'costCodes': 'cost_codes',
   'missingBudgets': 'missing_budgets',
   'payments': 'payments',
