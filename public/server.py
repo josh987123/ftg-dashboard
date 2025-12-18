@@ -3634,7 +3634,7 @@ def api_get_top_vendors():
         invoices = invoices_json.get('invoices', [])
         
         # Vendors to exclude from chart
-        excluded_vendors = {'Bridge Bank', 'Payroll4Construction', 'Bank of America', 'Employee Fiduciary, LLC', 'Department of the Treasury'}
+        excluded_vendors = {'Bridge Bank', 'Payroll4Construction', 'Bank of America', 'Employee Fiduciary, LLC', 'Department of the Treasury', 'Capital One', 'Rodney Terra', 'Robert Giancola', 'Kaiser Foundation Health', 'Greg Baba', 'Miscellaneous Vendor', 'Construction Strategies'}
         
         # Filter by year range and aggregate by vendor
         vendor_totals = {}
