@@ -48,6 +48,8 @@ The dashboard offers several key views:
 - **Balance Sheet**: Shows a full balance sheet with cumulative balances, various view and comparison modes, and detailed asset, liability, and equity breakdowns.
 - **Statement of Cash Flows**: Uses the indirect method, offering period types, comparison modes, detail levels, and AI analysis.
 - **Cash Balances**: Tracks cash position using both Google Sheets for daily data and Balance Sheet data for monthly/quarterly/annual views.
+- **AP Aging**: Accounts Payable aging report grouped by vendor with aging buckets (0-30, 31-60, 61-90, 90+ days, retainage). Features bar chart, summary metrics, sortable table with clickable vendor names that open detail modal showing all outstanding invoices.
+- **AR Aging**: Accounts Receivable aging report grouped by customer with aging buckets (0-30, 31-60, 61-90, 90+ days, retainage). Features bar chart, summary metrics, sortable table with clickable customer names that open detail modal showing all outstanding invoices. Uses `ar_invoices.json` data source.
 
 ### Jobs Module
 The Jobs section in the sidebar contains job-related tracking views:
