@@ -3778,9 +3778,17 @@ def api_get_ap_aging():
         if search:
             vendors_list = [v for v in vendors_list if search in v['vendor_name'].lower()]
         
-        # Sort
+        # Sort - default is multi-column: 90+ desc, then 61-90 desc, then 31-60 desc, then 0-30 desc
         reverse = sort_direction.lower() == 'desc'
-        if sort_column in ['vendor_name']:
+        if sort_column == 'days_90_plus':
+            # Multi-column sort: 90+ -> 61-90 -> 31-60 -> 0-30 all descending
+            vendors_list.sort(key=lambda x: (
+                x.get('days_90_plus', 0),
+                x.get('days_61_90', 0),
+                x.get('days_31_60', 0),
+                x.get('current', 0)
+            ), reverse=reverse)
+        elif sort_column in ['vendor_name']:
             vendors_list.sort(key=lambda x: x.get(sort_column, '').lower(), reverse=reverse)
         else:
             vendors_list.sort(key=lambda x: x.get(sort_column, 0), reverse=reverse)
