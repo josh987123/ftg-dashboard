@@ -14121,7 +14121,21 @@ body.dark-mode .ap-aging-chart-wrapper {
 }
 
 /* Vendor Invoice Modal */
-.modal-xl {
+.modal-dialog {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 450px;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .modal-dialog,
+body.dark-mode .modal-dialog {
+  background: #1e293b;
+}
+
+.modal-dialog.modal-xl {
   max-width: 1100px;
 }
 
