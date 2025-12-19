@@ -3956,8 +3956,9 @@ def api_get_ar_aging():
         customer_aging = {}
         
         for inv in invoices:
-            amount_due = float(inv.get('amount_due', 0) or 0)
-            if amount_due <= 0:
+            # Use calculated_amount_due as the actual outstanding balance
+            calc_due = float(inv.get('calculated_amount_due', 0) or 0)
+            if calc_due <= 0:
                 continue  # Skip fully paid invoices
             
             customer = (inv.get('customer_name', '') or '').strip()
@@ -3980,17 +3981,17 @@ def api_get_ar_aging():
             # Get days outstanding
             days = int(float(inv.get('days_outstanding', 0) or 0))
             
-            # Add to appropriate bucket using amount_due (collectible portion)
+            # Add to appropriate bucket using calculated_amount_due
             if days <= 30:
-                customer_aging[customer]['current'] += amount_due
+                customer_aging[customer]['current'] += calc_due
             elif days <= 60:
-                customer_aging[customer]['days_31_60'] += amount_due
+                customer_aging[customer]['days_31_60'] += calc_due
             elif days <= 90:
-                customer_aging[customer]['days_61_90'] += amount_due
+                customer_aging[customer]['days_61_90'] += calc_due
             else:
-                customer_aging[customer]['days_90_plus'] += amount_due
+                customer_aging[customer]['days_90_plus'] += calc_due
             
-            customer_aging[customer]['total_due'] += amount_due
+            customer_aging[customer]['total_due'] += calc_due
             customer_aging[customer]['retainage'] += retainage
         
         # Convert to list
@@ -4072,13 +4073,16 @@ def api_get_customer_invoices():
             if inv_customer.lower() != customer_name.lower():
                 continue
             
-            amount_due = float(inv.get('amount_due', 0) or 0)
-            if amount_due <= 0:
+            # Use calculated_amount_due as the actual outstanding balance
+            calc_due = float(inv.get('calculated_amount_due', 0) or 0)
+            if calc_due <= 0:
                 continue
             
             invoice_amount = float(inv.get('invoice_amount', 0) or 0)
             retainage = float(inv.get('retainage_amount', 0) or 0)
-            total_applied = float(inv.get('total_applied', 0) or 0)
+            total_cash = float(inv.get('total_cash_applied', 0) or 0)
+            total_adj = float(inv.get('total_adjustments_applied', 0) or 0)
+            total_applied = total_cash + total_adj
             days = int(float(inv.get('days_outstanding', 0) or 0))
             
             # Parse invoice date from Excel serial
@@ -4101,14 +4105,14 @@ def api_get_customer_invoices():
                 'project_manager': inv.get('project_manager_name', ''),
                 'invoice_amount': invoice_amount,
                 'amount_paid': total_applied,
-                'amount_due': amount_due,
+                'amount_due': calc_due,
                 'retainage': retainage,
                 'days_outstanding': days
             })
             
             totals['invoice_amount'] += invoice_amount
             totals['amount_paid'] += total_applied
-            totals['amount_due'] += amount_due
+            totals['amount_due'] += calc_due
             totals['retainage'] += retainage
             totals['count'] += 1
         
