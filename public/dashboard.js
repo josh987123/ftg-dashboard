@@ -1441,6 +1441,7 @@ function initNavigation() {
       if (id === "missingBudgets") initMissingBudgets();
       if (id === "payments") initPayments();
       if (id === "apAging") initApAging();
+      if (id === "arAging") initArAging();
     });
   });
   
@@ -20648,5 +20649,340 @@ function showApAgingError(message) {
   const tbody = document.getElementById('apAgingTableBody');
   if (tbody) {
     tbody.innerHTML = `<tr><td colspan="7" class="error-cell">${escapeHtml(message)} <button onclick="loadApAgingData()" class="retry-btn">Retry</button></td></tr>`;
+  }
+}
+
+/* ------------------------------------------------------------
+   AR AGING REPORT
+------------------------------------------------------------ */
+let arAgingInitialized = false;
+let arAgingSortColumn = 'days_90_plus';
+let arAgingSortDirection = 'desc';
+let arAgingSearchTerm = '';
+let arAgingChart = null;
+
+function initArAging() {
+  if (!arAgingInitialized) {
+    setupArAgingEventHandlers();
+    arAgingInitialized = true;
+  }
+  
+  loadArAgingData();
+  
+  const dataAsOf = document.getElementById('arAgingDataAsOf');
+  if (dataAsOf) {
+    const now = new Date();
+    dataAsOf.textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+}
+
+function setupArAgingEventHandlers() {
+  const searchInput = document.getElementById('arAgingSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', debounce(() => {
+      arAgingSearchTerm = searchInput.value.trim();
+      loadArAgingData();
+    }, 300));
+  }
+  
+  const table = document.getElementById('arAgingTable');
+  if (table) {
+    table.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const col = btn.dataset.sort;
+        const dir = btn.dataset.dir;
+        arAgingSortColumn = col;
+        arAgingSortDirection = dir;
+        updateArAgingSortIndicators();
+        loadArAgingData();
+      });
+    });
+  }
+}
+
+function loadArAgingData() {
+  const loadingOverlay = document.getElementById('arAgingLoadingOverlay');
+  if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+  
+  const params = new URLSearchParams({
+    sortColumn: arAgingSortColumn,
+    sortDirection: arAgingSortDirection
+  });
+  
+  if (arAgingSearchTerm) {
+    params.set('search', arAgingSearchTerm);
+  }
+  
+  fetch(`/api/ar-aging?${params.toString()}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        renderArAgingTable(data.customers || [], data.totals || {});
+        updateArAgingSummary(data.totals || {});
+      } else {
+        showArAgingError('Failed to load AR aging data');
+      }
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    })
+    .catch(err => {
+      console.error('Error loading AR aging:', err);
+      showArAgingError('Error loading AR aging data');
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    });
+}
+
+function renderArAgingTable(customers, totals) {
+  const tbody = document.getElementById('arAgingTableBody');
+  if (!tbody) return;
+  
+  totals = totals || {};
+  
+  const totalsRow = `<tr class="totals-row">
+    <td><strong>Totals (${customers.length} customers)</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.total_due || 0)}</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.current || 0)}</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.days_31_60 || 0)}</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.days_61_90 || 0)}</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.days_90_plus || 0)}</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.retainage || 0)}</strong></td>
+  </tr>`;
+  
+  if (!customers || customers.length === 0) {
+    tbody.innerHTML = totalsRow + '<tr><td colspan="7" class="empty-cell">No outstanding AR balances found</td></tr>';
+    return;
+  }
+  
+  const dataRows = customers.map(c => `
+    <tr>
+      <td><span class="vendor-link" data-customer="${escapeHtml(c.customer_name)}">${escapeHtml(c.customer_name)}</span></td>
+      <td class="text-right">${formatCurrency(c.total_due)}</td>
+      <td class="text-right">${formatCurrency(c.current)}</td>
+      <td class="text-right">${formatCurrency(c.days_31_60)}</td>
+      <td class="text-right">${formatCurrency(c.days_61_90)}</td>
+      <td class="text-right ${c.days_90_plus > 0 ? 'negative' : ''}">${formatCurrency(c.days_90_plus)}</td>
+      <td class="text-right">${formatCurrency(c.retainage)}</td>
+    </tr>
+  `).join('');
+  
+  tbody.innerHTML = totalsRow + dataRows;
+  
+  tbody.querySelectorAll('.vendor-link').forEach(link => {
+    link.addEventListener('click', () => {
+      const customerName = link.dataset.customer;
+      if (customerName) showCustomerInvoicesModal(customerName);
+    });
+  });
+}
+
+function updateArAgingSummary(totals) {
+  const ids = {
+    'arAgingTotalDue': totals.total_due || 0,
+    'arAgingCurrent': totals.current || 0,
+    'arAging31to60': totals.days_31_60 || 0,
+    'arAging61to90': totals.days_61_90 || 0,
+    'arAging90plus': totals.days_90_plus || 0,
+    'arAgingRetainage': totals.retainage || 0
+  };
+  
+  for (const [id, value] of Object.entries(ids)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = formatCurrency(value);
+  }
+  
+  updateArAgingChart(totals);
+}
+
+function showCustomerInvoicesModal(customerName) {
+  const modal = document.getElementById('arAgingCustomerModal');
+  const title = document.getElementById('arAgingCustomerModalTitle');
+  const loading = document.getElementById('arAgingCustomerModalLoading');
+  const content = document.getElementById('arAgingCustomerModalContent');
+  const closeBtn = document.getElementById('arAgingCustomerModalClose');
+  
+  if (!modal) return;
+  
+  title.textContent = customerName;
+  loading.classList.remove('hidden');
+  content.classList.add('hidden');
+  modal.classList.remove('hidden');
+  
+  const closeModal = () => modal.classList.add('hidden');
+  closeBtn.onclick = closeModal;
+  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+  
+  fetch(`/api/ar-aging/customer?customer=${encodeURIComponent(customerName)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        renderCustomerInvoicesModal(data.invoices || [], data.totals || {});
+      } else {
+        document.getElementById('customerInvoicesTableBody').innerHTML = 
+          '<tr><td colspan="10" class="empty-cell">Error loading invoices</td></tr>';
+      }
+      loading.classList.add('hidden');
+      content.classList.remove('hidden');
+    })
+    .catch(err => {
+      console.error('Error loading customer invoices:', err);
+      document.getElementById('customerInvoicesTableBody').innerHTML = 
+        '<tr><td colspan="10" class="empty-cell">Error loading invoices</td></tr>';
+      loading.classList.add('hidden');
+      content.classList.remove('hidden');
+    });
+}
+
+function renderCustomerInvoicesModal(invoices, totals) {
+  const tbody = document.getElementById('customerInvoicesTableBody');
+  const summary = document.getElementById('customerInvoiceSummary');
+  
+  if (!tbody) return;
+  
+  if (summary) {
+    summary.innerHTML = `
+      <div class="summary-item">
+        <span class="label">Invoices</span>
+        <span class="value">${totals.count || 0}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Invoice Total</span>
+        <span class="value">${formatCurrency(totals.invoice_amount || 0)}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Amount Paid</span>
+        <span class="value">${formatCurrency(totals.amount_paid || 0)}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Amount Due</span>
+        <span class="value">${formatCurrency(totals.amount_due || 0)}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Retainage</span>
+        <span class="value">${formatCurrency(totals.retainage || 0)}</span>
+      </div>
+    `;
+  }
+  
+  if (!invoices || invoices.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">No invoices found</td></tr>';
+    return;
+  }
+  
+  const rows = invoices.map(inv => `
+    <tr>
+      <td>${escapeHtml(inv.invoice_number || '')}</td>
+      <td>${escapeHtml(inv.invoice_date || '')}</td>
+      <td>${escapeHtml(inv.job_number || '')}</td>
+      <td>${escapeHtml(inv.job_description || '')}</td>
+      <td>${escapeHtml(inv.project_manager || '')}</td>
+      <td class="text-right">${formatCurrency(inv.invoice_amount || 0)}</td>
+      <td class="text-right">${formatCurrency(inv.amount_paid || 0)}</td>
+      <td class="text-right">${formatCurrency(inv.amount_due || 0)}</td>
+      <td class="text-right">${formatCurrency(inv.retainage || 0)}</td>
+      <td class="text-right ${inv.days_outstanding > 90 ? 'negative' : ''}">${inv.days_outstanding}</td>
+    </tr>
+  `).join('');
+  
+  tbody.innerHTML = rows;
+}
+
+function updateArAgingChart(totals) {
+  const ctx = document.getElementById('arAgingChart');
+  if (!ctx) return;
+  
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#e2e8f0' : '#374151';
+  const gridColor = isDark ? '#334155' : '#e5e7eb';
+  
+  const values = [
+    totals.current || 0,
+    totals.days_31_60 || 0,
+    totals.days_61_90 || 0,
+    totals.days_90_plus || 0,
+    totals.retainage || 0
+  ];
+  const maxValue = Math.max(...values);
+  const yMax = maxValue > 0 ? maxValue * 1.15 : undefined;
+  
+  const data = {
+    labels: ['0-30 Days', '31-60 Days', '61-90 Days', '90+ Days', 'Retainage'],
+    datasets: [{
+      label: 'Amount',
+      data: values,
+      backgroundColor: (context) => {
+        const chart = context.chart;
+        const { ctx: canvasCtx, chartArea } = chart;
+        if (!chartArea) return gradientColors.blue.start;
+        return createBarGradient(canvasCtx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
+      },
+      borderRadius: 4,
+      barPercentage: 0.9,
+      categoryPercentage: 0.85
+    }]
+  };
+  
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: "rgba(31, 41, 55, 0.95)",
+        callbacks: {
+          label: (context) => formatCurrency(context.raw)
+        }
+      },
+      datalabels: {
+        display: true,
+        anchor: 'end',
+        align: 'top',
+        color: textColor,
+        font: { size: 10, weight: 'bold' },
+        formatter: (val) => formatCurrencyCompact(val)
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: textColor, font: { size: 11 } },
+        grid: { display: false }
+      },
+      y: {
+        max: yMax,
+        ticks: {
+          color: textColor,
+          font: { size: 10 },
+          callback: (val) => formatCurrencyCompact(val)
+        },
+        grid: { color: gridColor }
+      }
+    }
+  };
+  
+  if (arAgingChart) {
+    arAgingChart.data = data;
+    arAgingChart.options = options;
+    arAgingChart.update();
+  } else {
+    arAgingChart = new Chart(ctx, {
+      type: 'bar',
+      data: data,
+      options: options,
+      plugins: [ChartDataLabels]
+    });
+  }
+}
+
+function updateArAgingSortIndicators() {
+  document.querySelectorAll('#arAgingTable .sort-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.sort === arAgingSortColumn && btn.dataset.dir === arAgingSortDirection) {
+      btn.classList.add('active');
+    }
+  });
+}
+
+function showArAgingError(message) {
+  const tbody = document.getElementById('arAgingTableBody');
+  if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="7" class="error-cell">${escapeHtml(message)} <button onclick="loadArAgingData()" class="retry-btn">Retry</button></td></tr>`;
   }
 }
