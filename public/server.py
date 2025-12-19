@@ -4001,16 +4001,17 @@ def api_get_ar_aging():
         if search:
             customers_list = [c for c in customers_list if search in c['customer_name'].lower()]
         
-        # Sort - default is multi-column: 90+ desc, then 61-90 desc, then 31-60 desc, then 0-30 desc
+        # Sort - default is multi-column: 90+ desc, 61-90 desc, 31-60 desc, 0-30 desc, retainage desc
         reverse = sort_direction.lower() == 'desc'
-        if sort_column == 'days_90_plus':
-            # Multi-column sort: 90+ -> 61-90 -> 31-60 -> 0-30 all descending
+        if sort_column == 'days_90_plus' or sort_column == 'total_due':
+            # Multi-column sort: 90+ -> 61-90 -> 31-60 -> 0-30 -> retainage all descending
             customers_list.sort(key=lambda x: (
                 x.get('days_90_plus', 0),
                 x.get('days_61_90', 0),
                 x.get('days_31_60', 0),
-                x.get('current', 0)
-            ), reverse=reverse)
+                x.get('current', 0),
+                x.get('retainage', 0)
+            ), reverse=True)
         elif sort_column in ['customer_name']:
             customers_list.sort(key=lambda x: x.get(sort_column, '').lower(), reverse=reverse)
         else:
