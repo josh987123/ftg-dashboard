@@ -3976,22 +3976,21 @@ def api_get_ar_aging():
                 }
             
             retainage = float(inv.get('retainage_amount', 0) or 0)
-            collectible = float(inv.get('collectible_amount_due', 0) or 0)
             
             # Get days outstanding
             days = int(float(inv.get('days_outstanding', 0) or 0))
             
-            # Add to appropriate bucket (use collectible amount - excludes retainage)
+            # Add to appropriate bucket using amount_due (collectible portion)
             if days <= 30:
-                customer_aging[customer]['current'] += collectible
+                customer_aging[customer]['current'] += amount_due
             elif days <= 60:
-                customer_aging[customer]['days_31_60'] += collectible
+                customer_aging[customer]['days_31_60'] += amount_due
             elif days <= 90:
-                customer_aging[customer]['days_61_90'] += collectible
+                customer_aging[customer]['days_61_90'] += amount_due
             else:
-                customer_aging[customer]['days_90_plus'] += collectible
+                customer_aging[customer]['days_90_plus'] += amount_due
             
-            customer_aging[customer]['total_due'] += collectible
+            customer_aging[customer]['total_due'] += amount_due
             customer_aging[customer]['retainage'] += retainage
         
         # Convert to list
@@ -4079,8 +4078,7 @@ def api_get_customer_invoices():
             
             invoice_amount = float(inv.get('invoice_amount', 0) or 0)
             retainage = float(inv.get('retainage_amount', 0) or 0)
-            amount_paid = float(inv.get('amount_paid_to_date', 0) or 0)
-            collectible = float(inv.get('collectible_amount_due', 0) or 0)
+            total_applied = float(inv.get('total_applied', 0) or 0)
             days = int(float(inv.get('days_outstanding', 0) or 0))
             
             # Parse invoice date from Excel serial
@@ -4102,15 +4100,15 @@ def api_get_customer_invoices():
                 'job_description': inv.get('job_description', ''),
                 'project_manager': inv.get('project_manager_name', ''),
                 'invoice_amount': invoice_amount,
-                'amount_paid': amount_paid,
-                'amount_due': collectible,
+                'amount_paid': total_applied,
+                'amount_due': amount_due,
                 'retainage': retainage,
                 'days_outstanding': days
             })
             
             totals['invoice_amount'] += invoice_amount
-            totals['amount_paid'] += amount_paid
-            totals['amount_due'] += collectible
+            totals['amount_paid'] += total_applied
+            totals['amount_due'] += amount_due
             totals['retainage'] += retainage
             totals['count'] += 1
         
