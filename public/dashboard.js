@@ -16668,19 +16668,22 @@ function buildOubData() {
     });
   }
   
-  // Build combined data from budgets - ONLY ACTIVE JOBS
+  // Build combined data from budgets - ONLY ACTIVE JOBS with valid budget data
   if (jobBudgetsData && Array.isArray(jobBudgetsData)) {
     jobBudgetsData.forEach(budget => {
       // Only include Active jobs (status 'A')
       if (budget.job_status !== 'A') return;
-      
-      const actuals = actualsMap.get(budget.job_no) || { actual_cost: 0 };
       
       // Contract Value = revised_contract (already includes original + change orders)
       const contractValue = parseFloat(budget.revised_contract) || 0;
       
       // Est. Cost = revised_cost (already includes original + adjustments)
       const estCost = parseFloat(budget.revised_cost) || 0;
+      
+      // Skip jobs with no estimated cost or contract value
+      if (contractValue === 0 || estCost === 0) return;
+      
+      const actuals = actualsMap.get(budget.job_no) || { actual_cost: 0 };
       
       // Est. Profit = Contract Value - Est. Cost
       const estProfit = contractValue - estCost;
