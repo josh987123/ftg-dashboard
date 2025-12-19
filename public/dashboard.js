@@ -7634,19 +7634,22 @@ let acctDataCache = null;
 let acctUIInitialized = false;
 
 async function initAccountModule() {
+  console.log('[AccountDetail] Initializing...');
   const spinner = document.getElementById("acctLoadingSpinner");
   
   try {
-    spinner.classList.remove("hidden");
+    spinner?.classList.remove("hidden");
     
     if (!acctDataCache) {
       if (revenueDataCache) {
         acctDataCache = revenueDataCache;
+        console.log('[AccountDetail] Using cached revenue data');
       } else {
         const response = await fetch("/data/financials_gl.json");
         if (!response.ok) throw new Error("Failed to fetch account data");
         acctDataCache = await response.json();
         revenueDataCache = acctDataCache;
+        console.log('[AccountDetail] Data loaded:', acctDataCache.gl_history_all?.length || 0, 'GL records');
       }
     }
 
@@ -7656,12 +7659,12 @@ async function initAccountModule() {
       acctUIInitialized = true;
     }
     
-    spinner.classList.add("hidden");
+    spinner?.classList.add("hidden");
     updateAccountView(acctDataCache);
 
   } catch (err) {
-    console.error("Account module error:", err);
-    spinner.classList.add("hidden");
+    console.error("[AccountDetail] Module error:", err);
+    spinner?.classList.add("hidden");
   }
 }
 
@@ -7834,14 +7837,20 @@ function getAccountAnnualValue(accountNum, year, data) {
 }
 
 function updateAccountView(data) {
-  if (!data.gl_history_all || data.gl_history_all.length === 0) {
+  console.log('[AccountDetail] Updating view...');
+  if (!data || !data.gl_history_all || data.gl_history_all.length === 0) {
+    console.log('[AccountDetail] No GL data available');
     document.getElementById("acctChartTitleLine1").innerText = "No Account Data";
     document.getElementById("acctChartTitleLine2").innerText = "GL history not available";
     return;
   }
   
-  const acctNum = document.getElementById("acctSelect").value;
-  if (!acctNum) return;
+  const acctNum = document.getElementById("acctSelect")?.value;
+  if (!acctNum) {
+    console.log('[AccountDetail] No account selected');
+    return;
+  }
+  console.log('[AccountDetail] Rendering account:', acctNum);
   
   const view = document.getElementById("acctViewType").value;
   const year = parseInt(document.getElementById("acctYear").value);
