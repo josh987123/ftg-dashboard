@@ -3193,14 +3193,23 @@ function setupOverviewUI() {
       return;
     }
     
-    if (!overviewDataCache || !overviewDataCache.revenue) {
+    if (!overviewDataCache || !overviewDataCache.gl_history_all) {
       console.error("Overview data not loaded");
       return;
     }
     
-    const years = Object.keys(overviewDataCache.revenue).map(Number).sort((a, b) => a - b);
+    // Extract years from GL data date keys (format: YYYY-MM)
+    const yearSet = new Set();
+    overviewDataCache.gl_history_all.forEach(row => {
+      Object.keys(row).forEach(key => {
+        if (/^\d{4}-\d{2}$/.test(key)) {
+          yearSet.add(parseInt(key.substring(0, 4)));
+        }
+      });
+    });
+    const years = Array.from(yearSet).sort((a, b) => a - b);
     if (years.length === 0) {
-      console.error("No years found in revenue data");
+      console.error("No years found in GL data");
       return;
     }
     
@@ -3918,37 +3927,9 @@ initOverviewModule();
    FINANCIALS SECTION (STATIC CHARTS)
 ============================================================ */
 async function loadFinancialCharts() {
-  try {
-    const response = await fetch("/data/financials_gl.json");
-
-    const data = await response.json();
-
-    const months = ["Jan","Feb","Mar","Apr","May","Jun"];
-
-    renderFinancialBar(
-      "revenueChart",
-      "Monthly Revenue",
-      months,
-      data.revenue["2023"].slice(0, 6)
-    );
-
-    renderFinancialBar(
-      "arChart",
-      "A/R Outstanding",
-      months,
-      data.accounts_receivable["2023"].slice(0, 6)
-    );
-
-    renderFinancialBar(
-      "apChart",
-      "A/P Outstanding",
-      months,
-      data.accounts_payable["2023"].slice(0, 6)
-    );
-
-  } catch (err) {
-    console.error("Financial chart load error:", err);
-  }
+  // This function is deprecated - overview charts now use GL data directly
+  // Kept for backwards compatibility but does nothing
+  return;
 }
 
 /* Utility: subtle gradient generator with solid color fallback */
