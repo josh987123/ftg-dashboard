@@ -3115,10 +3115,11 @@
           </div>
         </div>
 
-        <!-- Search -->
-        <div class="ap-aging-controls">
-          <div class="search-container">
-            <input type="text" id="apAgingSearch" placeholder="Search vendor..." class="search-input">
+        <!-- Filter Bar -->
+        <div class="page-filter-bar">
+          <div class="filter-group">
+            <label for="apAgingSearch">Vendor:</label>
+            <input type="text" id="apAgingSearch" class="filter-input" placeholder="Search vendor..." style="width: 200px;">
           </div>
         </div>
 
@@ -3130,7 +3131,7 @@
 
         <!-- AP Aging Table -->
         <div class="table-wrapper">
-          <table class="data-table ap-aging-table" id="apAgingTable">
+          <table class="job-budgets-table ap-aging-table" id="apAgingTable">
             <thead>
               <tr>
                 <th class="sortable" data-sort="vendor_name">
@@ -3686,7 +3687,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251219a"></script>
+  <script src="dashboard.js?v=20251219b"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
