@@ -17153,6 +17153,7 @@ let ccQuickFilter = 'all';
 let ccFilteredActualsCache = [];
 
 async function initCostCodes() {
+  console.log('[CostCodes] Initializing...');
   try {
     // Clear budget lookup cache to ensure fresh data
     ccBudgetLookupCache = null;
@@ -17160,6 +17161,7 @@ async function initCostCodes() {
     // Always load fresh job data to avoid stale/incomplete data issues
     const resp = await fetch('data/financials_jobs.json');
     const data = await resp.json();
+    console.log('[CostCodes] Data loaded:', data.job_budgets?.length || 0, 'budgets,', data.job_actuals?.length || 0, 'actuals');
     
     if (data.job_budgets) {
       jobBudgetsData = (data.job_budgets || []).map(job => ({
@@ -17551,7 +17553,12 @@ let ccRevenueChart = null;
 
 function renderCCRevenueChart() {
   const ctx = document.getElementById('ccRevenueChart')?.getContext('2d');
-  if (!ctx) return;
+  if (!ctx) {
+    console.log('[CostCodes] Chart canvas not found');
+    return;
+  }
+  
+  console.log('[CostCodes] Rendering chart with', costCodeData.length, 'cost codes, earned revenue:', ccTotalEarnedRevenue);
   
   if (ccRevenueChart) ccRevenueChart.destroy();
   
@@ -17828,7 +17835,12 @@ function filterAndRenderCC() {
 
 function renderCCTable() {
   const tbody = document.getElementById('costCodesTableBody');
-  if (!tbody) return;
+  if (!tbody) {
+    console.log('[CostCodes] Table body not found');
+    return;
+  }
+  
+  console.log('[CostCodes] Rendering table with', costCodeFiltered.length, 'items');
   
   if (costCodeFiltered.length === 0) {
     tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">No cost codes found matching your filters</td></tr>';
