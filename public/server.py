@@ -3311,7 +3311,8 @@ PAYMENTS_EXCLUDED_VENDORS = {
     'Employee Fiduciary, LLC',
     'Bank of America',
     'Capital One',
-    'CaliforniaChoice'
+    'CaliforniaChoice',
+    'Kaiser Foundation Health Plan'
 }
 
 _payments_cache = None
