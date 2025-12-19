@@ -3308,6 +3308,7 @@ PAYMENTS_EXCLUDED_VENDORS = {
     'Charles Schwab',
     'Construction Strategies, LLC',
     'Construction Strategies',
+    'Construction Strategies LLC',
     'Employee Fiduciary, LLC',
     'Bank of America',
     'Capital One',
@@ -3721,8 +3722,8 @@ def api_get_ap_aging():
         
         invoices = invoices_json.get('invoices', [])
         
-        # Vendors to exclude from AP Aging report
-        excluded_vendors = {'Kaiser Foundation Health Plan'}
+        # Use same exclusion list as payments
+        excluded_vendors = PAYMENTS_EXCLUDED_VENDORS
         
         # Group by vendor and calculate aging buckets
         vendor_aging = {}
