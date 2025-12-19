@@ -3298,6 +3298,22 @@ def generate_report_email(report):
 
 # ============== PAYMENTS API (Optimized) ==============
 
+PAYMENTS_EXCLUDED_VENDORS = {
+    'Bridge Bank',
+    'Payroll4Construction',
+    'MISCELLANEOUS VENDOR',
+    'Miscellaneous Vendor',
+    'Department of the Treasury',
+    'Franchise Tax Board',
+    'Charles Schwab',
+    'Construction Strategies, LLC',
+    'Construction Strategies',
+    'Employee Fiduciary, LLC',
+    'Bank of America',
+    'Capital One',
+    'CaliforniaChoice'
+}
+
 _payments_cache = None
 _payments_cache_lock = threading.Lock()
 
@@ -3328,6 +3344,10 @@ def get_payments_data():
             unique_vendors = set()
             
             for inv in invoices_json.get('invoices', []):
+                vendor = inv.get('vendor_name', '')
+                if vendor in PAYMENTS_EXCLUDED_VENDORS:
+                    continue
+                
                 try:
                     excel_date = float(inv.get('invoice_date', 0))
                     if excel_date > 0:
@@ -3361,7 +3381,6 @@ def get_payments_data():
                     remaining = 0
                 
                 non_retention = invoice_amount - retention
-                vendor = inv.get('vendor_name', '')
                 
                 if vendor:
                     unique_vendors.add(vendor)
