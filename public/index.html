@@ -554,6 +554,7 @@
               <li class="nav-item nav-child" data-section="accounts">Account Detail</li>
               <li class="nav-item nav-child" data-section="payments">Payments</li>
               <li class="nav-item nav-child" data-section="apAging">AP Aging</li>
+              <li class="nav-item nav-child" data-section="arAging">AR Aging</li>
               <li class="nav-item nav-child placeholder" data-section="receivablesPayables">Receivables/Payables</li>
             </ul>
           </li>
@@ -3229,6 +3230,163 @@
                       </tr>
                     </thead>
                     <tbody id="vendorInvoicesTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           AR AGING REPORT
+      ============================================================= -->
+      <section id="arAging" class="dashboard-section">
+        <h2>Accounts Receivable Aging Report</h2>
+        <div class="data-as-of">Data as of: <span id="arAgingDataAsOf">-</span></div>
+
+        <!-- Summary Metrics -->
+        <div class="ap-aging-summary">
+          <div class="summary-card">
+            <div class="summary-label">Total Due (excl. Retainage)</div>
+            <div class="summary-value" id="arAgingTotalDue">$0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Current (0-30 Days)</div>
+            <div class="summary-value" id="arAgingCurrent">$0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">31-60 Days</div>
+            <div class="summary-value" id="arAging31to60">$0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">61-90 Days</div>
+            <div class="summary-value" id="arAging61to90">$0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">90+ Days</div>
+            <div class="summary-value negative" id="arAging90plus">$0.00</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Total Retainage</div>
+            <div class="summary-value" id="arAgingRetainage">$0.00</div>
+          </div>
+        </div>
+
+        <!-- Aging Buckets Chart -->
+        <div class="ap-aging-chart-section">
+          <div class="ap-aging-chart-wrapper">
+            <canvas id="arAgingChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="page-filter-bar">
+          <div class="filter-group">
+            <label for="arAgingSearch">Customer:</label>
+            <input type="text" id="arAgingSearch" class="filter-input" placeholder="Search customer..." style="width: 200px;">
+          </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="arAgingLoadingOverlay" class="loading-overlay hidden">
+          <div class="loading-spinner"></div>
+          <span>Loading AR aging data...</span>
+        </div>
+
+        <!-- AR Aging Table -->
+        <div class="table-wrapper">
+          <table class="job-budgets-table ap-aging-table" id="arAgingTable">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="customer_name">
+                  <span class="column-header-text">Customer</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="customer_name" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="customer_name" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="total_due">
+                  <span class="column-header-text">Total Due</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="total_due" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="total_due" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="current">
+                  <span class="column-header-text">0-30 Days</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="current" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="current" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="days_31_60">
+                  <span class="column-header-text">31-60 Days</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="days_31_60" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="days_31_60" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="days_61_90">
+                  <span class="column-header-text">61-90 Days</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="days_61_90" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="days_61_90" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="days_90_plus">
+                  <span class="column-header-text">90+ Days</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="days_90_plus" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="days_90_plus" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+                <th class="sortable text-right" data-sort="retainage">
+                  <span class="column-header-text">Retainage</span>
+                  <div class="sort-controls inline-sort">
+                    <button class="sort-btn sort-asc-btn" data-sort="retainage" data-dir="asc" title="Sort ascending">▲</button>
+                    <button class="sort-btn sort-desc-btn" data-sort="retainage" data-dir="desc" title="Sort descending">▼</button>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="arAgingTableBody">
+              <tr><td colspan="7" class="loading-cell">Loading AR aging data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Customer Invoice Detail Modal -->
+        <div id="arAgingCustomerModal" class="modal-overlay hidden">
+          <div class="modal-dialog modal-xl">
+            <div class="modal-header">
+              <h3 id="arAgingCustomerModalTitle">Customer Invoices</h3>
+              <button class="modal-close" id="arAgingCustomerModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div id="arAgingCustomerModalLoading" class="modal-loading">
+                <div class="loading-spinner"></div>
+                <span>Loading invoices...</span>
+              </div>
+              <div id="arAgingCustomerModalContent" class="hidden">
+                <div class="vendor-invoice-summary" id="customerInvoiceSummary"></div>
+                <div class="table-wrapper">
+                  <table class="job-budgets-table vendor-invoices-table">
+                    <thead>
+                      <tr>
+                        <th>Invoice #</th>
+                        <th>Invoice Date</th>
+                        <th>Job #</th>
+                        <th>Job Description</th>
+                        <th>Project Manager</th>
+                        <th class="text-right">Invoice Amount</th>
+                        <th class="text-right">Amount Paid</th>
+                        <th class="text-right">Amount Due</th>
+                        <th class="text-right">Retainage</th>
+                        <th class="text-right">Days Out</th>
+                      </tr>
+                    </thead>
+                    <tbody id="customerInvoicesTableBody"></tbody>
                   </table>
                 </div>
               </div>

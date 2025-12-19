@@ -3930,6 +3930,203 @@ def api_get_vendor_invoices():
         traceback.print_exc()
         return jsonify({'success': False, 'invoices': [], 'error': str(e)}), 500
 
+# ============== AR AGING API ==============
+
+@app.route('/api/ar-aging', methods=['GET', 'OPTIONS'])
+def api_get_ar_aging():
+    """Get AR aging report grouped by customer with aging buckets"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        search = request.args.get('search', '').strip().lower()
+        sort_column = request.args.get('sortColumn', 'total_due')
+        sort_direction = request.args.get('sortDirection', 'desc')
+        
+        # Load AR invoices data
+        invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ar_invoices.json')
+        with open(invoices_path, 'r', encoding='utf-8-sig') as f:
+            invoices_json = json.load(f)
+        
+        invoices = invoices_json.get('invoices', [])
+        
+        # Group by customer and calculate aging buckets
+        customer_aging = {}
+        
+        for inv in invoices:
+            amount_due = float(inv.get('amount_due', 0) or 0)
+            if amount_due <= 0:
+                continue  # Skip fully paid invoices
+            
+            customer = (inv.get('customer_name', '') or '').strip()
+            if not customer:
+                customer = 'Unknown Customer'
+            
+            if customer not in customer_aging:
+                customer_aging[customer] = {
+                    'customer_name': customer,
+                    'total_due': 0,
+                    'current': 0,
+                    'days_31_60': 0,
+                    'days_61_90': 0,
+                    'days_90_plus': 0,
+                    'retainage': 0
+                }
+            
+            retainage = float(inv.get('retainage_amount', 0) or 0)
+            collectible = float(inv.get('collectible_amount_due', 0) or 0)
+            
+            # Get days outstanding
+            days = int(float(inv.get('days_outstanding', 0) or 0))
+            
+            # Add to appropriate bucket (use collectible amount - excludes retainage)
+            if days <= 30:
+                customer_aging[customer]['current'] += collectible
+            elif days <= 60:
+                customer_aging[customer]['days_31_60'] += collectible
+            elif days <= 90:
+                customer_aging[customer]['days_61_90'] += collectible
+            else:
+                customer_aging[customer]['days_90_plus'] += collectible
+            
+            customer_aging[customer]['total_due'] += collectible
+            customer_aging[customer]['retainage'] += retainage
+        
+        # Convert to list
+        customers_list = list(customer_aging.values())
+        
+        # Apply search filter
+        if search:
+            customers_list = [c for c in customers_list if search in c['customer_name'].lower()]
+        
+        # Sort - default is multi-column: 90+ desc, then 61-90 desc, then 31-60 desc, then 0-30 desc
+        reverse = sort_direction.lower() == 'desc'
+        if sort_column == 'days_90_plus':
+            # Multi-column sort: 90+ -> 61-90 -> 31-60 -> 0-30 all descending
+            customers_list.sort(key=lambda x: (
+                x.get('days_90_plus', 0),
+                x.get('days_61_90', 0),
+                x.get('days_31_60', 0),
+                x.get('current', 0)
+            ), reverse=reverse)
+        elif sort_column in ['customer_name']:
+            customers_list.sort(key=lambda x: x.get(sort_column, '').lower(), reverse=reverse)
+        else:
+            customers_list.sort(key=lambda x: x.get(sort_column, 0), reverse=reverse)
+        
+        # Calculate totals
+        totals = {
+            'total_due': sum(c['total_due'] for c in customers_list),
+            'current': sum(c['current'] for c in customers_list),
+            'days_31_60': sum(c['days_31_60'] for c in customers_list),
+            'days_61_90': sum(c['days_61_90'] for c in customers_list),
+            'days_90_plus': sum(c['days_90_plus'] for c in customers_list),
+            'retainage': sum(c['retainage'] for c in customers_list)
+        }
+        
+        return jsonify({
+            'success': True,
+            'customers': customers_list,
+            'totals': totals,
+            'count': len(customers_list)
+        })
+        
+    except Exception as e:
+        print(f"[AR-AGING] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'customers': [], 'totals': {}, 'error': str(e)}), 500
+
+@app.route('/api/ar-aging/customer', methods=['GET', 'OPTIONS'])
+def api_get_customer_invoices():
+    """Get all invoices for a specific customer for AR aging detail view"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        customer_name = request.args.get('customer', '').strip()
+        if not customer_name:
+            return jsonify({'success': False, 'error': 'Customer name required'}), 400
+        
+        # Load AR invoices data
+        invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ar_invoices.json')
+        with open(invoices_path, 'r', encoding='utf-8-sig') as f:
+            invoices_json = json.load(f)
+        
+        invoices = invoices_json.get('invoices', [])
+        
+        # Filter invoices for this customer with amount due
+        customer_invoices = []
+        totals = {
+            'invoice_amount': 0,
+            'amount_paid': 0,
+            'amount_due': 0,
+            'retainage': 0,
+            'count': 0
+        }
+        
+        for inv in invoices:
+            inv_customer = (inv.get('customer_name', '') or '').strip()
+            if inv_customer.lower() != customer_name.lower():
+                continue
+            
+            amount_due = float(inv.get('amount_due', 0) or 0)
+            if amount_due <= 0:
+                continue
+            
+            invoice_amount = float(inv.get('invoice_amount', 0) or 0)
+            retainage = float(inv.get('retainage_amount', 0) or 0)
+            amount_paid = float(inv.get('amount_paid_to_date', 0) or 0)
+            collectible = float(inv.get('collectible_amount_due', 0) or 0)
+            days = int(float(inv.get('days_outstanding', 0) or 0))
+            
+            # Parse invoice date from Excel serial
+            invoice_date = ''
+            date_val = inv.get('invoice_date')
+            if date_val:
+                try:
+                    excel_date = float(date_val)
+                    if excel_date > 0:
+                        date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
+                        invoice_date = date_obj.strftime('%m/%d/%Y')
+                except (ValueError, TypeError):
+                    invoice_date = str(date_val)
+            
+            customer_invoices.append({
+                'invoice_number': inv.get('invoice_no', ''),
+                'invoice_date': invoice_date,
+                'job_number': inv.get('job_no', ''),
+                'job_description': inv.get('job_description', ''),
+                'project_manager': inv.get('project_manager_name', ''),
+                'invoice_amount': invoice_amount,
+                'amount_paid': amount_paid,
+                'amount_due': collectible,
+                'retainage': retainage,
+                'days_outstanding': days
+            })
+            
+            totals['invoice_amount'] += invoice_amount
+            totals['amount_paid'] += amount_paid
+            totals['amount_due'] += collectible
+            totals['retainage'] += retainage
+            totals['count'] += 1
+        
+        # Sort by days outstanding descending
+        customer_invoices.sort(key=lambda x: x['days_outstanding'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'customer': customer_name,
+            'invoices': customer_invoices,
+            'totals': totals
+        })
+        
+    except Exception as e:
+        print(f"[AR-AGING] Customer detail error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'invoices': [], 'error': str(e)}), 500
+
 scheduler_thread = None
 
 def start_scheduler():
