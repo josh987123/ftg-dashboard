@@ -20350,9 +20350,8 @@ function loadApAgingData() {
     .then(r => r.json())
     .then(data => {
       if (data.success) {
-        renderApAgingTable(data.vendors || []);
+        renderApAgingTable(data.vendors || [], data.totals || {});
         updateApAgingSummary(data.totals || {});
-        updateApAgingFooter(data.totals || {});
       } else {
         showApAgingError('Failed to load AP aging data');
       }
@@ -20365,16 +20364,29 @@ function loadApAgingData() {
     });
 }
 
-function renderApAgingTable(vendors) {
+function renderApAgingTable(vendors, totals) {
   const tbody = document.getElementById('apAgingTableBody');
   if (!tbody) return;
   
+  totals = totals || {};
+  
+  // Totals row at top (after header)
+  const totalsRow = `<tr class="totals-row">
+    <td><strong>Totals (${vendors.length} vendors)</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.total_due || 0)}</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.current || 0)}</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.days_31_60 || 0)}</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.days_61_90 || 0)}</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.days_90_plus || 0)}</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totals.retainage || 0)}</strong></td>
+  </tr>`;
+  
   if (!vendors || vendors.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">No outstanding AP balances found</td></tr>';
+    tbody.innerHTML = totalsRow + '<tr><td colspan="7" class="empty-cell">No outstanding AP balances found</td></tr>';
     return;
   }
   
-  tbody.innerHTML = vendors.map(v => `
+  const dataRows = vendors.map(v => `
     <tr>
       <td>${escapeHtml(v.vendor_name)}</td>
       <td class="text-right">${formatCurrency(v.total_due)}</td>
@@ -20385,6 +20397,8 @@ function renderApAgingTable(vendors) {
       <td class="text-right">${formatCurrency(v.retainage)}</td>
     </tr>
   `).join('');
+  
+  tbody.innerHTML = totalsRow + dataRows;
 }
 
 function updateApAgingSummary(totals) {

@@ -14079,6 +14079,17 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
   color: #dc2626;
 }
 
+/* AP Aging totals row */
+.ap-aging-table .totals-row {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.ap-aging-table .totals-row td {
+  border-top: 2px solid #374151;
+  border-bottom: 2px solid #374151;
+}
+
 /* Dark mode for AP Aging */
 [data-theme="dark"] .ap-aging-summary .summary-card,
 body.dark-mode .ap-aging-summary .summary-card {
@@ -14094,6 +14105,17 @@ body.dark-mode .ap-aging-summary .summary-label {
 [data-theme="dark"] .ap-aging-summary .summary-value,
 body.dark-mode .ap-aging-summary .summary-value {
   color: #e2e8f0;
+}
+
+[data-theme="dark"] .ap-aging-table .totals-row,
+body.dark-mode .ap-aging-table .totals-row {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .ap-aging-table .totals-row td,
+body.dark-mode .ap-aging-table .totals-row td {
+  border-top-color: #94a3b8;
+  border-bottom-color: #94a3b8;
 }
 
 @media (max-width: 768px) {

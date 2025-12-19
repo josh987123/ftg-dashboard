@@ -3721,6 +3721,9 @@ def api_get_ap_aging():
         
         invoices = invoices_json.get('invoices', [])
         
+        # Vendors to exclude from AP Aging report
+        excluded_vendors = {'Kaiser Foundation Health Plan'}
+        
         # Group by vendor and calculate aging buckets
         vendor_aging = {}
         
@@ -3732,6 +3735,10 @@ def api_get_ap_aging():
             vendor = (inv.get('vendor_name', '') or '').strip()
             if not vendor:
                 vendor = 'Unknown Vendor'
+            
+            # Skip excluded vendors
+            if vendor in excluded_vendors:
+                continue
             
             if vendor not in vendor_aging:
                 vendor_aging[vendor] = {
