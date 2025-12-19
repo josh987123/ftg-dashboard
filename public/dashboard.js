@@ -12423,8 +12423,11 @@ function renderCashChart() {
   const canvas = document.getElementById("cashChart");
   if (!canvas) return;
   
+  const isMobileView = window.innerWidth <= 768;
   const stackBars = document.getElementById("cashStackBars")?.checked !== false;
-  const showDataLabels = document.getElementById("cashDataLabels")?.checked === true;
+  // On mobile, default to no data labels unless explicitly enabled
+  const dataLabelsCheckbox = document.getElementById("cashDataLabels");
+  const showDataLabels = isMobileView ? false : (dataLabelsCheckbox?.checked === true);
   
   // Get dates to display using the new helper function
   const dates = getCashDateRange();
