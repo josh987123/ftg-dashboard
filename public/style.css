@@ -1388,9 +1388,43 @@ body.dark-mode .nav-item.nav-parent.expanded {
   }
   
   .nav-item {
-    padding: 16px 24px;
+    padding: 14px 20px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+  
+  /* Nav section styling for mobile */
+  .nav-section-header {
+    padding: 12px 16px;
+    font-size: 12px;
+    min-height: 44px;
+  }
+  
+  .nav-section-icon {
     font-size: 16px;
-    min-height: 52px;
+    margin-right: 12px;
+  }
+  
+  .nav-section-toggle {
+    font-size: 10px;
+  }
+  
+  .nav-section-items.expanded {
+    max-height: 600px;
+  }
+  
+  .nav-section-items .nav-item.nav-child {
+    padding: 12px 16px 12px 44px;
+    font-size: 14px;
+    min-height: 44px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Ensure sidebar fills screen properly */
+  .sidebar.open {
+    width: min(280px, 85vw);
   }
   
   .overlay {
