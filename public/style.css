@@ -14081,6 +14081,33 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
   color: #dc2626;
 }
 
+/* AP Aging Chart */
+.ap-aging-chart-section {
+  margin-bottom: 16px;
+}
+
+.ap-aging-chart-wrapper {
+  max-width: 600px;
+  height: 200px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+[data-theme="dark"] .ap-aging-chart-wrapper,
+body.dark-mode .ap-aging-chart-wrapper {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+@media (max-width: 768px) {
+  .ap-aging-chart-wrapper {
+    max-width: 100%;
+    height: 180px;
+  }
+}
+
 /* AP Aging totals row */
 .ap-aging-table .totals-row {
   background: #f8fafc;

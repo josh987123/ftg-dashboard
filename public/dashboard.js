@@ -20293,6 +20293,7 @@ let apAgingInitialized = false;
 let apAgingSortColumn = 'days_90_plus';
 let apAgingSortDirection = 'desc';
 let apAgingSearchTerm = '';
+let apAgingChart = null;
 
 function initApAging() {
   if (!apAgingInitialized) {
@@ -20414,6 +20415,89 @@ function updateApAgingSummary(totals) {
   for (const [id, value] of Object.entries(ids)) {
     const el = document.getElementById(id);
     if (el) el.textContent = formatCurrency(value);
+  }
+  
+  // Update chart
+  updateApAgingChart(totals);
+}
+
+function updateApAgingChart(totals) {
+  const ctx = document.getElementById('apAgingChart');
+  if (!ctx) return;
+  
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#e2e8f0' : '#374151';
+  const gridColor = isDark ? '#334155' : '#e5e7eb';
+  
+  const data = {
+    labels: ['0-30 Days', '31-60 Days', '61-90 Days', '90+ Days', 'Retainage'],
+    datasets: [{
+      label: 'Amount',
+      data: [
+        totals.current || 0,
+        totals.days_31_60 || 0,
+        totals.days_61_90 || 0,
+        totals.days_90_plus || 0,
+        totals.retainage || 0
+      ],
+      backgroundColor: [
+        '#10b981',
+        '#f59e0b',
+        '#f97316',
+        '#dc2626',
+        '#6366f1'
+      ],
+      borderRadius: 4,
+      barThickness: 40
+    }]
+  };
+  
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (context) => formatCurrency(context.raw)
+        }
+      },
+      datalabels: {
+        display: true,
+        anchor: 'end',
+        align: 'top',
+        color: textColor,
+        font: { size: 10, weight: 'bold' },
+        formatter: (val) => formatCurrencyCompact(val)
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: textColor, font: { size: 11 } },
+        grid: { display: false }
+      },
+      y: {
+        ticks: {
+          color: textColor,
+          font: { size: 10 },
+          callback: (val) => formatCurrencyCompact(val)
+        },
+        grid: { color: gridColor }
+      }
+    }
+  };
+  
+  if (apAgingChart) {
+    apAgingChart.data = data;
+    apAgingChart.options = options;
+    apAgingChart.update();
+  } else {
+    apAgingChart = new Chart(ctx, {
+      type: 'bar',
+      data: data,
+      options: options,
+      plugins: [ChartDataLabels]
+    });
   }
 }
 
