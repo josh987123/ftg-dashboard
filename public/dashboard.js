@@ -7346,6 +7346,11 @@ function applyGradientToDatasets(datasets, chart) {
   datasets.forEach(ds => {
     if (ds.type === "line") return;
     
+    // Apply consistent bar styling
+    if (ds.borderRadius === undefined) ds.borderRadius = 4;
+    if (ds.barPercentage === undefined) ds.barPercentage = 0.9;
+    if (ds.categoryPercentage === undefined) ds.categoryPercentage = 0.85;
+    
     const origBg = ds._originalBg || ds.backgroundColor;
     ds._originalBg = origBg;
     
@@ -20535,26 +20540,31 @@ function updateApAgingChart(totals) {
   const textColor = isDark ? '#e2e8f0' : '#374151';
   const gridColor = isDark ? '#334155' : '#e5e7eb';
   
+  // Calculate max value for Y-axis padding (to show data labels above highest bar)
+  const values = [
+    totals.current || 0,
+    totals.days_31_60 || 0,
+    totals.days_61_90 || 0,
+    totals.days_90_plus || 0,
+    totals.retainage || 0
+  ];
+  const maxValue = Math.max(...values);
+  const yMax = maxValue > 0 ? maxValue * 1.15 : undefined; // 15% padding above max
+  
   const data = {
     labels: ['0-30 Days', '31-60 Days', '61-90 Days', '90+ Days', 'Retainage'],
     datasets: [{
       label: 'Amount',
-      data: [
-        totals.current || 0,
-        totals.days_31_60 || 0,
-        totals.days_61_90 || 0,
-        totals.days_90_plus || 0,
-        totals.retainage || 0
-      ],
-      backgroundColor: [
-        '#10b981',
-        '#f59e0b',
-        '#f97316',
-        '#dc2626',
-        '#6366f1'
-      ],
+      data: values,
+      backgroundColor: (context) => {
+        const chart = context.chart;
+        const { ctx: canvasCtx, chartArea } = chart;
+        if (!chartArea) return gradientColors.blue.start;
+        return createBarGradient(canvasCtx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
+      },
       borderRadius: 4,
-      barThickness: 40
+      barPercentage: 0.9,
+      categoryPercentage: 0.85
     }]
   };
   
@@ -20564,6 +20574,7 @@ function updateApAgingChart(totals) {
     plugins: {
       legend: { display: false },
       tooltip: {
+        backgroundColor: "rgba(31, 41, 55, 0.95)",
         callbacks: {
           label: (context) => formatCurrency(context.raw)
         }
@@ -20583,6 +20594,7 @@ function updateApAgingChart(totals) {
         grid: { display: false }
       },
       y: {
+        max: yMax,
         ticks: {
           color: textColor,
           font: { size: 10 },
