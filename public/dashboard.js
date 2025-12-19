@@ -16980,6 +16980,8 @@ function renderOubCharts() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const textColor = isDark ? '#e2e8f0' : '#374151';
   const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  const isMobile = window.innerWidth <= 768;
+  const showDataLabels = !isMobile;
   
   // Get top 10 overbilled jobs (over_under > 0, sorted descending)
   const overbilled = oubFiltered
@@ -16992,6 +16994,8 @@ function renderOubCharts() {
     .filter(j => j.over_under < 0)
     .sort((a, b) => a.over_under - b.over_under)
     .slice(0, 10);
+  
+  console.log('[OUB] Rendering charts - overbilled:', overbilled.length, 'underbilled:', underbilled.length);
   
   // Render overbilled chart
   const overbilledCanvas = document.getElementById('oubOverbilledChart');
@@ -17035,7 +17039,7 @@ function renderOubCharts() {
             }
           },
           datalabels: {
-            display: true,
+            display: showDataLabels,
             anchor: 'end',
             align: 'top',
             color: textColor,
@@ -17104,7 +17108,7 @@ function renderOubCharts() {
             }
           },
           datalabels: {
-            display: true,
+            display: showDataLabels,
             anchor: 'end',
             align: 'top',
             color: textColor,
