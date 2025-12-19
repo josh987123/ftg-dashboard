@@ -14183,6 +14183,77 @@ body.dark-mode .vendor-invoice-summary .summary-item .value {
   color: #64748b;
 }
 
+/* Vendor Invoice Modal Mobile */
+@media (max-width: 768px) {
+  .modal-xl {
+    max-width: 100%;
+    margin: 8px;
+    max-height: calc(100vh - 16px);
+  }
+  
+  .modal-xl .modal-body {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+  
+  .vendor-invoice-summary {
+    gap: 8px;
+    padding: 8px;
+  }
+  
+  .vendor-invoice-summary .summary-item {
+    min-width: 80px;
+  }
+  
+  .vendor-invoice-summary .summary-item .value {
+    font-size: 12px;
+  }
+  
+  .vendor-invoices-table {
+    font-size: 10px;
+    min-width: 800px;
+  }
+  
+  .vendor-invoices-table th,
+  .vendor-invoices-table td {
+    padding: 6px 4px;
+  }
+}
+
+/* Dark mode for vendor invoice modal table */
+[data-theme="dark"] .vendor-invoices-table,
+body.dark-mode .vendor-invoices-table {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .vendor-invoices-table th,
+body.dark-mode .vendor-invoices-table th {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .vendor-invoices-table td,
+body.dark-mode .vendor-invoices-table td {
+  border-color: #334155;
+}
+
+[data-theme="dark"] .vendor-invoices-table tr:nth-child(even),
+body.dark-mode .vendor-invoices-table tr:nth-child(even) {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .vendor-invoices-table tr:hover,
+body.dark-mode .vendor-invoices-table tr:hover {
+  background: #334155;
+}
+
+[data-theme="dark"] .modal-loading,
+body.dark-mode .modal-loading {
+  color: #94a3b8;
+}
+
 /* AP Aging totals row */
 .ap-aging-table .totals-row {
   background: #f8fafc;
