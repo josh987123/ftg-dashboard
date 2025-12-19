@@ -14051,28 +14051,30 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
 
 .ap-aging-summary .summary-card {
   flex: 0 0 auto;
-  min-width: 100px;
-  max-width: 140px;
+  min-width: 90px;
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   text-align: center;
 }
 
 .ap-aging-summary .summary-label {
-  font-size: 10px;
+  font-size: 9px;
   color: #6b7280;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   margin-bottom: 2px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ap-aging-summary .summary-value {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #1f2937;
+  white-space: nowrap;
 }
 
 .ap-aging-summary .summary-value.negative {
