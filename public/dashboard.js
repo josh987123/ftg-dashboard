@@ -20287,7 +20287,7 @@ function debounce(func, wait) {
    AP AGING REPORT
 ------------------------------------------------------------ */
 let apAgingInitialized = false;
-let apAgingSortColumn = 'total_due';
+let apAgingSortColumn = 'days_90_plus';
 let apAgingSortDirection = 'desc';
 let apAgingSearchTerm = '';
 
