@@ -14323,3 +14323,52 @@ body.dark-mode .ap-aging-table .totals-row td {
     font-size: 9px;
   }
 }
+
+/* AP & AR Aging Table Header Compact Styling */
+.ap-aging-table th,
+.ar-aging-table th {
+  padding: 6px 10px;
+  font-size: 10px;
+  color: #374151;
+}
+
+.ap-aging-table th .sort-btn,
+.ar-aging-table th .sort-btn {
+  font-size: 8px;
+  padding: 1px;
+}
+
+.ap-aging-table th .inline-sort,
+.ar-aging-table th .inline-sort {
+  gap: 0;
+}
+
+/* Dark mode - white text for AP/AR aging headers */
+[data-theme="dark"] .ap-aging-table th,
+body.dark-mode .ap-aging-table th,
+[data-theme="dark"] .ar-aging-table th,
+body.dark-mode .ar-aging-table th {
+  color: #e2e8f0;
+  background: #1e293b;
+}
+
+[data-theme="dark"] .ap-aging-table th:hover,
+body.dark-mode .ap-aging-table th:hover,
+[data-theme="dark"] .ar-aging-table th:hover,
+body.dark-mode .ar-aging-table th:hover {
+  background: #334155;
+}
+
+/* Mobile - even more compact */
+@media (max-width: 768px) {
+  .ap-aging-table th,
+  .ar-aging-table th {
+    padding: 4px 6px;
+    font-size: 9px;
+  }
+  
+  .ap-aging-table th .sort-btn,
+  .ar-aging-table th .sort-btn {
+    font-size: 7px;
+  }
+}
