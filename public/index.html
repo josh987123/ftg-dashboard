@@ -3197,6 +3197,44 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Vendor Invoice Detail Modal -->
+        <div id="apAgingVendorModal" class="modal-overlay hidden">
+          <div class="modal-dialog modal-xl">
+            <div class="modal-header">
+              <h3 id="apAgingVendorModalTitle">Vendor Invoices</h3>
+              <button class="modal-close" id="apAgingVendorModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div id="apAgingVendorModalLoading" class="modal-loading">
+                <div class="loading-spinner"></div>
+                <span>Loading invoices...</span>
+              </div>
+              <div id="apAgingVendorModalContent" class="hidden">
+                <div class="vendor-invoice-summary" id="vendorInvoiceSummary"></div>
+                <div class="table-wrapper">
+                  <table class="job-budgets-table vendor-invoices-table">
+                    <thead>
+                      <tr>
+                        <th>Invoice #</th>
+                        <th>Invoice Date</th>
+                        <th>Job #</th>
+                        <th>Job Description</th>
+                        <th>Project Manager</th>
+                        <th class="text-right">Invoice Amount</th>
+                        <th class="text-right">Amount Paid</th>
+                        <th class="text-right">Amount Due</th>
+                        <th class="text-right">Retainage</th>
+                        <th class="text-right">Days Out</th>
+                      </tr>
+                    </thead>
+                    <tbody id="vendorInvoicesTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- ============================================================
@@ -3683,7 +3721,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251219d"></script>
+  <script src="dashboard.js?v=20251219e"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>

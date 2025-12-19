@@ -3816,6 +3816,119 @@ def api_get_ap_aging():
         traceback.print_exc()
         return jsonify({'success': False, 'vendors': [], 'totals': {}, 'error': str(e)}), 500
 
+@app.route('/api/ap-aging/vendor', methods=['GET', 'OPTIONS'])
+def api_get_vendor_invoices():
+    """Get all invoices for a specific vendor for AP aging detail view"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        vendor_name = request.args.get('vendor', '').strip()
+        if not vendor_name:
+            return jsonify({'success': False, 'error': 'Vendor name required'}), 400
+        
+        # Load invoices data
+        invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ap_invoices.json')
+        with open(invoices_path, 'r', encoding='utf-8-sig') as f:
+            invoices_json = json.load(f)
+        
+        invoices = invoices_json.get('invoices', [])
+        
+        # Load job budgets for job descriptions and PM names
+        budgets_path = os.path.join(os.path.dirname(__file__), 'data', 'job_budgets.json')
+        job_info = {}
+        try:
+            with open(budgets_path, 'r', encoding='utf-8-sig') as f:
+                budgets_json = json.load(f)
+            for job in budgets_json.get('jobs', []):
+                job_num = str(job.get('job_number', '')).strip()
+                if job_num:
+                    job_info[job_num] = {
+                        'description': job.get('job_description', ''),
+                        'pm': job.get('project_manager', '')
+                    }
+        except Exception as e:
+            print(f"[AP-AGING] Could not load job budgets: {e}")
+        
+        # Filter invoices for this vendor with remaining balance
+        vendor_invoices = []
+        totals = {
+            'invoice_amount': 0,
+            'amount_paid': 0,
+            'amount_due': 0,
+            'retainage': 0,
+            'count': 0
+        }
+        
+        for inv in invoices:
+            inv_vendor = (inv.get('vendor_name', '') or '').strip()
+            if inv_vendor.lower() != vendor_name.lower():
+                continue
+            
+            remaining = float(inv.get('remaining_balance', 0) or 0)
+            if remaining <= 0:
+                continue
+            
+            invoice_amount = float(inv.get('invoice_amount', 0) or 0)
+            retainage = float(inv.get('retainage_amount', 0) or 0)
+            amount_paid = invoice_amount - remaining
+            days = int(float(inv.get('days_outstanding', 0) or 0))
+            
+            # Get job info
+            job_num = str(inv.get('job_number', '') or '').strip()
+            job_desc = ''
+            pm_name = ''
+            if job_num and job_num in job_info:
+                job_desc = job_info[job_num].get('description', '')
+                pm_name = job_info[job_num].get('pm', '')
+            
+            # Parse invoice date
+            invoice_date = ''
+            date_val = inv.get('invoice_date')
+            if date_val:
+                try:
+                    excel_date = float(date_val)
+                    if excel_date > 0:
+                        date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
+                        invoice_date = date_obj.strftime('%m/%d/%Y')
+                except (ValueError, TypeError):
+                    invoice_date = str(date_val)
+            
+            vendor_invoices.append({
+                'invoice_number': inv.get('invoice_number', ''),
+                'invoice_date': invoice_date,
+                'job_number': job_num,
+                'job_description': job_desc,
+                'project_manager': pm_name,
+                'invoice_amount': invoice_amount,
+                'amount_paid': amount_paid,
+                'amount_due': remaining - retainage,
+                'retainage': retainage,
+                'days_outstanding': days
+            })
+            
+            totals['invoice_amount'] += invoice_amount
+            totals['amount_paid'] += amount_paid
+            totals['amount_due'] += (remaining - retainage)
+            totals['retainage'] += retainage
+            totals['count'] += 1
+        
+        # Sort by days outstanding descending
+        vendor_invoices.sort(key=lambda x: x['days_outstanding'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'vendor': vendor_name,
+            'invoices': vendor_invoices,
+            'totals': totals
+        })
+        
+    except Exception as e:
+        print(f"[AP-AGING] Vendor detail error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'invoices': [], 'error': str(e)}), 500
+
 scheduler_thread = None
 
 def start_scheduler():

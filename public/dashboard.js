@@ -20389,7 +20389,7 @@ function renderApAgingTable(vendors, totals) {
   
   const dataRows = vendors.map(v => `
     <tr>
-      <td>${escapeHtml(v.vendor_name)}</td>
+      <td><span class="vendor-link" data-vendor="${escapeHtml(v.vendor_name)}">${escapeHtml(v.vendor_name)}</span></td>
       <td class="text-right">${formatCurrency(v.total_due)}</td>
       <td class="text-right">${formatCurrency(v.current)}</td>
       <td class="text-right">${formatCurrency(v.days_31_60)}</td>
@@ -20400,6 +20400,14 @@ function renderApAgingTable(vendors, totals) {
   `).join('');
   
   tbody.innerHTML = totalsRow + dataRows;
+  
+  // Add click handlers to vendor links
+  tbody.querySelectorAll('.vendor-link').forEach(link => {
+    link.addEventListener('click', () => {
+      const vendorName = link.dataset.vendor;
+      if (vendorName) showVendorInvoicesModal(vendorName);
+    });
+  });
 }
 
 function updateApAgingSummary(totals) {
@@ -20419,6 +20427,104 @@ function updateApAgingSummary(totals) {
   
   // Update chart
   updateApAgingChart(totals);
+}
+
+function showVendorInvoicesModal(vendorName) {
+  const modal = document.getElementById('apAgingVendorModal');
+  const title = document.getElementById('apAgingVendorModalTitle');
+  const loading = document.getElementById('apAgingVendorModalLoading');
+  const content = document.getElementById('apAgingVendorModalContent');
+  const closeBtn = document.getElementById('apAgingVendorModalClose');
+  
+  if (!modal) return;
+  
+  // Show modal with loading state
+  title.textContent = vendorName;
+  loading.classList.remove('hidden');
+  content.classList.add('hidden');
+  modal.classList.remove('hidden');
+  
+  // Close handler
+  const closeModal = () => modal.classList.add('hidden');
+  closeBtn.onclick = closeModal;
+  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+  
+  // Fetch vendor invoices
+  fetch(`/api/ap-aging/vendor?vendor=${encodeURIComponent(vendorName)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        renderVendorInvoicesModal(data.invoices || [], data.totals || {});
+      } else {
+        document.getElementById('vendorInvoicesTableBody').innerHTML = 
+          '<tr><td colspan="10" class="empty-cell">Error loading invoices</td></tr>';
+      }
+      loading.classList.add('hidden');
+      content.classList.remove('hidden');
+    })
+    .catch(err => {
+      console.error('Error loading vendor invoices:', err);
+      document.getElementById('vendorInvoicesTableBody').innerHTML = 
+        '<tr><td colspan="10" class="empty-cell">Error loading invoices</td></tr>';
+      loading.classList.add('hidden');
+      content.classList.remove('hidden');
+    });
+}
+
+function renderVendorInvoicesModal(invoices, totals) {
+  const tbody = document.getElementById('vendorInvoicesTableBody');
+  const summary = document.getElementById('vendorInvoiceSummary');
+  
+  if (!tbody) return;
+  
+  // Render summary
+  if (summary) {
+    summary.innerHTML = `
+      <div class="summary-item">
+        <span class="label">Invoices</span>
+        <span class="value">${totals.count || 0}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Invoice Total</span>
+        <span class="value">${formatCurrency(totals.invoice_amount || 0)}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Amount Paid</span>
+        <span class="value">${formatCurrency(totals.amount_paid || 0)}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Amount Due</span>
+        <span class="value">${formatCurrency(totals.amount_due || 0)}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Retainage</span>
+        <span class="value">${formatCurrency(totals.retainage || 0)}</span>
+      </div>
+    `;
+  }
+  
+  // Render table
+  if (!invoices || invoices.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">No invoices found</td></tr>';
+    return;
+  }
+  
+  const rows = invoices.map(inv => `
+    <tr>
+      <td>${escapeHtml(inv.invoice_number || '')}</td>
+      <td>${escapeHtml(inv.invoice_date || '')}</td>
+      <td>${escapeHtml(inv.job_number || '')}</td>
+      <td>${escapeHtml(inv.job_description || '')}</td>
+      <td>${escapeHtml(inv.project_manager || '')}</td>
+      <td class="text-right">${formatCurrency(inv.invoice_amount || 0)}</td>
+      <td class="text-right">${formatCurrency(inv.amount_paid || 0)}</td>
+      <td class="text-right">${formatCurrency(inv.amount_due || 0)}</td>
+      <td class="text-right">${formatCurrency(inv.retainage || 0)}</td>
+      <td class="text-right ${inv.days_outstanding > 90 ? 'negative' : ''}">${inv.days_outstanding}</td>
+    </tr>
+  `).join('');
+  
+  tbody.innerHTML = rows;
 }
 
 function updateApAgingChart(totals) {
