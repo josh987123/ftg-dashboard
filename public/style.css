@@ -3578,8 +3578,9 @@ body.dark-mode .nav-item.nav-parent.expanded {
   
   .is-table-box {
     padding: 12px;
-    margin: 0 -18px;
-    border-radius: 0;
+    margin: 0 0 12px 0;
+    border-radius: 8px;
+    width: 100%;
   }
   
   #incomeStatementTable {
@@ -3617,19 +3618,22 @@ body.dark-mode .nav-item.nav-parent.expanded {
     padding: 8px 10px;
   }
   
-  /* Config panel mobile - match AI analysis panel styling */
+  /* Config panel mobile - consistent alignment */
   .config-panel {
-    margin: 0;
-    margin-bottom: 12px;
+    margin: 0 0 12px 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
     border-radius: 10px;
     border: 1px solid #e5e7eb;
+    box-sizing: border-box;
   }
   
   /* Both panels same horizontal alignment on mobile */
   .config-panel,
   .ai-analysis-panel {
-    margin-left: 0;
-    margin-right: 0;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
   }
   
   .config-body {
@@ -3752,7 +3756,8 @@ body.dark-mode .nav-item.nav-parent.expanded {
 @media (max-width: 500px) {
   .is-table-box {
     padding: 8px;
-    margin: 0 -14px;
+    margin: 0 0 10px 0;
+    width: 100%;
   }
   
   #incomeStatementTable {
@@ -3787,7 +3792,8 @@ body.dark-mode .nav-item.nav-parent.expanded {
   }
   
   .config-panel {
-    margin: 0 -14px 14px;
+    margin: 0 0 12px 0;
+    width: 100%;
   }
 }
 
