@@ -1113,140 +1113,194 @@ function applyJobBudgetsDarkModeStyles(theme) {
   // Keeping function to avoid errors from existing calls
 }
 
+/* ------------------------------------------------------------
+   CHART THEME MANAGER - Centralized theme color management
+   Reads colors from CSS custom properties for consistency
+------------------------------------------------------------ */
+const ChartThemeManager = {
+  _palette: null,
+  _listeners: [],
+  
+  refresh() {
+    const styles = getComputedStyle(document.documentElement);
+    this._palette = {
+      text: styles.getPropertyValue('--chart-text').trim() || '#374151',
+      grid: styles.getPropertyValue('--chart-grid').trim() || 'rgba(0,0,0,0.1)',
+      legend: styles.getPropertyValue('--chart-legend').trim() || '#374151',
+      datalabel: styles.getPropertyValue('--chart-datalabel').trim() || '#374151',
+      gradientStart: styles.getPropertyValue('--chart-gradient-start').trim() || '#2563eb',
+      gradientEnd: styles.getPropertyValue('--chart-gradient-end').trim() || '#60a5fa',
+      barPrimary: styles.getPropertyValue('--chart-bar-primary').trim() || '#3b82f6',
+      barSecondary: styles.getPropertyValue('--chart-bar-secondary').trim() || '#10b981',
+      barTertiary: styles.getPropertyValue('--chart-bar-tertiary').trim() || '#f59e0b',
+      lineTotal: styles.getPropertyValue('--chart-line-total').trim() || '#dc2626'
+    };
+    this._notifyListeners();
+    return this._palette;
+  },
+  
+  getPalette() {
+    if (!this._palette) this.refresh();
+    return this._palette;
+  },
+  
+  createGradient(ctx, vertical = true) {
+    const p = this.getPalette();
+    const gradient = vertical 
+      ? ctx.createLinearGradient(0, 0, 0, 300)
+      : ctx.createLinearGradient(0, 0, 300, 0);
+    gradient.addColorStop(0, p.gradientStart);
+    gradient.addColorStop(1, p.gradientEnd);
+    return gradient;
+  },
+  
+  onThemeChange(callback) {
+    this._listeners.push(callback);
+  },
+  
+  _notifyListeners() {
+    this._listeners.forEach(cb => cb(this._palette));
+  }
+};
+
 function getChartThemeColors() {
-  const isDark = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains("dark-mode");
+  const p = ChartThemeManager.getPalette();
   return {
-    gridColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
-    textColor: isDark ? "#ffffff" : "#374151",
-    legendColor: isDark ? "#ffffff" : "#374151"
+    gridColor: p.grid,
+    textColor: p.text,
+    legendColor: p.legend
   };
 }
 
 function initChartJsThemeDefaults(theme) {
   if (typeof Chart === "undefined") return;
   
-  const isDark = theme === "dark";
-  const textColor = isDark ? "#ffffff" : "#374151";
-  const gridColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)";
+  ChartThemeManager.refresh();
+  const p = ChartThemeManager.getPalette();
   
-  // Set global Chart.js defaults
-  Chart.defaults.color = textColor;
-  Chart.defaults.borderColor = gridColor;
+  Chart.defaults.color = p.text;
+  Chart.defaults.borderColor = p.grid;
   
-  // Set scale defaults
   if (Chart.defaults.scales) {
     if (Chart.defaults.scales.linear) {
       Chart.defaults.scales.linear.ticks = Chart.defaults.scales.linear.ticks || {};
-      Chart.defaults.scales.linear.ticks.color = textColor;
+      Chart.defaults.scales.linear.ticks.color = p.text;
       Chart.defaults.scales.linear.grid = Chart.defaults.scales.linear.grid || {};
-      Chart.defaults.scales.linear.grid.color = gridColor;
+      Chart.defaults.scales.linear.grid.color = p.grid;
     }
     if (Chart.defaults.scales.category) {
       Chart.defaults.scales.category.ticks = Chart.defaults.scales.category.ticks || {};
-      Chart.defaults.scales.category.ticks.color = textColor;
+      Chart.defaults.scales.category.ticks.color = p.text;
       Chart.defaults.scales.category.grid = Chart.defaults.scales.category.grid || {};
-      Chart.defaults.scales.category.grid.color = gridColor;
+      Chart.defaults.scales.category.grid.color = p.grid;
     }
   }
   
-  // Set legend defaults
   if (Chart.defaults.plugins && Chart.defaults.plugins.legend) {
     Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
-    Chart.defaults.plugins.legend.labels.color = textColor;
+    Chart.defaults.plugins.legend.labels.color = p.legend;
   }
 }
 
 function updateChartColorsForTheme(theme) {
-  const isDark = theme === "dark";
-  const gridColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)";
-  const textColor = isDark ? "#ffffff" : "#374151";
-  
-  // Set Chart.js global defaults for future charts
+  // Refresh the palette from CSS variables (CSS vars change when data-theme changes)
   initChartJsThemeDefaults(theme);
+  const p = ChartThemeManager.getPalette();
   
-  // Update all Chart.js instances if they exist
+  // Update all existing Chart.js instances with new colors from palette
   if (typeof Chart !== "undefined" && Chart.instances) {
     Object.values(Chart.instances).forEach(chart => {
-      if (chart.options && chart.options.scales) {
-        if (chart.options.scales.x) {
-          chart.options.scales.x.grid = chart.options.scales.x.grid || {};
-          chart.options.scales.x.grid.color = gridColor;
-          chart.options.scales.x.ticks = chart.options.scales.x.ticks || {};
-          chart.options.scales.x.ticks.color = textColor;
-        }
-        if (chart.options.scales.y) {
-          chart.options.scales.y.grid = chart.options.scales.y.grid || {};
-          chart.options.scales.y.grid.color = gridColor;
-          chart.options.scales.y.ticks = chart.options.scales.y.ticks || {};
-          chart.options.scales.y.ticks.color = textColor;
-        }
+      if (!chart || !chart.options) return;
+      
+      // Update scales
+      if (chart.options.scales) {
+        Object.keys(chart.options.scales).forEach(scaleKey => {
+          const scale = chart.options.scales[scaleKey];
+          if (scale) {
+            scale.ticks = scale.ticks || {};
+            scale.ticks.color = p.text;
+            scale.grid = scale.grid || {};
+            scale.grid.color = p.grid;
+          }
+        });
       }
-      // Update legend colors
-      if (chart.options && chart.options.plugins && chart.options.plugins.legend) {
-        chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
-        chart.options.plugins.legend.labels.color = textColor;
+      
+      // Update legend
+      if (chart.options.plugins?.legend?.labels) {
+        chart.options.plugins.legend.labels.color = p.legend;
       }
-      // Update datalabels colors
-      if (chart.options && chart.options.plugins && chart.options.plugins.datalabels) {
-        chart.options.plugins.datalabels.color = textColor;
+      
+      // Update datalabels
+      if (chart.options.plugins?.datalabels) {
+        chart.options.plugins.datalabels.color = p.datalabel;
       }
-      chart.update("none");
+      
+      // Update dataset colors that use gradients (need to recreate gradient)
+      if (chart.data?.datasets && chart.ctx) {
+        chart.data.datasets.forEach((dataset, index) => {
+          // Recreate gradient for bar charts
+          if (dataset.backgroundColor && typeof dataset.backgroundColor === 'object' && dataset.backgroundColor.addColorStop) {
+            dataset.backgroundColor = ChartThemeManager.createGradient(chart.ctx);
+          }
+        });
+      }
+      
+      chart.update('none');
     });
   }
   
-  // Re-render cash chart to update Total line color
-  if (typeof renderCashChart === 'function' && cashChartInstance) {
-    renderCashChart();
-  }
-  
-  // Re-render job budgets donut charts if they exist
-  if (typeof renderPmDonutChart === 'function' && typeof pmDonutChart !== 'undefined' && pmDonutChart) {
-    renderPmDonutChart();
-  }
-  if (typeof renderCustomerDonutChart === 'function' && typeof customerDonutChart !== 'undefined' && customerDonutChart) {
-    renderCustomerDonutChart();
-  }
-  
-  // Re-render PM Report charts if they exist
-  if (typeof renderPmrMarginChart === 'function' && typeof pmrMarginChart !== 'undefined' && pmrMarginChart) {
-    renderPmrMarginChart();
-  }
-  if (typeof renderPmrBudgetActualChart === 'function' && typeof pmrBudgetActualChart !== 'undefined' && pmrBudgetActualChart) {
-    renderPmrBudgetActualChart();
-  }
-  if (typeof renderPmrBillingChart === 'function' && typeof pmrBillingChart !== 'undefined' && pmrBillingChart) {
-    renderPmrBillingChart();
-  }
-  
-  // Re-render Over/Under Billing charts if they exist
-  if (typeof renderOubCharts === 'function' && (typeof oubOverbilledChart !== 'undefined' && oubOverbilledChart || typeof oubUnderbilledChart !== 'undefined' && oubUnderbilledChart)) {
-    renderOubCharts();
-  }
-  
-  // Re-render Job Actuals donut charts if they exist
-  if (typeof renderJaPmDonutChart === 'function' && typeof jaPmDonutChart !== 'undefined' && jaPmDonutChart) {
-    renderJaPmDonutChart();
-  }
-  if (typeof renderJaCustomerDonutChart === 'function' && typeof jaCustomerDonutChart !== 'undefined' && jaCustomerDonutChart) {
-    renderJaCustomerDonutChart();
-  }
-  
-  // Re-render AP/AR Aging charts if they exist
-  if (typeof renderTopVendorsChart === 'function' && typeof topVendorsChart !== 'undefined' && topVendorsChart) {
-    loadTopVendorsChart();
-  }
-  
-  // Re-render Job Overview charts if they exist
-  if (typeof updateJobOverviewCharts === 'function' && typeof joPmJobsChart !== 'undefined' && joPmJobsChart) {
-    updateJobOverviewCharts();
-  }
-  
-  // Re-render Overview tile charts if they exist
-  if (typeof overviewChartInstances !== 'undefined' && Object.keys(overviewChartInstances).length > 0) {
-    if (typeof updateOverviewCharts === 'function') {
+  // Re-render charts that need full reconstruction (complex gradients, special colors)
+  requestAnimationFrame(() => {
+    // Job Overview charts
+    if (typeof updateJobOverviewCharts === 'function' && typeof joPmJobsChart !== 'undefined' && joPmJobsChart) {
+      updateJobOverviewCharts();
+    }
+    
+    // Overview tile charts
+    if (typeof overviewChartInstances !== 'undefined' && Object.keys(overviewChartInstances).length > 0 && typeof updateOverviewCharts === 'function') {
       updateOverviewCharts();
     }
-  }
+    
+    // Cash chart
+    if (typeof renderCashChart === 'function' && typeof cashChartInstance !== 'undefined' && cashChartInstance) {
+      renderCashChart();
+    }
+    
+    // PM Report charts
+    if (typeof renderPmrMarginChart === 'function' && typeof pmrMarginChart !== 'undefined' && pmrMarginChart) {
+      renderPmrMarginChart();
+    }
+    if (typeof renderPmrBudgetActualChart === 'function' && typeof pmrBudgetActualChart !== 'undefined' && pmrBudgetActualChart) {
+      renderPmrBudgetActualChart();
+    }
+    if (typeof renderPmrBillingChart === 'function' && typeof pmrBillingChart !== 'undefined' && pmrBillingChart) {
+      renderPmrBillingChart();
+    }
+    
+    // Donut charts
+    if (typeof renderPmDonutChart === 'function' && typeof pmDonutChart !== 'undefined' && pmDonutChart) {
+      renderPmDonutChart();
+    }
+    if (typeof renderCustomerDonutChart === 'function' && typeof customerDonutChart !== 'undefined' && customerDonutChart) {
+      renderCustomerDonutChart();
+    }
+    if (typeof renderJaPmDonutChart === 'function' && typeof jaPmDonutChart !== 'undefined' && jaPmDonutChart) {
+      renderJaPmDonutChart();
+    }
+    if (typeof renderJaCustomerDonutChart === 'function' && typeof jaCustomerDonutChart !== 'undefined' && jaCustomerDonutChart) {
+      renderJaCustomerDonutChart();
+    }
+    
+    // Over/Under Billing charts
+    if (typeof renderOubCharts === 'function' && (typeof oubOverbilledChart !== 'undefined' && oubOverbilledChart || typeof oubUnderbilledChart !== 'undefined' && oubUnderbilledChart)) {
+      renderOubCharts();
+    }
+    
+    // AP/AR Aging charts
+    if (typeof loadTopVendorsChart === 'function' && typeof topVendorsChart !== 'undefined' && topVendorsChart) {
+      loadTopVendorsChart();
+    }
+  });
 }
 
 function setupMetricInfoButtons() {
