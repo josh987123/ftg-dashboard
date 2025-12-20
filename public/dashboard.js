@@ -15330,9 +15330,11 @@ async function loadJobActualsData() {
     const jobActualsRaw = data.job_actuals || [];
     const jobBilledRevenueRaw = data.job_billed_revenue || [];
     
+    // Normalize all job numbers to strings for consistent lookups
     const budgetMap = new Map();
     jobBudgets.forEach(job => {
-      budgetMap.set(job.job_no, {
+      const jobNo = String(job.job_no);
+      budgetMap.set(jobNo, {
         customer_name: job.customer_name,
         project_manager_name: job.project_manager_name,
         job_status: job.job_status,
@@ -15344,8 +15346,8 @@ async function loadJobActualsData() {
     
     const billedRevenueMap = new Map();
     jobBilledRevenueRaw.forEach(row => {
-      const jobNo = row.Job_No || row.job_no;
-      if (jobNo) {
+      const jobNo = String(row.Job_No || row.job_no);
+      if (jobNo && jobNo !== 'undefined') {
         const billedRev = parseFloat(row.Billed_Revenue || row.billed_revenue) || 0;
         billedRevenueMap.set(jobNo, billedRev);
       }
@@ -15353,17 +15355,21 @@ async function loadJobActualsData() {
     
     const jobMap = new Map();
     jobActualsRaw.forEach(row => {
-      const jobNo = row.job_no;
+      // Handle both capitalized (Job_No, Value) and lowercase (job_no, actual_cost) key names
+      const jobNo = String(row.Job_No || row.job_no);
+      const actualCost = parseFloat(row.Value || row.actual_cost) || 0;
+      if (!jobNo || jobNo === 'undefined') return;
+      
       if (!jobMap.has(jobNo)) {
         jobMap.set(jobNo, {
           job_no: jobNo,
-          job_status: row.job_status,
-          job_description: row.job_description,
-          project_manager_name: row.project_manager_name,
+          job_status: row.job_status || row.Job_Status || '',
+          job_description: row.Job_Description || row.job_description || '',
+          project_manager_name: row.Project_Manager || row.project_manager_name || '',
           actual_cost: 0
         });
       }
-      jobMap.get(jobNo).actual_cost += parseFloat(row.actual_cost) || 0;
+      jobMap.get(jobNo).actual_cost += actualCost;
     });
     
     jobActualsData = [];
