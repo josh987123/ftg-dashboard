@@ -16956,6 +16956,39 @@ function updatePmReport() {
   renderPmrClientSummaryTable();
 }
 
+// Gradient color helper for conditional formatting (green -> yellow -> red)
+function getGradientColor(value, lowThreshold, highThreshold, inverse = false) {
+  // inverse: true means low is good (green), high is bad (red)
+  // inverse: false means high is good (green), low is bad (red)
+  let ratio;
+  if (inverse) {
+    // Low = green, High = red
+    if (value <= lowThreshold) ratio = 1; // green
+    else if (value >= highThreshold) ratio = 0; // red
+    else ratio = 1 - (value - lowThreshold) / (highThreshold - lowThreshold);
+  } else {
+    // High = green, Low = red
+    if (value >= highThreshold) ratio = 1; // green
+    else if (value <= lowThreshold) ratio = 0; // red
+    else ratio = (value - lowThreshold) / (highThreshold - lowThreshold);
+  }
+  
+  // Interpolate: red(0) -> yellow(0.5) -> green(1)
+  let r, g, b;
+  if (ratio <= 0.5) {
+    // Red to Yellow
+    r = 220;
+    g = Math.round(38 + (175 * ratio * 2)); // 38 to 213
+    b = 38;
+  } else {
+    // Yellow to Green
+    r = Math.round(220 - (204 * (ratio - 0.5) * 2)); // 220 to 16
+    g = Math.round(213 - (28 * (ratio - 0.5) * 2)); // 213 to 185
+    b = Math.round(38 + (91 * (ratio - 0.5) * 2)); // 38 to 129
+  }
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 function updatePmrMetrics() {
   const jobs = pmrData.jobs;
   
@@ -17020,44 +17053,67 @@ function updatePmrMetrics() {
   document.getElementById('pmrTotalActualCost').textContent = formatCurrencyCompact(totalActualCost);
   document.getElementById('pmrTotalEarnedRevenue').textContent = formatCurrencyCompact(totalEarnedRevenue);
   
-  // Backlog
+  // Backlog - gradient: 20%+ remaining = green (healthy), 10-20% = yellow, <10% = red (low backlog)
   const backlogEl = document.getElementById('pmrBacklog');
   const backlogPctEl = document.getElementById('pmrBacklogPct');
-  if (backlogEl) backlogEl.textContent = formatCurrencyCompact(backlog);
-  if (backlogPctEl) backlogPctEl.textContent = `${backlogPct.toFixed(0)}%`;
+  if (backlogEl) {
+    backlogEl.textContent = formatCurrencyCompact(backlog);
+    backlogEl.style.color = getGradientColor(backlogPct, 10, 30, false);
+  }
+  if (backlogPctEl) {
+    backlogPctEl.textContent = `${backlogPct.toFixed(0)}%`;
+    backlogPctEl.style.color = getGradientColor(backlogPct, 10, 30, false);
+  }
   
-  // Gross Margin (actual realized margin)
+  // Gross Margin (actual realized margin) - gradient color based on percentage
   const marginEl = document.getElementById('pmrGrossMargin');
   const marginAmtEl = document.getElementById('pmrGrossMarginAmt');
   if (marginEl) {
     marginEl.textContent = `${grossMarginPct.toFixed(1)}%`;
-    marginEl.classList.remove('positive', 'negative');
-    marginEl.classList.add(grossMarginPct >= 10 ? 'positive' : grossMarginPct < 5 ? 'negative' : '');
+    // Gradient: <5% red, 5-20% yellow gradient, >20% green
+    marginEl.style.color = getGradientColor(grossMarginPct, 5, 20, false);
   }
-  if (marginAmtEl) marginAmtEl.textContent = formatCurrencyCompact(actualProfit);
+  if (marginAmtEl) {
+    marginAmtEl.textContent = formatCurrencyCompact(actualProfit);
+    marginAmtEl.style.color = getGradientColor(grossMarginPct, 5, 20, false);
+  }
   
-  // Avg % Complete
+  // Avg % Complete - gradient progress bar color
   const avgPctEl = document.getElementById('pmrAvgPctComplete');
   const progressFill = document.getElementById('pmrProgressFill');
-  if (avgPctEl) avgPctEl.textContent = `${avgPctComplete.toFixed(0)}%`;
-  if (progressFill) progressFill.style.width = `${Math.min(avgPctComplete, 100)}%`;
+  if (avgPctEl) {
+    avgPctEl.textContent = `${avgPctComplete.toFixed(0)}%`;
+    // Color: 0-30% red, 30-60% yellow, 60%+ green
+    avgPctEl.style.color = getGradientColor(avgPctComplete, 30, 70, false);
+  }
+  if (progressFill) {
+    progressFill.style.width = `${Math.min(avgPctComplete, 100)}%`;
+    progressFill.style.backgroundColor = getGradientColor(avgPctComplete, 30, 70, false);
+  }
   
   // Billed Last Month
   const billedLastMonthEl = document.getElementById('pmrBilledLastMonth');
   if (billedLastMonthEl) billedLastMonthEl.textContent = formatCurrencyCompact(billedLastMonth);
   
-  // AR Exposure
+  // AR Exposure - gradient based on % of AR that's over 60 days (high % = red)
   const arEl = document.getElementById('pmrArExposure');
   const arOver60El = document.getElementById('pmrArOver60');
   if (arEl) arEl.textContent = formatCurrencyCompact(arTotal);
-  if (arOver60El) arOver60El.textContent = arOver60 > 0 ? `${formatCurrencyCompact(arOver60)} >60d` : 'None';
+  if (arOver60El) {
+    arOver60El.textContent = arOver60 > 0 ? `${formatCurrencyCompact(arOver60)} >60d` : 'None';
+    // Color based on % of AR that's over 60 days: 0% green, 10% yellow, 25%+ red
+    const arOver60Pct = arTotal > 0 ? (arOver60 / arTotal * 100) : 0;
+    arOver60El.style.color = arOver60 > 0 ? getGradientColor(arOver60Pct, 5, 25, true) : '';
+  }
   
-  // Net Over/Under
+  // Net Over/Under - gradient: negative (under-billed) = red, 0 = yellow, positive (over-billed) = green
   const netEl = document.getElementById('pmrNetOverUnder');
   if (netEl) {
     netEl.textContent = formatCurrencyCompact(netOverUnder);
-    netEl.classList.remove('positive', 'negative');
-    netEl.classList.add(netOverUnder >= 0 ? 'positive' : 'negative');
+    // Use % of earned revenue for context (under-billed by >10% of earned is concerning)
+    const overUnderPct = totalEarnedRevenue > 0 ? (netOverUnder / totalEarnedRevenue * 100) : 0;
+    // Gradient: -10% (red) -> 0% (yellow) -> +10% (green)
+    netEl.style.color = getGradientColor(overUnderPct, -10, 10, false);
   }
   
   // Store computed data for charts
