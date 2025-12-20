@@ -17279,7 +17279,7 @@ function formatCurrencyShort(value) {
   return '$' + value.toFixed(0);
 }
 
-// Track collapse state for Over/Under section
+// Track collapse state for Over/Under section (now controls columns, not rows)
 let pmrOverUnderExpanded = false;
 
 function renderPmrOverUnderTable() {
@@ -17293,7 +17293,7 @@ function renderPmrOverUnderTable() {
   pmrData.overUnder = overUnderJobs;
   
   if (overUnderJobs.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="pmr-empty-state"><div class="pmr-empty-state-text">No jobs with billing variance</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="pmr-empty-state"><div class="pmr-empty-state-text">No jobs with billing variance</div></td></tr>';
     document.getElementById('pmrOverUnderCount').textContent = '0 jobs';
     document.getElementById('pmrOverUnderToggle').style.display = 'none';
     return;
@@ -17313,60 +17313,65 @@ function renderPmrOverUnderTable() {
     : 0;
   
   const overUnderClass = totals.overUnder >= 0 ? 'over-billed' : 'under-billed';
-  const collapsedClass = pmrOverUnderExpanded ? '' : 'collapsed';
   
   // Subtotal row first
   const subtotalRow = `<tr class="pmr-subtotal-row">
     <td colspan="3"><strong>TOTAL (${overUnderJobs.length} jobs)</strong></td>
-    <td class="text-right">${formatCurrency(totals.contract)}</td>
-    <td class="text-right">${formatCurrency(totals.actualCost)}</td>
-    <td class="text-right">${avgPctComplete.toFixed(1)}%</td>
-    <td class="text-right">${formatCurrency(totals.earnedRev)}</td>
-    <td class="text-right">${formatCurrency(totals.billedRev)}</td>
+    <td class="text-right pmr-expandable-col">${formatCurrency(totals.contract)}</td>
+    <td class="text-right pmr-expandable-col">${formatCurrency(totals.actualCost)}</td>
+    <td class="text-right pmr-expandable-col">${avgPctComplete.toFixed(1)}%</td>
+    <td class="text-right pmr-expandable-col">${formatCurrency(totals.earnedRev)}</td>
+    <td class="text-right pmr-expandable-col">${formatCurrency(totals.billedRev)}</td>
     <td class="text-right ${overUnderClass}">${formatCurrency(totals.overUnder)}</td>
   </tr>`;
   
-  // Detail rows (collapsible)
+  // Detail rows
   const detailRows = overUnderJobs.map(job => {
     const pctComplete = job.percent_complete || 0;
     const jobOverUnderClass = job.over_under >= 0 ? 'over-billed' : 'under-billed';
-    return `<tr class="pmr-detail-row ${collapsedClass}">
+    return `<tr>
       <td>${job.job_no || ''}</td>
       <td>${job.job_description || ''}</td>
       <td>${job.customer_name || ''}</td>
-      <td class="text-right">${formatCurrency(job.revised_contract)}</td>
-      <td class="text-right">${formatCurrency(job.actual_cost)}</td>
-      <td class="text-right">${pctComplete.toFixed(1)}%</td>
-      <td class="text-right">${formatCurrency(job.earned_revenue)}</td>
-      <td class="text-right">${formatCurrency(job.billed_revenue)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrency(job.revised_contract)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrency(job.actual_cost)}</td>
+      <td class="text-right pmr-expandable-col">${pctComplete.toFixed(1)}%</td>
+      <td class="text-right pmr-expandable-col">${formatCurrency(job.earned_revenue)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrency(job.billed_revenue)}</td>
       <td class="text-right ${jobOverUnderClass}">${formatCurrency(job.over_under)}</td>
     </tr>`;
   }).join('');
   
   tbody.innerHTML = subtotalRow + detailRows;
   
-  // Update toggle button state
+  // Update toggle button state and apply column visibility
   const toggleBtn = document.getElementById('pmrOverUnderToggle');
   if (toggleBtn) {
     toggleBtn.textContent = pmrOverUnderExpanded ? 'Collapse' : 'Expand';
     toggleBtn.style.display = 'inline-block';
   }
   
+  // Apply current column visibility state
+  applyOverUnderColumnVisibility();
+  
   document.getElementById('pmrOverUnderCount').textContent = `${overUnderJobs.length} job${overUnderJobs.length !== 1 ? 's' : ''}`;
+}
+
+function applyOverUnderColumnVisibility() {
+  const table = document.getElementById('pmrOverUnderTable');
+  if (!table) return;
+  
+  const expandableCols = table.querySelectorAll('.pmr-expandable-col');
+  expandableCols.forEach(col => {
+    col.style.display = pmrOverUnderExpanded ? '' : 'none';
+  });
 }
 
 function togglePmrOverUnderDetail() {
   pmrOverUnderExpanded = !pmrOverUnderExpanded;
   
-  // Toggle collapsed class on detail rows
-  const detailRows = document.querySelectorAll('#pmrOverUnderTableBody .pmr-detail-row');
-  detailRows.forEach(row => {
-    if (pmrOverUnderExpanded) {
-      row.classList.remove('collapsed');
-    } else {
-      row.classList.add('collapsed');
-    }
-  });
+  // Toggle column visibility
+  applyOverUnderColumnVisibility();
   
   // Update button text
   const toggleBtn = document.getElementById('pmrOverUnderToggle');
