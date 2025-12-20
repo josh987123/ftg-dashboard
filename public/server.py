@@ -804,6 +804,75 @@ Period: {period_info}
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/ai-analysis', methods=['POST', 'OPTIONS'])
+def api_ai_analysis():
+    """Generic AI analysis endpoint for comprehensive insights"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json()
+        prompt = data.get('prompt', '')
+        section = data.get('section', 'general')
+        max_tokens = data.get('max_tokens', 2048)
+        
+        if not prompt:
+            return jsonify({'error': 'No prompt provided'}), 400
+        
+        client = get_anthropic_client()
+        
+        if section == 'comprehensive_insights':
+            system_prompt = """You are a senior financial analyst for a construction company. Provide comprehensive business insights.
+
+Structure your response with these clear sections using markdown headers:
+## Executive Summary
+Brief 2-3 sentence overview of overall business health.
+
+## Financial Health
+Key observations about revenue, expenses, and profitability.
+
+## Job Performance
+Analysis of project portfolio, margins, and billing status.
+
+## Cash Flow & Receivables/Payables
+AR/AP aging analysis and cash position insights.
+
+## PM Performance
+Project manager rankings and performance observations.
+
+## Strategic Recommendations
+3-5 actionable recommendations for improvement.
+
+Keep each section concise (2-4 bullet points). Use specific dollar amounts rounded to thousands (e.g., $1.2M, $450K)."""
+        elif section == 'pm_report':
+            system_prompt = """You are a project management analyst for a construction company. Analyze the PM's performance data and provide insights on:
+- Overall performance metrics
+- Areas of concern (under-billing, missing budgets)
+- Recommendations for improvement
+Keep response concise with bullet points."""
+        else:
+            system_prompt = """You are a financial analyst for a construction company. Provide clear, actionable insights based on the data provided. Use bullet points and be concise."""
+        
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=min(max_tokens, 4000),
+            system=system_prompt,
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        content_block = response.content[0]
+        analysis = getattr(content_block, 'text', '') or ""
+        
+        return jsonify({'success': True, 'analysis': analysis})
+        
+    except Exception as e:
+        import traceback
+        print(f"AI Analysis error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/sheets/<spreadsheet_id>', methods=['GET', 'OPTIONS'])
 @app.route('/api/sheets/<spreadsheet_id>/<sheet_name>', methods=['GET', 'OPTIONS'])
 def api_get_sheet_data(spreadsheet_id, sheet_name=None):
