@@ -17527,16 +17527,21 @@ function renderPmrClientSummaryTable() {
   
   // Sort by contract value - show all clients with active jobs
   const clients = [...clientMap.values()]
-    .map(c => ({
-      ...c,
-      est_profit: c.est_contract - c.est_cost
-    }))
+    .map(c => {
+      const estProfit = c.est_contract - c.est_cost;
+      const marginPct = c.est_contract > 0 ? (estProfit / c.est_contract * 100) : 0;
+      return {
+        ...c,
+        est_profit: estProfit,
+        margin_pct: marginPct
+      };
+    })
     .sort((a, b) => b.est_contract - a.est_contract);
   
   pmrData.clientSummary = clients;
   
   if (clients.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="pmr-empty-state"><div class="pmr-empty-state-text">No client data available</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="pmr-empty-state"><div class="pmr-empty-state-text">No client data available</div></td></tr>';
     document.getElementById('pmrClientSummaryCount').textContent = '0 clients';
     return;
   }
@@ -17551,26 +17556,33 @@ function renderPmrClientSummaryTable() {
     cost_to_date: acc.cost_to_date + c.cost_to_date
   }), { est_contract: 0, est_cost: 0, est_profit: 0, billed_last_month: 0, billed_to_date: 0, cost_to_date: 0 });
   
+  const totalMarginPct = totals.est_contract > 0 ? (totals.est_profit / totals.est_contract * 100) : 0;
+  
   // Subtotal row first, then detail rows
   const subtotalRow = `<tr class="pmr-subtotal-row">
     <td><strong>TOTAL (${clients.length} clients)</strong></td>
     <td class="text-right">${formatCurrency(totals.est_contract)}</td>
     <td class="text-right">${formatCurrency(totals.est_cost)}</td>
     <td class="text-right">${formatCurrency(totals.est_profit)}</td>
+    <td class="text-right">${totalMarginPct.toFixed(1)}%</td>
     <td class="text-right">${formatCurrency(totals.billed_last_month)}</td>
     <td class="text-right">${formatCurrency(totals.billed_to_date)}</td>
     <td class="text-right">${formatCurrency(totals.cost_to_date)}</td>
   </tr>`;
   
-  const detailRows = clients.map(c => `<tr>
-    <td>${c.customer_name}</td>
-    <td class="text-right">${formatCurrency(c.est_contract)}</td>
-    <td class="text-right">${formatCurrency(c.est_cost)}</td>
-    <td class="text-right">${formatCurrency(c.est_profit)}</td>
-    <td class="text-right">${formatCurrency(c.billed_last_month)}</td>
-    <td class="text-right">${formatCurrency(c.billed_to_date)}</td>
-    <td class="text-right">${formatCurrency(c.cost_to_date)}</td>
-  </tr>`).join('');
+  const detailRows = clients.map(c => {
+    const marginColor = c.margin_pct >= 20 ? '#10b981' : c.margin_pct < 10 ? '#dc2626' : '#374151';
+    return `<tr>
+      <td>${c.customer_name}</td>
+      <td class="text-right">${formatCurrency(c.est_contract)}</td>
+      <td class="text-right">${formatCurrency(c.est_cost)}</td>
+      <td class="text-right">${formatCurrency(c.est_profit)}</td>
+      <td class="text-right" style="color:${marginColor}">${c.margin_pct.toFixed(1)}%</td>
+      <td class="text-right">${formatCurrency(c.billed_last_month)}</td>
+      <td class="text-right">${formatCurrency(c.billed_to_date)}</td>
+      <td class="text-right">${formatCurrency(c.cost_to_date)}</td>
+    </tr>`;
+  }).join('');
   
   tbody.innerHTML = subtotalRow + detailRows;
   
