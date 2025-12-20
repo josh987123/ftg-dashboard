@@ -4225,7 +4225,15 @@ def start_scheduler():
         scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
         scheduler_thread.start()
 
-start_scheduler()
+# Only start scheduler in main process (not in gunicorn workers)
+import os
+if os.environ.get('GUNICORN_WORKER') != 'true':
+    # For gunicorn, we need a preload hook or use gunicorn's --preload flag
+    # For dev server and single process mode, start normally
+    try:
+        start_scheduler()
+    except Exception as e:
+        print(f"Warning: Could not start scheduler: {e}")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
