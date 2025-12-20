@@ -17341,6 +17341,7 @@ function formatCurrencyShort(value) {
 
 // Track collapse state for Over/Under section (now controls columns, not rows)
 let pmrOverUnderExpanded = false;
+let pmrMissingBudgetsExpanded = false;
 
 function renderPmrOverUnderTable() {
   const tbody = document.getElementById('pmrOverUnderTableBody');
@@ -17440,6 +17441,29 @@ function togglePmrOverUnderDetail() {
   }
 }
 
+function applyMissingBudgetsColumnVisibility() {
+  const table = document.getElementById('pmrMissingBudgetsTable');
+  if (!table) return;
+  
+  const expandableCols = table.querySelectorAll('.pmr-mb-expandable-col');
+  expandableCols.forEach(col => {
+    col.style.display = pmrMissingBudgetsExpanded ? '' : 'none';
+  });
+}
+
+function togglePmrMissingBudgetsDetail() {
+  pmrMissingBudgetsExpanded = !pmrMissingBudgetsExpanded;
+  
+  // Toggle column visibility
+  applyMissingBudgetsColumnVisibility();
+  
+  // Update button text
+  const toggleBtn = document.getElementById('pmrMissingBudgetsToggle');
+  if (toggleBtn) {
+    toggleBtn.textContent = pmrMissingBudgetsExpanded ? 'Collapse' : 'Expand';
+  }
+}
+
 function renderPmrMissingBudgetsTable() {
   const tbody = document.getElementById('pmrMissingBudgetsTableBody');
   if (!tbody) return;
@@ -17520,14 +17544,21 @@ function renderPmrMissingBudgetsTable() {
     return `<tr>
       <td>${job.job_no || ''}</td>
       <td>${job.job_description || ''}</td>
-      <td>${job.customer_name || ''}</td>
-      <td><span class="job-status-badge ${status.class}">${status.label}</span></td>
+      <td class="pmr-mb-expandable-col">${job.customer_name || ''}</td>
+      <td class="pmr-mb-expandable-col"><span class="job-status-badge ${status.class}">${status.label}</span></td>
       <td class="text-right">${formatCurrency(job.actual_cost)}</td>
       <td class="text-right">${formatCurrency(job.revised_contract)}</td>
       <td class="text-right">${formatCurrency(job.revised_cost)}</td>
       <td><span class="pmr-issue-badge ${job.issueClass}">${job.issue}</span></td>
     </tr>`;
   }).join('');
+  
+  // Update toggle button and apply column visibility
+  const toggleBtn = document.getElementById('pmrMissingBudgetsToggle');
+  if (toggleBtn) {
+    toggleBtn.textContent = pmrMissingBudgetsExpanded ? 'Collapse' : 'Expand';
+  }
+  applyMissingBudgetsColumnVisibility();
   
   document.getElementById('pmrMissingBudgetsCount').textContent = `${missingBudgets.length} job${missingBudgets.length !== 1 ? 's' : ''}`;
 }

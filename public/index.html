@@ -3556,16 +3556,21 @@
 
         <!-- Missing Budgets Section -->
         <div class="pmr-section">
-          <h3 class="pmr-section-title">Missing Budgets</h3>
-          <div class="pmr-section-desc">Jobs with &gt;$2,500 actual cost but missing budgeted revenue or cost</div>
+          <div class="pmr-section-header">
+            <div>
+              <h3 class="pmr-section-title">Missing Budgets</h3>
+              <div class="pmr-section-desc">Jobs with &gt;$2,500 actual cost but missing budgeted revenue or cost</div>
+            </div>
+            <button class="pmr-toggle-btn" id="pmrMissingBudgetsToggle" onclick="togglePmrMissingBudgetsDetail()">Expand</button>
+          </div>
           <div class="table-container pmr-table-container">
             <table class="data-table pmr-missing-budgets-table" id="pmrMissingBudgetsTable">
               <thead>
                 <tr>
                   <th>Job #</th>
                   <th>Description</th>
-                  <th>Client</th>
-                  <th>Status</th>
+                  <th class="pmr-mb-expandable-col">Client</th>
+                  <th class="pmr-mb-expandable-col">Status</th>
                   <th class="text-right">Actual Cost</th>
                   <th class="text-right">Budgeted Revenue</th>
                   <th class="text-right">Budgeted Cost</th>
