@@ -1235,6 +1235,18 @@ function updateChartColorsForTheme(theme) {
   if (typeof renderTopVendorsChart === 'function' && typeof topVendorsChart !== 'undefined' && topVendorsChart) {
     loadTopVendorsChart();
   }
+  
+  // Re-render Job Overview charts if they exist
+  if (typeof updateJobOverviewCharts === 'function' && typeof joPmJobsChart !== 'undefined' && joPmJobsChart) {
+    updateJobOverviewCharts();
+  }
+  
+  // Re-render Overview tile charts if they exist
+  if (typeof overviewChartInstances !== 'undefined' && Object.keys(overviewChartInstances).length > 0) {
+    if (typeof updateOverviewCharts === 'function') {
+      updateOverviewCharts();
+    }
+  }
 }
 
 function setupMetricInfoButtons() {
