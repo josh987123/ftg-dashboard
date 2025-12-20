@@ -14900,58 +14900,210 @@ body.dark-mode .pmr-table-footer {
   color: #94a3b8;
 }
 
-/* Mobile Responsive */
+/* Mobile Responsive - Compact Heights */
 @media (max-width: 768px) {
   .pmr-filter-bar {
-    padding: 12px 16px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
   }
   
   .pmr-filter-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 6px;
   }
   
-  .pmr-filter-row {
-    flex-wrap: wrap;
+  .pmr-filter-row label {
+    font-size: 12px;
+    margin-bottom: 0;
   }
   
   .pmr-pm-select,
   .pmr-status-select {
     width: 100%;
     max-width: none;
+    padding: 6px 10px;
+    font-size: 13px;
   }
   
   .pmr-metrics-row {
-    gap: 6px;
+    gap: 4px;
+    margin-bottom: 10px;
   }
   
   .pmr-metric-tile {
-    padding: 6px 10px;
-    min-width: 75px;
+    padding: 4px 8px;
+    min-width: 70px;
+    border-radius: 4px;
   }
   
   .pmr-metric-label {
-    font-size: 9px;
+    font-size: 8px;
+    margin-bottom: 1px;
   }
   
   .pmr-metric-value {
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 1.1;
+  }
+  
+  .pmr-charts-row,
+  .pmr-charts-row-2 {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  
+  .pmr-chart-container {
+    padding: 10px;
+    min-height: 140px;
+    max-height: 180px;
+  }
+  
+  .pmr-chart-container canvas {
+    max-height: 110px !important;
+    height: 110px !important;
+  }
+  
+  .pmr-chart-title {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+  
+  .pmr-chart-legend {
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 9px;
   }
   
   .pmr-section {
-    padding: 16px;
-    margin-bottom: 16px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+  }
+  
+  .pmr-section-header {
+    margin-bottom: 8px;
   }
   
   .pmr-section-title {
-    font-size: 16px;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  
+  .pmr-section-desc {
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+  
+  .pmr-toggle-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  
+  .pmr-table-container {
+    margin: 0 -12px;
+    padding: 0 12px;
   }
   
   .pmr-over-under-table,
   .pmr-missing-budgets-table,
   .pmr-client-summary-table {
+    font-size: 11px;
+  }
+  
+  .pmr-over-under-table th,
+  .pmr-missing-budgets-table th,
+  .pmr-client-summary-table th {
+    padding: 6px 4px;
+    font-size: 10px;
+  }
+  
+  .pmr-over-under-table td,
+  .pmr-missing-budgets-table td,
+  .pmr-client-summary-table td {
+    padding: 5px 4px;
+  }
+  
+  .pmr-table-footer {
+    padding: 6px 0;
+    font-size: 11px;
+  }
+  
+  .pmr-empty-state {
+    padding: 16px;
+  }
+  
+  .pmr-empty-state-icon {
+    font-size: 28px;
+  }
+  
+  .pmr-empty-state-text {
     font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pmr-filter-bar {
+    padding: 6px 10px;
+    margin-bottom: 8px;
+  }
+  
+  .pmr-filter-row {
+    gap: 4px;
+  }
+  
+  .pmr-pm-select,
+  .pmr-status-select {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+  
+  .pmr-metrics-row {
+    gap: 3px;
+    margin-bottom: 8px;
+  }
+  
+  .pmr-metric-tile {
+    min-width: 60px;
+    padding: 3px 6px;
+  }
+  
+  .pmr-metric-label {
+    font-size: 7px;
+  }
+  
+  .pmr-metric-value {
+    font-size: 12px;
+  }
+  
+  .pmr-chart-container {
+    padding: 8px;
+    min-height: 120px;
+    max-height: 150px;
+  }
+  
+  .pmr-chart-container canvas {
+    max-height: 90px !important;
+    height: 90px !important;
+  }
+  
+  .pmr-chart-title {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+  
+  .pmr-section {
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+  
+  .pmr-section-title {
+    font-size: 13px;
+  }
+  
+  .pmr-section-desc {
+    font-size: 10px;
+    margin-bottom: 6px;
   }
   
   .pmr-over-under-table th,
@@ -14960,20 +15112,8 @@ body.dark-mode .pmr-table-footer {
   .pmr-over-under-table td,
   .pmr-missing-budgets-table td,
   .pmr-client-summary-table td {
-    padding: 8px 6px;
-  }
-}
-
-@media (max-width: 480px) {
-  .pmr-metric-tile {
-    min-width: 70px;
-    padding: 5px 8px;
-  }
-  .pmr-metric-label {
-    font-size: 8px;
-  }
-  .pmr-metric-value {
-    font-size: 13px;
+    padding: 4px 3px;
+    font-size: 10px;
   }
 }
 
