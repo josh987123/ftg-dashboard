@@ -1554,7 +1554,7 @@ function initNavigation() {
 }
 
 function initAllAiPanelToggles() {
-  ['overview', 'rev', 'acct', 'bs', 'jo', 'jb', 'ja'].forEach(prefix => {
+  ['overview', 'rev', 'acct', 'bs', 'jo', 'jb', 'ja', 'pmr'].forEach(prefix => {
     const panel = document.getElementById(`${prefix}AiAnalysisPanel`);
     const header = document.getElementById(`${prefix}AiAnalysisHeader`);
     const analyzeBtn = document.getElementById(`${prefix}AiAnalyzeBtn`);
@@ -18068,95 +18068,103 @@ function clearPmrTables() {
 }
 
 async function runPmrAiAnalysis() {
+  const btn = document.getElementById('pmrAiAnalyzeBtn');
+  const panel = document.getElementById('pmrAiAnalysisPanel');
+  const content = document.getElementById('pmrAiAnalysisContent');
+  
+  if (!btn || !panel || !content) return;
+  
   if (!pmrSelectedPm) {
     showNotification('Please select a Project Manager first', 'warning');
     return;
   }
   
-  const content = document.getElementById('pmrAiAnalysisContent');
-  const body = document.getElementById('pmrAiAnalysisBody');
-  const btn = document.getElementById('pmrAiAnalyzeBtn');
-  
-  if (!content || !body) return;
-  
-  body.classList.add('expanded');
   btn.disabled = true;
   btn.textContent = 'Analyzing...';
-  content.innerHTML = '<div class="ai-loading"><div class="ai-loading-spinner"></div>Analyzing PM performance...</div>';
+  panel.classList.remove('collapsed');
+  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing PM performance...</div>';
   
   try {
-    // Build analysis context - ensure arrays are defined
-    const jobs = pmrData.jobs || [];
-    const overUnder = pmrData.overUnder || [];
-    const missingBudgets = pmrData.missingBudgets || [];
-    const clients = pmrData.clientSummary || [];
-    
-    if (jobs.length === 0) {
-      content.innerHTML = '<div class="ai-error">No job data available for analysis. Please ensure data is loaded.</div>';
-      btn.disabled = false;
-      btn.textContent = 'Run Analysis';
-      return;
-    }
-    
-    const totalContract = jobs.reduce((s, j) => s + (j.revised_contract || 0), 0);
-    const totalActualCost = jobs.reduce((s, j) => s + (j.actual_cost || 0), 0);
-    const totalEarned = jobs.reduce((s, j) => s + (j.earned_revenue || 0), 0);
-    const netOverUnder = jobs.reduce((s, j) => s + (j.over_under || 0), 0);
-    
-    // Handle "All PMs" selection
-    const pmLabel = pmrSelectedPm === '__ALL__' ? 'All Project Managers (Company-Wide)' : pmrSelectedPm;
-    
-    const prompt = `Analyze the project manager performance data for ${pmLabel}:
-
-Summary Metrics:
-- Total Jobs: ${jobs.length}
-- Total Contract Value: ${formatCurrency(totalContract)}
-- Total Actual Cost: ${formatCurrency(totalActualCost)}
-- Total Earned Revenue: ${formatCurrency(totalEarned)}
-- Net Over/(Under) Billing: ${formatCurrency(netOverUnder)}
-
-Over/Under Billing Issues (${overUnder.length} jobs with variance):
-${overUnder.slice(0, 5).map(j => `- ${j.job_no}: ${j.job_description} - ${formatCurrency(j.over_under)} (${j.over_under < 0 ? 'Under' : 'Over'})`).join('\n')}
-
-Missing Budgets (${missingBudgets.length} jobs with >$2,500 cost but incomplete budgets):
-${missingBudgets.slice(0, 5).map(j => `- ${j.job_no}: ${j.job_description} - ${j.issue} - Cost: ${formatCurrency(j.actual_cost)}`).join('\n')}
-
-Top Clients by Contract Value:
-${clients.map(c => `- ${c.customer_name}: Contract ${formatCurrency(c.est_contract)}, Cost ${formatCurrency(c.cost_to_date)}, Profit ${formatCurrency(c.est_profit)}`).join('\n')}
-
-Provide a concise analysis (max 300 words) with:
-1. Key performance indicators and trends
-2. Risk areas requiring attention (under-billing, missing budgets)
-3. Client portfolio assessment
-4. Specific recommendations for improvement`;
-
-    const response = await fetch('/api/ai-analysis', {
+    const statementData = extractPmReportData();
+    const response = await fetch('/api/analyze-pm-report', {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`
-      },
-      body: JSON.stringify({ prompt, section: 'pm_report' })
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({statementData, periodInfo: 'PM Report Analysis'})
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Server error: ${response.status}`);
+    const result = await response.json();
+    if (result.success) {
+      content.innerHTML = formatMarkdown(result.analysis);
+      panel.classList.add('has-analysis');
+    } else {
+      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
     }
-    
-    const data = await response.json();
-    if (!data.success && data.error) {
-      throw new Error(data.error);
-    }
-    content.innerHTML = `<div class="ai-analysis-text">${formatAiResponse(data.analysis || data.response || 'No analysis available')}</div>`;
-  } catch (err) {
-    console.error('PM Report AI analysis error:', err);
-    const errorMsg = err.message || 'Unknown error';
-    content.innerHTML = `<div class="ai-error">Unable to generate analysis: ${errorMsg}</div>`;
+  } catch (e) {
+    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
   } finally {
     btn.disabled = false;
     btn.textContent = 'Run Analysis';
   }
+}
+
+function extractPmReportData() {
+  let text = "PM Report Analysis:\n\n";
+  
+  // Get selected PM
+  const pmLabel = pmrSelectedPm === '__ALL__' ? 'All Project Managers (Company-Wide)' : pmrSelectedPm;
+  text += `Project Manager: ${pmLabel}\n\n`;
+  
+  // Get key metrics from the page
+  text += "Key Metrics:\n";
+  const metricIds = [
+    {id: 'pmrTotalJobs', label: 'Active Jobs'},
+    {id: 'pmrTotalContract', label: 'Contract Value'},
+    {id: 'pmrBacklog', label: 'Backlog'},
+    {id: 'pmrGrossMargin', label: 'Gross Margin'},
+    {id: 'pmrNetOverUnder', label: 'Net Over/(Under)'},
+    {id: 'pmrAvgPctComplete', label: 'Avg % Complete'},
+    {id: 'pmrBilledLastMonth', label: 'Billed Last Month'},
+    {id: 'pmrArExposure', label: 'AR Exposure'},
+    {id: 'pmrTotalActualCost', label: 'Actual Cost'},
+    {id: 'pmrTotalEarnedRevenue', label: 'Earned Revenue'}
+  ];
+  
+  metricIds.forEach(m => {
+    const el = document.getElementById(m.id);
+    if (el) {
+      text += `- ${m.label}: ${el.textContent || '-'}\n`;
+    }
+  });
+  
+  // Get data from pmrData if available
+  const jobs = pmrData.jobs || [];
+  const overUnder = pmrData.overUnder || [];
+  const missingBudgets = pmrData.missingBudgets || [];
+  const clients = pmrData.clientSummary || [];
+  
+  text += `\nTotal Jobs in Dataset: ${jobs.length}\n`;
+  
+  if (overUnder.length > 0) {
+    text += `\nOver/Under Billing Issues (${overUnder.length} jobs):\n`;
+    overUnder.slice(0, 5).forEach(j => {
+      text += `- ${j.job_no}: ${j.job_description} - ${formatCurrency(j.over_under)} (${j.over_under < 0 ? 'Under' : 'Over'})\n`;
+    });
+  }
+  
+  if (missingBudgets.length > 0) {
+    text += `\nMissing Budgets (${missingBudgets.length} jobs):\n`;
+    missingBudgets.slice(0, 5).forEach(j => {
+      text += `- ${j.job_no}: ${j.job_description} - ${j.issue} - Cost: ${formatCurrency(j.actual_cost)}\n`;
+    });
+  }
+  
+  if (clients.length > 0) {
+    text += `\nTop Clients by Contract Value:\n`;
+    clients.slice(0, 10).forEach(c => {
+      text += `- ${c.customer_name}: Contract ${formatCurrency(c.est_contract)}, Cost ${formatCurrency(c.cost_to_date)}, Profit ${formatCurrency(c.est_profit)}\n`;
+    });
+  }
+  
+  return text || "No PM report data available";
 }
 
 // ========================================
