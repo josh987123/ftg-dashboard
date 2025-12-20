@@ -708,6 +708,7 @@ Period: {period_info}
 @app.route('/api/analyze-balance-sheet', methods=['POST', 'OPTIONS'])
 @app.route('/api/analyze-jobs', methods=['POST', 'OPTIONS'])
 @app.route('/api/analyze-pm-report', methods=['POST', 'OPTIONS'])
+@app.route('/api/analyze-ai-insights', methods=['POST', 'OPTIONS'])
 def api_analyze_financial_data():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'})
@@ -726,7 +727,10 @@ def api_analyze_financial_data():
         client = get_anthropic_client()
         
         endpoint = request.path
-        if 'overview' in endpoint:
+        if 'ai-insights' in endpoint:
+            title = "Comprehensive Business Analysis"
+            focus = "overall business health including financials, job portfolio, accounts receivable, accounts payable, project managers, and strategic recommendations"
+        elif 'overview' in endpoint:
             title = "Executive Overview"
             focus = "P&L and balance sheet metrics"
         elif 'revenue' in endpoint:

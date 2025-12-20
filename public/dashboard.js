@@ -18206,48 +18206,40 @@ async function runFullAiAnalysis() {
     progressText.textContent = 'Loading financial data...';
     progressFill.style.width = '10%';
     
-    const aggregatedData = await aggregateAllBusinessData();
+    const statementData = await extractAiInsightsData();
     
     progressText.textContent = 'Sending to AI for analysis...';
     progressFill.style.width = '40%';
     
-    // Step 2: Build comprehensive prompt
-    const prompt = buildComprehensiveAiPrompt(aggregatedData);
-    
-    // Step 3: Call AI API
+    // Step 2: Call AI API - use same pattern as overview
     progressText.textContent = 'Generating insights...';
     progressFill.style.width = '60%';
     
-    const response = await fetch('/api/ai-analysis', {
+    const response = await fetch('/api/analyze-ai-insights', {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`
-      },
-      body: JSON.stringify({ 
-        prompt, 
-        section: 'comprehensive_insights',
-        max_tokens: 2500
-      })
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({statementData, periodInfo: 'Comprehensive Business Analysis'})
     });
     
-    if (!response.ok) throw new Error('AI analysis request failed');
-    
-    const data = await response.json();
+    const result = await response.json();
     
     progressText.textContent = 'Formatting results...';
     progressFill.style.width = '90%';
     
-    // Step 4: Parse and display results
-    displayAiInsightsResults(data.analysis || data.response);
-    
-    progressFill.style.width = '100%';
-    progressText.textContent = 'Analysis complete!';
-    
-    setTimeout(() => {
-      progress.classList.add('hidden');
-      results.classList.remove('hidden');
-    }, 500);
+    if (result.success) {
+      // Step 3: Parse and display results
+      displayAiInsightsResults(result.analysis);
+      
+      progressFill.style.width = '100%';
+      progressText.textContent = 'Analysis complete!';
+      
+      setTimeout(() => {
+        progress.classList.add('hidden');
+        results.classList.remove('hidden');
+      }, 500);
+    } else {
+      throw new Error(result.error || 'Analysis failed');
+    }
     
   } catch (err) {
     console.error('AI Insights error:', err);
@@ -18255,21 +18247,106 @@ async function runFullAiAnalysis() {
     errorDiv.classList.remove('hidden');
     const errorMsgEl = document.getElementById('aiInsightsErrorMsg');
     if (errorMsgEl) {
-      // Try to get more specific error
-      let errorText = 'Unable to complete analysis. ';
-      if (err.message && err.message.includes('401')) {
-        errorText += 'Please log in and try again.';
-      } else if (err.message && err.message.includes('API key')) {
-        errorText += 'AI service not configured.';
-      } else {
-        errorText += 'Please check your connection and try again.';
-      }
-      errorMsgEl.textContent = errorText;
+      errorMsgEl.textContent = `Unable to complete analysis: ${err.message}`;
     }
   } finally {
     runBtn.disabled = false;
     runBtn.querySelector('.btn-text').textContent = 'Run Full Analysis';
   }
+}
+
+async function extractAiInsightsData() {
+  let text = "Comprehensive Business Analysis:\n\n";
+  
+  try {
+    // Load all data sources in parallel
+    const [glData, jobsData, arData, apData] = await Promise.all([
+      fetch('data/financials_gl.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null),
+      fetch('data/financials_jobs.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null),
+      fetch('data/ar_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null),
+      fetch('data/ap_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null)
+    ]);
+    
+    const currentYear = new Date().getFullYear();
+    
+    // Financial Summary
+    if (glData && glData.gl_history) {
+      text += "=== FINANCIAL SUMMARY ===\n";
+      let revenue = 0, expenses = 0;
+      glData.gl_history.forEach(entry => {
+        if (entry.fiscal_year === currentYear) {
+          const acctNum = parseInt(entry.gl_account_number);
+          if (acctNum >= 4000 && acctNum < 5000) revenue += Math.abs(entry.amount || 0);
+          else if (acctNum >= 5000 && acctNum < 10000) expenses += entry.amount || 0;
+        }
+      });
+      text += `Current Year Revenue: ${formatCurrency(revenue)}\n`;
+      text += `Current Year Expenses: ${formatCurrency(expenses)}\n`;
+      text += `Net Income: ${formatCurrency(revenue - expenses)}\n\n`;
+    }
+    
+    // Jobs Summary
+    if (jobsData) {
+      text += "=== JOB PORTFOLIO ===\n";
+      const budgets = jobsData.job_budgets || [];
+      const actuals = jobsData.job_actuals || [];
+      const activeJobs = budgets.filter(j => j.job_status === 'A');
+      
+      const totalContract = activeJobs.reduce((s, j) => s + (j.revised_contract || 0), 0);
+      const totalCost = activeJobs.reduce((s, j) => s + (j.revised_cost || 0), 0);
+      
+      text += `Total Active Jobs: ${activeJobs.length}\n`;
+      text += `Total Contract Value: ${formatCurrency(totalContract)}\n`;
+      text += `Total Budgeted Cost: ${formatCurrency(totalCost)}\n`;
+      text += `Est. Profit Margin: ${totalContract > 0 ? ((totalContract - totalCost) / totalContract * 100).toFixed(1) : 0}%\n\n`;
+      
+      // PM Summary
+      const pmStats = {};
+      activeJobs.forEach(j => {
+        const pm = j.project_manager_name || 'Unassigned';
+        if (!pmStats[pm]) pmStats[pm] = {jobs: 0, contract: 0};
+        pmStats[pm].jobs++;
+        pmStats[pm].contract += j.revised_contract || 0;
+      });
+      text += "Top Project Managers:\n";
+      Object.entries(pmStats).sort((a, b) => b[1].contract - a[1].contract).slice(0, 5).forEach(([pm, stats]) => {
+        text += `- ${pm}: ${stats.jobs} jobs, ${formatCurrency(stats.contract)}\n`;
+      });
+      text += "\n";
+    }
+    
+    // AR Summary
+    if (arData && arData.ar_invoices) {
+      text += "=== ACCOUNTS RECEIVABLE ===\n";
+      const invoices = arData.ar_invoices;
+      const totalAR = invoices.reduce((s, i) => s + (i.balance || 0), 0);
+      const over30 = invoices.filter(i => i.days_outstanding > 30).reduce((s, i) => s + (i.balance || 0), 0);
+      const over60 = invoices.filter(i => i.days_outstanding > 60).reduce((s, i) => s + (i.balance || 0), 0);
+      const over90 = invoices.filter(i => i.days_outstanding > 90).reduce((s, i) => s + (i.balance || 0), 0);
+      
+      text += `Total AR: ${formatCurrency(totalAR)}\n`;
+      text += `Over 30 Days: ${formatCurrency(over30)}\n`;
+      text += `Over 60 Days: ${formatCurrency(over60)}\n`;
+      text += `Over 90 Days: ${formatCurrency(over90)}\n\n`;
+    }
+    
+    // AP Summary
+    if (apData && apData.ap_invoices) {
+      text += "=== ACCOUNTS PAYABLE ===\n";
+      const invoices = apData.ap_invoices;
+      const totalAP = invoices.reduce((s, i) => s + (i.balance || 0), 0);
+      const over30 = invoices.filter(i => i.days_outstanding > 30).reduce((s, i) => s + (i.balance || 0), 0);
+      
+      text += `Total AP: ${formatCurrency(totalAP)}\n`;
+      text += `Over 30 Days: ${formatCurrency(over30)}\n\n`;
+    }
+    
+  } catch (e) {
+    console.error('Error extracting AI insights data:', e);
+    text += "Error loading some data sources.\n";
+  }
+  
+  return text || "No data available for analysis";
 }
 
 async function aggregateAllBusinessData() {
