@@ -15087,12 +15087,15 @@ body.dark-mode .pmr-subtotal-row td {
     font-size: 13px;
   }
   
-  .pmr-metrics-row {
+  .pmr-metrics-wrapper {
     display: flex;
     flex-wrap: wrap;
     gap: 3px;
     margin-bottom: 8px;
-    justify-content: space-between;
+  }
+  
+  .pmr-metrics-row {
+    display: contents;
   }
   
   .pmr-metric-tile {
@@ -15260,7 +15263,7 @@ body.dark-mode .pmr-subtotal-row td {
     font-size: 12px;
   }
   
-  .pmr-metrics-row {
+  .pmr-metrics-wrapper {
     gap: 2px;
     margin-bottom: 6px;
   }

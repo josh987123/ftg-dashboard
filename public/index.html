@@ -3439,62 +3439,63 @@
           </label>
         </div>
 
-        <!-- Key Metrics Summary Row 1 -->
-        <div class="pmr-metrics-row">
-          <div class="pmr-metric-tile">
-            <div class="pmr-metric-label">Active Jobs</div>
-            <div class="pmr-metric-value" id="pmrTotalJobs">-</div>
-            <div class="pmr-metric-trend" id="pmrJobsTrend"></div>
+        <!-- Key Metrics Summary - Wrapper for mobile 4-4-2 layout -->
+        <div class="pmr-metrics-wrapper">
+          <div class="pmr-metrics-row">
+            <div class="pmr-metric-tile">
+              <div class="pmr-metric-label">Active Jobs</div>
+              <div class="pmr-metric-value" id="pmrTotalJobs">-</div>
+              <div class="pmr-metric-trend" id="pmrJobsTrend"></div>
+            </div>
+            <div class="pmr-metric-tile">
+              <div class="pmr-metric-label">Contract Value</div>
+              <div class="pmr-metric-value" id="pmrTotalContract">-</div>
+              <div class="pmr-metric-trend" id="pmrContractTrend"></div>
+            </div>
+            <div class="pmr-metric-tile">
+              <div class="pmr-metric-label">Backlog</div>
+              <div class="pmr-metric-value" id="pmrBacklog">-</div>
+              <div class="pmr-metric-subtext" id="pmrBacklogPct">-</div>
+            </div>
+            <div class="pmr-metric-tile">
+              <div class="pmr-metric-label">Gross Margin</div>
+              <div class="pmr-metric-value" id="pmrGrossMargin">-</div>
+              <div class="pmr-metric-subtext" id="pmrGrossMarginAmt">-</div>
+              <div class="pmr-metric-trend" id="pmrMarginTrend"></div>
+            </div>
+            <div class="pmr-metric-tile">
+              <div class="pmr-metric-label">Net Over/(Under)</div>
+              <div class="pmr-metric-value" id="pmrNetOverUnder">-</div>
+              <div class="pmr-metric-trend" id="pmrOverUnderTrend"></div>
+            </div>
           </div>
-          <div class="pmr-metric-tile">
-            <div class="pmr-metric-label">Contract Value</div>
-            <div class="pmr-metric-value" id="pmrTotalContract">-</div>
-            <div class="pmr-metric-trend" id="pmrContractTrend"></div>
-          </div>
-          <div class="pmr-metric-tile">
-            <div class="pmr-metric-label">Backlog</div>
-            <div class="pmr-metric-value" id="pmrBacklog">-</div>
-            <div class="pmr-metric-subtext" id="pmrBacklogPct">-</div>
-          </div>
-          <div class="pmr-metric-tile">
-            <div class="pmr-metric-label">Gross Margin</div>
-            <div class="pmr-metric-value" id="pmrGrossMargin">-</div>
-            <div class="pmr-metric-subtext" id="pmrGrossMarginAmt">-</div>
-            <div class="pmr-metric-trend" id="pmrMarginTrend"></div>
-          </div>
-          <div class="pmr-metric-tile">
-            <div class="pmr-metric-label">Net Over/(Under)</div>
-            <div class="pmr-metric-value" id="pmrNetOverUnder">-</div>
-            <div class="pmr-metric-trend" id="pmrOverUnderTrend"></div>
-          </div>
-        </div>
 
-        <!-- Key Metrics Summary Row 2 -->
-        <div class="pmr-metrics-row pmr-metrics-row-2">
-          <div class="pmr-metric-tile">
-            <div class="pmr-metric-label">Avg % Complete</div>
-            <div class="pmr-metric-value" id="pmrAvgPctComplete">-</div>
-            <div class="pmr-progress-bar"><div class="pmr-progress-fill" id="pmrProgressFill"></div></div>
-          </div>
-          <div class="pmr-metric-tile">
-            <div class="pmr-metric-label">Billed Last Month</div>
-            <div class="pmr-metric-value" id="pmrBilledLastMonth">-</div>
-            <div class="pmr-metric-trend" id="pmrBillingTrend"></div>
-          </div>
-          <div class="pmr-metric-tile">
-            <div class="pmr-metric-label">AR Exposure</div>
-            <div class="pmr-metric-value" id="pmrArExposure">-</div>
-            <div class="pmr-metric-subtext" id="pmrArOver60">-</div>
-          </div>
-          <div class="pmr-metric-tile">
-            <div class="pmr-metric-label">Actual Cost</div>
-            <div class="pmr-metric-value" id="pmrTotalActualCost">-</div>
-            <div class="pmr-metric-trend" id="pmrCostTrend"></div>
-          </div>
-          <div class="pmr-metric-tile">
-            <div class="pmr-metric-label">Earned Revenue</div>
-            <div class="pmr-metric-value" id="pmrTotalEarnedRevenue">-</div>
-            <div class="pmr-metric-trend" id="pmrRevenueTrend"></div>
+          <div class="pmr-metrics-row pmr-metrics-row-2">
+            <div class="pmr-metric-tile">
+              <div class="pmr-metric-label">Avg % Complete</div>
+              <div class="pmr-metric-value" id="pmrAvgPctComplete">-</div>
+              <div class="pmr-progress-bar"><div class="pmr-progress-fill" id="pmrProgressFill"></div></div>
+            </div>
+            <div class="pmr-metric-tile">
+              <div class="pmr-metric-label">Billed Last Month</div>
+              <div class="pmr-metric-value" id="pmrBilledLastMonth">-</div>
+              <div class="pmr-metric-trend" id="pmrBillingTrend"></div>
+            </div>
+            <div class="pmr-metric-tile">
+              <div class="pmr-metric-label">AR Exposure</div>
+              <div class="pmr-metric-value" id="pmrArExposure">-</div>
+              <div class="pmr-metric-subtext" id="pmrArOver60">-</div>
+            </div>
+            <div class="pmr-metric-tile">
+              <div class="pmr-metric-label">Actual Cost</div>
+              <div class="pmr-metric-value" id="pmrTotalActualCost">-</div>
+              <div class="pmr-metric-trend" id="pmrCostTrend"></div>
+            </div>
+            <div class="pmr-metric-tile">
+              <div class="pmr-metric-label">Earned Revenue</div>
+              <div class="pmr-metric-value" id="pmrTotalEarnedRevenue">-</div>
+              <div class="pmr-metric-trend" id="pmrRevenueTrend"></div>
+            </div>
           </div>
         </div>
 
