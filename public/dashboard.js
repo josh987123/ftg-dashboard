@@ -19218,8 +19218,8 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     const jobsParent = document.getElementById("navJobs");
     const jobsChildren = document.getElementById("navJobsChildren");
     
-    const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'payments', 'receivablesPayables'];
-    const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'missingBudgets', 'jobAnalytics'];
+    const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'payments', 'apAging', 'arAging', 'receivablesPayables'];
+    const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'jobAnalytics'];
     
     if (fsChildren.includes(targetSection) && finStatementsParent && finStatementsChildren) {
       finStatementsParent.classList.add("expanded");
@@ -19231,20 +19231,26 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
       jobsChildren.classList.add("expanded");
     }
     
-    // Initialize the section if needed
+    // Initialize the section if needed - comprehensive list matching nav click handlers
     if (targetSection === "overview") {
       initOverviewModule();
       loadFinancialCharts();
     }
-    if (targetSection === "jobBudgets") initJobBudgets();
-    if (targetSection === "missingBudgets") initMissingBudgets();
-    if (targetSection === "payments") initPayments();
     if (targetSection === "revenue") initRevenueModule();
     if (targetSection === "accounts") initAccountModule();
     if (targetSection === "incomeStatement") loadIncomeStatement();
     if (targetSection === "balanceSheet") initBalanceSheet();
     if (targetSection === "cashFlows") loadCashFlowStatement();
     if (targetSection === "cashReports") initCashReports();
+    if (targetSection === "jobOverview") initJobOverview();
+    if (targetSection === "jobBudgets") initJobBudgets();
+    if (targetSection === "jobActuals") initJobActuals();
+    if (targetSection === "overUnderBilling") initOverUnderBilling();
+    if (targetSection === "costCodes") initCostCodes();
+    if (targetSection === "missingBudgets") initMissingBudgets();
+    if (targetSection === "payments") initPayments();
+    if (targetSection === "apAging") initApAging();
+    if (targetSection === "arAging") initArAging();
     if (targetSection === "admin") initAdminModule();
   }
   
