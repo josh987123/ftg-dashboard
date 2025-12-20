@@ -812,12 +812,23 @@ def api_ai_analysis():
     
     try:
         data = request.get_json()
+        if not data:
+            print("AI Analysis error: No JSON data received")
+            return jsonify({'error': 'No data received'}), 400
+            
         prompt = data.get('prompt', '')
         section = data.get('section', 'general')
         max_tokens = data.get('max_tokens', 2048)
         
+        print(f"AI Analysis request: section={section}, prompt_length={len(prompt)}, max_tokens={max_tokens}")
+        
         if not prompt:
             return jsonify({'error': 'No prompt provided'}), 400
+        
+        # Truncate prompt if too long (keep under 100k chars to be safe)
+        if len(prompt) > 100000:
+            prompt = prompt[:100000] + "\n\n[Data truncated for length]"
+            print(f"Prompt truncated to 100k chars")
         
         client = get_anthropic_client()
         
@@ -853,6 +864,7 @@ Keep response concise with bullet points."""
         else:
             system_prompt = """You are a financial analyst for a construction company. Provide clear, actionable insights based on the data provided. Use bullet points and be concise."""
         
+        print(f"Calling Anthropic API...")
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
             max_tokens=min(max_tokens, 4000),
@@ -864,14 +876,16 @@ Keep response concise with bullet points."""
         
         content_block = response.content[0]
         analysis = getattr(content_block, 'text', '') or ""
+        print(f"AI Analysis completed: response_length={len(analysis)}")
         
         return jsonify({'success': True, 'analysis': analysis})
         
     except Exception as e:
         import traceback
-        print(f"AI Analysis error: {str(e)}")
+        error_msg = str(e)
+        print(f"AI Analysis error: {error_msg}")
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': error_msg, 'success': False}), 500
 
 @app.route('/api/sheets/<spreadsheet_id>', methods=['GET', 'OPTIONS'])
 @app.route('/api/sheets/<spreadsheet_id>/<sheet_name>', methods=['GET', 'OPTIONS'])
