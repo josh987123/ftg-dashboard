@@ -14323,7 +14323,7 @@ function formatCurrencyCompact(value) {
   if (absValue >= 1000000) {
     return sign + '$' + (absValue / 1000000).toFixed(1) + 'M';
   } else if (absValue >= 1000) {
-    return sign + '$' + (absValue / 1000).toFixed(0) + 'K';
+    return sign + '$' + (absValue / 1000).toFixed(1) + 'K';
   } else {
     return sign + '$' + absValue.toFixed(0);
   }
@@ -17011,17 +17011,17 @@ function updatePmrMetrics() {
     }
   });
   
-  // Update DOM elements
+  // Update DOM elements with compact currency format
   document.getElementById('pmrTotalJobs').textContent = `${activeJobCount} / ${totalJobs}`;
-  document.getElementById('pmrTotalContract').textContent = formatCurrency(totalContract);
-  document.getElementById('pmrTotalActualCost').textContent = formatCurrency(totalActualCost);
-  document.getElementById('pmrTotalEarnedRevenue').textContent = formatCurrency(totalEarnedRevenue);
+  document.getElementById('pmrTotalContract').textContent = formatCurrencyCompact(totalContract);
+  document.getElementById('pmrTotalActualCost').textContent = formatCurrencyCompact(totalActualCost);
+  document.getElementById('pmrTotalEarnedRevenue').textContent = formatCurrencyCompact(totalEarnedRevenue);
   
   // Backlog
   const backlogEl = document.getElementById('pmrBacklog');
   const backlogPctEl = document.getElementById('pmrBacklogPct');
-  if (backlogEl) backlogEl.textContent = formatCurrency(backlog);
-  if (backlogPctEl) backlogPctEl.textContent = `${backlogPct.toFixed(0)}% remaining`;
+  if (backlogEl) backlogEl.textContent = formatCurrencyCompact(backlog);
+  if (backlogPctEl) backlogPctEl.textContent = `${backlogPct.toFixed(0)}%`;
   
   // Gross Margin (actual realized margin)
   const marginEl = document.getElementById('pmrGrossMargin');
@@ -17031,7 +17031,7 @@ function updatePmrMetrics() {
     marginEl.classList.remove('positive', 'negative');
     marginEl.classList.add(grossMarginPct >= 10 ? 'positive' : grossMarginPct < 5 ? 'negative' : '');
   }
-  if (marginAmtEl) marginAmtEl.textContent = formatCurrency(actualProfit);
+  if (marginAmtEl) marginAmtEl.textContent = formatCurrencyCompact(actualProfit);
   
   // Avg % Complete
   const avgPctEl = document.getElementById('pmrAvgPctComplete');
@@ -17041,18 +17041,18 @@ function updatePmrMetrics() {
   
   // Billed Last Month
   const billedLastMonthEl = document.getElementById('pmrBilledLastMonth');
-  if (billedLastMonthEl) billedLastMonthEl.textContent = formatCurrency(billedLastMonth);
+  if (billedLastMonthEl) billedLastMonthEl.textContent = formatCurrencyCompact(billedLastMonth);
   
   // AR Exposure
   const arEl = document.getElementById('pmrArExposure');
   const arOver60El = document.getElementById('pmrArOver60');
-  if (arEl) arEl.textContent = formatCurrency(arTotal);
-  if (arOver60El) arOver60El.textContent = arOver60 > 0 ? `${formatCurrency(arOver60)} >60 days` : 'No aged AR';
+  if (arEl) arEl.textContent = formatCurrencyCompact(arTotal);
+  if (arOver60El) arOver60El.textContent = arOver60 > 0 ? `${formatCurrencyCompact(arOver60)} >60d` : 'None';
   
   // Net Over/Under
   const netEl = document.getElementById('pmrNetOverUnder');
   if (netEl) {
-    netEl.textContent = formatCurrency(netOverUnder);
+    netEl.textContent = formatCurrencyCompact(netOverUnder);
     netEl.classList.remove('positive', 'negative');
     netEl.classList.add(netOverUnder >= 0 ? 'positive' : 'negative');
   }

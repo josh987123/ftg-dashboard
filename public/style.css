@@ -14927,24 +14927,41 @@ body.dark-mode .pmr-table-footer {
   }
   
   .pmr-metrics-row {
-    gap: 4px;
-    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-bottom: 8px;
+    justify-content: space-between;
   }
   
   .pmr-metric-tile {
-    padding: 4px 8px;
-    min-width: 70px;
+    padding: 3px 4px;
+    min-width: calc(20% - 3px);
+    max-width: calc(20% - 3px);
+    flex: 0 0 calc(20% - 3px);
     border-radius: 4px;
+    box-sizing: border-box;
   }
   
   .pmr-metric-label {
-    font-size: 8px;
-    margin-bottom: 1px;
+    font-size: 7px;
+    margin-bottom: 0;
+    line-height: 1.1;
   }
   
   .pmr-metric-value {
-    font-size: 13px;
+    font-size: 11px;
     line-height: 1.1;
+  }
+  
+  .pmr-metric-subtext {
+    font-size: 7px;
+    margin-top: 1px;
+  }
+  
+  .pmr-progress-bar {
+    height: 3px;
+    margin-top: 2px;
   }
   
   .pmr-charts-row,
@@ -15045,7 +15062,7 @@ body.dark-mode .pmr-table-footer {
 @media (max-width: 480px) {
   .pmr-filter-bar {
     padding: 6px 10px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   
   .pmr-filter-row {
@@ -15059,21 +15076,27 @@ body.dark-mode .pmr-table-footer {
   }
   
   .pmr-metrics-row {
-    gap: 3px;
-    margin-bottom: 8px;
+    gap: 2px;
+    margin-bottom: 6px;
   }
   
   .pmr-metric-tile {
-    min-width: 60px;
-    padding: 3px 6px;
+    min-width: calc(20% - 2px);
+    max-width: calc(20% - 2px);
+    flex: 0 0 calc(20% - 2px);
+    padding: 2px 3px;
   }
   
   .pmr-metric-label {
-    font-size: 7px;
+    font-size: 6px;
   }
   
   .pmr-metric-value {
-    font-size: 12px;
+    font-size: 10px;
+  }
+  
+  .pmr-metric-subtext {
+    font-size: 6px;
   }
   
   .pmr-chart-container {
