@@ -14099,50 +14099,22 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
   color: #64748b;
 }
 
-/* Mobile compact styles for page filter bars */
+/* Mobile compact styles for page filter bars - 2 filters per row */
 @media (max-width: 768px) {
   .page-filter-bar {
     padding: 8px 10px;
-    gap: 6px 10px;
+    gap: 6px 8px;
     margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
   }
   
   .page-filter-bar .filter-group {
-    gap: 4px;
-  }
-  
-  .page-filter-bar .filter-group label {
-    font-size: 11px;
-  }
-  
-  .page-filter-bar .filter-input {
-    padding: 5px 8px;
-    font-size: 12px;
-    height: 28px;
-  }
-  
-  .page-filter-bar select {
-    padding: 5px 8px;
-    font-size: 12px;
-    height: 28px;
-  }
-  
-  .page-filter-bar .column-picker-btn {
-    padding: 5px 10px;
-    font-size: 11px;
-    height: 28px;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-filter-bar {
-    padding: 6px 8px;
-    gap: 4px 8px;
-    margin-bottom: 8px;
-  }
-  
-  .page-filter-bar .filter-group {
+    flex: 0 0 calc(50% - 4px);
+    max-width: calc(50% - 4px);
     gap: 3px;
+    flex-direction: column;
+    align-items: flex-start;
   }
   
   .page-filter-bar .filter-group label {
@@ -14150,6 +14122,56 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
   }
   
   .page-filter-bar .filter-input {
+    padding: 5px 8px;
+    font-size: 12px;
+    height: 28px;
+    width: 100% !important;
+    max-width: 100%;
+  }
+  
+  .page-filter-bar select {
+    padding: 5px 8px;
+    font-size: 12px;
+    height: 28px;
+    width: 100% !important;
+    max-width: 100%;
+  }
+  
+  .page-filter-bar .filter-spacer {
+    display: none;
+  }
+  
+  .page-filter-bar .column-picker-container {
+    flex: 0 0 calc(50% - 4px);
+    max-width: calc(50% - 4px);
+  }
+  
+  .page-filter-bar .column-picker-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+    height: 28px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-filter-bar {
+    padding: 6px 8px;
+    gap: 5px 6px;
+    margin-bottom: 8px;
+  }
+  
+  .page-filter-bar .filter-group {
+    flex: 0 0 calc(50% - 3px);
+    max-width: calc(50% - 3px);
+    gap: 2px;
+  }
+  
+  .page-filter-bar .filter-group label {
+    font-size: 9px;
+  }
+  
+  .page-filter-bar .filter-input {
     padding: 4px 6px;
     font-size: 11px;
     height: 26px;
@@ -14159,6 +14181,11 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
     padding: 4px 6px;
     font-size: 11px;
     height: 26px;
+  }
+  
+  .page-filter-bar .column-picker-container {
+    flex: 0 0 calc(50% - 3px);
+    max-width: calc(50% - 3px);
   }
   
   .page-filter-bar .column-picker-btn {
