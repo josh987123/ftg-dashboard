@@ -6675,11 +6675,39 @@ body.dark-mode .nav-item.nav-parent.expanded {
 @media (max-width: 768px) {
   .transaction-filter-row {
     flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+  }
+  
+  .transaction-filter-row label {
+    font-size: 11px;
   }
   
   .transaction-filter-row input[type="text"] {
     order: 1;
     width: 100%;
+    padding: 6px 8px;
+    font-size: 12px;
+    min-width: 0;
+  }
+  
+  .transaction-filter-row .filter-clear-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  .cash-tabs {
+    gap: 0;
+  }
+  
+  .cash-tab {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  
+  .cash-tab-content {
+    padding-top: 10px;
   }
 }
 
@@ -13879,6 +13907,21 @@ body.dark-mode .payments-year-range .range-separator {
   
   .payments-year-range .range-separator {
     font-size: 11px;
+  }
+  
+  .metrics-section-header {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  
+  .dashboard-section h2 {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+  
+  .data-as-of {
+    font-size: 11px;
+    margin-bottom: 10px;
   }
 }
 
