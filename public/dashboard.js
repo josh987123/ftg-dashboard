@@ -1445,6 +1445,8 @@ function initNavigation() {
       if (id === "overUnderBilling") initOverUnderBilling();
       if (id === "costCodes") initCostCodes();
       if (id === "missingBudgets") initMissingBudgets();
+      if (id === "pmReport") initPmReport();
+      if (id === "aiInsights") initAiInsights();
       if (id === "payments") initPayments();
       if (id === "apAging") initApAging();
       if (id === "arAging") initArAging();
