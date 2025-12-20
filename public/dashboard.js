@@ -1400,7 +1400,7 @@ function initNavigation() {
 
       // Auto-expand Financials if child is clicked
       if (item.classList.contains("nav-child") && finStatementsParent && finStatementsChildren) {
-        const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'receivablesPayables'];
+        const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'payments', 'apAging', 'arAging'];
         if (fsChildren.includes(id)) {
           finStatementsParent.classList.add("expanded");
           finStatementsChildren.classList.add("expanded");
@@ -4508,7 +4508,7 @@ async function deleteScheduledReport(id) {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "overUnderBilling", "costCodes", "missingBudgets", "payments", "receivablesPayables", "jobAnalytics", "admin"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "overUnderBilling", "costCodes", "missingBudgets", "payments", "apAging", "arAging", "jobAnalytics", "admin"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -4633,14 +4633,6 @@ function getReportData() {
       subtitle: getPaymentsSubtitle(),
       tableHtml: getPaymentsTableHtml(),
       csvData: getPaymentsCsvData(),
-      isWide: true
-    };
-  } else if (view === "receivablesPayables") {
-    return {
-      title: "Receivables & Payables Report",
-      subtitle: getReceivablesPayablesSubtitle(),
-      tableHtml: getReceivablesPayablesTableHtml(),
-      csvData: getReceivablesPayablesCsvData(),
       isWide: true
     };
   }
@@ -5712,64 +5704,6 @@ function getPaymentsCsvData() {
       }
     });
     csv += cells.join(',') + '\n';
-  });
-  
-  return csv;
-}
-
-// Receivables & Payables Export Helpers
-function getReceivablesPayablesSubtitle() {
-  return 'Current Receivables and Payables Summary';
-}
-
-function getReceivablesPayablesTableHtml() {
-  const section = document.getElementById('receivablesPayables');
-  if (!section) return "<p>No data available</p>";
-  
-  // Extract any visible tables from the section
-  const tables = section.querySelectorAll('table');
-  if (tables.length === 0) return "<p>No table data available</p>";
-  
-  let html = '';
-  tables.forEach(table => {
-    html += table.outerHTML;
-  });
-  
-  return html || "<p>No data available</p>";
-}
-
-function getReceivablesPayablesCsvData() {
-  const section = document.getElementById('receivablesPayables');
-  if (!section) return "";
-  
-  const tables = section.querySelectorAll('table');
-  if (tables.length === 0) return "";
-  
-  let csv = "";
-  
-  tables.forEach((table, tableIdx) => {
-    if (tableIdx > 0) csv += '\n\n';
-    
-    const thead = table.querySelector('thead');
-    const tbody = table.querySelector('tbody');
-    
-    if (thead) {
-      const headers = [];
-      thead.querySelectorAll('th').forEach(th => {
-        headers.push(`"${th.textContent.trim().replace(/"/g, '""')}"`);
-      });
-      csv += headers.join(',') + '\n';
-    }
-    
-    if (tbody) {
-      Array.from(tbody.children).forEach(tr => {
-        const cells = [];
-        tr.querySelectorAll('td').forEach(td => {
-          cells.push(`"${td.textContent.trim().replace(/"/g, '""')}"`);
-        });
-        csv += cells.join(',') + '\n';
-      });
-    }
   });
   
   return csv;
@@ -19028,7 +18962,6 @@ const sectionToPermission = {
   'incomeStatement': 'income_statement',
   'balanceSheet': 'balance_sheet',
   'cashFlows': 'cash_flow',
-  'receivablesPayables': 'receivables',
   'apAging': 'ap_aging',
   'arAging': 'ar_aging',
   'jobAnalytics': 'job_analytics',
@@ -19046,7 +18979,7 @@ const sectionToPermission = {
 // Order of sections for default page selection
 const sectionOrder = [
   'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
-  'cashReports', 'accounts', 'apAging', 'arAging', 'receivablesPayables', 'payments',
+  'cashReports', 'accounts', 'apAging', 'arAging', 'payments',
   'jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'jobAnalytics'
 ];
 
@@ -19221,7 +19154,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     const jobsParent = document.getElementById("navJobs");
     const jobsChildren = document.getElementById("navJobsChildren");
     
-    const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'payments', 'apAging', 'arAging', 'receivablesPayables'];
+    const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'payments', 'apAging', 'arAging'];
     const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'jobAnalytics'];
     
     if (fsChildren.includes(targetSection) && finStatementsParent && finStatementsChildren) {

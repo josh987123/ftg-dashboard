@@ -292,7 +292,6 @@ def init_database():
             ('ap_aging', 'AP Aging', 'View accounts payable aging report'),
             ('ar_aging', 'AR Aging', 'View accounts receivable aging report'),
             ('job_analytics', 'Job Analytics', 'View job performance metrics'),
-            ('receivables', 'Receivables/Payables', 'View AR/AP tracking'),
             ('admin', 'Admin', 'Access user management and settings')
         ]
         for page_key, page_name, description in default_permissions:
