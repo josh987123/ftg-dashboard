@@ -18672,7 +18672,7 @@ function displayAiInsightsResults(response) {
   };
   
   // Split response by section headers
-  const formatted = formatAiResponse(response);
+  const formatted = formatMarkdown(response);
   
   // Try to extract sections (simple approach - show full content in each if parsing fails)
   const execMatch = response.match(/##\s*EXECUTIVE SUMMARY([\s\S]*?)(?=##|$)/i);
@@ -18683,22 +18683,22 @@ function displayAiInsightsResults(response) {
   const recMatch = response.match(/##\s*STRATEGIC RECOMMENDATIONS([\s\S]*?)(?=##|$)/i);
   
   document.getElementById('aiInsightsExecSummary').innerHTML = 
-    formatAiResponse(execMatch ? execMatch[1].trim() : 'See detailed analysis below.');
+    formatMarkdown(execMatch ? execMatch[1].trim() : 'See detailed analysis below.');
   
   document.getElementById('aiInsightsFinancial').innerHTML = 
-    formatAiResponse(finMatch ? finMatch[1].trim() : 'Financial analysis included in recommendations.');
+    formatMarkdown(finMatch ? finMatch[1].trim() : 'Financial analysis included in recommendations.');
   
   document.getElementById('aiInsightsJobs').innerHTML = 
-    formatAiResponse(jobMatch ? jobMatch[1].trim() : 'Job analysis included in recommendations.');
+    formatMarkdown(jobMatch ? jobMatch[1].trim() : 'Job analysis included in recommendations.');
   
   document.getElementById('aiInsightsCashFlow').innerHTML = 
-    formatAiResponse(cashMatch ? cashMatch[1].trim() : 'Cash flow analysis included in recommendations.');
+    formatMarkdown(cashMatch ? cashMatch[1].trim() : 'Cash flow analysis included in recommendations.');
   
   document.getElementById('aiInsightsPMs').innerHTML = 
-    formatAiResponse(pmMatch ? pmMatch[1].trim() : 'PM analysis included in recommendations.');
+    formatMarkdown(pmMatch ? pmMatch[1].trim() : 'PM analysis included in recommendations.');
   
   document.getElementById('aiInsightsRecommendations').innerHTML = 
-    formatAiResponse(recMatch ? recMatch[1].trim() : formatted);
+    formatMarkdown(recMatch ? recMatch[1].trim() : formatted);
 }
 
 // ========================================
