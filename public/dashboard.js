@@ -1111,7 +1111,7 @@ function applyJobBudgetsDarkModeStyles(theme) {
 }
 
 function getChartThemeColors() {
-  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains("dark-mode");
   return {
     gridColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
     textColor: isDark ? "#ffffff" : "#374151",
@@ -1213,6 +1213,24 @@ function updateChartColorsForTheme(theme) {
   }
   if (typeof renderPmrBillingChart === 'function' && typeof pmrBillingChart !== 'undefined' && pmrBillingChart) {
     renderPmrBillingChart();
+  }
+  
+  // Re-render Over/Under Billing charts if they exist
+  if (typeof renderOubCharts === 'function' && (typeof oubOverbilledChart !== 'undefined' && oubOverbilledChart || typeof oubUnderbilledChart !== 'undefined' && oubUnderbilledChart)) {
+    renderOubCharts();
+  }
+  
+  // Re-render Job Actuals donut charts if they exist
+  if (typeof renderJaPmDonutChart === 'function' && typeof jaPmDonutChart !== 'undefined' && jaPmDonutChart) {
+    renderJaPmDonutChart();
+  }
+  if (typeof renderJaCustomerDonutChart === 'function' && typeof jaCustomerDonutChart !== 'undefined' && jaCustomerDonutChart) {
+    renderJaCustomerDonutChart();
+  }
+  
+  // Re-render AP/AR Aging charts if they exist
+  if (typeof renderTopVendorsChart === 'function' && typeof topVendorsChart !== 'undefined' && topVendorsChart) {
+    loadTopVendorsChart();
   }
 }
 
@@ -12495,7 +12513,7 @@ function renderCashChart() {
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#dc2626', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
   
   // Get theme colors
-  const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark";
+  const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains("dark-mode");
   
   // Pre-calculate totals per date for data labels
   const dateTotals = dates.map(dateKey => {
@@ -18954,8 +18972,8 @@ function updateOubMetrics() {
 }
 
 function renderOubCharts() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const textColor = isDark ? '#e2e8f0' : '#374151';
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#374151';
   const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
   const isMobile = window.innerWidth <= 768;
   const showDataLabels = !isMobile;
