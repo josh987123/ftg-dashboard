@@ -17030,7 +17030,7 @@ function updatePmrMetrics() {
     if (days > 60) arOver60 += amtDue;
   });
   
-  // Calculate last month billing from ALL AR invoices for this PM
+  // Calculate last month billing from ALL AR invoices for this PM (no job filter - use invoice's PM directly)
   const now = new Date();
   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
   const lastMonthStart = new Date(lastMonthEnd.getFullYear(), lastMonthEnd.getMonth(), 1);
@@ -17039,7 +17039,7 @@ function updatePmrMetrics() {
   
   pmrArInvoices.forEach(inv => {
     if (!isAllPms && inv.project_manager_name !== pmrSelectedPm) return;
-    if (!pmJobNos.has(String(inv.job_no))) return;
+    // Don't filter by job_no - invoice already has PM name, use all invoices for this PM
     const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
     const invoiceDate = new Date(excelEpoch.getTime() + invoiceDateSerial * 24 * 60 * 60 * 1000);
     if (invoiceDate >= lastMonthStart && invoiceDate <= lastMonthEnd) {
