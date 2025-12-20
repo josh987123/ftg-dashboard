@@ -17218,6 +17218,11 @@ function renderPmrMarginChart() {
     pmrMarginChart = null;
   }
   
+  // Theme-adaptive colors
+  const isDark = document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#1f2937';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+  
   const ctx = canvas.getContext('2d');
   pmrMarginChart = new Chart(ctx, {
     type: 'bar',
@@ -17238,7 +17243,7 @@ function renderPmrMarginChart() {
         datalabels: {
           anchor: 'end',
           align: 'end',
-          color: '#374151',
+          color: textColor,
           font: { weight: 'bold', size: window.innerWidth <= 768 ? 10 : 12 },
           formatter: (value) => value > 0 ? value : ''
         }
@@ -17246,10 +17251,11 @@ function renderPmrMarginChart() {
       scales: {
         y: { 
           beginAtZero: true, 
-          ticks: { stepSize: 1 },
-          grid: { color: 'rgba(0,0,0,0.05)' }
+          ticks: { stepSize: 1, color: textColor },
+          grid: { color: gridColor }
         },
         x: {
+          ticks: { color: textColor },
           grid: { display: false }
         }
       }
@@ -17305,6 +17311,11 @@ function renderPmrBillingChart() {
     pmrBillingChart = null;
   }
   
+  // Theme-adaptive colors
+  const isDark = document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#1f2937';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+  
   const ctx = canvas.getContext('2d');
   pmrBillingChart = new Chart(ctx, {
     type: 'line',
@@ -17331,11 +17342,13 @@ function renderPmrBillingChart() {
         y: {
           beginAtZero: true,
           ticks: { 
-            callback: (v) => formatCurrencyShort(v)
+            callback: (v) => formatCurrencyShort(v),
+            color: textColor
           },
-          grid: { color: 'rgba(0,0,0,0.05)' }
+          grid: { color: gridColor }
         },
         x: {
+          ticks: { color: textColor },
           grid: { display: false }
         }
       }
