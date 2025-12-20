@@ -63,6 +63,18 @@
   --table-header-bg: #f9fafb;
   --table-row-hover: #f3f4f6;
   --table-border: #e5e7eb;
+  
+  /* Chart colors - light mode */
+  --chart-text: #374151;
+  --chart-grid: rgba(0, 0, 0, 0.1);
+  --chart-legend: #374151;
+  --chart-datalabel: #374151;
+  --chart-gradient-start: #2563eb;
+  --chart-gradient-end: #60a5fa;
+  --chart-bar-primary: #3b82f6;
+  --chart-bar-secondary: #10b981;
+  --chart-bar-tertiary: #f59e0b;
+  --chart-line-total: #dc2626;
 }
 
 /* Dark Mode Color Overrides */
@@ -113,6 +125,18 @@
   --table-header-bg: #334155;
   --table-row-hover: #334155;
   --table-border: #475569;
+  
+  /* Chart colors - dark mode */
+  --chart-text: #e2e8f0;
+  --chart-grid: rgba(255, 255, 255, 0.15);
+  --chart-legend: #e2e8f0;
+  --chart-datalabel: #ffffff;
+  --chart-gradient-start: #3b82f6;
+  --chart-gradient-end: #93c5fd;
+  --chart-bar-primary: #60a5fa;
+  --chart-bar-secondary: #34d399;
+  --chart-bar-tertiary: #fbbf24;
+  --chart-line-total: #f87171;
 }
 
 /* Smooth scrolling and better text rendering */
