@@ -14522,6 +14522,57 @@ body.dark-mode .ar-aging-table th:hover {
 
 .pmr-metric-trend.up { color: #10b981; }
 .pmr-metric-trend.down { color: #dc2626; }
+.pmr-metric-trend.neutral { color: #6b7280; }
+.pmr-metric-trend.compare { color: #3b82f6; font-weight: 500; }
+.pmr-metric-trend.compare.better { color: #10b981; }
+.pmr-metric-trend.compare.worse { color: #dc2626; }
+
+[data-theme="dark"] .pmr-metric-trend.up,
+body.dark-mode .pmr-metric-trend.up { color: #34d399; }
+[data-theme="dark"] .pmr-metric-trend.down,
+body.dark-mode .pmr-metric-trend.down { color: #f87171; }
+[data-theme="dark"] .pmr-metric-trend.neutral,
+body.dark-mode .pmr-metric-trend.neutral { color: #9ca3af; }
+[data-theme="dark"] .pmr-metric-trend.compare,
+body.dark-mode .pmr-metric-trend.compare { color: #60a5fa; }
+[data-theme="dark"] .pmr-metric-trend.compare.better,
+body.dark-mode .pmr-metric-trend.compare.better { color: #34d399; }
+[data-theme="dark"] .pmr-metric-trend.compare.worse,
+body.dark-mode .pmr-metric-trend.compare.worse { color: #f87171; }
+
+/* PM Comparison Bar */
+.pmr-comparison-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.pmr-comparison-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pmr-comparison-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+
+.pmr-comparison-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+[data-theme="dark"] .pmr-comparison-label,
+body.dark-mode .pmr-comparison-label {
+  color: #9ca3af;
+}
 
 .pmr-progress-bar {
   width: 100%;
@@ -14545,6 +14596,10 @@ body.dark-mode .ar-aging-table th:hover {
   grid-template-columns: 1fr 1fr 1.5fr;
   gap: 16px;
   margin-bottom: 24px;
+}
+
+.pmr-charts-row-3 {
+  grid-template-columns: 1fr 1fr 1.5fr;
 }
 
 .pmr-chart-container {
@@ -14976,9 +15031,32 @@ body.dark-mode .pmr-subtotal-row td {
   }
   
   .pmr-charts-row,
-  .pmr-charts-row-2 {
+  .pmr-charts-row-2,
+  .pmr-charts-row-3 {
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
     margin-bottom: 12px;
+  }
+  
+  .pmr-charts-row-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .pmr-charts-row-3 .pmr-billing-chart {
+    grid-column: span 2;
+  }
+  
+  .pmr-metric-trend {
+    font-size: 9px;
+    margin-top: 2px;
+  }
+  
+  .pmr-comparison-bar {
+    margin-bottom: 8px;
+  }
+  
+  .pmr-comparison-label {
+    font-size: 11px;
   }
   
   .pmr-chart-container {

@@ -3431,15 +3431,25 @@
           </div>
         </div>
 
+        <!-- PM Comparison Toggle -->
+        <div class="pmr-comparison-bar" id="pmrComparisonBar">
+          <label class="pmr-comparison-toggle">
+            <input type="checkbox" id="pmrCompareToggle">
+            <span class="pmr-comparison-label">Compare to Company Average</span>
+          </label>
+        </div>
+
         <!-- Key Metrics Summary Row 1 -->
         <div class="pmr-metrics-row">
           <div class="pmr-metric-tile">
             <div class="pmr-metric-label">Active Jobs</div>
             <div class="pmr-metric-value" id="pmrTotalJobs">-</div>
+            <div class="pmr-metric-trend" id="pmrJobsTrend"></div>
           </div>
           <div class="pmr-metric-tile">
             <div class="pmr-metric-label">Contract Value</div>
             <div class="pmr-metric-value" id="pmrTotalContract">-</div>
+            <div class="pmr-metric-trend" id="pmrContractTrend"></div>
           </div>
           <div class="pmr-metric-tile">
             <div class="pmr-metric-label">Backlog</div>
@@ -3450,10 +3460,12 @@
             <div class="pmr-metric-label">Gross Margin</div>
             <div class="pmr-metric-value" id="pmrGrossMargin">-</div>
             <div class="pmr-metric-subtext" id="pmrGrossMarginAmt">-</div>
+            <div class="pmr-metric-trend" id="pmrMarginTrend"></div>
           </div>
           <div class="pmr-metric-tile">
             <div class="pmr-metric-label">Net Over/(Under)</div>
             <div class="pmr-metric-value" id="pmrNetOverUnder">-</div>
+            <div class="pmr-metric-trend" id="pmrOverUnderTrend"></div>
           </div>
         </div>
 
@@ -3477,18 +3489,24 @@
           <div class="pmr-metric-tile">
             <div class="pmr-metric-label">Actual Cost</div>
             <div class="pmr-metric-value" id="pmrTotalActualCost">-</div>
+            <div class="pmr-metric-trend" id="pmrCostTrend"></div>
           </div>
           <div class="pmr-metric-tile">
             <div class="pmr-metric-label">Earned Revenue</div>
             <div class="pmr-metric-value" id="pmrTotalEarnedRevenue">-</div>
+            <div class="pmr-metric-trend" id="pmrRevenueTrend"></div>
           </div>
         </div>
 
         <!-- Charts Row -->
-        <div class="pmr-charts-row pmr-charts-row-2">
+        <div class="pmr-charts-row pmr-charts-row-3">
           <div class="pmr-chart-container">
             <h4 class="pmr-chart-title">Margin Distribution</h4>
             <canvas id="pmrMarginChart" width="280" height="180"></canvas>
+          </div>
+          <div class="pmr-chart-container">
+            <h4 class="pmr-chart-title">Budget vs Actual</h4>
+            <canvas id="pmrBudgetActualChart" width="280" height="180"></canvas>
           </div>
           <div class="pmr-chart-container pmr-billing-chart">
             <h4 class="pmr-chart-title">Monthly Billing Trend</h4>

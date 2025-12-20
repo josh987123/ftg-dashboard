@@ -16608,6 +16608,8 @@ let pmrData = {
 let pmrSelectedPm = '__ALL__'; // Default to All PMs
 let pmrSelectedStatus = 'A';
 let pmrArInvoices = [];
+let pmrCompareMode = false; // Comparison to company average
+let pmrCompanyAvg = {}; // Cached company-wide averages
 
 // Cache key for PM list
 const PMR_CACHE_KEY = 'ftg_pm_list_cache';
@@ -16757,6 +16759,9 @@ function showPmrLoadingState() {
 async function ensurePmrDataLoaded() {
   if (pmrDataLoaded) return;
   
+  // Reset comparison cache when loading new data
+  pmrCompanyAvg = {};
+  
   // Load job actuals
   if (!jobActualsData || jobActualsData.length === 0) {
     try {
@@ -16869,6 +16874,7 @@ function setupPmrEventListeners() {
   const pmSelect = document.getElementById('pmrPmSelect');
   pmSelect?.addEventListener('change', async (e) => {
     pmrSelectedPm = e.target.value;
+    pmrCompanyAvg = {}; // Reset comparison cache when PM changes
     if (pmrSelectedPm) {
       // Show loading indicator
       showPmrLoadingState();
@@ -16881,6 +16887,7 @@ function setupPmrEventListeners() {
   const statusSelect = document.getElementById('pmrStatusSelect');
   statusSelect?.addEventListener('change', (e) => {
     pmrSelectedStatus = e.target.value;
+    pmrCompanyAvg = {}; // Reset comparison cache when status changes
     updatePmReport();
   });
   
@@ -16897,6 +16904,13 @@ function setupPmrEventListeners() {
   // AI Analysis button
   const aiBtn = document.getElementById('pmrAiAnalyzeBtn');
   aiBtn?.addEventListener('click', () => runPmrAiAnalysis());
+  
+  // Comparison toggle
+  const compareToggle = document.getElementById('pmrCompareToggle');
+  compareToggle?.addEventListener('change', (e) => {
+    pmrCompareMode = e.target.checked;
+    updatePmrMetrics();
+  });
 }
 
 function updatePmReport() {
@@ -17131,16 +17145,106 @@ function updatePmrMetrics() {
   }
   
   // Store computed data for charts
-  pmrData.metrics = { totalContract, totalActualCost, totalEarnedRevenue, backlog, grossMarginPct, avgPctComplete, billedLastMonth, arTotal, arOver60 };
+  pmrData.metrics = { totalContract, totalActualCost, totalEarnedRevenue, backlog, grossMarginPct, avgPctComplete, billedLastMonth, arTotal, arOver60, netOverUnder };
+  
+  // Calculate billing trend (compare to 2 months ago)
+  const twoMonthsAgoEnd = new Date(now.getFullYear(), now.getMonth() - 1, 0);
+  const twoMonthsAgoStart = new Date(twoMonthsAgoEnd.getFullYear(), twoMonthsAgoEnd.getMonth(), 1);
+  let billedTwoMonthsAgo = 0;
+  pmrArInvoices.forEach(inv => {
+    if (!isAllPms && inv.project_manager_name !== pmrSelectedPm) return;
+    const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
+    const invoiceDate = new Date(excelEpoch.getTime() + invoiceDateSerial * 24 * 60 * 60 * 1000);
+    if (invoiceDate >= twoMonthsAgoStart && invoiceDate <= twoMonthsAgoEnd) {
+      billedTwoMonthsAgo += parseFloat(inv.invoice_amount) || 0;
+    }
+  });
+  
+  // Display billing trend
+  const billingTrendEl = document.getElementById('pmrBillingTrend');
+  if (billingTrendEl) {
+    if (billedTwoMonthsAgo > 0) {
+      const change = ((billedLastMonth - billedTwoMonthsAgo) / billedTwoMonthsAgo * 100);
+      const arrow = change > 0 ? '↑' : change < 0 ? '↓' : '→';
+      const trendClass = change > 0 ? 'up' : change < 0 ? 'down' : 'neutral';
+      billingTrendEl.innerHTML = `<span class="${trendClass}">${arrow} ${Math.abs(change).toFixed(0)}% vs prior mo.</span>`;
+    } else {
+      billingTrendEl.innerHTML = '';
+    }
+  }
+  
+  // PM Comparison Mode - show vs company average
+  if (pmrCompareMode && pmrSelectedPm !== '__ALL__' && jobActualsData && jobActualsData.length > 0) {
+    // Calculate company-wide averages (cache for performance)
+    if (!pmrCompanyAvg.calculated) {
+      const allJobs = jobActualsData;
+      const allActiveJobs = allJobs.filter(j => j.job_status === 'A');
+      const pmCount = new Set(allActiveJobs.map(j => j.project_manager_name)).size || 1;
+      
+      // Use active jobs for all calculations to be consistent with individual PM view
+      const allTotalContract = allActiveJobs.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
+      const allTotalActualCost = allActiveJobs.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
+      const allTotalEarnedRevenue = allActiveJobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+      const allActualProfit = allTotalEarnedRevenue - allTotalActualCost;
+      const allGrossMarginPct = allTotalEarnedRevenue > 0 ? (allActualProfit / allTotalEarnedRevenue * 100) : 0;
+      
+      pmrCompanyAvg = {
+        calculated: true,
+        avgJobsPerPm: allActiveJobs.length / pmCount,
+        avgContractPerPm: allTotalContract / pmCount,
+        avgMargin: allGrossMarginPct,
+        avgCostPerPm: allTotalActualCost / pmCount,
+        avgRevenuePerPm: allTotalEarnedRevenue / pmCount
+      };
+    }
+    
+    // Show comparison in trend elements
+    updateComparisonTrend('pmrJobsTrend', activeJobCount, pmrCompanyAvg.avgJobsPerPm, 'jobs', true);
+    updateComparisonTrend('pmrContractTrend', totalContract, pmrCompanyAvg.avgContractPerPm, 'currency', true);
+    updateComparisonTrend('pmrMarginTrend', grossMarginPct, pmrCompanyAvg.avgMargin, 'percent', true);
+    updateComparisonTrend('pmrCostTrend', totalActualCost, pmrCompanyAvg.avgCostPerPm, 'currency', false);
+    updateComparisonTrend('pmrRevenueTrend', totalEarnedRevenue, pmrCompanyAvg.avgRevenuePerPm, 'currency', true);
+  } else {
+    // Clear comparison trends
+    ['pmrJobsTrend', 'pmrContractTrend', 'pmrMarginTrend', 'pmrCostTrend', 'pmrRevenueTrend', 'pmrOverUnderTrend'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '';
+    });
+  }
+}
+
+function updateComparisonTrend(elementId, value, avgValue, format, higherIsBetter) {
+  const el = document.getElementById(elementId);
+  if (!el || avgValue === 0) return;
+  
+  const diff = value - avgValue;
+  const pctDiff = (diff / avgValue * 100);
+  const isBetter = higherIsBetter ? diff > 0 : diff < 0;
+  const isWorse = higherIsBetter ? diff < 0 : diff > 0;
+  
+  let displayDiff;
+  if (format === 'currency') {
+    displayDiff = formatCurrencyCompact(Math.abs(diff));
+  } else if (format === 'percent') {
+    displayDiff = `${Math.abs(pctDiff).toFixed(1)}%`;
+  } else {
+    displayDiff = Math.abs(diff).toFixed(0);
+  }
+  
+  const arrow = isBetter ? '↑' : isWorse ? '↓' : '→';
+  const colorClass = isBetter ? 'compare better' : isWorse ? 'compare worse' : 'compare';
+  el.innerHTML = `<span class="${colorClass}">${arrow} ${displayDiff} vs avg</span>`;
 }
 
 // PM Report Charts
 let pmrStatusChart = null;
 let pmrMarginChart = null;
 let pmrBillingChart = null;
+let pmrBudgetActualChart = null;
 
 function renderPmrCharts() {
   renderPmrMarginChart();
+  renderPmrBudgetActualChart();
   renderPmrBillingChart();
 }
 
@@ -17201,6 +17305,14 @@ function renderPmrMarginChart() {
   const canvas = document.getElementById('pmrMarginChart');
   if (!canvas) return;
   
+  if (!pmrData.jobs || pmrData.jobs.length === 0) {
+    if (pmrMarginChart) {
+      pmrMarginChart.destroy();
+      pmrMarginChart = null;
+    }
+    return;
+  }
+  
   const jobs = pmrData.jobs.filter(j => j.revised_contract > 0);
   
   // Group jobs by margin range
@@ -17219,7 +17331,7 @@ function renderPmrMarginChart() {
   }
   
   // Theme-adaptive colors
-  const isDark = document.body.classList.contains('dark-mode');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
   const textColor = isDark ? '#ffffff' : '#1f2937';
   const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
   
@@ -17264,9 +17376,110 @@ function renderPmrMarginChart() {
   });
 }
 
+function renderPmrBudgetActualChart() {
+  const canvas = document.getElementById('pmrBudgetActualChart');
+  if (!canvas) return;
+  
+  const jobs = pmrData.jobs || [];
+  if (jobs.length === 0) {
+    // Clear chart if no data
+    if (pmrBudgetActualChart) {
+      pmrBudgetActualChart.destroy();
+      pmrBudgetActualChart = null;
+    }
+    return;
+  }
+  
+  // Calculate totals for Budget vs Actual
+  const totalBudgetedCost = jobs.reduce((sum, j) => sum + (j.revised_cost || 0), 0);
+  const totalActualCost = jobs.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
+  const totalBudgetedRevenue = jobs.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
+  const totalEarnedRevenue = jobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  
+  // Destroy existing chart
+  if (pmrBudgetActualChart) {
+    pmrBudgetActualChart.destroy();
+    pmrBudgetActualChart = null;
+  }
+  
+  // Theme-adaptive colors
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#1f2937';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+  
+  const ctx = canvas.getContext('2d');
+  pmrBudgetActualChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Cost', 'Revenue'],
+      datasets: [
+        {
+          label: 'Budget',
+          data: [totalBudgetedCost, totalBudgetedRevenue],
+          backgroundColor: '#6b7280',
+          borderRadius: 4
+        },
+        {
+          label: 'Actual',
+          data: [totalActualCost, totalEarnedRevenue],
+          backgroundColor: ['#3b82f6', '#10b981'],
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { 
+          display: true,
+          position: 'top',
+          labels: { 
+            boxWidth: 12, 
+            padding: 8, 
+            font: { size: 10 },
+            color: textColor
+          }
+        },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: textColor,
+          font: { weight: 'bold', size: 9 },
+          formatter: (value) => value > 0 ? formatCurrencyCompact(value) : ''
+        }
+      },
+      scales: {
+        y: { 
+          beginAtZero: true, 
+          ticks: { 
+            callback: (v) => formatCurrencyShort(v),
+            color: textColor,
+            font: { size: 10 }
+          },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor },
+          grid: { display: false }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
 function renderPmrBillingChart() {
   const canvas = document.getElementById('pmrBillingChart');
   if (!canvas) return;
+  
+  if (!pmrData.jobs || pmrData.jobs.length === 0) {
+    if (pmrBillingChart) {
+      pmrBillingChart.destroy();
+      pmrBillingChart = null;
+    }
+    return;
+  }
   
   // Use ALL PM jobs, not just active ones
   const pmJobNos = new Set(pmrData.jobs.map(j => String(j.job_no)));
@@ -17312,7 +17525,7 @@ function renderPmrBillingChart() {
   }
   
   // Theme-adaptive colors
-  const isDark = document.body.classList.contains('dark-mode');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
   const textColor = isDark ? '#ffffff' : '#1f2937';
   const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
   
@@ -17746,6 +17959,7 @@ function clearPmrTables() {
   
   // Clear charts
   if (pmrMarginChart) { pmrMarginChart.destroy(); pmrMarginChart = null; }
+  if (pmrBudgetActualChart) { pmrBudgetActualChart.destroy(); pmrBudgetActualChart = null; }
   if (pmrBillingChart) { pmrBillingChart.destroy(); pmrBillingChart = null; }
   
   const emptyRow = '<tr><td colspan="9" class="pmr-empty-state"><div class="pmr-empty-state-icon">👤</div><div class="pmr-empty-state-text">Select a Project Manager to view their report</div></td></tr>';

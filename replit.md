@@ -68,13 +68,15 @@ The Jobs section in the sidebar contains job-related tracking views:
   - **Filters**: Status, PM, and Customer dropdown filters. Search input for finding specific cost codes.
   - **My PM View**: Respects the global PM filter toggle to show only logged-in user's jobs.
 - **PM Report**: Project manager-focused performance view. Features:
-  - **PM Selector**: Dropdown to select a project manager (auto-selects current user if PM view is enabled).
+  - **PM Selector**: Dropdown to select a project manager (defaults to "All PMs", auto-selects current user if PM view is enabled).
   - **AI Analysis Panel**: AI-powered analysis of PM performance metrics, risk areas, and recommendations.
-  - **Key Metrics Row**: 5 tiles showing Total Jobs, Total Contract Value, Total Actual Cost, Total Earned Revenue, and Net Over/(Under) with conditional coloring.
-  - **Over/Under Billing Table**: Jobs with billing variance for the selected PM, sorted by under-billed first. Shows Job #, Description, Client, Contract, Actual Cost, % Complete, Earned Rev, Billed Rev, Over/(Under).
+  - **Comparison Toggle**: "Compare to Company Average" checkbox shows how selected PM's metrics compare to company-wide averages (with color-coded better/worse indicators).
+  - **Key Metrics Row**: 10 tiles across 2 rows showing Active Jobs, Contract Value, Backlog, Gross Margin, Net Over/(Under), Avg % Complete, Billed Last Month, AR Exposure, Actual Cost, and Earned Revenue. Features gradient conditional coloring and trend indicators showing change vs prior month.
+  - **Charts Row**: Three charts - Margin Distribution (bar chart of jobs by margin bucket), Budget vs Actual (grouped bar comparing budgeted vs actual for cost and revenue), and Monthly Billing Trend (6-month line chart).
+  - **Over/Under Billing Table**: Jobs with billing variance for the selected PM, sorted by under-billed first. Shows Job #, Description, Client, Contract, Actual Cost, % Complete, Earned Rev, Billed Rev, Over/(Under). Collapsible detail rows.
   - **Missing Budgets Table**: Jobs with >$2,500 actual cost but missing budgeted revenue or cost. Shows Job #, Description, Client, Status, Actual Cost, Budgeted Revenue, Budgeted Cost, and Issue badge (No Budget/No Revenue/No Cost).
-  - **Client Summary Table**: All clients with active jobs (includes subtotal row). Shows Client, Est. Contract, Est. Cost, Est. Profit, Billed (Last Mo.), Billed to Date, Cost to Date.
-  - Responsive design for mobile and desktop.
+  - **Client Summary Table**: All clients with active jobs (includes subtotal row). Shows Client, Est. Contract, Est. Cost, Est. Profit, Margin %, Billed (Last Mo.), Billed to Date, Cost to Date.
+  - Responsive design for mobile and desktop with theme-adaptive chart colors.
 
 ### AI Insights (Comprehensive Business Analysis)
 Standalone AI-powered analysis page that aggregates data from all sources and provides strategic business intelligence:
