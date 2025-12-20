@@ -17397,11 +17397,11 @@ function renderPmrOverUnderTable() {
     <td class="text-right ${overUnderClass}">${formatCurrencyCompact(totals.overUnder)}</td>
   </tr>`;
   
-  // Detail rows
+  // Detail rows - hidden by default, shown when expanded
   const detailRows = overUnderJobs.map(job => {
     const pctComplete = job.percent_complete || 0;
     const jobOverUnderClass = job.over_under >= 0 ? 'over-billed' : 'under-billed';
-    return `<tr>
+    return `<tr class="pmr-ou-detail-row">
       <td>${job.job_no || ''}</td>
       <td>${job.job_description || ''}</td>
       <td>${job.customer_name || ''}</td>
@@ -17433,9 +17433,16 @@ function applyOverUnderColumnVisibility() {
   const table = document.getElementById('pmrOverUnderTable');
   if (!table) return;
   
+  // Toggle expandable columns visibility
   const expandableCols = table.querySelectorAll('.pmr-expandable-col');
   expandableCols.forEach(col => {
     col.style.display = pmrOverUnderExpanded ? '' : 'none';
+  });
+  
+  // Toggle detail rows visibility (rows below subtotal)
+  const detailRows = table.querySelectorAll('.pmr-ou-detail-row');
+  detailRows.forEach(row => {
+    row.style.display = pmrOverUnderExpanded ? '' : 'none';
   });
 }
 
