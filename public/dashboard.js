@@ -1242,23 +1242,87 @@ function closeMetricInfoPopup() {
   if (popup) popup.remove();
 }
 
-function updateDataAsOfDates() {
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('en-US', { 
+// Global data timestamps
+let dataTimestamps = {
+  gl: null,
+  jobs: null,
+  ar: null,
+  ap: null,
+  latest: null
+};
+
+async function loadDataTimestamps() {
+  try {
+    const [glResp, jobsResp, arResp, apResp] = await Promise.all([
+      fetch('data/financials_gl.json').then(r => r.json()).catch(() => null),
+      fetch('data/financials_jobs.json').then(r => r.json()).catch(() => null),
+      fetch('data/ar_invoices.json').then(r => r.json()).catch(() => null),
+      fetch('data/ap_invoices.json').then(r => r.json()).catch(() => null)
+    ]);
+    
+    dataTimestamps.gl = glResp?.generated_at || null;
+    dataTimestamps.jobs = jobsResp?.generated_at || null;
+    dataTimestamps.ar = arResp?.generated_at || null;
+    dataTimestamps.ap = apResp?.generated_at || null;
+    
+    // Find the most recent timestamp
+    const timestamps = [dataTimestamps.gl, dataTimestamps.jobs, dataTimestamps.ar, dataTimestamps.ap]
+      .filter(t => t)
+      .map(t => new Date(t))
+      .sort((a, b) => b - a);
+    
+    dataTimestamps.latest = timestamps[0] || new Date();
+    
+    // Update all data as of elements
+    updateAllDataAsOfElements();
+  } catch (e) {
+    console.error('Error loading data timestamps:', e);
+  }
+}
+
+function formatDataTimestamp(date) {
+  if (!date) return 'Unknown';
+  const d = new Date(date);
+  return d.toLocaleDateString('en-US', { 
     year: 'numeric', 
     month: 'long', 
-    day: 'numeric' 
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
   });
+}
+
+function formatDataTimestampShort(date) {
+  if (!date) return 'Unknown';
+  const d = new Date(date);
+  return d.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric'
+  });
+}
+
+function updateAllDataAsOfElements() {
+  const dateStr = formatDataTimestampShort(dataTimestamps.latest);
   
-  const revEl = document.getElementById("revDataAsOf");
-  const acctEl = document.getElementById("acctDataAsOf");
-  const isEl = document.getElementById("isDataAsOf");
-  const overviewEl = document.getElementById("overviewDataAsOf");
+  // All DataAsOf element IDs
+  const elementIds = [
+    'revDataAsOf', 'acctDataAsOf', 'isDataAsOf', 'overviewDataAsOf',
+    'bsDataAsOf', 'cfDataAsOf', 'cashDataAsOf', 
+    'jobBudgetsDataAsOf', 'jobOverviewDataAsOf', 'jobActualsDataAsOf', 
+    'jobCostsDataAsOf', 'missingBudgetsDataAsOf', 'pmrDataAsOf',
+    'arAgingDataAsOf', 'apAgingDataAsOf', 'aiInsightsDataAsOf'
+  ];
   
-  if (revEl) revEl.textContent = dateStr;
-  if (acctEl) acctEl.textContent = dateStr;
-  if (isEl) isEl.textContent = dateStr;
-  if (overviewEl) overviewEl.textContent = dateStr;
+  elementIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = dateStr;
+  });
+}
+
+function updateDataAsOfDates() {
+  // Load timestamps from data files and update all elements
+  loadDataTimestamps();
 }
 
 function initConfigPanels() {
