@@ -1183,6 +1183,10 @@ function updateChartColorsForTheme(theme) {
         chart.options.plugins.legend.labels = chart.options.plugins.legend.labels || {};
         chart.options.plugins.legend.labels.color = textColor;
       }
+      // Update datalabels colors
+      if (chart.options && chart.options.plugins && chart.options.plugins.datalabels) {
+        chart.options.plugins.datalabels.color = textColor;
+      }
       chart.update("none");
     });
   }
@@ -1198,6 +1202,17 @@ function updateChartColorsForTheme(theme) {
   }
   if (typeof renderCustomerDonutChart === 'function' && typeof customerDonutChart !== 'undefined' && customerDonutChart) {
     renderCustomerDonutChart();
+  }
+  
+  // Re-render PM Report charts if they exist
+  if (typeof renderPmrMarginChart === 'function' && typeof pmrMarginChart !== 'undefined' && pmrMarginChart) {
+    renderPmrMarginChart();
+  }
+  if (typeof renderPmrBudgetActualChart === 'function' && typeof pmrBudgetActualChart !== 'undefined' && pmrBudgetActualChart) {
+    renderPmrBudgetActualChart();
+  }
+  if (typeof renderPmrBillingChart === 'function' && typeof pmrBillingChart !== 'undefined' && pmrBillingChart) {
+    renderPmrBillingChart();
   }
 }
 
