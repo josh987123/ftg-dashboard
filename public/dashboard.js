@@ -16788,6 +16788,7 @@ function renderPmrMissingBudgetsTable() {
   });
   
   // Find jobs with actual cost > threshold but missing budget revenue or cost
+  // Only show ACTIVE jobs (status 'A')
   const missingBudgets = [];
   
   actualsMap.forEach((actual, jobNo) => {
@@ -16795,6 +16796,11 @@ function renderPmrMissingBudgetsTable() {
     if (actualCost < threshold) return;
     
     const budget = budgetMap.get(jobNo) || {};
+    const jobStatus = budget.job_status || actual.job_status || '';
+    
+    // Only include active jobs
+    if (jobStatus !== 'A') return;
+    
     const revisedContract = parseFloat(budget.revised_contract) || 0;
     const revisedCost = parseFloat(budget.revised_cost) || 0;
     
@@ -16816,7 +16822,7 @@ function renderPmrMissingBudgetsTable() {
         job_no: jobNo,
         job_description: actual.job_description || budget.job_description || '',
         customer_name: actual.customer_name || budget.customer_name || '',
-        job_status: budget.job_status || actual.job_status || '',
+        job_status: jobStatus,
         actual_cost: actualCost,
         revised_contract: revisedContract,
         revised_cost: revisedCost,
@@ -16855,10 +16861,10 @@ function renderPmrClientSummaryTable() {
   const tbody = document.getElementById('pmrClientSummaryTableBody');
   if (!tbody) return;
   
-  // Aggregate by client
+  // Aggregate by client - only include ACTIVE jobs (status 'A')
   const clientMap = new Map();
   
-  pmrData.jobs.forEach(job => {
+  pmrData.jobs.filter(job => job.job_status === 'A').forEach(job => {
     const client = job.customer_name || 'Unknown';
     if (!clientMap.has(client)) {
       clientMap.set(client, {
@@ -16878,14 +16884,13 @@ function renderPmrClientSummaryTable() {
     c.cost_to_date += job.actual_cost || 0;
   });
   
-  // Sort by contract value and get top 5
+  // Sort by contract value - show all clients with active jobs
   const clients = [...clientMap.values()]
     .map(c => ({
       ...c,
       est_profit: c.est_contract - c.est_cost
     }))
-    .sort((a, b) => b.est_contract - a.est_contract)
-    .slice(0, 5);
+    .sort((a, b) => b.est_contract - a.est_contract);
   
   pmrData.clientSummary = clients;
   
