@@ -12743,7 +12743,13 @@ function updateCashStatsTiles(dates, accountsConfig) {
   document.getElementById("cashMinDate").textContent = formatDate(min.date);
   const growthEl = document.getElementById("cashGrowthValue");
   if (growthEl) {
-    growthEl.className = growth < 0 ? "stat-value negative" : "stat-value";
+    if (growth < 0) {
+      growthEl.className = "tile-value negative";
+      growthEl.style.color = "#dc2626";
+    } else {
+      growthEl.className = "tile-value positive";
+      growthEl.style.color = "#10b981";
+    }
   }
   animatePercent(growthEl, growth, 600);
 }
