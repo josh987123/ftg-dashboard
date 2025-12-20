@@ -97,6 +97,11 @@ The application adopts a mobile-first approach with a responsive sidebar navigat
 - **Sidebar Collapse**: Desktop sidebar can be collapsed to icon-only mode (state persisted in localStorage). Hover over section icons shows submenu flyout.
 
 ### UI Polish & Micro-interactions
+- **Custom Greeting**: Time-based greeting ("Good morning/afternoon/evening, [Name]") with date display on Executive Overview
+- **Page Transitions**: Smooth opacity and translateY animations when switching between dashboard sections
+- **Gradient Accents**: Section headers feature gradient text using CSS background-clip for visual appeal
+- **Glassmorphism Effects**: Modals, dropdowns, user menu, and config panels use backdrop-filter blur with semi-transparent backgrounds
+- **Drag-and-Drop Tiles**: Executive Overview tiles can be reordered via drag-and-drop with localStorage persistence
 - **Button Effects**: Subtle lift on hover, scale on active
 - **Input Focus**: Blue glow ring on focus
 - **Table Rows**: Smooth hover highlight transitions
