@@ -246,6 +246,9 @@ function refreshCurrentSection() {
     case 'missingBudgets':
       if (typeof filterMissingBudgets === 'function') filterMissingBudgets();
       break;
+    case 'pmReport':
+      if (typeof initPmReport === 'function') initPmReport();
+      break;
     case 'payments':
       if (typeof loadPaymentsPage === 'function') loadPaymentsPage();
       break;
@@ -1409,7 +1412,7 @@ function initNavigation() {
       
       // Auto-expand Jobs if child is clicked
       if (item.classList.contains("nav-child") && jobsParent && jobsChildren) {
-        const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'payments', 'jobAnalytics'];
+        const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'pmReport', 'payments', 'jobAnalytics'];
         if (jobsChildItems.includes(id)) {
           jobsParent.classList.add("expanded");
           jobsChildren.classList.add("expanded");
@@ -4508,7 +4511,7 @@ async function deleteScheduledReport(id) {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "overUnderBilling", "costCodes", "missingBudgets", "payments", "apAging", "arAging", "jobAnalytics", "admin"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "overUnderBilling", "costCodes", "missingBudgets", "pmReport", "payments", "apAging", "arAging", "jobAnalytics", "admin"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -16523,6 +16526,464 @@ function updateMbPagination(total) {
 }
 
 // ========================================
+// PM REPORT MODULE
+// ========================================
+
+let pmrInitialized = false;
+let pmrData = {
+  jobs: [],
+  overUnder: [],
+  missingBudgets: [],
+  clientSummary: []
+};
+let pmrSelectedPm = '';
+
+async function initPmReport() {
+  const pmSelect = document.getElementById('pmrPmSelect');
+  
+  // Load data if not already loaded
+  if (!jobActualsData || jobActualsData.length === 0) {
+    try {
+      await loadJobActualsData();
+    } catch (e) {
+      console.error('Failed to load job actuals for PM Report:', e);
+    }
+  }
+  
+  if (!jobBudgetsData || jobBudgetsData.length === 0) {
+    try {
+      const resp = await fetch('data/financials_jobs.json');
+      const text = await resp.text();
+      const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+      jobBudgetsData = (data.job_budgets || []).map(job => ({
+        ...job,
+        original_contract: parseFloat(job.original_contract) || 0,
+        tot_income_adj: parseFloat(job.tot_income_adj) || 0,
+        revised_contract: parseFloat(job.revised_contract) || 0,
+        original_cost: parseFloat(job.original_cost) || 0,
+        tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
+        revised_cost: parseFloat(job.revised_cost) || 0
+      }));
+    } catch (e) {
+      console.error('Failed to load job budgets for PM Report:', e);
+    }
+  }
+  
+  // Populate PM dropdown
+  populatePmrPmSelect();
+  
+  // Set up event listeners
+  if (!pmrInitialized) {
+    setupPmrEventListeners();
+    pmrInitialized = true;
+  }
+  
+  // Set data as of date
+  const dataAsOf = document.getElementById('pmrDataAsOf');
+  if (dataAsOf && jobsDataAsOf) {
+    dataAsOf.textContent = jobsDataAsOf;
+  }
+  
+  // If PM already selected, refresh data
+  if (pmSelect && pmSelect.value) {
+    pmrSelectedPm = pmSelect.value;
+    updatePmReport();
+  }
+}
+
+function populatePmrPmSelect() {
+  const pmSelect = document.getElementById('pmrPmSelect');
+  if (!pmSelect) return;
+  
+  // Get unique PMs from job actuals and budgets
+  const pmSet = new Set();
+  
+  jobActualsData.forEach(job => {
+    if (job.project_manager_name) pmSet.add(job.project_manager_name);
+  });
+  
+  jobBudgetsData.forEach(job => {
+    if (job.project_manager_name) pmSet.add(job.project_manager_name);
+  });
+  
+  const pms = [...pmSet].sort();
+  
+  pmSelect.innerHTML = '<option value="">-- Select a PM --</option>' +
+    pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+  
+  // Auto-select if user is a PM
+  if (getMyPmViewEnabled() && isUserProjectManager()) {
+    const pmName = getCurrentUserPmName();
+    if (pmName && pms.includes(pmName)) {
+      pmSelect.value = pmName;
+      pmrSelectedPm = pmName;
+    }
+  }
+}
+
+function setupPmrEventListeners() {
+  const pmSelect = document.getElementById('pmrPmSelect');
+  pmSelect?.addEventListener('change', (e) => {
+    pmrSelectedPm = e.target.value;
+    updatePmReport();
+  });
+  
+  // AI Analysis toggle
+  const aiHeader = document.getElementById('pmrAiAnalysisHeader');
+  const aiBody = document.getElementById('pmrAiAnalysisBody');
+  aiHeader?.addEventListener('click', (e) => {
+    if (e.target.closest('.ai-run-btn')) return;
+    aiBody?.classList.toggle('expanded');
+    const icon = aiHeader.querySelector('.ai-analysis-toggle-icon');
+    if (icon) icon.textContent = aiBody?.classList.contains('expanded') ? '▼' : '▶';
+  });
+  
+  // AI Analysis button
+  const aiBtn = document.getElementById('pmrAiAnalyzeBtn');
+  aiBtn?.addEventListener('click', () => runPmrAiAnalysis());
+}
+
+function updatePmReport() {
+  if (!pmrSelectedPm) {
+    clearPmrTables();
+    return;
+  }
+  
+  // Filter jobs for this PM
+  const pmJobs = jobActualsData.filter(job => job.project_manager_name === pmrSelectedPm);
+  const pmBudgets = jobBudgetsData.filter(job => job.project_manager_name === pmrSelectedPm);
+  
+  // Create a map of budget data by job number for quick lookup
+  const budgetMap = new Map();
+  pmBudgets.forEach(b => budgetMap.set(String(b.job_no), b));
+  
+  // Build combined data with over/under calculations
+  pmrData.jobs = pmJobs.map(job => {
+    const jobNo = String(job.job_no);
+    const budget = budgetMap.get(jobNo) || {};
+    const revisedContract = parseFloat(budget.revised_contract) || job.revised_contract || 0;
+    const revisedCost = parseFloat(budget.revised_cost) || job.revised_cost || 0;
+    const actualCost = job.actual_cost || 0;
+    const earnedRevenue = job.earned_revenue || 0;
+    const billedRevenue = job.billed_revenue || 0;
+    const overUnder = billedRevenue - earnedRevenue;
+    
+    return {
+      ...job,
+      revised_contract: revisedContract,
+      revised_cost: revisedCost,
+      actual_cost: actualCost,
+      earned_revenue: earnedRevenue,
+      billed_revenue: billedRevenue,
+      over_under: overUnder,
+      customer_name: budget.customer_name || job.customer_name || '',
+      job_status: budget.job_status || job.job_status || ''
+    };
+  });
+  
+  // Update metrics
+  updatePmrMetrics();
+  
+  // Render tables
+  renderPmrOverUnderTable();
+  renderPmrMissingBudgetsTable();
+  renderPmrClientSummaryTable();
+}
+
+function updatePmrMetrics() {
+  const jobs = pmrData.jobs;
+  
+  const totalJobs = jobs.length;
+  const totalContract = jobs.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
+  const totalActualCost = jobs.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
+  const totalEarnedRevenue = jobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  const netOverUnder = jobs.reduce((sum, j) => sum + (j.over_under || 0), 0);
+  
+  document.getElementById('pmrTotalJobs').textContent = totalJobs.toLocaleString();
+  document.getElementById('pmrTotalContract').textContent = formatCurrency(totalContract);
+  document.getElementById('pmrTotalActualCost').textContent = formatCurrency(totalActualCost);
+  document.getElementById('pmrTotalEarnedRevenue').textContent = formatCurrency(totalEarnedRevenue);
+  
+  const netEl = document.getElementById('pmrNetOverUnder');
+  if (netEl) {
+    netEl.textContent = formatCurrency(netOverUnder);
+    netEl.classList.remove('positive', 'negative');
+    netEl.classList.add(netOverUnder >= 0 ? 'positive' : 'negative');
+  }
+}
+
+function renderPmrOverUnderTable() {
+  const tbody = document.getElementById('pmrOverUnderTableBody');
+  if (!tbody) return;
+  
+  // Filter to show only jobs with non-zero variance
+  const overUnderJobs = pmrData.jobs.filter(j => Math.abs(j.over_under) > 0.01)
+    .sort((a, b) => a.over_under - b.over_under); // Under-billed first
+  
+  pmrData.overUnder = overUnderJobs;
+  
+  if (overUnderJobs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="pmr-empty-state"><div class="pmr-empty-state-text">No jobs with billing variance</div></td></tr>';
+    document.getElementById('pmrOverUnderCount').textContent = '0 jobs';
+    return;
+  }
+  
+  tbody.innerHTML = overUnderJobs.map(job => {
+    const pctComplete = job.percent_complete || 0;
+    const overUnderClass = job.over_under >= 0 ? 'over-billed' : 'under-billed';
+    return `<tr>
+      <td>${job.job_no || ''}</td>
+      <td>${job.job_description || ''}</td>
+      <td>${job.customer_name || ''}</td>
+      <td class="text-right">${formatCurrency(job.revised_contract)}</td>
+      <td class="text-right">${formatCurrency(job.actual_cost)}</td>
+      <td class="text-right">${pctComplete.toFixed(1)}%</td>
+      <td class="text-right">${formatCurrency(job.earned_revenue)}</td>
+      <td class="text-right">${formatCurrency(job.billed_revenue)}</td>
+      <td class="text-right ${overUnderClass}">${formatCurrency(job.over_under)}</td>
+    </tr>`;
+  }).join('');
+  
+  document.getElementById('pmrOverUnderCount').textContent = `${overUnderJobs.length} job${overUnderJobs.length !== 1 ? 's' : ''}`;
+}
+
+function renderPmrMissingBudgetsTable() {
+  const tbody = document.getElementById('pmrMissingBudgetsTableBody');
+  if (!tbody) return;
+  
+  // Get jobs with >$2,500 actual cost but missing budget data
+  const threshold = 2500;
+  
+  // Build map of actuals by job
+  const actualsMap = new Map();
+  jobActualsData.forEach(j => {
+    if (j.project_manager_name === pmrSelectedPm) {
+      actualsMap.set(String(j.job_no), j);
+    }
+  });
+  
+  // Build map of budgets by job
+  const budgetMap = new Map();
+  jobBudgetsData.forEach(b => {
+    budgetMap.set(String(b.job_no), b);
+  });
+  
+  // Find jobs with actual cost > threshold but missing budget revenue or cost
+  const missingBudgets = [];
+  
+  actualsMap.forEach((actual, jobNo) => {
+    const actualCost = actual.actual_cost || 0;
+    if (actualCost < threshold) return;
+    
+    const budget = budgetMap.get(jobNo) || {};
+    const revisedContract = parseFloat(budget.revised_contract) || 0;
+    const revisedCost = parseFloat(budget.revised_cost) || 0;
+    
+    if (revisedContract === 0 || revisedCost === 0) {
+      let issue = '';
+      let issueClass = '';
+      if (revisedContract === 0 && revisedCost === 0) {
+        issue = 'No Budget';
+        issueClass = 'no-both';
+      } else if (revisedContract === 0) {
+        issue = 'No Revenue';
+        issueClass = 'no-revenue';
+      } else {
+        issue = 'No Cost';
+        issueClass = 'no-cost';
+      }
+      
+      missingBudgets.push({
+        job_no: jobNo,
+        job_description: actual.job_description || budget.job_description || '',
+        customer_name: actual.customer_name || budget.customer_name || '',
+        job_status: budget.job_status || actual.job_status || '',
+        actual_cost: actualCost,
+        revised_contract: revisedContract,
+        revised_cost: revisedCost,
+        issue: issue,
+        issueClass: issueClass
+      });
+    }
+  });
+  
+  pmrData.missingBudgets = missingBudgets.sort((a, b) => b.actual_cost - a.actual_cost);
+  
+  if (missingBudgets.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="pmr-empty-state"><div class="pmr-empty-state-text">No jobs with missing budgets above $2,500</div></td></tr>';
+    document.getElementById('pmrMissingBudgetsCount').textContent = '0 jobs';
+    return;
+  }
+  
+  tbody.innerHTML = missingBudgets.map(job => {
+    const status = getJobStatusLabel(job.job_status);
+    return `<tr>
+      <td>${job.job_no || ''}</td>
+      <td>${job.job_description || ''}</td>
+      <td>${job.customer_name || ''}</td>
+      <td><span class="job-status-badge ${status.class}">${status.label}</span></td>
+      <td class="text-right">${formatCurrency(job.actual_cost)}</td>
+      <td class="text-right">${formatCurrency(job.revised_contract)}</td>
+      <td class="text-right">${formatCurrency(job.revised_cost)}</td>
+      <td><span class="pmr-issue-badge ${job.issueClass}">${job.issue}</span></td>
+    </tr>`;
+  }).join('');
+  
+  document.getElementById('pmrMissingBudgetsCount').textContent = `${missingBudgets.length} job${missingBudgets.length !== 1 ? 's' : ''}`;
+}
+
+function renderPmrClientSummaryTable() {
+  const tbody = document.getElementById('pmrClientSummaryTableBody');
+  if (!tbody) return;
+  
+  // Aggregate by client
+  const clientMap = new Map();
+  
+  pmrData.jobs.forEach(job => {
+    const client = job.customer_name || 'Unknown';
+    if (!clientMap.has(client)) {
+      clientMap.set(client, {
+        customer_name: client,
+        est_contract: 0,
+        est_cost: 0,
+        billed_last_month: 0,
+        billed_to_date: 0,
+        cost_to_date: 0
+      });
+    }
+    
+    const c = clientMap.get(client);
+    c.est_contract += job.revised_contract || 0;
+    c.est_cost += job.revised_cost || 0;
+    c.billed_to_date += job.billed_revenue || 0;
+    c.cost_to_date += job.actual_cost || 0;
+  });
+  
+  // Sort by contract value and get top 5
+  const clients = [...clientMap.values()]
+    .map(c => ({
+      ...c,
+      est_profit: c.est_contract - c.est_cost
+    }))
+    .sort((a, b) => b.est_contract - a.est_contract)
+    .slice(0, 5);
+  
+  pmrData.clientSummary = clients;
+  
+  if (clients.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="pmr-empty-state"><div class="pmr-empty-state-text">No client data available</div></td></tr>';
+    document.getElementById('pmrClientSummaryCount').textContent = '0 clients';
+    return;
+  }
+  
+  tbody.innerHTML = clients.map(c => `<tr>
+    <td>${c.customer_name}</td>
+    <td class="text-right">${formatCurrency(c.est_contract)}</td>
+    <td class="text-right">${formatCurrency(c.est_cost)}</td>
+    <td class="text-right">${formatCurrency(c.est_profit)}</td>
+    <td class="text-right">${formatCurrency(c.billed_last_month)}</td>
+    <td class="text-right">${formatCurrency(c.billed_to_date)}</td>
+    <td class="text-right">${formatCurrency(c.cost_to_date)}</td>
+  </tr>`).join('');
+  
+  document.getElementById('pmrClientSummaryCount').textContent = `${clients.length} client${clients.length !== 1 ? 's' : ''}`;
+}
+
+function clearPmrTables() {
+  document.getElementById('pmrTotalJobs').textContent = '-';
+  document.getElementById('pmrTotalContract').textContent = '-';
+  document.getElementById('pmrTotalActualCost').textContent = '-';
+  document.getElementById('pmrTotalEarnedRevenue').textContent = '-';
+  document.getElementById('pmrNetOverUnder').textContent = '-';
+  document.getElementById('pmrNetOverUnder').classList.remove('positive', 'negative');
+  
+  const emptyRow = '<tr><td colspan="9" class="pmr-empty-state"><div class="pmr-empty-state-icon">👤</div><div class="pmr-empty-state-text">Select a Project Manager to view their report</div></td></tr>';
+  
+  document.getElementById('pmrOverUnderTableBody').innerHTML = emptyRow;
+  document.getElementById('pmrMissingBudgetsTableBody').innerHTML = '<tr><td colspan="8" class="pmr-empty-state"><div class="pmr-empty-state-text">Select a Project Manager to view their report</div></td></tr>';
+  document.getElementById('pmrClientSummaryTableBody').innerHTML = '<tr><td colspan="7" class="pmr-empty-state"><div class="pmr-empty-state-text">Select a Project Manager to view their report</div></td></tr>';
+  
+  document.getElementById('pmrOverUnderCount').textContent = '0 jobs';
+  document.getElementById('pmrMissingBudgetsCount').textContent = '0 jobs';
+  document.getElementById('pmrClientSummaryCount').textContent = '0 clients';
+}
+
+async function runPmrAiAnalysis() {
+  if (!pmrSelectedPm) {
+    showNotification('Please select a Project Manager first', 'warning');
+    return;
+  }
+  
+  const content = document.getElementById('pmrAiAnalysisContent');
+  const body = document.getElementById('pmrAiAnalysisBody');
+  const btn = document.getElementById('pmrAiAnalyzeBtn');
+  
+  if (!content || !body) return;
+  
+  body.classList.add('expanded');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  content.innerHTML = '<div class="ai-loading"><div class="ai-loading-spinner"></div>Analyzing PM performance...</div>';
+  
+  try {
+    // Build analysis context
+    const jobs = pmrData.jobs;
+    const overUnder = pmrData.overUnder;
+    const missingBudgets = pmrData.missingBudgets;
+    const clients = pmrData.clientSummary;
+    
+    const totalContract = jobs.reduce((s, j) => s + (j.revised_contract || 0), 0);
+    const totalActualCost = jobs.reduce((s, j) => s + (j.actual_cost || 0), 0);
+    const totalEarned = jobs.reduce((s, j) => s + (j.earned_revenue || 0), 0);
+    const netOverUnder = jobs.reduce((s, j) => s + (j.over_under || 0), 0);
+    
+    const prompt = `Analyze the project manager performance data for ${pmrSelectedPm}:
+
+Summary Metrics:
+- Total Jobs: ${jobs.length}
+- Total Contract Value: ${formatCurrency(totalContract)}
+- Total Actual Cost: ${formatCurrency(totalActualCost)}
+- Total Earned Revenue: ${formatCurrency(totalEarned)}
+- Net Over/(Under) Billing: ${formatCurrency(netOverUnder)}
+
+Over/Under Billing Issues (${overUnder.length} jobs with variance):
+${overUnder.slice(0, 5).map(j => `- ${j.job_no}: ${j.job_description} - ${formatCurrency(j.over_under)} (${j.over_under < 0 ? 'Under' : 'Over'})`).join('\n')}
+
+Missing Budgets (${missingBudgets.length} jobs with >$2,500 cost but incomplete budgets):
+${missingBudgets.slice(0, 5).map(j => `- ${j.job_no}: ${j.job_description} - ${j.issue} - Cost: ${formatCurrency(j.actual_cost)}`).join('\n')}
+
+Top Clients by Contract Value:
+${clients.map(c => `- ${c.customer_name}: Contract ${formatCurrency(c.est_contract)}, Cost ${formatCurrency(c.cost_to_date)}, Profit ${formatCurrency(c.est_profit)}`).join('\n')}
+
+Provide a concise analysis (max 300 words) with:
+1. Key performance indicators and trends
+2. Risk areas requiring attention (under-billing, missing budgets)
+3. Client portfolio assessment
+4. Specific recommendations for improvement`;
+
+    const response = await fetch('/api/ai-analysis', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ prompt, section: 'pm_report' })
+    });
+    
+    if (!response.ok) throw new Error('AI analysis failed');
+    
+    const data = await response.json();
+    content.innerHTML = `<div class="ai-analysis-text">${formatAiResponse(data.analysis || data.response || 'No analysis available')}</div>`;
+  } catch (err) {
+    console.error('PM Report AI analysis error:', err);
+    content.innerHTML = '<div class="ai-error">Unable to generate analysis. Please try again later.</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis';
+  }
+}
+
+// ========================================
 // OVER/(UNDER) BILLING MODULE
 // ========================================
 
@@ -18986,6 +19447,7 @@ const sectionToPermission = {
   'overUnderBilling': 'over_under_billing',
   'costCodes': 'cost_codes',
   'missingBudgets': 'missing_budgets',
+  'pmReport': 'pm_report',
   'payments': 'payments',
   'cashReports': 'cash_balances',
   'admin': 'admin'
@@ -18995,7 +19457,7 @@ const sectionToPermission = {
 const sectionOrder = [
   'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
   'cashReports', 'accounts', 'apAging', 'arAging', 'payments',
-  'jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'jobAnalytics'
+  'jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'pmReport', 'jobAnalytics'
 ];
 
 // Check permissions and show/hide nav items based on user role
@@ -19170,7 +19632,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     const jobsChildren = document.getElementById("navJobsChildren");
     
     const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'payments', 'apAging', 'arAging'];
-    const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'jobAnalytics'];
+    const jobsChildItems = ['jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'pmReport', 'jobAnalytics'];
     
     if (fsChildren.includes(targetSection) && finStatementsParent && finStatementsChildren) {
       finStatementsParent.classList.add("expanded");

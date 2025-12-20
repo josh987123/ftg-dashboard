@@ -68,6 +68,14 @@ The Jobs section in the sidebar contains job-related tracking views:
   - **Job + Cost Code Table**: Flat table showing each job and cost code combination with columns: Job #, Job Description, Cost Code, Description, Total Cost, % of Revenue.
   - **Filters**: Status, PM, and Customer dropdown filters. Search input for finding specific cost codes.
   - **My PM View**: Respects the global PM filter toggle to show only logged-in user's jobs.
+- **PM Report**: Project manager-focused performance view. Features:
+  - **PM Selector**: Dropdown to select a project manager (auto-selects current user if PM view is enabled).
+  - **AI Analysis Panel**: AI-powered analysis of PM performance metrics, risk areas, and recommendations.
+  - **Key Metrics Row**: 5 tiles showing Total Jobs, Total Contract Value, Total Actual Cost, Total Earned Revenue, and Net Over/(Under) with conditional coloring.
+  - **Over/Under Billing Table**: Jobs with billing variance for the selected PM, sorted by under-billed first. Shows Job #, Description, Client, Contract, Actual Cost, % Complete, Earned Rev, Billed Rev, Over/(Under).
+  - **Missing Budgets Table**: Jobs with >$2,500 actual cost but missing budgeted revenue or cost. Shows Job #, Description, Client, Status, Actual Cost, Budgeted Revenue, Budgeted Cost, and Issue badge (No Budget/No Revenue/No Cost).
+  - **Client Summary Table**: Top 5 clients by contract value. Shows Client, Est. Contract, Est. Cost, Est. Profit, Billed (Last Mo.), Billed to Date, Cost to Date.
+  - Responsive design for mobile and desktop.
 - **Job Analytics**: Placeholder for future job analytics features.
 
 ### Responsive Design

@@ -572,6 +572,7 @@
               <li class="nav-item nav-child" data-section="overUnderBilling">Over/(Under) Billing</li>
               <li class="nav-item nav-child" data-section="costCodes">Cost Codes</li>
               <li class="nav-item nav-child" data-section="missingBudgets">Missing Budgets</li>
+              <li class="nav-item nav-child" data-section="pmReport">PM Report</li>
               <li class="nav-item nav-child placeholder" data-section="jobAnalytics">Job Analytics</li>
             </ul>
           </li>
@@ -3404,6 +3405,141 @@
           <div class="placeholder-icon">🚧</div>
           <h3>Under Construction</h3>
           <p>This feature is coming soon.</p>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           PM REPORT
+      ============================================================= -->
+      <section id="pmReport" class="dashboard-section">
+        <h2>PM Report</h2>
+        <div class="section-subtitle">Project Manager Performance Summary</div>
+        <div class="data-as-of">Data as of: <span id="pmrDataAsOf">-</span></div>
+
+        <!-- PM Selector Filter Bar -->
+        <div class="pmr-filter-bar">
+          <div class="pmr-filter-row">
+            <label for="pmrPmSelect">Project Manager:</label>
+            <select id="pmrPmSelect" class="pmr-pm-select">
+              <option value="">-- Select a PM --</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- AI Analysis Panel -->
+        <div id="pmrAiAnalysisPanel" class="ai-analysis-panel">
+          <div class="ai-analysis-header" id="pmrAiAnalysisHeader">
+            <div class="ai-analysis-header-left">
+              <span class="ai-analysis-toggle-icon">▼</span>
+              <span class="ai-analysis-title">AI ANALYSIS</span>
+              <button type="button" id="pmrAiAnalyzeBtn" class="ai-run-btn">Run Analysis</button>
+            </div>
+          </div>
+          <div id="pmrAiAnalysisBody" class="ai-analysis-body">
+            <div id="pmrAiAnalysisContent" class="ai-analysis-content"></div>
+          </div>
+        </div>
+
+        <!-- Key Metrics Summary Row -->
+        <div class="pmr-metrics-row">
+          <div class="pmr-metric-tile">
+            <div class="pmr-metric-label">Total Jobs</div>
+            <div class="pmr-metric-value" id="pmrTotalJobs">-</div>
+          </div>
+          <div class="pmr-metric-tile">
+            <div class="pmr-metric-label">Total Contract Value</div>
+            <div class="pmr-metric-value" id="pmrTotalContract">-</div>
+          </div>
+          <div class="pmr-metric-tile">
+            <div class="pmr-metric-label">Total Actual Cost</div>
+            <div class="pmr-metric-value" id="pmrTotalActualCost">-</div>
+          </div>
+          <div class="pmr-metric-tile">
+            <div class="pmr-metric-label">Total Earned Revenue</div>
+            <div class="pmr-metric-value" id="pmrTotalEarnedRevenue">-</div>
+          </div>
+          <div class="pmr-metric-tile">
+            <div class="pmr-metric-label">Net Over/(Under)</div>
+            <div class="pmr-metric-value" id="pmrNetOverUnder">-</div>
+          </div>
+        </div>
+
+        <!-- Over/Under Billing Section -->
+        <div class="pmr-section">
+          <h3 class="pmr-section-title">Over/(Under) Billing</h3>
+          <div class="pmr-section-desc">Jobs with billing variance for this PM</div>
+          <div class="table-container pmr-table-container">
+            <table class="data-table pmr-over-under-table" id="pmrOverUnderTable">
+              <thead>
+                <tr>
+                  <th>Job #</th>
+                  <th>Description</th>
+                  <th>Client</th>
+                  <th class="text-right">Contract</th>
+                  <th class="text-right">Actual Cost</th>
+                  <th class="text-right">% Complete</th>
+                  <th class="text-right">Earned Rev</th>
+                  <th class="text-right">Billed Rev</th>
+                  <th class="text-right">Over/(Under)</th>
+                </tr>
+              </thead>
+              <tbody id="pmrOverUnderTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pmr-table-footer">
+            <span id="pmrOverUnderCount">0 jobs</span>
+          </div>
+        </div>
+
+        <!-- Missing Budgets Section -->
+        <div class="pmr-section">
+          <h3 class="pmr-section-title">Missing Budgets</h3>
+          <div class="pmr-section-desc">Jobs with &gt;$2,500 actual cost but missing budgeted revenue or cost</div>
+          <div class="table-container pmr-table-container">
+            <table class="data-table pmr-missing-budgets-table" id="pmrMissingBudgetsTable">
+              <thead>
+                <tr>
+                  <th>Job #</th>
+                  <th>Description</th>
+                  <th>Client</th>
+                  <th>Status</th>
+                  <th class="text-right">Actual Cost</th>
+                  <th class="text-right">Budgeted Revenue</th>
+                  <th class="text-right">Budgeted Cost</th>
+                  <th>Issue</th>
+                </tr>
+              </thead>
+              <tbody id="pmrMissingBudgetsTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pmr-table-footer">
+            <span id="pmrMissingBudgetsCount">0 jobs</span>
+          </div>
+        </div>
+
+        <!-- Client Summary Section -->
+        <div class="pmr-section">
+          <h3 class="pmr-section-title">Client Summary</h3>
+          <div class="pmr-section-desc">Top 5 clients by contract value for this PM</div>
+          <div class="table-container pmr-table-container">
+            <table class="data-table pmr-client-summary-table" id="pmrClientSummaryTable">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th class="text-right">Est. Contract</th>
+                  <th class="text-right">Est. Cost</th>
+                  <th class="text-right">Est. Profit</th>
+                  <th class="text-right">Billed (Last Mo.)</th>
+                  <th class="text-right">Billed to Date</th>
+                  <th class="text-right">Cost to Date</th>
+                </tr>
+              </thead>
+              <tbody id="pmrClientSummaryTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pmr-table-footer">
+            <span id="pmrClientSummaryCount">0 clients</span>
+          </div>
         </div>
       </section>
 
