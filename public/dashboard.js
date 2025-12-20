@@ -3247,8 +3247,245 @@ let isAccountGroups = null;
 let isGLLookup = {};
 let isRowStates = {};
 
+// ===========================================
+// CUSTOM GREETING
+// ===========================================
+function updateGreeting() {
+  const greetingText = document.getElementById('greetingText');
+  const greetingSubtext = document.getElementById('greetingSubtext');
+  const greetingDate = document.getElementById('greetingDate');
+  
+  if (!greetingText) return;
+  
+  const now = new Date();
+  const hour = now.getHours();
+  const currentUser = localStorage.getItem('ftg_current_user') || '';
+  const displayName = currentUser ? currentUser.charAt(0).toUpperCase() + currentUser.slice(1) : '';
+  
+  let greeting, subtext;
+  
+  if (hour < 12) {
+    greeting = displayName ? `Good morning, ${displayName}` : 'Good morning';
+    subtext = "Start your day with a clear view of your finances";
+  } else if (hour < 17) {
+    greeting = displayName ? `Good afternoon, ${displayName}` : 'Good afternoon';
+    subtext = "Here's your mid-day financial snapshot";
+  } else {
+    greeting = displayName ? `Good evening, ${displayName}` : 'Good evening';
+    subtext = "Review today's financial performance";
+  }
+  
+  greetingText.textContent = greeting;
+  if (greetingSubtext) greetingSubtext.textContent = subtext;
+  
+  if (greetingDate) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    greetingDate.textContent = now.toLocaleDateString('en-US', options);
+  }
+}
+
+// ===========================================
+// DRAG AND DROP TILES
+// ===========================================
+let draggedTile = null;
+
+function initDragAndDropTiles() {
+  const grid = document.querySelector('.overview-tiles-grid');
+  if (!grid) return;
+  
+  // Skip if already initialized
+  if (grid.dataset.dragInitialized) return;
+  grid.dataset.dragInitialized = 'true';
+  
+  // Enable drag mode
+  grid.classList.add('drag-enabled');
+  
+  // Add reset button
+  let resetBtn = grid.querySelector('.reset-tile-order-btn');
+  if (!resetBtn) {
+    resetBtn = document.createElement('button');
+    resetBtn.className = 'reset-tile-order-btn';
+    resetBtn.textContent = 'Reset Order';
+    resetBtn.onclick = resetTileOrder;
+    grid.appendChild(resetBtn);
+  }
+  
+  // Add saved indicator
+  let savedIndicator = document.getElementById('tileOrderSaved');
+  if (!savedIndicator) {
+    savedIndicator = document.createElement('div');
+    savedIndicator.id = 'tileOrderSaved';
+    savedIndicator.className = 'tile-order-saved';
+    savedIndicator.textContent = 'Tile order saved';
+    document.body.appendChild(savedIndicator);
+  }
+  
+  // Restore saved order first
+  restoreTileOrder();
+  
+  // Use event delegation on the grid for robust handling
+  grid.addEventListener('dragstart', (e) => {
+    const tile = e.target.closest('.overview-metric-tile');
+    if (!tile) return;
+    
+    draggedTile = tile;
+    tile.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', 'tile');
+    
+    setTimeout(() => tile.classList.add('drag-ghost'), 0);
+  });
+  
+  grid.addEventListener('dragend', (e) => {
+    const tile = e.target.closest('.overview-metric-tile');
+    if (!tile) return;
+    
+    tile.classList.remove('dragging', 'drag-ghost');
+    grid.querySelectorAll('.overview-metric-tile').forEach(t => t.classList.remove('drag-over'));
+    draggedTile = null;
+  });
+  
+  grid.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const tile = e.target.closest('.overview-metric-tile');
+    if (!tile || tile === draggedTile) return;
+    
+    e.dataTransfer.dropEffect = 'move';
+    tile.classList.add('drag-over');
+  });
+  
+  grid.addEventListener('dragleave', (e) => {
+    const tile = e.target.closest('.overview-metric-tile');
+    if (!tile) return;
+    tile.classList.remove('drag-over');
+  });
+  
+  grid.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const tile = e.target.closest('.overview-metric-tile');
+    if (!tile) return;
+    
+    tile.classList.remove('drag-over');
+    
+    if (draggedTile && tile !== draggedTile) {
+      // Get fresh indices from current DOM state
+      const allTiles = Array.from(grid.querySelectorAll('.overview-metric-tile'));
+      const draggedIdx = allTiles.indexOf(draggedTile);
+      const targetIdx = allTiles.indexOf(tile);
+      
+      if (draggedIdx < targetIdx) {
+        tile.parentNode.insertBefore(draggedTile, tile.nextSibling);
+      } else {
+        tile.parentNode.insertBefore(draggedTile, tile);
+      }
+      
+      saveTileOrder();
+      showTileOrderSaved();
+    }
+  });
+  
+  // Make all tiles draggable and add handles
+  setupTileDragHandles();
+}
+
+function setupTileDragHandles() {
+  const grid = document.querySelector('.overview-tiles-grid');
+  if (!grid) return;
+  
+  const tiles = grid.querySelectorAll('.overview-metric-tile');
+  
+  tiles.forEach(tile => {
+    // Add drag handle if not present
+    let dragHandle = tile.querySelector('.drag-handle');
+    if (!dragHandle) {
+      dragHandle = document.createElement('div');
+      dragHandle.className = 'drag-handle';
+      dragHandle.innerHTML = '<span></span>';
+      tile.style.position = 'relative';
+      tile.insertBefore(dragHandle, tile.firstChild);
+    }
+    
+    // Make tile draggable
+    tile.setAttribute('draggable', 'true');
+  });
+}
+
+function saveTileOrder() {
+  const grid = document.querySelector('.overview-tiles-grid');
+  if (!grid) return;
+  
+  const tiles = grid.querySelectorAll('.overview-metric-tile');
+  const order = [];
+  
+  tiles.forEach(tile => {
+    const title = tile.querySelector('.metric-tile-title');
+    if (title) {
+      order.push(title.textContent.trim());
+    }
+  });
+  
+  localStorage.setItem('ftg_tile_order', JSON.stringify(order));
+}
+
+function restoreTileOrder() {
+  const savedOrder = localStorage.getItem('ftg_tile_order');
+  if (!savedOrder) return;
+  
+  try {
+    const order = JSON.parse(savedOrder);
+    const grid = document.querySelector('.overview-tiles-grid');
+    if (!grid) return;
+    
+    const tiles = Array.from(grid.querySelectorAll('.overview-metric-tile'));
+    const tileMap = {};
+    
+    tiles.forEach(tile => {
+      const title = tile.querySelector('.metric-tile-title');
+      if (title) {
+        tileMap[title.textContent.trim()] = tile;
+      }
+    });
+    
+    // Reorder tiles based on saved order
+    order.forEach(titleText => {
+      const tile = tileMap[titleText];
+      if (tile) {
+        grid.appendChild(tile);
+      }
+    });
+    
+    // Append any tiles not in saved order (new tiles)
+    tiles.forEach(tile => {
+      const title = tile.querySelector('.metric-tile-title');
+      if (title && !order.includes(title.textContent.trim())) {
+        grid.appendChild(tile);
+      }
+    });
+  } catch (e) {
+    console.warn('Could not restore tile order:', e);
+  }
+}
+
+function resetTileOrder() {
+  localStorage.removeItem('ftg_tile_order');
+  location.reload();
+}
+
+function showTileOrderSaved() {
+  const indicator = document.getElementById('tileOrderSaved');
+  if (!indicator) return;
+  
+  indicator.classList.add('show');
+  setTimeout(() => {
+    indicator.classList.remove('show');
+  }, 2000);
+}
+
 async function initOverviewModule() {
   try {
+    // Update greeting first (instant, no data needed)
+    updateGreeting();
+    
     const fetchPromises = [];
     
     if (!overviewDataCache) {
@@ -3278,6 +3515,9 @@ async function initOverviewModule() {
     
     setupOverviewUI();
     updateOverviewCharts();
+    
+    // Initialize drag-and-drop for tiles (after charts are rendered)
+    setTimeout(() => initDragAndDropTiles(), 100);
   } catch (err) {
     console.error("Overview data load error:", err);
   }

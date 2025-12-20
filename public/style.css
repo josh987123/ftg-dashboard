@@ -3,6 +3,17 @@
 
 /* CSS Custom Properties for Light/Dark Mode */
 :root {
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  
+  /* Gradient accents */
+  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+  --gradient-warm: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  --gradient-header: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%);
+  
   /* Background colors */
   --bg-primary: #f5f7fa;
   --bg-secondary: #fff;
@@ -56,6 +67,11 @@
 
 /* Dark Mode Color Overrides */
 [data-theme="dark"] {
+  /* Glassmorphism - dark mode */
+  --glass-bg: rgba(30, 41, 59, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  
   /* Background colors */
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
@@ -15798,4 +15814,270 @@ body.dark-mode .ai-insights-error .error-message {
 body.dark-mode .margin-neutral,
 [data-theme="dark"] .margin-neutral {
   color: #ffffff;
+}
+
+/* ===========================================
+   CUSTOM GREETING SECTION
+   =========================================== */
+.greeting-section {
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  background: var(--gradient-header);
+  border-radius: 16px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.greeting-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.greeting-text {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.greeting-subtext {
+  font-size: 14px;
+  opacity: 0.9;
+  position: relative;
+  z-index: 1;
+}
+
+.greeting-date {
+  font-size: 13px;
+  opacity: 0.75;
+  margin-top: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .greeting-section {
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  
+  .greeting-text {
+    font-size: 22px;
+  }
+  
+  .greeting-subtext {
+    font-size: 13px;
+  }
+}
+
+/* ===========================================
+   SMOOTH PAGE TRANSITIONS
+   =========================================== */
+.dashboard-section {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.dashboard-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ===========================================
+   GRADIENT SECTION HEADERS
+   =========================================== */
+.dashboard-section > h2 {
+  background: var(--gradient-header);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+[data-theme="dark"] .dashboard-section > h2,
+body.dark-mode .dashboard-section > h2 {
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===========================================
+   GLASSMORPHISM EFFECTS
+   =========================================== */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+}
+
+/* Apply glassmorphism to modals */
+.modal-content,
+.dropdown-menu,
+.user-dropdown {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+/* Config panels with subtle glass effect */
+.config-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ===========================================
+   DRAG AND DROP TILES
+   =========================================== */
+.overview-tiles-grid {
+  position: relative;
+}
+
+.overview-tiles-grid.drag-enabled .overview-metric-tile {
+  cursor: grab;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.overview-tiles-grid.drag-enabled .overview-metric-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.overview-metric-tile.dragging {
+  opacity: 0.8;
+  transform: scale(1.02) rotate(1deg);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  z-index: 1000;
+  cursor: grabbing !important;
+}
+
+.overview-metric-tile.drag-over {
+  border: 2px dashed var(--color-primary);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.overview-metric-tile.drag-ghost {
+  opacity: 0.4;
+}
+
+/* Drag handle indicator */
+.drag-handle {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: grab;
+  z-index: 10;
+}
+
+.overview-tiles-grid.drag-enabled .overview-metric-tile:hover .drag-handle {
+  opacity: 0.5;
+}
+
+.drag-handle::before,
+.drag-handle::after {
+  content: '';
+  width: 12px;
+  height: 2px;
+  background: var(--text-tertiary);
+  border-radius: 1px;
+}
+
+.drag-handle span {
+  width: 12px;
+  height: 2px;
+  background: var(--text-tertiary);
+  border-radius: 1px;
+}
+
+/* Tile order saved indicator */
+.tile-order-saved {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--color-success);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  transform: translateY(100px);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  z-index: 9999;
+}
+
+.tile-order-saved.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Reset tile order button */
+.reset-tile-order-btn {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.overview-tiles-grid.drag-enabled:hover .reset-tile-order-btn {
+  opacity: 1;
+}
+
+.reset-tile-order-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .overview-tiles-grid.drag-enabled .overview-metric-tile {
+    cursor: default;
+  }
+  
+  .drag-handle {
+    display: none;
+  }
+  
+  .reset-tile-order-btn {
+    display: none;
+  }
 }
