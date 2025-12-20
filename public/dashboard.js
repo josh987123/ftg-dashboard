@@ -16543,6 +16543,7 @@ let pmrData = {
 };
 let pmrSelectedPm = '';
 let pmrSelectedStatus = 'A';
+let pmrArInvoices = [];
 
 async function initPmReport() {
   const pmSelect = document.getElementById('pmrPmSelect');
@@ -16572,6 +16573,18 @@ async function initPmReport() {
       }));
     } catch (e) {
       console.error('Failed to load job budgets for PM Report:', e);
+    }
+  }
+  
+  // Load AR invoices for last month billing calculation
+  if (pmrArInvoices.length === 0) {
+    try {
+      const resp = await fetch('data/ar_invoices.json');
+      const text = await resp.text();
+      const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+      pmrArInvoices = data.invoices || [];
+    } catch (e) {
+      console.error('Failed to load AR invoices for PM Report:', e);
     }
   }
   
@@ -16861,17 +16874,49 @@ function renderPmrClientSummaryTable() {
   const tbody = document.getElementById('pmrClientSummaryTableBody');
   if (!tbody) return;
   
+  // Get active jobs for this PM
+  const activeJobs = pmrData.jobs.filter(job => job.job_status === 'A');
+  const activeJobNos = new Set(activeJobs.map(j => String(j.job_no)));
+  
+  // Calculate last complete month date range
+  const now = new Date();
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0); // Last day of previous month
+  const lastMonthStart = new Date(lastMonthEnd.getFullYear(), lastMonthEnd.getMonth(), 1); // First day of previous month
+  
+  // Excel serial date base (January 1, 1900 = 1, but Excel has a leap year bug so we use Dec 30, 1899)
+  const excelEpoch = new Date(1899, 11, 30);
+  
+  // Calculate last month billing from AR invoices for this PM's active jobs
+  const lastMonthBillingByClient = new Map();
+  
+  pmrArInvoices.forEach(inv => {
+    // Check if invoice is for this PM and an active job
+    if (inv.project_manager_name !== pmrSelectedPm) return;
+    if (!activeJobNos.has(String(inv.job_no))) return;
+    
+    // Convert Excel serial date to JS Date
+    const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
+    const invoiceDate = new Date(excelEpoch.getTime() + invoiceDateSerial * 24 * 60 * 60 * 1000);
+    
+    // Check if in last complete month
+    if (invoiceDate >= lastMonthStart && invoiceDate <= lastMonthEnd) {
+      const client = inv.customer_name || 'Unknown';
+      const amount = parseFloat(inv.invoice_amount) || 0;
+      lastMonthBillingByClient.set(client, (lastMonthBillingByClient.get(client) || 0) + amount);
+    }
+  });
+  
   // Aggregate by client - only include ACTIVE jobs (status 'A')
   const clientMap = new Map();
   
-  pmrData.jobs.filter(job => job.job_status === 'A').forEach(job => {
+  activeJobs.forEach(job => {
     const client = job.customer_name || 'Unknown';
     if (!clientMap.has(client)) {
       clientMap.set(client, {
         customer_name: client,
         est_contract: 0,
         est_cost: 0,
-        billed_last_month: 0,
+        billed_last_month: lastMonthBillingByClient.get(client) || 0,
         billed_to_date: 0,
         cost_to_date: 0
       });
