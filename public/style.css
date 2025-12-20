@@ -10913,32 +10913,42 @@ body.dark-mode .job-budgets-table td.margin-cell {
     padding: 10px 12px 6px;
   }
   
-  /* Pagination mobile layout */
+  /* Pagination mobile layout - single row */
   .job-pagination {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 8px 10px;
+    flex-wrap: nowrap;
   }
   
   .pagination-controls {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 4px;
+    flex-wrap: nowrap;
     justify-content: center;
+    align-items: center;
   }
   
   .pagination-btn {
-    padding: 10px 14px;
-    font-size: 14px;
-    min-width: 44px;
-    min-height: 44px;
+    padding: 5px 10px;
+    font-size: 11px;
+    min-width: auto;
+    min-height: 28px;
+  }
+  
+  .page-info {
+    font-size: 10px;
+    white-space: nowrap;
   }
   
   .page-size-select {
-    padding: 10px 12px;
-    font-size: 14px;
-    min-height: 44px;
+    padding: 4px 6px;
+    font-size: 11px;
+    min-height: 28px;
+    width: auto;
+    min-width: 70px;
   }
   
   /* Config panel improvements */
