@@ -15438,3 +15438,22 @@ body.dark-mode .ai-insights-error .error-message {
     font-size: 16px;
   }
 }
+
+/* Margin percentage color classes for PM Report Client Summary */
+.margin-good {
+  color: #10b981 !important;
+}
+
+.margin-bad {
+  color: #dc2626 !important;
+}
+
+.margin-neutral {
+  color: #374151;
+}
+
+/* Dark mode: neutral margin text should be white */
+body.dark-mode .margin-neutral,
+[data-theme="dark"] .margin-neutral {
+  color: #ffffff;
+}

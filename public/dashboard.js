@@ -17675,25 +17675,28 @@ function renderPmrClientSummaryTable() {
   const totalMarginPct = totals.est_contract > 0 ? (totals.est_profit / totals.est_contract * 100) : 0;
   
   // Subtotal row first, then detail rows
+  // Margin color: green >= 20%, red < 10%, neutral uses CSS class for dark/light mode
+  const totalMarginClass = totalMarginPct >= 20 ? 'margin-good' : totalMarginPct < 10 ? 'margin-bad' : 'margin-neutral';
   const subtotalRow = `<tr class="pmr-subtotal-row">
     <td><strong>TOTAL (${clients.length} clients)</strong></td>
     <td class="text-right">${formatCurrencyCompact(totals.est_contract)}</td>
     <td class="text-right">${formatCurrencyCompact(totals.est_cost)}</td>
     <td class="text-right">${formatCurrencyCompact(totals.est_profit)}</td>
-    <td class="text-right">${totalMarginPct.toFixed(1)}%</td>
+    <td class="text-right ${totalMarginClass}">${totalMarginPct.toFixed(1)}%</td>
     <td class="text-right">${formatCurrencyCompact(totals.billed_last_month)}</td>
     <td class="text-right">${formatCurrencyCompact(totals.billed_to_date)}</td>
     <td class="text-right">${formatCurrencyCompact(totals.cost_to_date)}</td>
   </tr>`;
   
   const detailRows = clients.map(c => {
-    const marginColor = c.margin_pct >= 20 ? '#10b981' : c.margin_pct < 10 ? '#dc2626' : '#374151';
+    // Margin color classes: green >= 20%, red < 10%, neutral adapts to dark/light mode
+    const marginClass = c.margin_pct >= 20 ? 'margin-good' : c.margin_pct < 10 ? 'margin-bad' : 'margin-neutral';
     return `<tr>
       <td>${c.customer_name}</td>
       <td class="text-right">${formatCurrencyCompact(c.est_contract)}</td>
       <td class="text-right">${formatCurrencyCompact(c.est_cost)}</td>
       <td class="text-right">${formatCurrencyCompact(c.est_profit)}</td>
-      <td class="text-right" style="color:${marginColor}">${c.margin_pct.toFixed(1)}%</td>
+      <td class="text-right ${marginClass}">${c.margin_pct.toFixed(1)}%</td>
       <td class="text-right">${formatCurrencyCompact(c.billed_last_month)}</td>
       <td class="text-right">${formatCurrencyCompact(c.billed_to_date)}</td>
       <td class="text-right">${formatCurrencyCompact(c.cost_to_date)}</td>
