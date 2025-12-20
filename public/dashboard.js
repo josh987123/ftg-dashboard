@@ -16825,9 +16825,12 @@ async function initPmReport() {
     dataAsOf.textContent = jobsDataAsOf;
   }
   
-  // If PM already selected, refresh data
+  // If PM already selected (including default "All PMs"), load data and refresh
   if (pmSelect && pmSelect.value) {
     pmrSelectedPm = pmSelect.value;
+    // Show loading indicator and load data before updating
+    showPmrLoadingState();
+    await ensurePmrDataLoaded();
     updatePmReport();
   }
 }
