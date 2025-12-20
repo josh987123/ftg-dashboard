@@ -15171,9 +15171,9 @@ body.dark-mode .pmr-subtotal-row td {
   }
   
   .pmr-metric-tile {
-    min-width: calc(20% - 2px);
-    max-width: calc(20% - 2px);
-    flex: 0 0 calc(20% - 2px);
+    min-width: calc(25% - 2px);
+    max-width: calc(25% - 2px);
+    flex: 0 0 calc(25% - 2px);
     padding: 2px 3px;
   }
   
