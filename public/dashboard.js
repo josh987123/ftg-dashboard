@@ -18215,6 +18215,8 @@ async function runFullAiAnalysis() {
     progressText.textContent = 'Generating insights...';
     progressFill.style.width = '60%';
     
+    console.log('AI Insights data being sent:', statementData);
+    
     const response = await fetch('/api/analyze-ai-insights', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -18256,7 +18258,8 @@ async function runFullAiAnalysis() {
 }
 
 async function extractAiInsightsData() {
-  let text = "Comprehensive Business Analysis:\n\n";
+  let text = "FTG Builders Financial Dashboard - Comprehensive Business Analysis\n\n";
+  text += "NOTE: All dollar values below are in USD and represent real business data.\n\n";
   
   try {
     // Load jobs data for portfolio analysis
