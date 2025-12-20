@@ -14501,6 +14501,129 @@ body.dark-mode .ar-aging-table th:hover {
   color: #dc2626;
 }
 
+.pmr-metric-subtext {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.pmr-metric-trend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.pmr-metric-trend.up { color: #10b981; }
+.pmr-metric-trend.down { color: #dc2626; }
+
+.pmr-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.pmr-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* PM Report Charts Row */
+.pmr-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.pmr-chart-container {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.pmr-chart-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pmr-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 11px;
+}
+
+.pmr-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pmr-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+@media (max-width: 900px) {
+  .pmr-charts-row {
+    grid-template-columns: 1fr;
+  }
+  .pmr-metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .pmr-metrics-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark mode for new PM Report elements */
+[data-theme="dark"] .pmr-chart-container,
+body.dark-mode .pmr-chart-container {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .pmr-chart-title,
+body.dark-mode .pmr-chart-title {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .pmr-metric-subtext,
+body.dark-mode .pmr-metric-subtext {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .pmr-progress-bar,
+body.dark-mode .pmr-progress-bar {
+  background: #334155;
+}
+
+[data-theme="dark"] .pmr-legend-item,
+body.dark-mode .pmr-legend-item {
+  color: #cbd5e1;
+}
+
 /* PM Report Sections */
 .pmr-section {
   background: #fff;
