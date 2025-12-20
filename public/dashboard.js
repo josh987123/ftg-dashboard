@@ -17317,12 +17317,12 @@ function renderPmrOverUnderTable() {
   // Subtotal row first
   const subtotalRow = `<tr class="pmr-subtotal-row">
     <td colspan="3"><strong>TOTAL (${overUnderJobs.length} jobs)</strong></td>
-    <td class="text-right pmr-expandable-col">${formatCurrency(totals.contract)}</td>
-    <td class="text-right pmr-expandable-col">${formatCurrency(totals.actualCost)}</td>
+    <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.contract)}</td>
+    <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.actualCost)}</td>
     <td class="text-right pmr-expandable-col">${avgPctComplete.toFixed(1)}%</td>
-    <td class="text-right pmr-expandable-col">${formatCurrency(totals.earnedRev)}</td>
-    <td class="text-right pmr-expandable-col">${formatCurrency(totals.billedRev)}</td>
-    <td class="text-right ${overUnderClass}">${formatCurrency(totals.overUnder)}</td>
+    <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.earnedRev)}</td>
+    <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.billedRev)}</td>
+    <td class="text-right ${overUnderClass}">${formatCurrencyCompact(totals.overUnder)}</td>
   </tr>`;
   
   // Detail rows
@@ -17333,12 +17333,12 @@ function renderPmrOverUnderTable() {
       <td>${job.job_no || ''}</td>
       <td>${job.job_description || ''}</td>
       <td>${job.customer_name || ''}</td>
-      <td class="text-right pmr-expandable-col">${formatCurrency(job.revised_contract)}</td>
-      <td class="text-right pmr-expandable-col">${formatCurrency(job.actual_cost)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(job.revised_contract)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(job.actual_cost)}</td>
       <td class="text-right pmr-expandable-col">${pctComplete.toFixed(1)}%</td>
-      <td class="text-right pmr-expandable-col">${formatCurrency(job.earned_revenue)}</td>
-      <td class="text-right pmr-expandable-col">${formatCurrency(job.billed_revenue)}</td>
-      <td class="text-right ${jobOverUnderClass}">${formatCurrency(job.over_under)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(job.earned_revenue)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(job.billed_revenue)}</td>
+      <td class="text-right ${jobOverUnderClass}">${formatCurrencyCompact(job.over_under)}</td>
     </tr>`;
   }).join('');
   
@@ -17566,26 +17566,26 @@ function renderPmrClientSummaryTable() {
   // Subtotal row first, then detail rows
   const subtotalRow = `<tr class="pmr-subtotal-row">
     <td><strong>TOTAL (${clients.length} clients)</strong></td>
-    <td class="text-right">${formatCurrency(totals.est_contract)}</td>
-    <td class="text-right">${formatCurrency(totals.est_cost)}</td>
-    <td class="text-right">${formatCurrency(totals.est_profit)}</td>
+    <td class="text-right">${formatCurrencyCompact(totals.est_contract)}</td>
+    <td class="text-right">${formatCurrencyCompact(totals.est_cost)}</td>
+    <td class="text-right">${formatCurrencyCompact(totals.est_profit)}</td>
     <td class="text-right">${totalMarginPct.toFixed(1)}%</td>
-    <td class="text-right">${formatCurrency(totals.billed_last_month)}</td>
-    <td class="text-right">${formatCurrency(totals.billed_to_date)}</td>
-    <td class="text-right">${formatCurrency(totals.cost_to_date)}</td>
+    <td class="text-right">${formatCurrencyCompact(totals.billed_last_month)}</td>
+    <td class="text-right">${formatCurrencyCompact(totals.billed_to_date)}</td>
+    <td class="text-right">${formatCurrencyCompact(totals.cost_to_date)}</td>
   </tr>`;
   
   const detailRows = clients.map(c => {
     const marginColor = c.margin_pct >= 20 ? '#10b981' : c.margin_pct < 10 ? '#dc2626' : '#374151';
     return `<tr>
       <td>${c.customer_name}</td>
-      <td class="text-right">${formatCurrency(c.est_contract)}</td>
-      <td class="text-right">${formatCurrency(c.est_cost)}</td>
-      <td class="text-right">${formatCurrency(c.est_profit)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.est_contract)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.est_cost)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.est_profit)}</td>
       <td class="text-right" style="color:${marginColor}">${c.margin_pct.toFixed(1)}%</td>
-      <td class="text-right">${formatCurrency(c.billed_last_month)}</td>
-      <td class="text-right">${formatCurrency(c.billed_to_date)}</td>
-      <td class="text-right">${formatCurrency(c.cost_to_date)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.billed_last_month)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.billed_to_date)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.cost_to_date)}</td>
     </tr>`;
   }).join('');
   
