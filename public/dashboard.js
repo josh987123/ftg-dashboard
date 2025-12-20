@@ -17388,7 +17388,10 @@ function renderPmrMarginChart() {
         datalabels: {
           anchor: 'end',
           align: 'end',
-          color: textColor,
+          color: function() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+            return isDark ? '#ffffff' : '#1f2937';
+          },
           font: { weight: 'bold', size: window.innerWidth <= 768 ? 10 : 12 },
           formatter: (value) => value > 0 ? value : ''
         }
@@ -17397,11 +17400,22 @@ function renderPmrMarginChart() {
         y: { 
           beginAtZero: true,
           max: Math.ceil(Math.max(ranges.low, ranges.medium, ranges.high) * 1.2) || 1,
-          ticks: { stepSize: 1, color: textColor },
+          ticks: { 
+            stepSize: 1, 
+            color: function() {
+              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+              return isDark ? '#ffffff' : '#1f2937';
+            }
+          },
           grid: { color: gridColor }
         },
         x: {
-          ticks: { color: textColor },
+          ticks: { 
+            color: function() {
+              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+              return isDark ? '#ffffff' : '#1f2937';
+            }
+          },
           grid: { display: false }
         }
       }
@@ -17472,13 +17486,19 @@ function renderPmrBudgetActualChart() {
             boxWidth: 12, 
             padding: 8, 
             font: { size: 10 },
-            color: textColor
+            color: function() {
+              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+              return isDark ? '#ffffff' : '#1f2937';
+            }
           }
         },
         datalabels: {
           anchor: 'end',
           align: 'end',
-          color: textColor,
+          color: function() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+            return isDark ? '#ffffff' : '#1f2937';
+          },
           font: { weight: 'bold', size: 9 },
           formatter: (value) => value > 0 ? formatCurrencyCompact(value) : ''
         }
@@ -17488,13 +17508,21 @@ function renderPmrBudgetActualChart() {
           beginAtZero: true, 
           ticks: { 
             callback: (v) => formatCurrencyShort(v),
-            color: textColor,
+            color: function() {
+              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+              return isDark ? '#ffffff' : '#1f2937';
+            },
             font: { size: 10 }
           },
           grid: { color: gridColor }
         },
         x: {
-          ticks: { color: textColor },
+          ticks: { 
+            color: function() {
+              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+              return isDark ? '#ffffff' : '#1f2937';
+            }
+          },
           grid: { display: false }
         }
       }
@@ -17590,12 +17618,20 @@ function renderPmrBillingChart() {
           beginAtZero: true,
           ticks: { 
             callback: (v) => formatCurrencyShort(v),
-            color: textColor
+            color: function() {
+              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+              return isDark ? '#ffffff' : '#1f2937';
+            }
           },
           grid: { color: gridColor }
         },
         x: {
-          ticks: { color: textColor },
+          ticks: { 
+            color: function() {
+              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+              return isDark ? '#ffffff' : '#1f2937';
+            }
+          },
           grid: { display: false }
         }
       }
