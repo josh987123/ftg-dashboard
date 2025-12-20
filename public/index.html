@@ -3599,12 +3599,7 @@
         </div>
 
         <!-- Charts Row -->
-        <div class="pmr-charts-row">
-          <div class="pmr-chart-container">
-            <h4 class="pmr-chart-title">Job Status Mix</h4>
-            <canvas id="pmrStatusChart" width="180" height="180"></canvas>
-            <div class="pmr-chart-legend" id="pmrStatusLegend"></div>
-          </div>
+        <div class="pmr-charts-row pmr-charts-row-2">
           <div class="pmr-chart-container">
             <h4 class="pmr-chart-title">Margin Distribution</h4>
             <canvas id="pmrMarginChart" width="280" height="180"></canvas>
@@ -3615,10 +3610,40 @@
           </div>
         </div>
 
+        <!-- Client Summary Section -->
+        <div class="pmr-section">
+          <h3 class="pmr-section-title">Client Summary</h3>
+          <div class="pmr-section-desc">All clients with active jobs for this PM</div>
+          <div class="table-container pmr-table-container">
+            <table class="data-table pmr-client-summary-table" id="pmrClientSummaryTable">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th class="text-right">Est. Contract</th>
+                  <th class="text-right">Est. Cost</th>
+                  <th class="text-right">Est. Profit</th>
+                  <th class="text-right">Billed (Last Mo.)</th>
+                  <th class="text-right">Billed to Date</th>
+                  <th class="text-right">Cost to Date</th>
+                </tr>
+              </thead>
+              <tbody id="pmrClientSummaryTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pmr-table-footer">
+            <span id="pmrClientSummaryCount">0 clients</span>
+          </div>
+        </div>
+
         <!-- Over/Under Billing Section -->
         <div class="pmr-section">
-          <h3 class="pmr-section-title">Over/(Under) Billing</h3>
-          <div class="pmr-section-desc">Jobs with billing variance for this PM</div>
+          <div class="pmr-section-header">
+            <div>
+              <h3 class="pmr-section-title">Over/(Under) Billing</h3>
+              <div class="pmr-section-desc">Jobs with billing variance for this PM</div>
+            </div>
+            <button class="pmr-toggle-btn" id="pmrOverUnderToggle" onclick="togglePmrOverUnderDetail()">Expand</button>
+          </div>
           <div class="table-container pmr-table-container">
             <table class="data-table pmr-over-under-table" id="pmrOverUnderTable">
               <thead>
@@ -3665,31 +3690,6 @@
           </div>
           <div class="pmr-table-footer">
             <span id="pmrMissingBudgetsCount">0 jobs</span>
-          </div>
-        </div>
-
-        <!-- Client Summary Section -->
-        <div class="pmr-section">
-          <h3 class="pmr-section-title">Client Summary</h3>
-          <div class="pmr-section-desc">Top 5 clients by contract value for this PM</div>
-          <div class="table-container pmr-table-container">
-            <table class="data-table pmr-client-summary-table" id="pmrClientSummaryTable">
-              <thead>
-                <tr>
-                  <th>Client</th>
-                  <th class="text-right">Est. Contract</th>
-                  <th class="text-right">Est. Cost</th>
-                  <th class="text-right">Est. Profit</th>
-                  <th class="text-right">Billed (Last Mo.)</th>
-                  <th class="text-right">Billed to Date</th>
-                  <th class="text-right">Cost to Date</th>
-                </tr>
-              </thead>
-              <tbody id="pmrClientSummaryTableBody"></tbody>
-            </table>
-          </div>
-          <div class="pmr-table-footer">
-            <span id="pmrClientSummaryCount">0 clients</span>
           </div>
         </div>
       </section>

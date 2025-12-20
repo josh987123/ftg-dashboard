@@ -16902,7 +16902,6 @@ let pmrMarginChart = null;
 let pmrBillingChart = null;
 
 function renderPmrCharts() {
-  renderPmrStatusChart();
   renderPmrMarginChart();
   renderPmrBillingChart();
 }
@@ -17107,6 +17106,9 @@ function formatCurrencyShort(value) {
   return '$' + value.toFixed(0);
 }
 
+// Track collapse state for Over/Under section
+let pmrOverUnderExpanded = false;
+
 function renderPmrOverUnderTable() {
   const tbody = document.getElementById('pmrOverUnderTableBody');
   if (!tbody) return;
@@ -17120,13 +17122,42 @@ function renderPmrOverUnderTable() {
   if (overUnderJobs.length === 0) {
     tbody.innerHTML = '<tr><td colspan="9" class="pmr-empty-state"><div class="pmr-empty-state-text">No jobs with billing variance</div></td></tr>';
     document.getElementById('pmrOverUnderCount').textContent = '0 jobs';
+    document.getElementById('pmrOverUnderToggle').style.display = 'none';
     return;
   }
   
-  tbody.innerHTML = overUnderJobs.map(job => {
+  // Calculate totals for subtotal row
+  const totals = overUnderJobs.reduce((acc, j) => ({
+    contract: acc.contract + (j.revised_contract || 0),
+    actualCost: acc.actualCost + (j.actual_cost || 0),
+    earnedRev: acc.earnedRev + (j.earned_revenue || 0),
+    billedRev: acc.billedRev + (j.billed_revenue || 0),
+    overUnder: acc.overUnder + (j.over_under || 0)
+  }), { contract: 0, actualCost: 0, earnedRev: 0, billedRev: 0, overUnder: 0 });
+  
+  const avgPctComplete = overUnderJobs.length > 0 
+    ? overUnderJobs.reduce((sum, j) => sum + (j.percent_complete || 0), 0) / overUnderJobs.length 
+    : 0;
+  
+  const overUnderClass = totals.overUnder >= 0 ? 'over-billed' : 'under-billed';
+  const collapsedClass = pmrOverUnderExpanded ? '' : 'collapsed';
+  
+  // Subtotal row first
+  const subtotalRow = `<tr class="pmr-subtotal-row">
+    <td colspan="3"><strong>TOTAL (${overUnderJobs.length} jobs)</strong></td>
+    <td class="text-right">${formatCurrency(totals.contract)}</td>
+    <td class="text-right">${formatCurrency(totals.actualCost)}</td>
+    <td class="text-right">${avgPctComplete.toFixed(1)}%</td>
+    <td class="text-right">${formatCurrency(totals.earnedRev)}</td>
+    <td class="text-right">${formatCurrency(totals.billedRev)}</td>
+    <td class="text-right ${overUnderClass}">${formatCurrency(totals.overUnder)}</td>
+  </tr>`;
+  
+  // Detail rows (collapsible)
+  const detailRows = overUnderJobs.map(job => {
     const pctComplete = job.percent_complete || 0;
-    const overUnderClass = job.over_under >= 0 ? 'over-billed' : 'under-billed';
-    return `<tr>
+    const jobOverUnderClass = job.over_under >= 0 ? 'over-billed' : 'under-billed';
+    return `<tr class="pmr-detail-row ${collapsedClass}">
       <td>${job.job_no || ''}</td>
       <td>${job.job_description || ''}</td>
       <td>${job.customer_name || ''}</td>
@@ -17135,11 +17166,40 @@ function renderPmrOverUnderTable() {
       <td class="text-right">${pctComplete.toFixed(1)}%</td>
       <td class="text-right">${formatCurrency(job.earned_revenue)}</td>
       <td class="text-right">${formatCurrency(job.billed_revenue)}</td>
-      <td class="text-right ${overUnderClass}">${formatCurrency(job.over_under)}</td>
+      <td class="text-right ${jobOverUnderClass}">${formatCurrency(job.over_under)}</td>
     </tr>`;
   }).join('');
   
+  tbody.innerHTML = subtotalRow + detailRows;
+  
+  // Update toggle button state
+  const toggleBtn = document.getElementById('pmrOverUnderToggle');
+  if (toggleBtn) {
+    toggleBtn.textContent = pmrOverUnderExpanded ? 'Collapse' : 'Expand';
+    toggleBtn.style.display = 'inline-block';
+  }
+  
   document.getElementById('pmrOverUnderCount').textContent = `${overUnderJobs.length} job${overUnderJobs.length !== 1 ? 's' : ''}`;
+}
+
+function togglePmrOverUnderDetail() {
+  pmrOverUnderExpanded = !pmrOverUnderExpanded;
+  
+  // Toggle collapsed class on detail rows
+  const detailRows = document.querySelectorAll('#pmrOverUnderTableBody .pmr-detail-row');
+  detailRows.forEach(row => {
+    if (pmrOverUnderExpanded) {
+      row.classList.remove('collapsed');
+    } else {
+      row.classList.add('collapsed');
+    }
+  });
+  
+  // Update button text
+  const toggleBtn = document.getElementById('pmrOverUnderToggle');
+  if (toggleBtn) {
+    toggleBtn.textContent = pmrOverUnderExpanded ? 'Collapse' : 'Expand';
+  }
 }
 
 function renderPmrMissingBudgetsTable() {
@@ -17308,7 +17368,28 @@ function renderPmrClientSummaryTable() {
     return;
   }
   
-  tbody.innerHTML = clients.map(c => `<tr>
+  // Calculate totals for subtotal row
+  const totals = clients.reduce((acc, c) => ({
+    est_contract: acc.est_contract + c.est_contract,
+    est_cost: acc.est_cost + c.est_cost,
+    est_profit: acc.est_profit + c.est_profit,
+    billed_last_month: acc.billed_last_month + c.billed_last_month,
+    billed_to_date: acc.billed_to_date + c.billed_to_date,
+    cost_to_date: acc.cost_to_date + c.cost_to_date
+  }), { est_contract: 0, est_cost: 0, est_profit: 0, billed_last_month: 0, billed_to_date: 0, cost_to_date: 0 });
+  
+  // Subtotal row first, then detail rows
+  const subtotalRow = `<tr class="pmr-subtotal-row">
+    <td><strong>TOTAL (${clients.length} clients)</strong></td>
+    <td class="text-right">${formatCurrency(totals.est_contract)}</td>
+    <td class="text-right">${formatCurrency(totals.est_cost)}</td>
+    <td class="text-right">${formatCurrency(totals.est_profit)}</td>
+    <td class="text-right">${formatCurrency(totals.billed_last_month)}</td>
+    <td class="text-right">${formatCurrency(totals.billed_to_date)}</td>
+    <td class="text-right">${formatCurrency(totals.cost_to_date)}</td>
+  </tr>`;
+  
+  const detailRows = clients.map(c => `<tr>
     <td>${c.customer_name}</td>
     <td class="text-right">${formatCurrency(c.est_contract)}</td>
     <td class="text-right">${formatCurrency(c.est_cost)}</td>
@@ -17317,6 +17398,8 @@ function renderPmrClientSummaryTable() {
     <td class="text-right">${formatCurrency(c.billed_to_date)}</td>
     <td class="text-right">${formatCurrency(c.cost_to_date)}</td>
   </tr>`).join('');
+  
+  tbody.innerHTML = subtotalRow + detailRows;
   
   document.getElementById('pmrClientSummaryCount').textContent = `${clients.length} client${clients.length !== 1 ? 's' : ''}`;
 }
@@ -17342,10 +17425,8 @@ function clearPmrTables() {
   document.getElementById('pmrTotalEarnedRevenue').textContent = '-';
   
   // Clear charts
-  if (pmrStatusChart) { pmrStatusChart.destroy(); pmrStatusChart = null; }
   if (pmrMarginChart) { pmrMarginChart.destroy(); pmrMarginChart = null; }
   if (pmrBillingChart) { pmrBillingChart.destroy(); pmrBillingChart = null; }
-  document.getElementById('pmrStatusLegend').innerHTML = '';
   
   const emptyRow = '<tr><td colspan="9" class="pmr-empty-state"><div class="pmr-empty-state-icon">👤</div><div class="pmr-empty-state-text">Select a Project Manager to view their report</div></td></tr>';
   
