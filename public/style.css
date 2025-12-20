@@ -13856,6 +13856,30 @@ body.dark-mode .payments-year-range .range-separator {
   .payments-chart-wrapper {
     height: 220px;
   }
+  
+  .payments-year-range {
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  
+  .payments-year-range label {
+    font-size: 11px;
+  }
+  
+  .payments-year-range .year-slider {
+    width: 70px;
+    height: 4px;
+  }
+  
+  .payments-year-range .year-label {
+    font-size: 11px;
+    min-width: 30px;
+  }
+  
+  .payments-year-range .range-separator {
+    font-size: 11px;
+  }
 }
 
 /* Over/(Under) Billing Key Metrics */
