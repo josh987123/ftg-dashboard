@@ -17161,7 +17161,14 @@ function renderPmrMarginChart() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false }
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#374151',
+          font: { weight: 'bold', size: 12 },
+          formatter: (value) => value > 0 ? value : ''
+        }
       },
       scales: {
         y: { 
@@ -17173,7 +17180,8 @@ function renderPmrMarginChart() {
           grid: { display: false }
         }
       }
-    }
+    },
+    plugins: [ChartDataLabels]
   });
 }
 
