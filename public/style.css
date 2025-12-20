@@ -14431,7 +14431,8 @@ body.dark-mode .ar-aging-table th:hover {
   white-space: nowrap;
 }
 
-.pmr-pm-select {
+.pmr-pm-select,
+.pmr-status-select {
   flex: 1;
   max-width: 350px;
   padding: 10px 14px;
@@ -14443,7 +14444,12 @@ body.dark-mode .ar-aging-table th:hover {
   cursor: pointer;
 }
 
-.pmr-pm-select:focus {
+.pmr-status-select {
+  max-width: 180px;
+}
+
+.pmr-pm-select:focus,
+.pmr-status-select:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
@@ -14623,7 +14629,9 @@ body.dark-mode .pmr-filter-bar {
 }
 
 [data-theme="dark"] .pmr-pm-select,
-body.dark-mode .pmr-pm-select {
+body.dark-mode .pmr-pm-select,
+[data-theme="dark"] .pmr-status-select,
+body.dark-mode .pmr-status-select {
   background: #1e293b;
   border-color: #475569;
   color: #e2e8f0;
@@ -14704,7 +14712,12 @@ body.dark-mode .pmr-table-footer {
     gap: 8px;
   }
   
-  .pmr-pm-select {
+  .pmr-filter-row {
+    flex-wrap: wrap;
+  }
+  
+  .pmr-pm-select,
+  .pmr-status-select {
     width: 100%;
     max-width: none;
   }

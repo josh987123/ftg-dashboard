@@ -16542,6 +16542,7 @@ let pmrData = {
   clientSummary: []
 };
 let pmrSelectedPm = '';
+let pmrSelectedStatus = 'Active';
 
 async function initPmReport() {
   const pmSelect = document.getElementById('pmrPmSelect');
@@ -16633,6 +16634,12 @@ function setupPmrEventListeners() {
     updatePmReport();
   });
   
+  const statusSelect = document.getElementById('pmrStatusSelect');
+  statusSelect?.addEventListener('change', (e) => {
+    pmrSelectedStatus = e.target.value;
+    updatePmReport();
+  });
+  
   // AI Analysis toggle
   const aiHeader = document.getElementById('pmrAiAnalysisHeader');
   const aiBody = document.getElementById('pmrAiAnalysisBody');
@@ -16655,15 +16662,15 @@ function updatePmReport() {
   }
   
   // Filter jobs for this PM
-  const pmJobs = jobActualsData.filter(job => job.project_manager_name === pmrSelectedPm);
-  const pmBudgets = jobBudgetsData.filter(job => job.project_manager_name === pmrSelectedPm);
+  let pmJobs = jobActualsData.filter(job => job.project_manager_name === pmrSelectedPm);
+  let pmBudgets = jobBudgetsData.filter(job => job.project_manager_name === pmrSelectedPm);
   
   // Create a map of budget data by job number for quick lookup
   const budgetMap = new Map();
   pmBudgets.forEach(b => budgetMap.set(String(b.job_no), b));
   
   // Build combined data with over/under calculations
-  pmrData.jobs = pmJobs.map(job => {
+  let allJobs = pmJobs.map(job => {
     const jobNo = String(job.job_no);
     const budget = budgetMap.get(jobNo) || {};
     const revisedContract = parseFloat(budget.revised_contract) || job.revised_contract || 0;
@@ -16685,6 +16692,13 @@ function updatePmReport() {
       job_status: budget.job_status || job.job_status || ''
     };
   });
+  
+  // Apply status filter
+  if (pmrSelectedStatus) {
+    pmrData.jobs = allJobs.filter(job => job.job_status === pmrSelectedStatus);
+  } else {
+    pmrData.jobs = allJobs;
+  }
   
   // Update metrics
   updatePmrMetrics();
