@@ -18259,31 +18259,10 @@ async function extractAiInsightsData() {
   let text = "Comprehensive Business Analysis:\n\n";
   
   try {
-    // Load all data sources in parallel
-    const [glData, jobsData, arData, apData] = await Promise.all([
-      fetch('data/financials_gl.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null),
-      fetch('data/financials_jobs.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null),
-      fetch('data/ar_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null),
-      fetch('data/ap_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null)
-    ]);
-    
-    const currentYear = new Date().getFullYear();
-    
-    // Financial Summary
-    if (glData && glData.gl_history) {
-      text += "=== FINANCIAL SUMMARY ===\n";
-      let revenue = 0, expenses = 0;
-      glData.gl_history.forEach(entry => {
-        if (entry.fiscal_year === currentYear) {
-          const acctNum = parseInt(entry.gl_account_number);
-          if (acctNum >= 4000 && acctNum < 5000) revenue += Math.abs(entry.amount || 0);
-          else if (acctNum >= 5000 && acctNum < 10000) expenses += entry.amount || 0;
-        }
-      });
-      text += `Current Year Revenue: ${formatCurrency(revenue)}\n`;
-      text += `Current Year Expenses: ${formatCurrency(expenses)}\n`;
-      text += `Net Income: ${formatCurrency(revenue - expenses)}\n\n`;
-    }
+    // Load jobs data for portfolio analysis
+    const jobsData = await fetch('data/financials_jobs.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null);
+    const arData = await fetch('data/ar_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null);
+    const apData = await fetch('data/ap_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null);
     
     // Jobs Summary
     if (jobsData) {
@@ -18292,25 +18271,40 @@ async function extractAiInsightsData() {
       const actuals = jobsData.job_actuals || [];
       const activeJobs = budgets.filter(j => j.job_status === 'A');
       
-      const totalContract = activeJobs.reduce((s, j) => s + (j.revised_contract || 0), 0);
-      const totalCost = activeJobs.reduce((s, j) => s + (j.revised_cost || 0), 0);
+      const totalContract = activeJobs.reduce((s, j) => s + (parseFloat(j.revised_contract) || 0), 0);
+      const totalCost = activeJobs.reduce((s, j) => s + (parseFloat(j.revised_cost) || 0), 0);
+      const estProfit = totalContract - totalCost;
+      const margin = totalContract > 0 ? (estProfit / totalContract * 100) : 0;
+      
+      // Calculate actual costs from job_actuals
+      const actualCostByJob = {};
+      (actuals || []).forEach(a => {
+        const jobNum = a.job_number || a.Job_Number;
+        const cost = parseFloat(a.actual_cost || a.Actual_Cost) || 0;
+        actualCostByJob[jobNum] = (actualCostByJob[jobNum] || 0) + cost;
+      });
+      const totalActualCost = Object.values(actualCostByJob).reduce((s, v) => s + v, 0);
       
       text += `Total Active Jobs: ${activeJobs.length}\n`;
-      text += `Total Contract Value: ${formatCurrency(totalContract)}\n`;
-      text += `Total Budgeted Cost: ${formatCurrency(totalCost)}\n`;
-      text += `Est. Profit Margin: ${totalContract > 0 ? ((totalContract - totalCost) / totalContract * 100).toFixed(1) : 0}%\n\n`;
+      text += `Total Contract Value: $${totalContract.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}\n`;
+      text += `Total Budgeted Cost: $${totalCost.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}\n`;
+      text += `Total Actual Cost to Date: $${totalActualCost.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}\n`;
+      text += `Estimated Profit: $${estProfit.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}\n`;
+      text += `Estimated Margin: ${margin.toFixed(1)}%\n\n`;
       
       // PM Summary
       const pmStats = {};
       activeJobs.forEach(j => {
         const pm = j.project_manager_name || 'Unassigned';
-        if (!pmStats[pm]) pmStats[pm] = {jobs: 0, contract: 0};
+        if (!pmStats[pm]) pmStats[pm] = {jobs: 0, contract: 0, cost: 0};
         pmStats[pm].jobs++;
-        pmStats[pm].contract += j.revised_contract || 0;
+        pmStats[pm].contract += parseFloat(j.revised_contract) || 0;
+        pmStats[pm].cost += parseFloat(j.revised_cost) || 0;
       });
-      text += "Top Project Managers:\n";
-      Object.entries(pmStats).sort((a, b) => b[1].contract - a[1].contract).slice(0, 5).forEach(([pm, stats]) => {
-        text += `- ${pm}: ${stats.jobs} jobs, ${formatCurrency(stats.contract)}\n`;
+      text += "Project Managers (Active Jobs):\n";
+      Object.entries(pmStats).sort((a, b) => b[1].contract - a[1].contract).forEach(([pm, stats]) => {
+        const pmMargin = stats.contract > 0 ? ((stats.contract - stats.cost) / stats.contract * 100).toFixed(1) : 0;
+        text += `- ${pm}: ${stats.jobs} jobs, $${stats.contract.toLocaleString('en-US', {maximumFractionDigits: 0})} contract, ${pmMargin}% margin\n`;
       });
       text += "\n";
     }
@@ -18319,26 +18313,30 @@ async function extractAiInsightsData() {
     if (arData && arData.ar_invoices) {
       text += "=== ACCOUNTS RECEIVABLE ===\n";
       const invoices = arData.ar_invoices;
-      const totalAR = invoices.reduce((s, i) => s + (i.balance || 0), 0);
-      const over30 = invoices.filter(i => i.days_outstanding > 30).reduce((s, i) => s + (i.balance || 0), 0);
-      const over60 = invoices.filter(i => i.days_outstanding > 60).reduce((s, i) => s + (i.balance || 0), 0);
-      const over90 = invoices.filter(i => i.days_outstanding > 90).reduce((s, i) => s + (i.balance || 0), 0);
+      const totalAR = invoices.reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
+      const current = invoices.filter(i => (i.days_outstanding || 0) <= 30).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
+      const over30 = invoices.filter(i => (i.days_outstanding || 0) > 30 && (i.days_outstanding || 0) <= 60).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
+      const over60 = invoices.filter(i => (i.days_outstanding || 0) > 60 && (i.days_outstanding || 0) <= 90).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
+      const over90 = invoices.filter(i => (i.days_outstanding || 0) > 90).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
       
-      text += `Total AR: ${formatCurrency(totalAR)}\n`;
-      text += `Over 30 Days: ${formatCurrency(over30)}\n`;
-      text += `Over 60 Days: ${formatCurrency(over60)}\n`;
-      text += `Over 90 Days: ${formatCurrency(over90)}\n\n`;
+      text += `Total AR Outstanding: $${totalAR.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Current (0-30 days): $${current.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `31-60 Days: $${over30.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `61-90 Days: $${over60.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Over 90 Days: $${over90.toLocaleString('en-US', {maximumFractionDigits: 0})}\n\n`;
     }
     
     // AP Summary
     if (apData && apData.ap_invoices) {
       text += "=== ACCOUNTS PAYABLE ===\n";
       const invoices = apData.ap_invoices;
-      const totalAP = invoices.reduce((s, i) => s + (i.balance || 0), 0);
-      const over30 = invoices.filter(i => i.days_outstanding > 30).reduce((s, i) => s + (i.balance || 0), 0);
+      const totalAP = invoices.reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
+      const current = invoices.filter(i => (i.days_outstanding || 0) <= 30).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
+      const over30 = invoices.filter(i => (i.days_outstanding || 0) > 30).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
       
-      text += `Total AP: ${formatCurrency(totalAP)}\n`;
-      text += `Over 30 Days: ${formatCurrency(over30)}\n\n`;
+      text += `Total AP Outstanding: $${totalAP.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Current (0-30 days): $${current.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Over 30 Days: $${over30.toLocaleString('en-US', {maximumFractionDigits: 0})}\n\n`;
     }
     
   } catch (e) {
@@ -18656,49 +18654,14 @@ Top 3-5 actionable recommendations prioritized by impact.`;
 }
 
 function displayAiInsightsResults(response) {
+  const contentEl = document.getElementById('aiInsightsContent');
   if (!response) {
-    document.getElementById('aiInsightsExecSummary').innerHTML = '<p>No analysis available.</p>';
+    contentEl.innerHTML = '<p>No analysis available.</p>';
     return;
   }
   
-  // Parse sections from the response
-  const sections = {
-    exec: '',
-    financial: '',
-    jobs: '',
-    cashflow: '',
-    pms: '',
-    recommendations: ''
-  };
-  
-  // Split response by section headers
-  const formatted = formatMarkdown(response);
-  
-  // Try to extract sections (simple approach - show full content in each if parsing fails)
-  const execMatch = response.match(/##\s*EXECUTIVE SUMMARY([\s\S]*?)(?=##|$)/i);
-  const finMatch = response.match(/##\s*FINANCIAL HEALTH([\s\S]*?)(?=##|$)/i);
-  const jobMatch = response.match(/##\s*JOB PERFORMANCE([\s\S]*?)(?=##|$)/i);
-  const cashMatch = response.match(/##\s*CASH FLOW([\s\S]*?)(?=##|$)/i);
-  const pmMatch = response.match(/##\s*PROJECT MANAGER([\s\S]*?)(?=##|$)/i);
-  const recMatch = response.match(/##\s*STRATEGIC RECOMMENDATIONS([\s\S]*?)(?=##|$)/i);
-  
-  document.getElementById('aiInsightsExecSummary').innerHTML = 
-    formatMarkdown(execMatch ? execMatch[1].trim() : 'See detailed analysis below.');
-  
-  document.getElementById('aiInsightsFinancial').innerHTML = 
-    formatMarkdown(finMatch ? finMatch[1].trim() : 'Financial analysis included in recommendations.');
-  
-  document.getElementById('aiInsightsJobs').innerHTML = 
-    formatMarkdown(jobMatch ? jobMatch[1].trim() : 'Job analysis included in recommendations.');
-  
-  document.getElementById('aiInsightsCashFlow').innerHTML = 
-    formatMarkdown(cashMatch ? cashMatch[1].trim() : 'Cash flow analysis included in recommendations.');
-  
-  document.getElementById('aiInsightsPMs').innerHTML = 
-    formatMarkdown(pmMatch ? pmMatch[1].trim() : 'PM analysis included in recommendations.');
-  
-  document.getElementById('aiInsightsRecommendations').innerHTML = 
-    formatMarkdown(recMatch ? recMatch[1].trim() : formatted);
+  // Display full analysis in single section
+  contentEl.innerHTML = formatMarkdown(response);
 }
 
 // ========================================
