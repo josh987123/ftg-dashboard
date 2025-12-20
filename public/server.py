@@ -853,7 +853,7 @@ def api_ai_analysis():
         data = request.get_json()
         if not data:
             print("AI Analysis error: No JSON data received")
-            return jsonify({'error': 'No data received'}), 400
+            return jsonify({'error': 'No data received', 'success': False}), 400
             
         prompt = data.get('prompt', '')
         section = data.get('section', 'general')

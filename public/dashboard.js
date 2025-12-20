@@ -17765,8 +17765,19 @@ async function runFullAiAnalysis() {
     console.error('AI Insights error:', err);
     progress.classList.add('hidden');
     errorDiv.classList.remove('hidden');
-    document.getElementById('aiInsightsErrorMsg').textContent = 
-      'Unable to complete analysis. Please check your connection and try again.';
+    const errorMsgEl = document.getElementById('aiInsightsErrorMsg');
+    if (errorMsgEl) {
+      // Try to get more specific error
+      let errorText = 'Unable to complete analysis. ';
+      if (err.message && err.message.includes('401')) {
+        errorText += 'Please log in and try again.';
+      } else if (err.message && err.message.includes('API key')) {
+        errorText += 'AI service not configured.';
+      } else {
+        errorText += 'Please check your connection and try again.';
+      }
+      errorMsgEl.textContent = errorText;
+    }
   } finally {
     runBtn.disabled = false;
     runBtn.querySelector('.btn-text').textContent = 'Run Full Analysis';
