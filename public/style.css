@@ -10503,12 +10503,31 @@ body.dark-mode .jo-metrics-chart-card .chart-title {
 
 @media (max-width: 768px) {
   .jo-metrics-row-5 {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-start;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact {
-    flex: 1 1 100%;
-    max-width: 100%;
+    flex: 0 0 auto;
+    min-width: auto;
+    max-width: none;
+    padding: 6px 8px !important;
+  }
+  
+  .jo-metrics-row-5 .job-metric-card.compact .metric-icon {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 10px !important;
+  }
+  
+  .jo-metrics-row-5 .job-metric-card.compact .metric-value {
+    font-size: 11px !important;
+  }
+  
+  .jo-metrics-row-5 .job-metric-card.compact .metric-label {
+    font-size: 7px !important;
   }
 }
 
