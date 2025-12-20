@@ -16542,7 +16542,7 @@ let pmrData = {
   clientSummary: []
 };
 let pmrSelectedPm = '';
-let pmrSelectedStatus = 'Active';
+let pmrSelectedStatus = 'A';
 
 async function initPmReport() {
   const pmSelect = document.getElementById('pmrPmSelect');
