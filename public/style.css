@@ -1427,6 +1427,20 @@ body.dark-mode .nav-item.nav-parent.expanded {
     width: min(280px, 85vw);
   }
   
+  /* Keep sidebar collapse button circular on mobile */
+  .sidebar-collapse-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    max-width: 28px;
+    max-height: 28px;
+    aspect-ratio: 1;
+    flex-shrink: 0;
+    border-radius: 50%;
+    padding: 0;
+  }
+  
   .overlay {
     z-index: 1000;
   }
