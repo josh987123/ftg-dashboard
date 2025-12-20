@@ -19629,6 +19629,11 @@ function renderCCRevenueChart() {
   
   if (ccRevenueChart) ccRevenueChart.destroy();
   
+  // Theme-adaptive colors
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#374151';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  
   const top10 = costCodeData.slice(0, 10);
   const labels = top10.map(cc => cc.description.length > 30 ? cc.description.substring(0, 28) + '...' : cc.description);
   const values = top10.map(cc => cc.pct_of_revenue);
@@ -19668,13 +19673,13 @@ function renderCCRevenueChart() {
       scales: {
         x: {
           beginAtZero: true,
-          title: { display: true, text: '% of Earned Revenue' },
-          ticks: {
-            callback: value => value + '%'
-          }
+          title: { display: true, text: '% of Earned Revenue', color: textColor },
+          ticks: { callback: value => value + '%', color: textColor },
+          grid: { color: gridColor }
         },
         y: {
-          ticks: { font: { size: 11 } }
+          ticks: { font: { size: 11 }, color: textColor },
+          grid: { display: false }
         }
       }
     }
@@ -19687,6 +19692,11 @@ function renderCCCharts() {
   const labels = top10.map(cc => cc.description.length > 25 ? cc.description.substring(0, 23) + '...' : cc.description);
   const values = top10.map(cc => cc.total_cost);
   const pcts = top10.map(cc => cc.pct_of_total);
+  
+  // Theme-adaptive colors
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#374151';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
   
   const colors = [
     '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
@@ -19706,7 +19716,7 @@ function renderCCCharts() {
             data: values,
             backgroundColor: colors,
             borderWidth: 2,
-            borderColor: '#fff',
+            borderColor: isDark ? '#1e293b' : '#ffffff',
             cutout: chartType === 'doughnut' ? '50%' : 0
           }]
         },
@@ -19716,7 +19726,7 @@ function renderCCCharts() {
           plugins: {
             legend: {
               position: 'right',
-              labels: { boxWidth: 12, font: { size: 11 } }
+              labels: { boxWidth: 12, font: { size: 11 }, color: textColor }
             },
             tooltip: {
               callbacks: {
@@ -19760,15 +19770,18 @@ function renderCCCharts() {
           scales: {
             x: {
               ticks: {
+                color: textColor,
                 callback: function(value) {
                   if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
                   if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'K';
                   return '$' + value;
                 }
-              }
+              },
+              grid: { color: gridColor }
             },
             y: {
-              ticks: { font: { size: 11 } }
+              ticks: { font: { size: 11 }, color: textColor },
+              grid: { display: false }
             }
           }
         }
@@ -19788,7 +19801,7 @@ function renderCCCharts() {
           data: pcts,
           backgroundColor: colors,
           borderWidth: 2,
-          borderColor: '#fff'
+          borderColor: isDark ? '#1e293b' : '#ffffff'
         }]
       },
       options: {
@@ -19798,7 +19811,7 @@ function renderCCCharts() {
         plugins: {
           legend: {
             position: 'right',
-            labels: { boxWidth: 12, font: { size: 11 } }
+            labels: { boxWidth: 12, font: { size: 11 }, color: textColor }
           },
           tooltip: {
             callbacks: {
@@ -20327,6 +20340,11 @@ function renderCCTrendChart() {
     });
   }
   
+  // Theme-adaptive colors
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#374151';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  
   ccTrendChart = new Chart(canvas.getContext('2d'), {
     type: 'line',
     data: { labels: periods, datasets },
@@ -20335,7 +20353,7 @@ function renderCCTrendChart() {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, color: textColor } },
         tooltip: {
           callbacks: {
             label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
@@ -20343,9 +20361,14 @@ function renderCCTrendChart() {
         }
       },
       scales: {
+        x: {
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        },
         y: {
           beginAtZero: true,
-          ticks: { callback: v => formatCurrency(v) }
+          ticks: { callback: v => formatCurrency(v), color: textColor },
+          grid: { color: gridColor }
         }
       }
     }
