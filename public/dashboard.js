@@ -16552,10 +16552,11 @@ async function initOverUnderBilling() {
     }
     
     // Load billed revenue data directly
+    // IMPORTANT: Normalize job numbers to strings for consistent key matching
     oubBilledRevenueMap = new Map();
     const billedRevenueRaw = data.job_billed_revenue || [];
     billedRevenueRaw.forEach(row => {
-      const jobNo = row.Job_No || row.job_no;
+      const jobNo = String(row.Job_No || row.job_no);
       if (jobNo) {
         const billedRev = parseFloat(row.Billed_Revenue || row.billed_revenue) || 0;
         oubBilledRevenueMap.set(jobNo, billedRev);
@@ -16592,10 +16593,12 @@ function buildOubData() {
   oubData = [];
   
   // Create lookup for actuals by job number (for actual costs)
+  // IMPORTANT: Normalize job numbers to strings to ensure consistent key matching
   const actualsMap = new Map();
   if (jobActualsData && Array.isArray(jobActualsData)) {
     jobActualsData.forEach(job => {
-      actualsMap.set(job.job_no, {
+      const jobNo = String(job.job_no);
+      actualsMap.set(jobNo, {
         actual_cost: job.actual_cost || 0
       });
     });
@@ -16616,7 +16619,9 @@ function buildOubData() {
       // Skip jobs with no estimated cost or contract value
       if (contractValue === 0 || estCost === 0) return;
       
-      const actuals = actualsMap.get(budget.job_no) || { actual_cost: 0 };
+      // Normalize job number to string for consistent lookup
+      const jobNo = String(budget.job_no);
+      const actuals = actualsMap.get(jobNo) || { actual_cost: 0 };
       
       // Est. Profit = Contract Value - Est. Cost
       const estProfit = contractValue - estCost;
@@ -16627,8 +16632,8 @@ function buildOubData() {
       // % Complete = Actual Cost / Est. Cost (cost-based completion)
       const pctComplete = estCost > 0 ? (actualCost / estCost) * 100 : 0;
       
-      // Billed Revenue from the directly loaded billed revenue map
-      const billedRevenue = oubBilledRevenueMap.get(budget.job_no) || 0;
+      // Billed Revenue from the directly loaded billed revenue map (use normalized jobNo)
+      const billedRevenue = oubBilledRevenueMap.get(jobNo) || 0;
       
       // Earned Revenue = % Complete × Contract Value
       const earnedRevenue = (pctComplete / 100) * contractValue;
