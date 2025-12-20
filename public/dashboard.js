@@ -12691,7 +12691,7 @@ function renderCashChart() {
         },
         y: {
           stacked: stackBars,
-          min: yMin > 0 ? yMin : undefined,
+          min: 10000000,
           max: yMax,
           grid: { color: themeColors.gridColor },
           ticks: {
