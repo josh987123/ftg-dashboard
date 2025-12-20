@@ -17818,13 +17818,20 @@ Provide a concise analysis (max 300 words) with:
       body: JSON.stringify({ prompt, section: 'pm_report' })
     });
     
-    if (!response.ok) throw new Error('AI analysis failed');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Server error: ${response.status}`);
+    }
     
     const data = await response.json();
+    if (!data.success && data.error) {
+      throw new Error(data.error);
+    }
     content.innerHTML = `<div class="ai-analysis-text">${formatAiResponse(data.analysis || data.response || 'No analysis available')}</div>`;
   } catch (err) {
     console.error('PM Report AI analysis error:', err);
-    content.innerHTML = '<div class="ai-error">Unable to generate analysis. Please try again later.</div>';
+    const errorMsg = err.message || 'Unknown error';
+    content.innerHTML = `<div class="ai-error">Unable to generate analysis: ${errorMsg}</div>`;
   } finally {
     btn.disabled = false;
     btn.textContent = 'Run Analysis';
