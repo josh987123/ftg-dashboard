@@ -19028,7 +19028,9 @@ const sectionToPermission = {
   'incomeStatement': 'income_statement',
   'balanceSheet': 'balance_sheet',
   'cashFlows': 'cash_flow',
-    'receivablesPayables': 'receivables',
+  'receivablesPayables': 'receivables',
+  'apAging': 'ap_aging',
+  'arAging': 'ar_aging',
   'jobAnalytics': 'job_analytics',
   'jobOverview': 'job_overview',
   'jobBudgets': 'job_budgets',
@@ -19044,7 +19046,8 @@ const sectionToPermission = {
 // Order of sections for default page selection
 const sectionOrder = [
   'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
-  'cashReports', 'accounts', 'receivablesPayables', 'jobOverview', 'jobBudgets', 'jobActuals', 'costCodes', 'missingBudgets', 'jobAnalytics'
+  'cashReports', 'accounts', 'apAging', 'arAging', 'receivablesPayables', 'payments',
+  'jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'jobAnalytics'
 ];
 
 // Check permissions and show/hide nav items based on user role
