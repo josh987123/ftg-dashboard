@@ -695,7 +695,9 @@ function initAuth() {
   if (isAuthenticated === "true" && currentUser) {
     loginScreen.classList.add("hidden");
     if (currentUserEl) {
-      const displayName = currentUser.charAt(0).toUpperCase() + currentUser.slice(1);
+      // Prefer display name from database, fall back to email
+      const storedDisplayName = localStorage.getItem("ftg_display_name");
+      const displayName = storedDisplayName || currentUser.split('@')[0].charAt(0).toUpperCase() + currentUser.split('@')[0].slice(1);
       currentUserEl.textContent = displayName;
     }
     
@@ -751,6 +753,7 @@ function initAuth() {
       localStorage.removeItem("ftg_session_token");
       localStorage.removeItem("ftg_is_admin");
       localStorage.removeItem("ftg_user_role");
+      localStorage.removeItem("ftg_display_name");
       if (currentUserEl) currentUserEl.textContent = "";
       if (userDropdownMenu) userDropdownMenu.classList.add("hidden");
       window.userPermissions = [];
@@ -3259,8 +3262,12 @@ function updateGreeting() {
   
   const now = new Date();
   const hour = now.getHours();
-  const currentUser = localStorage.getItem('ftg_current_user') || '';
-  const displayName = currentUser ? currentUser.charAt(0).toUpperCase() + currentUser.slice(1) : '';
+  // Prefer display name from database, fall back to email with capitalization
+  let displayName = localStorage.getItem('ftg_display_name') || '';
+  if (!displayName) {
+    const currentUser = localStorage.getItem('ftg_current_user') || '';
+    displayName = currentUser ? currentUser.split('@')[0].charAt(0).toUpperCase() + currentUser.split('@')[0].slice(1) : '';
+  }
   
   let greeting, subtext;
   
@@ -21428,9 +21435,23 @@ async function checkAdminAccess() {
       window.isAdminUser = isAdmin;
       window.userRole = userRole;
       
-      // Cache admin status in localStorage for immediate access on page refresh
+      // Cache admin status and display name in localStorage for immediate access on page refresh
       localStorage.setItem("ftg_is_admin", isAdmin ? "true" : "false");
       localStorage.setItem("ftg_user_role", userRole);
+      
+      // Store display name for greeting and user display
+      if (data.user.displayName) {
+        localStorage.setItem("ftg_display_name", data.user.displayName);
+        // Update current user display in header
+        const currentUserEl = document.getElementById("currentUser");
+        if (currentUserEl) {
+          currentUserEl.textContent = data.user.displayName;
+        }
+        // Update greeting if visible
+        if (typeof updateGreeting === 'function') {
+          updateGreeting();
+        }
+      }
       
       // Navigate to the appropriate default page based on permissions
       navigateToDefaultPage(userRole, userPerms, isAdmin);
