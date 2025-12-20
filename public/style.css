@@ -14488,17 +14488,44 @@ body.dark-mode .ar-aging-table th:hover {
   background: #334155;
 }
 
-/* Mobile - even more compact */
+/* Mobile - even more compact table headers with sort arrows */
 @media (max-width: 768px) {
   .ap-aging-table th,
-  .ar-aging-table th {
+  .ar-aging-table th,
+  .job-budgets-table th,
+  .job-actuals-table th,
+  .pmr-over-under-table th,
+  .pmr-client-summary-table th,
+  .pmr-missing-budgets-table th,
+  .payments-table th,
+  #costCodesTable th {
     padding: 4px 6px;
     font-size: 9px;
+    line-height: 1.2;
   }
   
   .ap-aging-table th .sort-btn,
-  .ar-aging-table th .sort-btn {
-    font-size: 7px;
+  .ar-aging-table th .sort-btn,
+  .job-budgets-table th .sort-btn,
+  .job-actuals-table th .sort-btn,
+  .pmr-over-under-table th .sort-btn,
+  .pmr-client-summary-table th .sort-btn,
+  .pmr-missing-budgets-table th .sort-btn,
+  .payments-table th .sort-btn,
+  #costCodesTable th .sort-btn {
+    font-size: 6px;
+    line-height: 1;
+  }
+  
+  .inline-sort {
+    gap: 0 !important;
+    margin-left: 2px !important;
+  }
+  
+  .inline-sort .sort-btn {
+    font-size: 6px !important;
+    padding: 0 !important;
+    line-height: 0.9 !important;
   }
 }
 
