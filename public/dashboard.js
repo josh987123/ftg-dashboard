@@ -17169,7 +17169,7 @@ function renderPmrMarginChart() {
           anchor: 'end',
           align: 'end',
           color: '#374151',
-          font: { weight: 'bold', size: 12 },
+          font: { weight: 'bold', size: window.innerWidth <= 768 ? 10 : 12 },
           formatter: (value) => value > 0 ? value : ''
         }
       },
