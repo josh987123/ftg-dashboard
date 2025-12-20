@@ -15393,6 +15393,10 @@ async function loadJobActualsData() {
       
       jobActualsData.push({
         ...job,
+        // Get job_status from budget data (actuals data doesn't have it)
+        job_status: budget.job_status || job.job_status || '',
+        job_description: budget.job_description || job.job_description || '',
+        project_manager_name: budget.project_manager_name || job.project_manager_name || '',
         customer_name: budget.customer_name || '',
         revised_contract: revisedContract,
         revised_cost: revisedCost,
