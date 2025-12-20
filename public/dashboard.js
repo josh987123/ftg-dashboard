@@ -19232,7 +19232,16 @@ async function initCostCodes() {
     }
     
     if (data.job_actuals) {
-      jobActualsData = data.job_actuals || [];
+      // Normalize field names from JSON format to expected format (preserve all original fields)
+      jobActualsData = (data.job_actuals || []).map(a => ({
+        ...a,
+        job_no: a.Job_No || a.job_no,
+        job_description: a.Job_Description || a.job_description,
+        project_manager: a.Project_Manager || a.project_manager,
+        cost_code_no: a.Cost_Code_No || a.cost_code_no,
+        cost_code_description: a.Cost_Code_Description || a.cost_code_description,
+        actual_cost: parseFloat(a.Value || a.actual_cost) || 0
+      }));
     }
     
     if (data.generated_at) {
