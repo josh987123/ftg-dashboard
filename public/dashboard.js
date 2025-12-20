@@ -249,6 +249,9 @@ function refreshCurrentSection() {
     case 'pmReport':
       if (typeof initPmReport === 'function') initPmReport();
       break;
+    case 'aiInsights':
+      if (typeof initAiInsights === 'function') initAiInsights();
+      break;
     case 'payments':
       if (typeof loadPaymentsPage === 'function') loadPaymentsPage();
       break;
@@ -4511,7 +4514,7 @@ async function deleteScheduledReport(id) {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "overUnderBilling", "costCodes", "missingBudgets", "pmReport", "payments", "apAging", "arAging", "jobAnalytics", "admin"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "overUnderBilling", "costCodes", "missingBudgets", "pmReport", "aiInsights", "payments", "apAging", "arAging", "jobAnalytics", "admin"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -16984,6 +16987,452 @@ Provide a concise analysis (max 300 words) with:
 }
 
 // ========================================
+// AI INSIGHTS MODULE - Comprehensive Analysis
+// ========================================
+
+let aiInsightsInitialized = false;
+
+function initAiInsights() {
+  if (aiInsightsInitialized) return;
+  
+  const runBtn = document.getElementById('aiInsightsRunBtn');
+  const retryBtn = document.getElementById('aiInsightsRetryBtn');
+  
+  runBtn?.addEventListener('click', runFullAiAnalysis);
+  retryBtn?.addEventListener('click', runFullAiAnalysis);
+  
+  aiInsightsInitialized = true;
+}
+
+async function runFullAiAnalysis() {
+  const runBtn = document.getElementById('aiInsightsRunBtn');
+  const progress = document.getElementById('aiInsightsProgress');
+  const progressFill = document.getElementById('aiInsightsProgressFill');
+  const progressText = document.getElementById('aiInsightsProgressText');
+  const results = document.getElementById('aiInsightsResults');
+  const errorDiv = document.getElementById('aiInsightsError');
+  
+  // Reset states
+  runBtn.disabled = true;
+  runBtn.querySelector('.btn-text').textContent = 'Analyzing...';
+  progress.classList.remove('hidden');
+  results.classList.add('hidden');
+  errorDiv.classList.add('hidden');
+  progressFill.style.width = '0%';
+  
+  try {
+    // Step 1: Load and aggregate all data
+    progressText.textContent = 'Loading financial data...';
+    progressFill.style.width = '10%';
+    
+    const aggregatedData = await aggregateAllBusinessData();
+    
+    progressText.textContent = 'Sending to AI for analysis...';
+    progressFill.style.width = '40%';
+    
+    // Step 2: Build comprehensive prompt
+    const prompt = buildComprehensiveAiPrompt(aggregatedData);
+    
+    // Step 3: Call AI API
+    progressText.textContent = 'Generating insights...';
+    progressFill.style.width = '60%';
+    
+    const response = await fetch('/api/ai-analysis', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ 
+        prompt, 
+        section: 'comprehensive_insights',
+        max_tokens: 2500
+      })
+    });
+    
+    if (!response.ok) throw new Error('AI analysis request failed');
+    
+    const data = await response.json();
+    
+    progressText.textContent = 'Formatting results...';
+    progressFill.style.width = '90%';
+    
+    // Step 4: Parse and display results
+    displayAiInsightsResults(data.analysis || data.response);
+    
+    progressFill.style.width = '100%';
+    progressText.textContent = 'Analysis complete!';
+    
+    setTimeout(() => {
+      progress.classList.add('hidden');
+      results.classList.remove('hidden');
+    }, 500);
+    
+  } catch (err) {
+    console.error('AI Insights error:', err);
+    progress.classList.add('hidden');
+    errorDiv.classList.remove('hidden');
+    document.getElementById('aiInsightsErrorMsg').textContent = 
+      'Unable to complete analysis. Please check your connection and try again.';
+  } finally {
+    runBtn.disabled = false;
+    runBtn.querySelector('.btn-text').textContent = 'Run Full Analysis';
+  }
+}
+
+async function aggregateAllBusinessData() {
+  const data = {
+    financial: {},
+    jobs: {},
+    ar: {},
+    ap: {},
+    pms: [],
+    clients: [],
+    vendors: [],
+    loadErrors: []
+  };
+  
+  // Load all data sources in parallel
+  const [glData, jobsData, arData, apData] = await Promise.all([
+    fetch('data/financials_gl.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(e => { data.loadErrors.push('GL Data'); return null; }),
+    fetch('data/financials_jobs.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(e => { data.loadErrors.push('Jobs Data'); return null; }),
+    fetch('data/ar_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(e => { data.loadErrors.push('AR Data'); return null; }),
+    fetch('data/ap_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(e => { data.loadErrors.push('AP Data'); return null; })
+  ]);
+  
+  // Aggregate Financial Data
+  if (glData && glData.gl_history) {
+    const glHistory = glData.gl_history;
+    const currentYear = new Date().getFullYear();
+    const lastYear = currentYear - 1;
+    
+    let revenueCurrentYear = 0, revenueLastYear = 0;
+    let expenseCurrentYear = 0, expenseLastYear = 0;
+    
+    glHistory.forEach(entry => {
+      const acct = parseInt(entry.gl_account) || 0;
+      const amt = parseFloat(entry.amount) || 0;
+      const year = parseInt(entry.fiscal_year);
+      
+      if (acct >= 4000 && acct < 5000) {
+        if (year === currentYear) revenueCurrentYear += amt;
+        if (year === lastYear) revenueLastYear += amt;
+      } else if (acct >= 5000 && acct < 9000) {
+        if (year === currentYear) expenseCurrentYear += amt;
+        if (year === lastYear) expenseLastYear += amt;
+      }
+    });
+    
+    // Normalize signs: revenue is typically credit (negative in some GL systems), expenses are debit (positive)
+    const normalizedRevCurrent = Math.abs(revenueCurrentYear);
+    const normalizedRevLast = Math.abs(revenueLastYear);
+    const normalizedExpCurrent = Math.abs(expenseCurrentYear);
+    const normalizedExpLast = Math.abs(expenseLastYear);
+    
+    data.financial = {
+      revenueCurrentYear: normalizedRevCurrent,
+      revenueLastYear: normalizedRevLast,
+      revenueGrowth: normalizedRevLast ? ((normalizedRevCurrent - normalizedRevLast) / normalizedRevLast * 100) : 0,
+      expenseCurrentYear: normalizedExpCurrent,
+      expenseLastYear: normalizedExpLast,
+      profitCurrentYear: normalizedRevCurrent - normalizedExpCurrent,
+      profitLastYear: normalizedRevLast - normalizedExpLast,
+      profitMarginCurrent: normalizedRevCurrent ? ((normalizedRevCurrent - normalizedExpCurrent) / normalizedRevCurrent * 100) : 0
+    };
+  }
+  
+  // Aggregate Jobs Data
+  if (jobsData) {
+    const budgets = jobsData.job_budgets || [];
+    const actuals = jobsData.job_actuals || [];
+    const billedRev = jobsData.job_billed_revenue || [];
+    
+    // Aggregate actuals by job
+    const actualsMap = new Map();
+    actuals.forEach(a => {
+      const jobNo = String(a.Job_No || a.job_no);
+      const cost = parseFloat(a.Value || a.actual_cost) || 0;
+      actualsMap.set(jobNo, (actualsMap.get(jobNo) || 0) + cost);
+    });
+    
+    // Aggregate billed by job
+    const billedMap = new Map();
+    billedRev.forEach(b => {
+      const jobNo = String(b.Job_No || b.job_no);
+      billedMap.set(jobNo, parseFloat(b.Billed_Revenue || b.billed_revenue) || 0);
+    });
+    
+    let totalContract = 0, totalCost = 0, totalActualCost = 0, totalBilled = 0;
+    let activeJobs = 0, closedJobs = 0;
+    let totalOverUnder = 0;
+    const pmStats = new Map();
+    const clientStats = new Map();
+    const missingBudgetJobs = [];
+    
+    budgets.forEach(job => {
+      const jobNo = String(job.job_no);
+      const contract = parseFloat(job.revised_contract) || 0;
+      const cost = parseFloat(job.revised_cost) || 0;
+      const actualCost = actualsMap.get(jobNo) || 0;
+      const billed = billedMap.get(jobNo) || 0;
+      const status = (job.job_status || '').toUpperCase();
+      const pm = job.project_manager_name || 'Unassigned';
+      const client = job.customer_name || 'Unknown';
+      
+      totalContract += contract;
+      totalCost += cost;
+      totalActualCost += actualCost;
+      totalBilled += billed;
+      
+      if (status === 'A') activeJobs++;
+      if (status === 'C') closedJobs++;
+      
+      // Calculate over/under
+      const earnedRev = cost > 0 ? (actualCost / cost) * contract : 0;
+      const overUnder = billed - earnedRev;
+      totalOverUnder += overUnder;
+      
+      // PM stats
+      if (!pmStats.has(pm)) {
+        pmStats.set(pm, { jobs: 0, contract: 0, actualCost: 0, overUnder: 0 });
+      }
+      const pmStat = pmStats.get(pm);
+      pmStat.jobs++;
+      pmStat.contract += contract;
+      pmStat.actualCost += actualCost;
+      pmStat.overUnder += overUnder;
+      
+      // Client stats
+      if (!clientStats.has(client)) {
+        clientStats.set(client, { jobs: 0, contract: 0, billed: 0 });
+      }
+      const clientStat = clientStats.get(client);
+      clientStat.jobs++;
+      clientStat.contract += contract;
+      clientStat.billed += billed;
+      
+      // Check for missing budgets
+      if (actualCost > 2500 && (contract === 0 || cost === 0)) {
+        missingBudgetJobs.push({ jobNo, actualCost, issue: contract === 0 && cost === 0 ? 'No Budget' : contract === 0 ? 'No Revenue' : 'No Cost' });
+      }
+    });
+    
+    data.jobs = {
+      totalJobs: budgets.length,
+      activeJobs,
+      closedJobs,
+      totalContract,
+      totalCost,
+      totalActualCost,
+      totalBilled,
+      totalOverUnder,
+      avgProfitMargin: totalContract ? ((totalContract - totalCost) / totalContract * 100) : 0,
+      missingBudgetCount: missingBudgetJobs.length
+    };
+    
+    // Top 5 PMs by contract value
+    data.pms = [...pmStats.entries()]
+      .map(([name, stats]) => ({ name, ...stats }))
+      .sort((a, b) => b.contract - a.contract)
+      .slice(0, 5);
+    
+    // Top 5 clients
+    data.clients = [...clientStats.entries()]
+      .map(([name, stats]) => ({ name, ...stats }))
+      .sort((a, b) => b.contract - a.contract)
+      .slice(0, 5);
+  }
+  
+  // Aggregate AR Data
+  if (arData && arData.ar_invoices) {
+    const invoices = arData.ar_invoices;
+    let totalAR = 0, current = 0, over30 = 0, over60 = 0, over90 = 0;
+    const customerAR = new Map();
+    
+    invoices.forEach(inv => {
+      const amtDue = parseFloat(inv.amount_due) || 0;
+      const daysOut = parseInt(inv.days_out) || 0;
+      const customer = inv.customer_name || 'Unknown';
+      
+      totalAR += amtDue;
+      if (daysOut <= 30) current += amtDue;
+      else if (daysOut <= 60) over30 += amtDue;
+      else if (daysOut <= 90) over60 += amtDue;
+      else over90 += amtDue;
+      
+      customerAR.set(customer, (customerAR.get(customer) || 0) + amtDue);
+    });
+    
+    data.ar = {
+      totalOutstanding: totalAR,
+      current,
+      over30,
+      over60,
+      over90,
+      topCustomers: [...customerAR.entries()]
+        .map(([name, amount]) => ({ name, amount }))
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 5)
+    };
+  }
+  
+  // Aggregate AP Data
+  if (apData && apData.ap_invoices) {
+    const invoices = apData.ap_invoices;
+    let totalAP = 0, current = 0, over30 = 0, over60 = 0, over90 = 0;
+    const vendorAP = new Map();
+    
+    invoices.forEach(inv => {
+      const amtDue = parseFloat(inv.amount_due) || 0;
+      const daysOut = parseInt(inv.days_out) || 0;
+      const vendor = inv.vendor_name || 'Unknown';
+      
+      totalAP += amtDue;
+      if (daysOut <= 30) current += amtDue;
+      else if (daysOut <= 60) over30 += amtDue;
+      else if (daysOut <= 90) over60 += amtDue;
+      else over90 += amtDue;
+      
+      vendorAP.set(vendor, (vendorAP.get(vendor) || 0) + amtDue);
+    });
+    
+    data.ap = {
+      totalOutstanding: totalAP,
+      current,
+      over30,
+      over60,
+      over90,
+      topVendors: [...vendorAP.entries()]
+        .map(([name, amount]) => ({ name, amount }))
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 5)
+    };
+  }
+  
+  return data;
+}
+
+function buildComprehensiveAiPrompt(data) {
+  const f = data.financial;
+  const j = data.jobs;
+  const ar = data.ar;
+  const ap = data.ap;
+  const pms = data.pms;
+  const clients = data.clients;
+  
+  return `You are a business analyst for a construction company. Analyze this comprehensive business data and provide strategic insights.
+
+=== FINANCIAL PERFORMANCE ===
+Current Year Revenue: ${formatCurrency(f.revenueCurrentYear || 0)}
+Prior Year Revenue: ${formatCurrency(f.revenueLastYear || 0)}
+Revenue Growth: ${(f.revenueGrowth || 0).toFixed(1)}%
+Current Year Expenses: ${formatCurrency(f.expenseCurrentYear || 0)}
+Current Year Profit: ${formatCurrency(f.profitCurrentYear || 0)}
+Profit Margin: ${(f.profitMarginCurrent || 0).toFixed(1)}%
+
+=== JOB PORTFOLIO ===
+Total Jobs: ${j.totalJobs || 0}
+Active Jobs: ${j.activeJobs || 0}
+Closed Jobs: ${j.closedJobs || 0}
+Total Contract Value: ${formatCurrency(j.totalContract || 0)}
+Total Estimated Cost: ${formatCurrency(j.totalCost || 0)}
+Total Actual Cost: ${formatCurrency(j.totalActualCost || 0)}
+Total Billed: ${formatCurrency(j.totalBilled || 0)}
+Net Over/(Under) Billing: ${formatCurrency(j.totalOverUnder || 0)}
+Jobs Missing Budgets (>$2.5k cost): ${j.missingBudgetCount || 0}
+
+=== TOP PROJECT MANAGERS (by Contract Value) ===
+${(pms || []).map(pm => `${pm.name}: ${pm.jobs} jobs, ${formatCurrency(pm.contract)} contract, O/U: ${formatCurrency(pm.overUnder)}`).join('\n')}
+
+=== TOP CLIENTS (by Contract Value) ===
+${(clients || []).map(c => `${c.name}: ${c.jobs} jobs, ${formatCurrency(c.contract)} contract, ${formatCurrency(c.billed)} billed`).join('\n')}
+
+=== ACCOUNTS RECEIVABLE ===
+Total Outstanding: ${formatCurrency(ar.totalOutstanding || 0)}
+Current (0-30 days): ${formatCurrency(ar.current || 0)}
+31-60 days: ${formatCurrency(ar.over30 || 0)}
+61-90 days: ${formatCurrency(ar.over60 || 0)}
+Over 90 days: ${formatCurrency(ar.over90 || 0)}
+Top Customers with Outstanding AR:
+${(ar.topCustomers || []).map(c => `- ${c.name}: ${formatCurrency(c.amount)}`).join('\n')}
+
+=== ACCOUNTS PAYABLE ===
+Total Outstanding: ${formatCurrency(ap.totalOutstanding || 0)}
+Current (0-30 days): ${formatCurrency(ap.current || 0)}
+31-60 days: ${formatCurrency(ap.over30 || 0)}
+61-90 days: ${formatCurrency(ap.over60 || 0)}
+Over 90 days: ${formatCurrency(ap.over90 || 0)}
+Top Vendors with Outstanding AP:
+${(ap.topVendors || []).map(v => `- ${v.name}: ${formatCurrency(v.amount)}`).join('\n')}
+
+Please provide a comprehensive analysis with the following sections (use markdown formatting):
+
+## EXECUTIVE SUMMARY
+A 2-3 sentence overview of the company's current financial health and key takeaways.
+
+## FINANCIAL HEALTH
+Analysis of revenue trends, profitability, and expense management.
+
+## JOB PERFORMANCE
+Analysis of job portfolio, billing status, and project execution.
+
+## CASH FLOW & RECEIVABLES/PAYABLES
+Analysis of AR aging, AP management, and cash position.
+
+## PROJECT MANAGER PERFORMANCE
+Comparison of PM performance and any concerns.
+
+## STRATEGIC RECOMMENDATIONS
+Top 3-5 actionable recommendations prioritized by impact.`;
+}
+
+function displayAiInsightsResults(response) {
+  if (!response) {
+    document.getElementById('aiInsightsExecSummary').innerHTML = '<p>No analysis available.</p>';
+    return;
+  }
+  
+  // Parse sections from the response
+  const sections = {
+    exec: '',
+    financial: '',
+    jobs: '',
+    cashflow: '',
+    pms: '',
+    recommendations: ''
+  };
+  
+  // Split response by section headers
+  const formatted = formatAiResponse(response);
+  
+  // Try to extract sections (simple approach - show full content in each if parsing fails)
+  const execMatch = response.match(/##\s*EXECUTIVE SUMMARY([\s\S]*?)(?=##|$)/i);
+  const finMatch = response.match(/##\s*FINANCIAL HEALTH([\s\S]*?)(?=##|$)/i);
+  const jobMatch = response.match(/##\s*JOB PERFORMANCE([\s\S]*?)(?=##|$)/i);
+  const cashMatch = response.match(/##\s*CASH FLOW([\s\S]*?)(?=##|$)/i);
+  const pmMatch = response.match(/##\s*PROJECT MANAGER([\s\S]*?)(?=##|$)/i);
+  const recMatch = response.match(/##\s*STRATEGIC RECOMMENDATIONS([\s\S]*?)(?=##|$)/i);
+  
+  document.getElementById('aiInsightsExecSummary').innerHTML = 
+    formatAiResponse(execMatch ? execMatch[1].trim() : 'See detailed analysis below.');
+  
+  document.getElementById('aiInsightsFinancial').innerHTML = 
+    formatAiResponse(finMatch ? finMatch[1].trim() : 'Financial analysis included in recommendations.');
+  
+  document.getElementById('aiInsightsJobs').innerHTML = 
+    formatAiResponse(jobMatch ? jobMatch[1].trim() : 'Job analysis included in recommendations.');
+  
+  document.getElementById('aiInsightsCashFlow').innerHTML = 
+    formatAiResponse(cashMatch ? cashMatch[1].trim() : 'Cash flow analysis included in recommendations.');
+  
+  document.getElementById('aiInsightsPMs').innerHTML = 
+    formatAiResponse(pmMatch ? pmMatch[1].trim() : 'PM analysis included in recommendations.');
+  
+  document.getElementById('aiInsightsRecommendations').innerHTML = 
+    formatAiResponse(recMatch ? recMatch[1].trim() : formatted);
+}
+
+// ========================================
 // OVER/(UNDER) BILLING MODULE
 // ========================================
 
@@ -19448,6 +19897,7 @@ const sectionToPermission = {
   'costCodes': 'cost_codes',
   'missingBudgets': 'missing_budgets',
   'pmReport': 'pm_report',
+  'aiInsights': 'ai_insights',
   'payments': 'payments',
   'cashReports': 'cash_balances',
   'admin': 'admin'
@@ -19457,7 +19907,7 @@ const sectionToPermission = {
 const sectionOrder = [
   'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
   'cashReports', 'accounts', 'apAging', 'arAging', 'payments',
-  'jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'pmReport', 'jobAnalytics'
+  'jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'pmReport', 'jobAnalytics', 'aiInsights'
 ];
 
 // Check permissions and show/hide nav items based on user role

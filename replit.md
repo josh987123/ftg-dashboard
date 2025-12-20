@@ -78,6 +78,15 @@ The Jobs section in the sidebar contains job-related tracking views:
   - Responsive design for mobile and desktop.
 - **Job Analytics**: Placeholder for future job analytics features.
 
+### AI Insights (Comprehensive Business Analysis)
+Standalone AI-powered analysis page that aggregates data from all sources and provides strategic business intelligence:
+- **Single Button Interface**: One "Run Full Analysis" button with progress indicator
+- **Data Aggregation**: Loads and aggregates data from financials_gl.json, financials_jobs.json, ar_invoices.json, and ap_invoices.json
+- **Pre-computed Metrics**: Revenue/expense trends, job portfolio stats, AR/AP aging, PM rankings, client summaries
+- **AI Prompt Construction**: Builds comprehensive prompt with all aggregated data (fits within token limits)
+- **Sectioned Results**: Executive Summary, Financial Health, Job Performance, Cash Flow & AR/AP, PM Performance, Strategic Recommendations
+- **Error Handling**: Graceful error display with retry option
+
 ### Responsive Design
 The application adopts a mobile-first approach with a responsive sidebar navigation, hamburger menu, and flexible layout using CSS flexbox.
 

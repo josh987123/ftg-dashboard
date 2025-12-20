@@ -289,6 +289,7 @@ def init_database():
             ('cost_codes', 'Cost Codes', 'View cost code analysis and breakdowns'),
             ('missing_budgets', 'Missing Budgets', 'View jobs with missing budget data'),
             ('pm_report', 'PM Report', 'View project manager performance reports'),
+            ('ai_insights', 'AI Insights', 'Run comprehensive AI business analysis'),
             ('payments', 'Payments', 'View AP invoices and payment status'),
             ('ap_aging', 'AP Aging', 'View accounts payable aging report'),
             ('ar_aging', 'AR Aging', 'View accounts receivable aging report'),

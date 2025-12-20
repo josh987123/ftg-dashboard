@@ -577,6 +577,12 @@
             </ul>
           </li>
           
+          <!-- AI Insights Section (standalone) -->
+          <li class="nav-item" data-section="aiInsights" id="aiInsightsNavItem">
+            <span class="nav-item-icon">🧠</span>
+            <span class="nav-item-label">AI Insights</span>
+          </li>
+          
           <!-- Admin Section (standalone) -->
           <li class="nav-item admin-nav-item hidden" data-section="admin" id="adminNavItem">
             <span class="nav-item-icon">⚙️</span>
@@ -3405,6 +3411,97 @@
           <div class="placeholder-icon">🚧</div>
           <h3>Under Construction</h3>
           <p>This feature is coming soon.</p>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           AI INSIGHTS - Comprehensive Business Analysis
+      ============================================================= -->
+      <section id="aiInsights" class="dashboard-section">
+        <h2>AI Insights</h2>
+        <div class="section-subtitle">Comprehensive Business Intelligence</div>
+        
+        <div class="ai-insights-container">
+          <!-- Hero Card with Run Button -->
+          <div class="ai-insights-hero">
+            <div class="ai-insights-hero-icon">🧠</div>
+            <h3>Full Business Analysis</h3>
+            <p>Analyze all financial data, jobs, accounts receivable, accounts payable, project managers, clients, and vendors to generate comprehensive insights and recommendations.</p>
+            <button type="button" id="aiInsightsRunBtn" class="ai-insights-run-btn">
+              <span class="btn-icon">✨</span>
+              <span class="btn-text">Run Full Analysis</span>
+            </button>
+            <div id="aiInsightsProgress" class="ai-insights-progress hidden">
+              <div class="progress-bar">
+                <div class="progress-fill" id="aiInsightsProgressFill"></div>
+              </div>
+              <div class="progress-text" id="aiInsightsProgressText">Aggregating data...</div>
+            </div>
+          </div>
+
+          <!-- Results Container -->
+          <div id="aiInsightsResults" class="ai-insights-results hidden">
+            <!-- Executive Summary -->
+            <div class="ai-insights-section">
+              <h4 class="ai-insights-section-title">
+                <span class="section-icon">📊</span>
+                Executive Summary
+              </h4>
+              <div id="aiInsightsExecSummary" class="ai-insights-content"></div>
+            </div>
+
+            <!-- Financial Health -->
+            <div class="ai-insights-section">
+              <h4 class="ai-insights-section-title">
+                <span class="section-icon">💰</span>
+                Financial Health
+              </h4>
+              <div id="aiInsightsFinancial" class="ai-insights-content"></div>
+            </div>
+
+            <!-- Job Performance -->
+            <div class="ai-insights-section">
+              <h4 class="ai-insights-section-title">
+                <span class="section-icon">📁</span>
+                Job Performance
+              </h4>
+              <div id="aiInsightsJobs" class="ai-insights-content"></div>
+            </div>
+
+            <!-- Cash Flow & AR/AP -->
+            <div class="ai-insights-section">
+              <h4 class="ai-insights-section-title">
+                <span class="section-icon">💵</span>
+                Cash Flow & Receivables/Payables
+              </h4>
+              <div id="aiInsightsCashFlow" class="ai-insights-content"></div>
+            </div>
+
+            <!-- Project Manager Analysis -->
+            <div class="ai-insights-section">
+              <h4 class="ai-insights-section-title">
+                <span class="section-icon">👤</span>
+                Project Manager Performance
+              </h4>
+              <div id="aiInsightsPMs" class="ai-insights-content"></div>
+            </div>
+
+            <!-- Strategic Recommendations -->
+            <div class="ai-insights-section">
+              <h4 class="ai-insights-section-title">
+                <span class="section-icon">🎯</span>
+                Strategic Recommendations
+              </h4>
+              <div id="aiInsightsRecommendations" class="ai-insights-content"></div>
+            </div>
+          </div>
+
+          <!-- Error State -->
+          <div id="aiInsightsError" class="ai-insights-error hidden">
+            <div class="error-icon">⚠️</div>
+            <div class="error-message" id="aiInsightsErrorMsg">An error occurred during analysis.</div>
+            <button type="button" id="aiInsightsRetryBtn" class="ai-insights-retry-btn">Try Again</button>
+          </div>
         </div>
       </section>
 
