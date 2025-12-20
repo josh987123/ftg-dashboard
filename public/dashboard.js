@@ -17362,7 +17362,8 @@ function renderPmrMarginChart() {
       },
       scales: {
         y: { 
-          beginAtZero: true, 
+          beginAtZero: true,
+          max: Math.ceil(Math.max(ranges.low, ranges.medium, ranges.high) * 1.2) || 1,
           ticks: { stepSize: 1, color: textColor },
           grid: { color: gridColor }
         },

@@ -15002,9 +15002,9 @@ body.dark-mode .pmr-subtotal-row td {
   
   .pmr-metric-tile {
     padding: 3px 4px;
-    min-width: calc(20% - 3px);
-    max-width: calc(20% - 3px);
-    flex: 0 0 calc(20% - 3px);
+    min-width: calc(25% - 3px);
+    max-width: calc(25% - 3px);
+    flex: 0 0 calc(25% - 3px);
     border-radius: 4px;
     box-sizing: border-box;
   }
@@ -15033,17 +15033,18 @@ body.dark-mode .pmr-subtotal-row td {
   .pmr-charts-row,
   .pmr-charts-row-2,
   .pmr-charts-row-3 {
-    grid-template-columns: 1fr 1fr;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 10px;
     margin-bottom: 12px;
   }
   
   .pmr-charts-row-3 {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
   
   .pmr-charts-row-3 .pmr-billing-chart {
-    grid-column: span 2;
+    grid-column: span 1;
   }
   
   .pmr-metric-trend {
