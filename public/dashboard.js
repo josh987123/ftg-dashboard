@@ -22614,6 +22614,15 @@ function updateApAgingChart(totals) {
   const maxValue = Math.max(...values);
   const yMax = maxValue > 0 ? maxValue * 1.15 : undefined; // 15% padding above max
   
+  // Aging bucket colors: green, yellow, orange, red, blue (retainage)
+  const agingColors = [
+    { start: '#22c55e', end: '#16a34a' },  // 0-30 days - green
+    { start: '#eab308', end: '#ca8a04' },  // 31-60 days - yellow
+    { start: '#f97316', end: '#ea580c' },  // 61-90 days - orange
+    { start: '#ef4444', end: '#dc2626' },  // 90+ days - red
+    { start: '#3b82f6', end: '#2563eb' }   // Retainage - blue
+  ];
+  
   const data = {
     labels: ['0-30 Days', '31-60 Days', '61-90 Days', '90+ Days', 'Retainage'],
     datasets: [{
@@ -22622,8 +22631,9 @@ function updateApAgingChart(totals) {
       backgroundColor: (context) => {
         const chart = context.chart;
         const { ctx: canvasCtx, chartArea } = chart;
-        if (!chartArea) return gradientColors.blue.start;
-        return createBarGradient(canvasCtx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
+        const colorSet = agingColors[context.dataIndex] || agingColors[0];
+        if (!chartArea) return colorSet.start;
+        return createBarGradient(canvasCtx, chartArea, colorSet.start, colorSet.end);
       },
       borderRadius: 4,
       barPercentage: 0.9,
@@ -22965,6 +22975,15 @@ function updateArAgingChart(totals) {
   const maxValue = Math.max(...values);
   const yMax = maxValue > 0 ? maxValue * 1.15 : undefined;
   
+  // Aging bucket colors: green, yellow, orange, red, blue (retainage)
+  const agingColors = [
+    { start: '#22c55e', end: '#16a34a' },  // 0-30 days - green
+    { start: '#eab308', end: '#ca8a04' },  // 31-60 days - yellow
+    { start: '#f97316', end: '#ea580c' },  // 61-90 days - orange
+    { start: '#ef4444', end: '#dc2626' },  // 90+ days - red
+    { start: '#3b82f6', end: '#2563eb' }   // Retainage - blue
+  ];
+  
   const data = {
     labels: ['0-30 Days', '31-60 Days', '61-90 Days', '90+ Days', 'Retainage'],
     datasets: [{
@@ -22973,8 +22992,9 @@ function updateArAgingChart(totals) {
       backgroundColor: (context) => {
         const chart = context.chart;
         const { ctx: canvasCtx, chartArea } = chart;
-        if (!chartArea) return gradientColors.blue.start;
-        return createBarGradient(canvasCtx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
+        const colorSet = agingColors[context.dataIndex] || agingColors[0];
+        if (!chartArea) return colorSet.start;
+        return createBarGradient(canvasCtx, chartArea, colorSet.start, colorSet.end);
       },
       borderRadius: 4,
       barPercentage: 0.9,
