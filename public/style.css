@@ -14900,6 +14900,17 @@ body.dark-mode .pmr-table-footer {
   color: #94a3b8;
 }
 
+[data-theme="dark"] .pmr-subtotal-row,
+body.dark-mode .pmr-subtotal-row {
+  background: #1e3a5f !important;
+}
+
+[data-theme="dark"] .pmr-subtotal-row td,
+body.dark-mode .pmr-subtotal-row td {
+  color: #f1f5f9 !important;
+  border-color: #3b82f6 !important;
+}
+
 /* Mobile Responsive - Compact Heights */
 @media (max-width: 768px) {
   .pmr-filter-bar {
