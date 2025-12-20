@@ -17387,7 +17387,7 @@ function renderPmrMarginChart() {
     pmrMarginChart = null;
   }
   
-  // Theme-adaptive colors
+  // Theme-adaptive colors - must use static values for Chart.js scales
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
   const textColor = isDark ? '#ffffff' : '#1f2937';
   const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
@@ -17412,10 +17412,7 @@ function renderPmrMarginChart() {
         datalabels: {
           anchor: 'end',
           align: 'end',
-          color: function() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
-            return isDark ? '#ffffff' : '#1f2937';
-          },
+          color: textColor,
           font: { weight: 'bold', size: window.innerWidth <= 768 ? 10 : 12 },
           formatter: (value) => value > 0 ? value : ''
         }
@@ -17424,22 +17421,11 @@ function renderPmrMarginChart() {
         y: { 
           beginAtZero: true,
           max: Math.ceil(Math.max(ranges.low, ranges.medium, ranges.high) * 1.2) || 1,
-          ticks: { 
-            stepSize: 1, 
-            color: function() {
-              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
-              return isDark ? '#ffffff' : '#1f2937';
-            }
-          },
+          ticks: { stepSize: 1, color: textColor },
           grid: { color: gridColor }
         },
         x: {
-          ticks: { 
-            color: function() {
-              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
-              return isDark ? '#ffffff' : '#1f2937';
-            }
-          },
+          ticks: { color: textColor },
           grid: { display: false }
         }
       }
@@ -17506,23 +17492,12 @@ function renderPmrBudgetActualChart() {
         legend: { 
           display: true,
           position: 'top',
-          labels: { 
-            boxWidth: 12, 
-            padding: 8, 
-            font: { size: 10 },
-            color: function() {
-              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
-              return isDark ? '#ffffff' : '#1f2937';
-            }
-          }
+          labels: { boxWidth: 12, padding: 8, font: { size: 10 }, color: textColor }
         },
         datalabels: {
           anchor: 'end',
           align: 'end',
-          color: function() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
-            return isDark ? '#ffffff' : '#1f2937';
-          },
+          color: textColor,
           font: { weight: 'bold', size: 9 },
           formatter: (value) => value > 0 ? formatCurrencyCompact(value) : ''
         }
@@ -17530,23 +17505,11 @@ function renderPmrBudgetActualChart() {
       scales: {
         y: { 
           beginAtZero: true, 
-          ticks: { 
-            callback: (v) => formatCurrencyShort(v),
-            color: function() {
-              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
-              return isDark ? '#ffffff' : '#1f2937';
-            },
-            font: { size: 10 }
-          },
+          ticks: { callback: (v) => formatCurrencyShort(v), color: textColor, font: { size: 10 } },
           grid: { color: gridColor }
         },
         x: {
-          ticks: { 
-            color: function() {
-              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
-              return isDark ? '#ffffff' : '#1f2937';
-            }
-          },
+          ticks: { color: textColor },
           grid: { display: false }
         }
       }
@@ -17640,22 +17603,11 @@ function renderPmrBillingChart() {
       scales: {
         y: {
           beginAtZero: true,
-          ticks: { 
-            callback: (v) => formatCurrencyShort(v),
-            color: function() {
-              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
-              return isDark ? '#ffffff' : '#1f2937';
-            }
-          },
+          ticks: { callback: (v) => formatCurrencyShort(v), color: textColor },
           grid: { color: gridColor }
         },
         x: {
-          ticks: { 
-            color: function() {
-              const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
-              return isDark ? '#ffffff' : '#1f2937';
-            }
-          },
+          ticks: { color: textColor },
           grid: { display: false }
         }
       }
