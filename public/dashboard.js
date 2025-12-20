@@ -16605,7 +16605,7 @@ let pmrData = {
   missingBudgets: [],
   clientSummary: []
 };
-let pmrSelectedPm = '';
+let pmrSelectedPm = '__ALL__'; // Default to All PMs
 let pmrSelectedStatus = 'A';
 let pmrArInvoices = [];
 
@@ -16677,9 +16677,12 @@ function populatePmSelectFromList(pmSelect, pms) {
     pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
   pmSelect.disabled = false;
   
-  // Restore previously selected PM if any
+  // Restore previously selected PM or default to All PMs
   if (pmrSelectedPm && (pmrSelectedPm === '__ALL__' || pms.includes(pmrSelectedPm))) {
     pmSelect.value = pmrSelectedPm;
+  } else {
+    pmrSelectedPm = '__ALL__';
+    pmSelect.value = '__ALL__';
   }
 }
 
@@ -16991,11 +16994,19 @@ function getGradientColor(value, lowThreshold, highThreshold, inverse = false) {
 
 function updatePmrMetrics() {
   const jobs = pmrData.jobs;
+  const isAllPmsView = pmrSelectedPm === '__ALL__';
   
   // Active Jobs KPI - always count only jobs with status 'A', regardless of filter
   const activeJobs = jobs.filter(j => j.job_status === 'A');
   const activeJobCount = activeJobs.length;
-  const totalJobs = jobs.length;
+  
+  // For individual PM view, denominator shows total active jobs across ALL PMs
+  // For All PMs view, denominator shows total jobs in current view
+  let totalActiveJobsAllPMs = activeJobCount;
+  if (!isAllPmsView && jobActualsData && jobActualsData.length > 0) {
+    totalActiveJobsAllPMs = jobActualsData.filter(j => j.job_status === 'A').length;
+  }
+  const totalJobs = isAllPmsView ? jobs.length : totalActiveJobsAllPMs;
   
   const totalContract = jobs.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
   const totalActualCost = jobs.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
@@ -17017,14 +17028,14 @@ function updatePmrMetrics() {
     ? jobsWithProgress.reduce((sum, j) => sum + (j.percent_complete || 0), 0) / jobsWithProgress.length 
     : 0;
   
-  // Calculate AR exposure from ALL invoices for this PM (not just active jobs)
-  const pmJobNos = new Set(jobs.map(j => String(j.job_no)));
+  // Calculate AR exposure from ALL invoices for this PM using calculated_amount_due (matches AR Aging report)
   const isAllPms = pmrSelectedPm === '__ALL__';
   let arTotal = 0, arOver60 = 0;
   pmrArInvoices.forEach(inv => {
     if (!isAllPms && inv.project_manager_name !== pmrSelectedPm) return;
-    if (!pmJobNos.has(String(inv.job_no))) return;
-    const amtDue = parseFloat(inv.amount_due) || 0;
+    // Use calculated_amount_due (same as AR Aging report) - skip if <= 0
+    const amtDue = parseFloat(inv.calculated_amount_due) || 0;
+    if (amtDue <= 0) return;
     arTotal += amtDue;
     const days = parseInt(inv.days_outstanding) || 0;
     if (days > 60) arOver60 += amtDue;
