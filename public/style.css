@@ -14550,6 +14550,16 @@ body.dark-mode .ar-aging-table th:hover {
   padding: 16px;
   text-align: center;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  min-height: 200px;
+  max-height: 280px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pmr-chart-container canvas {
+  max-height: 180px !important;
+  height: 180px !important;
+  flex-shrink: 0;
 }
 
 .pmr-chart-title {
@@ -14585,6 +14595,13 @@ body.dark-mode .ar-aging-table th:hover {
 @media (max-width: 900px) {
   .pmr-charts-row {
     grid-template-columns: 1fr;
+  }
+  .pmr-chart-container {
+    max-height: 260px;
+  }
+  .pmr-chart-container canvas {
+    max-height: 160px !important;
+    height: 160px !important;
   }
   .pmr-metrics-row {
     grid-template-columns: repeat(2, 1fr);
