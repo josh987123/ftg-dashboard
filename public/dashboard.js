@@ -7746,7 +7746,22 @@ function setupAccountUI(data) {
     acctSelect.value = accounts[0].num;
   }
   
-  const years = Object.keys(data.revenue).map(Number).sort((a, b) => a - b);
+  // Extract years from gl_history_all column names (format: YYYY-MM)
+  const yearSet = new Set();
+  if (data.gl_history_all && data.gl_history_all.length > 0) {
+    const firstRecord = data.gl_history_all[0];
+    Object.keys(firstRecord).forEach(key => {
+      const match = key.match(/^(\d{4})-\d{2}$/);
+      if (match) yearSet.add(parseInt(match[1]));
+    });
+  }
+  const years = Array.from(yearSet).sort((a, b) => a - b);
+  
+  if (years.length === 0) {
+    console.error("No years found in data");
+    return;
+  }
+  
   yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
   yearSelect.value = Math.max(...years);
   
