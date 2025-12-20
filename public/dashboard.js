@@ -12537,10 +12537,13 @@ function renderCashChart() {
     return {
       label: cfg.label,
       data: data,
-      backgroundColor: colors[idx % colors.length],
+      backgroundColor: colors[idx % colors.length] + '80',
       borderColor: colors[idx % colors.length],
-      borderWidth: 1,
-      stack: stackBars ? 'stack1' : undefined,
+      borderWidth: 2,
+      fill: stackBars ? 'stack' : false,
+      tension: 0.3,
+      pointRadius: 0,
+      pointHoverRadius: 4,
       datalabels: (showDataLabels && stackBars && isTopDataset) ? {
         display: true,
         align: 'end',
@@ -12616,7 +12619,7 @@ function renderCashChart() {
   const themeColors = getChartThemeColors();
   
   cashChartInstance = new Chart(canvas, {
-    type: 'bar',
+    type: 'line',
     data: { labels, datasets },
     plugins: showDataLabels ? [ChartDataLabels] : [],
     options: {
