@@ -16609,10 +16609,151 @@ let pmrSelectedPm = '';
 let pmrSelectedStatus = 'A';
 let pmrArInvoices = [];
 
-async function initPmReport() {
-  const pmSelect = document.getElementById('pmrPmSelect');
+// Cache key for PM list
+const PMR_CACHE_KEY = 'ftg_pm_list_cache';
+let pmrDataLoaded = false;
+
+// Fast PM list loader with caching
+async function loadPmListFast(pmSelect) {
+  try {
+    // Try cache first for instant load
+    const cached = localStorage.getItem(PMR_CACHE_KEY);
+    if (cached) {
+      try {
+        const cacheData = JSON.parse(cached);
+        // Use cache if less than 1 hour old
+        if (cacheData.timestamp && Date.now() - cacheData.timestamp < 3600000) {
+          populatePmSelectFromList(pmSelect, cacheData.pms);
+          if (cacheData.generated_at) {
+            jobsDataAsOf = cacheData.generated_at;
+            const dataAsOf = document.getElementById('pmrDataAsOf');
+            if (dataAsOf) dataAsOf.textContent = jobsDataAsOf;
+          }
+          // Refresh in background
+          refreshPmListInBackground();
+          return;
+        }
+      } catch (e) {
+        console.warn('PM cache parse error:', e);
+      }
+    }
+    
+    // Fetch from lightweight API
+    const resp = await fetch('/api/pm-list');
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.success && data.pms) {
+        populatePmSelectFromList(pmSelect, data.pms);
+        // Cache the result
+        localStorage.setItem(PMR_CACHE_KEY, JSON.stringify({
+          pms: data.pms,
+          generated_at: data.generated_at,
+          timestamp: Date.now()
+        }));
+        if (data.generated_at) {
+          jobsDataAsOf = data.generated_at;
+          const dataAsOf = document.getElementById('pmrDataAsOf');
+          if (dataAsOf) dataAsOf.textContent = jobsDataAsOf;
+        }
+        return;
+      }
+    }
+    
+    // Fallback to loading from full data
+    await loadPmListFromFullData(pmSelect);
+    
+  } catch (e) {
+    console.error('Failed to load PM list:', e);
+    // Fallback to full data load
+    await loadPmListFromFullData(pmSelect);
+  }
+}
+
+function populatePmSelectFromList(pmSelect, pms) {
+  if (!pmSelect) return;
   
-  // Load data if not already loaded
+  pmSelect.innerHTML = '<option value="">-- Select PM --</option>' + 
+    pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+  pmSelect.disabled = false;
+  
+  // Restore previously selected PM if any
+  if (pmrSelectedPm && pms.includes(pmrSelectedPm)) {
+    pmSelect.value = pmrSelectedPm;
+  }
+}
+
+async function refreshPmListInBackground() {
+  try {
+    const resp = await fetch('/api/pm-list');
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.success && data.pms) {
+        localStorage.setItem(PMR_CACHE_KEY, JSON.stringify({
+          pms: data.pms,
+          generated_at: data.generated_at,
+          timestamp: Date.now()
+        }));
+      }
+    }
+  } catch (e) {
+    // Silent background refresh failure
+  }
+}
+
+async function loadPmListFromFullData(pmSelect) {
+  // Fallback: load from full jobs data
+  if (!jobBudgetsData || jobBudgetsData.length === 0) {
+    try {
+      const resp = await fetch('data/financials_jobs.json');
+      const text = await resp.text();
+      const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+      jobBudgetsData = (data.job_budgets || []).map(job => ({
+        ...job,
+        original_contract: parseFloat(job.original_contract) || 0,
+        tot_income_adj: parseFloat(job.tot_income_adj) || 0,
+        revised_contract: parseFloat(job.revised_contract) || 0,
+        original_cost: parseFloat(job.original_cost) || 0,
+        tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
+        revised_cost: parseFloat(job.revised_cost) || 0
+      }));
+      if (data.generated_at) jobsDataAsOf = data.generated_at;
+    } catch (e) {
+      console.error('Failed to load job budgets:', e);
+    }
+  }
+  
+  // Extract PMs from data
+  const pms = [...new Set(jobBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+  populatePmSelectFromList(pmSelect, pms);
+}
+
+// Show loading state in the PM Report
+function showPmrLoadingState() {
+  const metricsRow1 = document.querySelector('.pmr-metrics-row');
+  const metricsRow2 = document.querySelector('.pmr-metrics-row-2');
+  
+  // Add pulse animation to metric values
+  document.querySelectorAll('.pmr-metric-value').forEach(el => {
+    el.textContent = '...';
+    el.classList.add('loading-pulse');
+  });
+  
+  // Show loading in tables
+  const loadingRow = '<tr><td colspan="9" class="pmr-empty-state"><div class="pmr-empty-state-text">Loading data...</div></td></tr>';
+  const overUnderBody = document.getElementById('pmrOverUnderTableBody');
+  const clientBody = document.getElementById('pmrClientSummaryTableBody');
+  const missingBody = document.getElementById('pmrMissingBudgetsTableBody');
+  
+  if (overUnderBody) overUnderBody.innerHTML = loadingRow;
+  if (clientBody) clientBody.innerHTML = '<tr><td colspan="7" class="pmr-empty-state"><div class="pmr-empty-state-text">Loading data...</div></td></tr>';
+  if (missingBody) missingBody.innerHTML = '<tr><td colspan="8" class="pmr-empty-state"><div class="pmr-empty-state-text">Loading data...</div></td></tr>';
+}
+
+// Load full data only when a PM is selected (lazy loading)
+async function ensurePmrDataLoaded() {
+  if (pmrDataLoaded) return;
+  
+  // Load job actuals
   if (!jobActualsData || jobActualsData.length === 0) {
     try {
       await loadJobActualsData();
@@ -16621,6 +16762,7 @@ async function initPmReport() {
     }
   }
   
+  // Load job budgets if not already loaded
   if (!jobBudgetsData || jobBudgetsData.length === 0) {
     try {
       const resp = await fetch('data/financials_jobs.json');
@@ -16640,7 +16782,7 @@ async function initPmReport() {
     }
   }
   
-  // Load AR invoices for last month billing calculation
+  // Load AR invoices
   if (pmrArInvoices.length === 0) {
     try {
       const resp = await fetch('data/ar_invoices.json');
@@ -16652,10 +16794,22 @@ async function initPmReport() {
     }
   }
   
-  // Populate PM dropdown
-  populatePmrPmSelect();
+  pmrDataLoaded = true;
+}
+
+async function initPmReport() {
+  const pmSelect = document.getElementById('pmrPmSelect');
   
-  // Set up event listeners
+  // Show loading state immediately
+  if (pmSelect) {
+    pmSelect.innerHTML = '<option value="">Loading PMs...</option>';
+    pmSelect.disabled = true;
+  }
+  
+  // FAST PATH: Try to load PM list from cache or lightweight API first
+  await loadPmListFast(pmSelect);
+  
+  // Set up event listeners (only once)
   if (!pmrInitialized) {
     setupPmrEventListeners();
     pmrInitialized = true;
@@ -16706,8 +16860,14 @@ function populatePmrPmSelect() {
 
 function setupPmrEventListeners() {
   const pmSelect = document.getElementById('pmrPmSelect');
-  pmSelect?.addEventListener('change', (e) => {
+  pmSelect?.addEventListener('change', async (e) => {
     pmrSelectedPm = e.target.value;
+    if (pmrSelectedPm) {
+      // Show loading indicator
+      showPmrLoadingState();
+      // Lazy load full data when PM is selected
+      await ensurePmrDataLoaded();
+    }
     updatePmReport();
   });
   
@@ -16733,6 +16893,11 @@ function setupPmrEventListeners() {
 }
 
 function updatePmReport() {
+  // Remove loading state
+  document.querySelectorAll('.pmr-metric-value').forEach(el => {
+    el.classList.remove('loading-pulse');
+  });
+  
   if (!pmrSelectedPm) {
     clearPmrTables();
     return;

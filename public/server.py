@@ -804,6 +804,47 @@ Period: {period_info}
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/pm-list', methods=['GET', 'OPTIONS'])
+def api_pm_list():
+    """Lightweight endpoint to get PM names quickly for the PM Report dropdown"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        import os
+        import json
+        
+        jobs_path = os.path.join(os.path.dirname(__file__), 'data', 'financials_jobs.json')
+        
+        if not os.path.exists(jobs_path):
+            return jsonify({'success': False, 'pms': [], 'error': 'Jobs data not found'}), 404
+        
+        with open(jobs_path, 'r', encoding='utf-8-sig') as f:
+            data = json.load(f)
+        
+        jobs = data.get('job_budgets', [])
+        generated_at = data.get('generated_at', '')
+        
+        # Extract unique PM names from active jobs only for faster filtering
+        pms = set()
+        for job in jobs:
+            pm = job.get('project_manager_name', '')
+            if pm and pm.strip():
+                pms.add(pm.strip())
+        
+        sorted_pms = sorted(list(pms))
+        
+        return jsonify({
+            'success': True,
+            'pms': sorted_pms,
+            'count': len(sorted_pms),
+            'generated_at': generated_at
+        })
+        
+    except Exception as e:
+        print(f"[PM-LIST] Error: {e}")
+        return jsonify({'success': False, 'pms': [], 'error': str(e)}), 500
+
 @app.route('/api/ai-analysis', methods=['POST', 'OPTIONS'])
 def api_ai_analysis():
     """Generic AI analysis endpoint for comprehensive insights"""
