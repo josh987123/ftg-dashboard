@@ -62,7 +62,6 @@ The Jobs section in the sidebar contains job-related tracking views:
   - **Actual Profit**: `Earned Revenue - Actual Cost`
   - **Actual Margin**: `(Actual Profit / Earned Revenue) × 100`
   Features donut charts by PM and Customer, breakdown tables, same filtering options as Job Budgets, search, sort, and pagination.
-- **Missing Budgets**: Shows jobs with incomplete budget data. Has two tabs: "No Contract Value" (jobs with zero revised contract) and "No Estimated Cost" (jobs with zero revised cost). Features same configuration options as Job Budgets (status filters with Active checked by default, PM filter, Customer filter), search, and pagination. Simplified table with columns: Job #, Description, Customer, Status, Project Manager, Revised Contract, Revised Cost (no profit/margin columns).
 - **Cost Codes**: Analyzes job costs by cost code category. Features:
   - **Cost as % of Earned Revenue Chart**: Horizontal bar chart showing top 10 cost codes as a percentage of total earned revenue. Earned revenue calculated as `(Actual Cost / Revised Cost) × Revised Contract` per job.
   - **Job + Cost Code Table**: Flat table showing each job and cost code combination with columns: Job #, Job Description, Cost Code, Description, Total Cost, % of Revenue.
@@ -74,9 +73,8 @@ The Jobs section in the sidebar contains job-related tracking views:
   - **Key Metrics Row**: 5 tiles showing Total Jobs, Total Contract Value, Total Actual Cost, Total Earned Revenue, and Net Over/(Under) with conditional coloring.
   - **Over/Under Billing Table**: Jobs with billing variance for the selected PM, sorted by under-billed first. Shows Job #, Description, Client, Contract, Actual Cost, % Complete, Earned Rev, Billed Rev, Over/(Under).
   - **Missing Budgets Table**: Jobs with >$2,500 actual cost but missing budgeted revenue or cost. Shows Job #, Description, Client, Status, Actual Cost, Budgeted Revenue, Budgeted Cost, and Issue badge (No Budget/No Revenue/No Cost).
-  - **Client Summary Table**: Top 5 clients by contract value. Shows Client, Est. Contract, Est. Cost, Est. Profit, Billed (Last Mo.), Billed to Date, Cost to Date.
+  - **Client Summary Table**: All clients with active jobs (includes subtotal row). Shows Client, Est. Contract, Est. Cost, Est. Profit, Billed (Last Mo.), Billed to Date, Cost to Date.
   - Responsive design for mobile and desktop.
-- **Job Analytics**: Placeholder for future job analytics features.
 
 ### AI Insights (Comprehensive Business Analysis)
 Standalone AI-powered analysis page that aggregates data from all sources and provides strategic business intelligence:

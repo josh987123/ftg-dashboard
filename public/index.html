@@ -571,9 +571,7 @@
               <li class="nav-item nav-child" data-section="jobActuals">Actuals</li>
               <li class="nav-item nav-child" data-section="overUnderBilling">Over/(Under) Billing</li>
               <li class="nav-item nav-child" data-section="costCodes">Cost Codes</li>
-              <li class="nav-item nav-child" data-section="missingBudgets">Missing Budgets</li>
               <li class="nav-item nav-child" data-section="pmReport">PM Report</li>
-              <li class="nav-item nav-child placeholder" data-section="jobAnalytics">Job Analytics</li>
             </ul>
           </li>
           
@@ -2799,111 +2797,6 @@
       </section>
 
       <!-- ============================================================
-           MISSING BUDGETS
-      ============================================================= -->
-      <section id="missingBudgets" class="dashboard-section">
-        <h2>Missing Budgets</h2>
-        <div class="section-subtitle">Foundation</div>
-        <div class="data-as-of">Data as of: <span id="missingBudgetsDataAsOf">-</span></div>
-
-        <!-- Configuration Panel -->
-        <div class="config-panel">
-          <div class="config-header" data-target="missingBudgetsConfigBody">
-            <span class="config-toggle">▼</span>
-            <span class="config-title">Configuration Options</span>
-            <button class="config-expand-btn">Expand ▼</button>
-          </div>
-          <div class="config-body" id="missingBudgetsConfigBody">
-            <div class="job-budgets-controls">
-              <div class="overview-config-box">
-                <div class="config-label">Job Status:</div>
-                <div class="checkbox-stack">
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="mbStatusActive" checked>
-                    Active
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="mbStatusInactive">
-                    Inactive
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="mbStatusClosed">
-                    Closed
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="mbStatusOverhead">
-                    Overhead
-                  </label>
-                </div>
-              </div>
-
-              <div class="overview-config-box job-filter-stack">
-                <select id="mbPmFilter" class="filter-select">
-                  <option value="">All Project Managers</option>
-                </select>
-                <select id="mbCustomerFilter" class="filter-select">
-                  <option value="">All Clients</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tabs for Missing Contract vs Missing Cost -->
-        <div class="missing-budgets-tabs">
-          <button class="mb-tab active" data-tab="noContract">No Contract Value</button>
-          <button class="mb-tab" data-tab="noCost">No Estimated Cost</button>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="job-search-bar">
-          <input type="text" id="mbSearchInput" placeholder="Search by job number, description, or client..." class="job-search-input">
-          <span class="job-search-icon">🔍</span>
-        </div>
-
-        <!-- Jobs Table -->
-        <div class="job-table-container">
-          <div class="loading-overlay hidden" id="missingBudgetsLoadingOverlay">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Loading...</div>
-          </div>
-          <table class="job-budgets-table" id="missingBudgetsTable">
-            <thead>
-              <tr>
-                <th class="sortable" data-sort="job_no">Job #</th>
-                <th class="sortable" data-sort="job_description">Description</th>
-                <th class="sortable" data-sort="customer_name">Client</th>
-                <th class="sortable" data-sort="job_status">Status</th>
-                <th class="sortable" data-sort="project_manager_name">Project Manager</th>
-                <th class="sortable number-col contract-detail-col hidden" data-sort="original_contract">Original Contract</th>
-                <th class="sortable number-col contract-detail-col hidden" data-sort="tot_income_adj">Change Orders</th>
-                <th class="sortable number-col revised-contract-col expandable-col" data-sort="revised_contract"><span class="expand-icon" data-expand="mb-contract">▶</span> Contract Value</th>
-                <th class="sortable number-col cost-detail-col hidden" data-sort="original_cost">Original Cost</th>
-                <th class="sortable number-col cost-detail-col hidden" data-sort="tot_cost_adj">Cost Adjustments</th>
-                <th class="sortable number-col revised-cost-col expandable-col" data-sort="revised_cost"><span class="expand-icon" data-expand="mb-cost">▶</span> Projected Cost</th>
-              </tr>
-            </thead>
-            <tbody id="missingBudgetsTableBody">
-              <tr><td colspan="11" class="loading-cell">Loading job data...</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="job-pagination" id="mbPagination">
-          <button id="mbPrevPage" class="pagination-btn" disabled>← Previous</button>
-          <span id="mbPageInfo" class="page-info">Page 1 of 1</span>
-          <button id="mbNextPage" class="pagination-btn" disabled>Next →</button>
-          <select id="mbPageSize" class="page-size-select">
-            <option value="25" selected>25 per page</option>
-            <option value="50">50 per page</option>
-            <option value="100">100 per page</option>
-            <option value="250">250 per page</option>
-          </select>
-        </div>
-      </section>
-
-      <!-- ============================================================
            PAYMENTS
       ============================================================= -->
       <section id="payments" class="dashboard-section">
@@ -3398,19 +3291,6 @@
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- ============================================================
-           JOB ANALYTICS (Under Construction)
-      ============================================================= -->
-      <section id="jobAnalytics" class="dashboard-section">
-        <h2>Job Analytics</h2>
-        <div class="section-subtitle">Foundation</div>
-        <div class="placeholder-content">
-          <div class="placeholder-icon">🚧</div>
-          <h3>Under Construction</h3>
-          <p>This feature is coming soon.</p>
         </div>
       </section>
 
