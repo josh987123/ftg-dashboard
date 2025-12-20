@@ -16673,11 +16673,12 @@ function populatePmSelectFromList(pmSelect, pms) {
   if (!pmSelect) return;
   
   pmSelect.innerHTML = '<option value="">-- Select PM --</option>' + 
+    '<option value="__ALL__">All PMs</option>' +
     pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
   pmSelect.disabled = false;
   
   // Restore previously selected PM if any
-  if (pmrSelectedPm && pms.includes(pmrSelectedPm)) {
+  if (pmrSelectedPm && (pmrSelectedPm === '__ALL__' || pms.includes(pmrSelectedPm))) {
     pmSelect.value = pmrSelectedPm;
   }
 }
@@ -16903,9 +16904,10 @@ function updatePmReport() {
     return;
   }
   
-  // Filter jobs for this PM
-  let pmJobs = jobActualsData.filter(job => job.project_manager_name === pmrSelectedPm);
-  let pmBudgets = jobBudgetsData.filter(job => job.project_manager_name === pmrSelectedPm);
+  // Filter jobs for this PM (or all PMs if "__ALL__" selected)
+  const isAllPms = pmrSelectedPm === '__ALL__';
+  let pmJobs = isAllPms ? jobActualsData : jobActualsData.filter(job => job.project_manager_name === pmrSelectedPm);
+  let pmBudgets = isAllPms ? jobBudgetsData : jobBudgetsData.filter(job => job.project_manager_name === pmrSelectedPm);
   
   // Create a map of budget data by job number for quick lookup
   const budgetMap = new Map();
@@ -16984,9 +16986,10 @@ function updatePmrMetrics() {
   
   // Calculate AR exposure from ALL invoices for this PM (not just active jobs)
   const pmJobNos = new Set(jobs.map(j => String(j.job_no)));
+  const isAllPms = pmrSelectedPm === '__ALL__';
   let arTotal = 0, arOver60 = 0;
   pmrArInvoices.forEach(inv => {
-    if (inv.project_manager_name !== pmrSelectedPm) return;
+    if (!isAllPms && inv.project_manager_name !== pmrSelectedPm) return;
     if (!pmJobNos.has(String(inv.job_no))) return;
     const amtDue = parseFloat(inv.amount_due) || 0;
     arTotal += amtDue;
@@ -17002,7 +17005,7 @@ function updatePmrMetrics() {
   let billedLastMonth = 0;
   
   pmrArInvoices.forEach(inv => {
-    if (inv.project_manager_name !== pmrSelectedPm) return;
+    if (!isAllPms && inv.project_manager_name !== pmrSelectedPm) return;
     if (!pmJobNos.has(String(inv.job_no))) return;
     const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
     const invoiceDate = new Date(excelEpoch.getTime() + invoiceDateSerial * 24 * 60 * 60 * 1000);
@@ -17205,8 +17208,9 @@ function renderPmrBillingChart() {
     billingByMonth[key] = 0;
   }
   
+  const isAllPms = pmrSelectedPm === '__ALL__';
   pmrArInvoices.forEach(inv => {
-    if (inv.project_manager_name !== pmrSelectedPm) return;
+    if (!isAllPms && inv.project_manager_name !== pmrSelectedPm) return;
     if (!pmJobNos.has(String(inv.job_no))) return;
     
     const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
@@ -17388,9 +17392,10 @@ function renderPmrMissingBudgetsTable() {
   const threshold = 2500;
   
   // Build map of actuals by job
+  const isAllPms = pmrSelectedPm === '__ALL__';
   const actualsMap = new Map();
   jobActualsData.forEach(j => {
-    if (j.project_manager_name === pmrSelectedPm) {
+    if (isAllPms || j.project_manager_name === pmrSelectedPm) {
       actualsMap.set(String(j.job_no), j);
     }
   });
@@ -17490,9 +17495,10 @@ function renderPmrClientSummaryTable() {
   // Calculate last month billing from AR invoices for this PM's active jobs
   const lastMonthBillingByClient = new Map();
   
+  const isAllPms = pmrSelectedPm === '__ALL__';
   pmrArInvoices.forEach(inv => {
     // Check if invoice is for this PM and an active job
-    if (inv.project_manager_name !== pmrSelectedPm) return;
+    if (!isAllPms && inv.project_manager_name !== pmrSelectedPm) return;
     if (!activeJobNos.has(String(inv.job_no))) return;
     
     // Convert Excel serial date to JS Date
