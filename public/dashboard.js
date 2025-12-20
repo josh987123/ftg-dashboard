@@ -17764,18 +17764,28 @@ async function runPmrAiAnalysis() {
   content.innerHTML = '<div class="ai-loading"><div class="ai-loading-spinner"></div>Analyzing PM performance...</div>';
   
   try {
-    // Build analysis context
-    const jobs = pmrData.jobs;
-    const overUnder = pmrData.overUnder;
-    const missingBudgets = pmrData.missingBudgets;
-    const clients = pmrData.clientSummary;
+    // Build analysis context - ensure arrays are defined
+    const jobs = pmrData.jobs || [];
+    const overUnder = pmrData.overUnder || [];
+    const missingBudgets = pmrData.missingBudgets || [];
+    const clients = pmrData.clientSummary || [];
+    
+    if (jobs.length === 0) {
+      content.innerHTML = '<div class="ai-error">No job data available for analysis. Please ensure data is loaded.</div>';
+      btn.disabled = false;
+      btn.textContent = 'Run Analysis';
+      return;
+    }
     
     const totalContract = jobs.reduce((s, j) => s + (j.revised_contract || 0), 0);
     const totalActualCost = jobs.reduce((s, j) => s + (j.actual_cost || 0), 0);
     const totalEarned = jobs.reduce((s, j) => s + (j.earned_revenue || 0), 0);
     const netOverUnder = jobs.reduce((s, j) => s + (j.over_under || 0), 0);
     
-    const prompt = `Analyze the project manager performance data for ${pmrSelectedPm}:
+    // Handle "All PMs" selection
+    const pmLabel = pmrSelectedPm === '__ALL__' ? 'All Project Managers (Company-Wide)' : pmrSelectedPm;
+    
+    const prompt = `Analyze the project manager performance data for ${pmLabel}:
 
 Summary Metrics:
 - Total Jobs: ${jobs.length}
