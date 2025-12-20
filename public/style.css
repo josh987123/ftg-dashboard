@@ -4853,6 +4853,11 @@ body.dark-mode .nav-item.nav-parent.expanded {
     width: 36px;
     height: 36px;
     min-width: 36px;
+    min-height: 36px;
+    max-width: 36px;
+    max-height: 36px;
+    flex-shrink: 0;
+    aspect-ratio: 1 / 1;
   }
   
   .user-dropdown-btn {
