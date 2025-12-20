@@ -14538,11 +14538,11 @@ body.dark-mode .ar-aging-table th:hover {
   .pmr-over-under-table th,
   .pmr-client-summary-table th,
   .pmr-missing-budgets-table th,
-  .payments-table th,
+  #paymentsTable th,
   #costCodesTable th {
-    padding: 4px 6px;
+    padding: 3px 4px !important;
     font-size: 9px;
-    line-height: 1.2;
+    line-height: 1.1 !important;
   }
   
   .ap-aging-table th .sort-btn,
@@ -14552,21 +14552,26 @@ body.dark-mode .ar-aging-table th:hover {
   .pmr-over-under-table th .sort-btn,
   .pmr-client-summary-table th .sort-btn,
   .pmr-missing-budgets-table th .sort-btn,
-  .payments-table th .sort-btn,
+  #paymentsTable th .sort-btn,
   #costCodesTable th .sort-btn {
-    font-size: 6px;
-    line-height: 1;
+    font-size: 5px !important;
+    line-height: 0.8 !important;
   }
   
-  .inline-sort {
-    gap: 0 !important;
+  .inline-sort,
+  .sort-controls.inline-sort {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    gap: 1px !important;
     margin-left: 2px !important;
+    vertical-align: middle !important;
   }
   
-  .inline-sort .sort-btn {
-    font-size: 6px !important;
+  .inline-sort .sort-btn,
+  .sort-controls.inline-sort .sort-btn {
+    font-size: 5px !important;
     padding: 0 !important;
-    line-height: 0.9 !important;
+    line-height: 1 !important;
   }
 }
 
