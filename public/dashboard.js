@@ -1165,48 +1165,60 @@ const ChartThemeManager = {
 
 /* ------------------------------------------------------------
    CHART THEME PLUGIN - Auto-applies theme colors on every chart update
-   This eliminates the need for manual re-render calls
+   Uses afterInit to apply theme colors once without causing loops
 ------------------------------------------------------------ */
 const ChartThemePlugin = {
   id: 'chartThemePlugin',
   
-  beforeUpdate(chart) {
-    const p = ChartThemeManager.getPalette();
-    if (!p || !chart.options) return;
-    
-    // Update all scales (x, y, r, etc.)
-    if (chart.options.scales) {
-      Object.keys(chart.options.scales).forEach(scaleKey => {
-        const scale = chart.options.scales[scaleKey];
-        if (scale) {
-          scale.ticks = scale.ticks || {};
-          scale.ticks.color = p.text;
-          scale.grid = scale.grid || {};
-          scale.grid.color = p.grid;
-        }
-      });
-    }
-    
-    // Update legend labels
-    if (chart.options.plugins?.legend?.labels) {
-      chart.options.plugins.legend.labels.color = p.legend;
-    }
-    
-    // Update datalabels
-    if (chart.options.plugins?.datalabels) {
-      chart.options.plugins.datalabels.color = p.datalabel;
-    }
-    
-    // Regenerate gradients for datasets flagged with useThemeGradient
-    if (chart.data?.datasets && chart.ctx) {
-      chart.data.datasets.forEach(dataset => {
-        if (dataset._useThemeGradient) {
-          dataset.backgroundColor = ChartThemeManager.createGradient(chart.ctx, dataset._gradientVertical !== false);
-        }
-      });
-    }
+  afterInit(chart) {
+    applyThemeToChart(chart);
   }
 };
+
+function applyThemeToChart(chart) {
+  const p = ChartThemeManager.getPalette();
+  if (!p || !chart || !chart.options) return;
+  
+  // Update scales only for cartesian charts (bar, line, etc.)
+  // Skip for pie, doughnut, polarArea, radar which don't have x/y scales
+  if (chart.options.scales && typeof chart.options.scales === 'object') {
+    Object.keys(chart.options.scales).forEach(scaleKey => {
+      const scale = chart.options.scales[scaleKey];
+      if (scale && typeof scale === 'object') {
+        if (!scale.ticks) scale.ticks = {};
+        scale.ticks.color = p.text;
+        if (!scale.grid) scale.grid = {};
+        scale.grid.color = p.grid;
+      }
+    });
+  }
+  
+  // Update legend labels (works for all chart types)
+  if (chart.options.plugins) {
+    if (chart.options.plugins.legend?.labels) {
+      chart.options.plugins.legend.labels.color = p.legend;
+    }
+    // Update datalabels
+    if (chart.options.plugins.datalabels) {
+      chart.options.plugins.datalabels.color = p.datalabel;
+    }
+  }
+  
+  // Regenerate gradients for datasets flagged with _useThemeGradient
+  // Respects per-dataset type override for mixed charts
+  if (chart.data?.datasets && chart.ctx) {
+    chart.data.datasets.forEach(dataset => {
+      if (dataset._useThemeGradient) {
+        // Determine effective type: dataset-level type overrides chart-level type
+        const effectiveType = dataset.type || chart.config?.type;
+        // Apply gradient only to bar/area fill datasets, not line strokes
+        if (effectiveType === 'bar' || (effectiveType === 'line' && dataset.fill)) {
+          dataset.backgroundColor = ChartThemeManager.createGradient(chart.ctx, dataset._gradientVertical !== false);
+        }
+      }
+    });
+  }
+}
 
 // Register the plugin globally when Chart.js is available
 if (typeof Chart !== 'undefined') {
@@ -1256,11 +1268,11 @@ function updateChartColorsForTheme(theme) {
   // Refresh the palette from CSS variables (CSS vars change when data-theme changes)
   initChartJsThemeDefaults(theme);
   
-  // The ChartThemePlugin will automatically apply colors during chart.update()
-  // Just trigger an update on all existing charts
+  // Apply theme colors to all existing charts and trigger update
   if (typeof Chart !== "undefined" && Chart.instances) {
     Object.values(Chart.instances).forEach(chart => {
       if (chart) {
+        applyThemeToChart(chart);
         chart.update('none');
       }
     });
