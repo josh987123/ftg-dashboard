@@ -17082,7 +17082,7 @@ body.dark-mode .dashboard-section > h2 {
   display: table;
   border-collapse: collapse;
   width: 100%;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .heatmap-row {
@@ -17106,10 +17106,10 @@ body.dark-mode .dashboard-section > h2 {
 .heatmap-cell.pm-label {
   text-align: left;
   font-weight: 500;
-  width: auto;
   white-space: nowrap;
   background: var(--bg-tertiary);
   color: var(--text-primary);
+  padding-right: 12px;
 }
 
 .heatmap-cell.header {
@@ -17182,7 +17182,7 @@ body.dark-mode .dashboard-section > h2 {
   
   .heatmap-grid {
     width: 100%;
-    table-layout: fixed;
+    table-layout: auto;
   }
   
   .heatmap-cell {
@@ -17192,8 +17192,7 @@ body.dark-mode .dashboard-section > h2 {
   
   .heatmap-cell.pm-label {
     font-size: 9px;
-    padding: 6px 4px;
-    width: 1%;
+    padding: 6px 6px 6px 4px;
     white-space: nowrap;
   }
   
@@ -17221,7 +17220,7 @@ body.dark-mode .dashboard-section > h2 {
   
   .heatmap-grid {
     width: 100%;
-    table-layout: fixed;
+    table-layout: auto;
   }
   
   .heatmap-cell {
@@ -17231,8 +17230,7 @@ body.dark-mode .dashboard-section > h2 {
   
   .heatmap-cell.pm-label {
     font-size: 10px;
-    padding: 6px 5px;
-    width: 1%;
+    padding: 6px 8px 6px 5px;
     white-space: nowrap;
   }
   

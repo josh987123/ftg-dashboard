@@ -15547,11 +15547,11 @@ function renderProfitabilityHeatmap() {
   // Start from joData (raw jobs), not joFiltered - this filter is independent
   let baseJobs = joData || [];
   
-  // Apply heat map's own status filter
+  // Apply heat map's own status filter (status codes: A=Active, C=Closed, I=Inactive, O=Overhead)
   if (statusFilter === 'active') {
-    baseJobs = baseJobs.filter(j => j.job_status === 'Active');
+    baseJobs = baseJobs.filter(j => j.job_status === 'A');
   } else if (statusFilter === 'closed') {
-    baseJobs = baseJobs.filter(j => j.job_status === 'Closed');
+    baseJobs = baseJobs.filter(j => j.job_status === 'C');
   }
   // 'all' = no status filtering
   
