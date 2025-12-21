@@ -17249,3 +17249,189 @@ body.dark-mode .dashboard-section > h2 {
     font-size: 10px;
   }
 }
+
+/* ============================================================
+   PM PERFORMANCE RADAR CHART
+   ============================================================ */
+
+.pm-radar-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.radar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.radar-header .jo-section-header {
+  margin-bottom: 0;
+}
+
+.radar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.radar-controls select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 180px;
+}
+
+.radar-controls select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.radar-description {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 15px;
+}
+
+.radar-chart-container {
+  position: relative;
+  height: 350px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.radar-legend-box {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin-top: 15px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.radar-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.radar-legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+[data-theme="dark"] .pm-radar-section {
+  background: rgba(30, 41, 59, 0.6);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .pm-radar-section {
+    padding: 12px;
+    margin-top: 15px;
+  }
+  
+  .radar-chart-container {
+    height: 280px;
+  }
+  
+  .radar-controls select {
+    min-width: 150px;
+    font-size: 12px;
+  }
+  
+  .radar-legend-box {
+    gap: 15px;
+    font-size: 11px;
+  }
+}
+
+/* ============================================================
+   REVENUE TO PROFIT WATERFALL CHART
+   ============================================================ */
+
+.waterfall-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.waterfall-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.waterfall-header .jo-section-header {
+  margin-bottom: 0;
+}
+
+.waterfall-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.waterfall-controls select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+.waterfall-controls select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.waterfall-description {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 15px;
+}
+
+.waterfall-chart-container {
+  position: relative;
+  height: 300px;
+}
+
+[data-theme="dark"] .waterfall-section {
+  background: rgba(30, 41, 59, 0.6);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .waterfall-section {
+    padding: 12px;
+    margin-top: 15px;
+  }
+  
+  .waterfall-chart-container {
+    height: 250px;
+  }
+  
+  .waterfall-controls select {
+    min-width: 130px;
+    font-size: 12px;
+  }
+}

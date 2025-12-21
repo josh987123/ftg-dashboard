@@ -15458,6 +15458,9 @@ function populateJobOverviewFilters() {
     custFilter.innerHTML = '<option value="">All Clients</option>' + 
       customers.map(c => `<option value="${c}">${c}</option>`).join('');
   }
+  
+  // Initialize PM Radar chart dropdown
+  initPmRadarSelect();
 }
 
 function filterJobOverview() {
@@ -15485,6 +15488,13 @@ function filterJobOverview() {
   updateJobOverviewMetrics();
   updateJobOverviewCharts();
   renderProfitabilityHeatmap();
+  
+  // Recalculate radar data and render
+  pmRadarData = null;
+  renderPmRadarChart();
+  
+  // Render waterfall chart
+  renderWaterfallChart();
 }
 
 function updateJobOverviewMetrics() {
@@ -15753,6 +15763,531 @@ function getHeatmapColor(value, min, max) {
       // Dark green
       return `rgb(${Math.round(16 - (normalized - 0.6) * 20)}, ${Math.round(185 - (normalized - 0.6) * 30)}, ${Math.round(129 - (normalized - 0.6) * 30)})`;
     }
+  }
+}
+
+// ========================================
+// PM PERFORMANCE RADAR CHART
+// ========================================
+
+let pmRadarChart = null;
+let pmRadarData = null;
+
+function initPmRadarSelect() {
+  const select = document.getElementById('radarPmSelect');
+  if (!select || !joData) return;
+  
+  // Get active PMs only (excluding Josh Angelo)
+  const activePMs = [...new Set(
+    joData
+      .filter(j => j.job_status === 'A' && j.project_manager_name && j.project_manager_name !== 'Josh Angelo')
+      .map(j => j.project_manager_name)
+  )].sort();
+  
+  // Clear and repopulate
+  select.innerHTML = '<option value="">Select Project Manager</option>';
+  activePMs.forEach(pm => {
+    const option = document.createElement('option');
+    option.value = pm;
+    option.textContent = pm;
+    select.appendChild(option);
+  });
+}
+
+function calculatePmRadarData() {
+  if (!joData || joData.length === 0) return null;
+  
+  // Filter to active jobs only, excluding Josh Angelo
+  const activeJobs = joData.filter(j => 
+    j.job_status === 'A' && 
+    j.project_manager_name && 
+    j.project_manager_name !== 'Josh Angelo' &&
+    (j.revised_contract || 0) > 0
+  );
+  
+  if (activeJobs.length === 0) return null;
+  
+  // Aggregate by PM
+  const pmStats = {};
+  activeJobs.forEach(job => {
+    const pm = job.project_manager_name;
+    if (!pmStats[pm]) {
+      pmStats[pm] = {
+        name: pm,
+        jobCount: 0,
+        contractValue: 0,
+        revisedCost: 0,
+        billedRevenue: 0,
+        earnedRevenue: 0
+      };
+    }
+    pmStats[pm].jobCount++;
+    pmStats[pm].contractValue += job.revised_contract || 0;
+    pmStats[pm].revisedCost += job.revised_cost || 0;
+    pmStats[pm].billedRevenue += job.billed_revenue || 0;
+    pmStats[pm].earnedRevenue += job.earned_revenue || 0;
+  });
+  
+  // Calculate derived metrics for each PM
+  const pmData = Object.values(pmStats).map(pm => {
+    const profitMargin = pm.contractValue > 0 ? ((pm.contractValue - pm.revisedCost) / pm.contractValue) * 100 : 0;
+    const overUnderPct = pm.earnedRevenue > 0 ? ((pm.billedRevenue - pm.earnedRevenue) / pm.earnedRevenue) * 100 : 0;
+    const avgJobSize = pm.jobCount > 0 ? pm.contractValue / pm.jobCount : 0;
+    
+    return {
+      ...pm,
+      profitMargin,
+      overUnderPct,
+      avgJobSize
+    };
+  });
+  
+  // Calculate portfolio averages
+  const totals = pmData.reduce((acc, pm) => {
+    acc.jobCount += pm.jobCount;
+    acc.contractValue += pm.contractValue;
+    acc.revisedCost += pm.revisedCost;
+    acc.billedRevenue += pm.billedRevenue;
+    acc.earnedRevenue += pm.earnedRevenue;
+    return acc;
+  }, { jobCount: 0, contractValue: 0, revisedCost: 0, billedRevenue: 0, earnedRevenue: 0 });
+  
+  const avgProfitMargin = totals.contractValue > 0 ? ((totals.contractValue - totals.revisedCost) / totals.contractValue) * 100 : 0;
+  const avgOverUnderPct = totals.earnedRevenue > 0 ? ((totals.billedRevenue - totals.earnedRevenue) / totals.earnedRevenue) * 100 : 0;
+  const avgJobCount = pmData.length > 0 ? totals.jobCount / pmData.length : 0;
+  const avgContractValue = pmData.length > 0 ? totals.contractValue / pmData.length : 0;
+  const avgJobSize = totals.jobCount > 0 ? totals.contractValue / totals.jobCount : 0;
+  
+  return {
+    pms: pmData,
+    portfolio: {
+      profitMargin: avgProfitMargin,
+      overUnderPct: avgOverUnderPct,
+      jobCount: avgJobCount,
+      contractValue: avgContractValue,
+      avgJobSize: avgJobSize
+    }
+  };
+}
+
+function renderPmRadarChart() {
+  const canvas = document.getElementById('pmRadarChart');
+  const legendBox = document.getElementById('radarLegendBox');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const selectedPm = document.getElementById('radarPmSelect')?.value;
+  
+  // Calculate data if not already done
+  if (!pmRadarData) {
+    pmRadarData = calculatePmRadarData();
+  }
+  
+  if (!pmRadarData) {
+    if (legendBox) legendBox.innerHTML = '<span style="color:var(--text-muted);">No data available</span>';
+    return;
+  }
+  
+  const portfolio = pmRadarData.portfolio;
+  const pmInfo = selectedPm ? pmRadarData.pms.find(p => p.name === selectedPm) : null;
+  
+  // Define metrics for radar (all normalized 0-100 for comparison)
+  const metrics = ['Profit Margin', 'Job Count', 'Contract Value', 'Avg Job Size', 'Billing Position'];
+  
+  // Normalize values for radar chart (scale each metric to 0-100 range)
+  // Higher is better for all metrics
+  const maxValues = {
+    profitMargin: Math.max(...pmRadarData.pms.map(p => p.profitMargin), 40),
+    jobCount: Math.max(...pmRadarData.pms.map(p => p.jobCount), 10),
+    contractValue: Math.max(...pmRadarData.pms.map(p => p.contractValue), 1000000),
+    avgJobSize: Math.max(...pmRadarData.pms.map(p => p.avgJobSize), 500000),
+    overUnderPct: 20 // Normalize billing position around 0
+  };
+  
+  function normalizeValue(value, metric) {
+    if (metric === 'overUnderPct') {
+      // Billing position: 0 is ideal, positive is overbilled (good), negative is underbilled (bad)
+      // Normalize so 0 = 50, +20% = 100, -20% = 0
+      return Math.max(0, Math.min(100, 50 + (value / 20) * 50));
+    }
+    const max = maxValues[metric] || 100;
+    return Math.max(0, Math.min(100, (value / max) * 100));
+  }
+  
+  // Portfolio average data
+  const portfolioData = [
+    normalizeValue(portfolio.profitMargin, 'profitMargin'),
+    normalizeValue(portfolio.jobCount, 'jobCount'),
+    normalizeValue(portfolio.contractValue, 'contractValue'),
+    normalizeValue(portfolio.avgJobSize, 'avgJobSize'),
+    normalizeValue(portfolio.overUnderPct, 'overUnderPct')
+  ];
+  
+  // PM specific data
+  const pmChartData = pmInfo ? [
+    normalizeValue(pmInfo.profitMargin, 'profitMargin'),
+    normalizeValue(pmInfo.jobCount, 'jobCount'),
+    normalizeValue(pmInfo.contractValue, 'contractValue'),
+    normalizeValue(pmInfo.avgJobSize, 'avgJobSize'),
+    normalizeValue(pmInfo.overUnderPct, 'overUnderPct')
+  ] : null;
+  
+  const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDarkMode ? '#e2e8f0' : '#374151';
+  const gridColor = isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)';
+  
+  // Build datasets
+  const datasets = [{
+    label: 'Portfolio Average',
+    data: portfolioData,
+    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+    borderColor: 'rgba(99, 102, 241, 0.8)',
+    borderWidth: 2,
+    pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+    pointRadius: 4
+  }];
+  
+  if (pmChartData) {
+    datasets.push({
+      label: selectedPm,
+      data: pmChartData,
+      backgroundColor: 'rgba(16, 185, 129, 0.25)',
+      borderColor: 'rgba(16, 185, 129, 0.9)',
+      borderWidth: 2,
+      pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+      pointRadius: 5
+    });
+  }
+  
+  // Destroy existing chart
+  if (pmRadarChart) {
+    pmRadarChart.destroy();
+  }
+  
+  pmRadarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: metrics,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const idx = context.dataIndex;
+              const pm = context.dataset.label;
+              const isPortfolio = pm === 'Portfolio Average';
+              const source = isPortfolio ? portfolio : pmInfo;
+              if (!source) return '';
+              
+              const rawValues = [
+                `${source.profitMargin.toFixed(1)}%`,
+                source.jobCount.toString(),
+                formatCurrencyCompact(source.contractValue),
+                formatCurrencyCompact(source.avgJobSize),
+                `${source.overUnderPct >= 0 ? '+' : ''}${source.overUnderPct.toFixed(1)}%`
+              ];
+              return `${pm}: ${rawValues[idx]}`;
+            }
+          }
+        }
+      },
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: {
+            display: false,
+            stepSize: 25
+          },
+          grid: {
+            color: gridColor
+          },
+          angleLines: {
+            color: gridColor
+          },
+          pointLabels: {
+            color: textColor,
+            font: { size: 11, weight: '500' }
+          }
+        }
+      }
+    }
+  });
+  
+  // Update legend
+  if (legendBox) {
+    let legendHtml = `
+      <div class="radar-legend-item">
+        <div class="radar-legend-color" style="background:rgba(99, 102, 241, 0.7);"></div>
+        <span>Portfolio Average</span>
+      </div>
+    `;
+    if (selectedPm) {
+      legendHtml += `
+        <div class="radar-legend-item">
+          <div class="radar-legend-color" style="background:rgba(16, 185, 129, 0.8);"></div>
+          <span>${selectedPm}</span>
+        </div>
+      `;
+    }
+    legendBox.innerHTML = legendHtml;
+  }
+}
+
+// ========================================
+// REVENUE TO PROFIT WATERFALL CHART
+// ========================================
+
+let waterfallChart = null;
+
+function renderWaterfallChart() {
+  const canvas = document.getElementById('waterfallChart');
+  if (!canvas || !joData || joData.length === 0) return;
+  
+  const ctx = canvas.getContext('2d');
+  const groupBy = document.getElementById('waterfallGroupBy')?.value || 'portfolio';
+  
+  // Filter to active jobs only, excluding Josh Angelo
+  const activeJobs = joData.filter(j => 
+    j.job_status === 'A' && 
+    j.project_manager_name && 
+    j.project_manager_name !== 'Josh Angelo' &&
+    (j.revised_contract || 0) > 0
+  );
+  
+  if (activeJobs.length === 0) return;
+  
+  const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDarkMode ? '#e2e8f0' : '#374151';
+  const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+  
+  let labels = [];
+  let contractData = [];
+  let costData = [];
+  let profitData = [];
+  
+  if (groupBy === 'portfolio') {
+    // Single waterfall for entire portfolio
+    const totals = activeJobs.reduce((acc, job) => {
+      acc.contract += job.revised_contract || 0;
+      acc.cost += job.revised_cost || 0;
+      return acc;
+    }, { contract: 0, cost: 0 });
+    
+    totals.profit = totals.contract - totals.cost;
+    
+    labels = ['Contract Value', 'Est. Cost', 'Gross Profit'];
+    // For waterfall effect, we show: starting value, negative (deduction), final value
+    contractData = [totals.contract, 0, 0];
+    costData = [0, -totals.cost, 0];
+    profitData = [0, 0, totals.profit];
+  } else if (groupBy === 'pm') {
+    // Aggregate by PM
+    const pmStats = {};
+    activeJobs.forEach(job => {
+      const pm = job.project_manager_name;
+      if (!pmStats[pm]) {
+        pmStats[pm] = { contract: 0, cost: 0 };
+      }
+      pmStats[pm].contract += job.revised_contract || 0;
+      pmStats[pm].cost += job.revised_cost || 0;
+    });
+    
+    // Sort by contract value descending, take top 8
+    const sortedPMs = Object.entries(pmStats)
+      .map(([name, stats]) => ({
+        name,
+        contract: stats.contract,
+        cost: stats.cost,
+        profit: stats.contract - stats.cost
+      }))
+      .sort((a, b) => b.contract - a.contract)
+      .slice(0, 8);
+    
+    labels = sortedPMs.map(pm => pm.name);
+    contractData = sortedPMs.map(pm => pm.contract);
+    costData = sortedPMs.map(pm => pm.cost);
+    profitData = sortedPMs.map(pm => pm.profit);
+  } else if (groupBy === 'client') {
+    // Aggregate by client
+    const clientStats = {};
+    activeJobs.forEach(job => {
+      const client = job.customer_name || 'Unknown';
+      if (!clientStats[client]) {
+        clientStats[client] = { contract: 0, cost: 0 };
+      }
+      clientStats[client].contract += job.revised_contract || 0;
+      clientStats[client].cost += job.revised_cost || 0;
+    });
+    
+    // Sort by contract value descending, take top 8
+    const sortedClients = Object.entries(clientStats)
+      .map(([name, stats]) => ({
+        name,
+        contract: stats.contract,
+        cost: stats.cost,
+        profit: stats.contract - stats.cost
+      }))
+      .sort((a, b) => b.contract - a.contract)
+      .slice(0, 8);
+    
+    labels = sortedClients.map(c => c.name.length > 15 ? c.name.substring(0, 15) + '...' : c.name);
+    contractData = sortedClients.map(c => c.contract);
+    costData = sortedClients.map(c => c.cost);
+    profitData = sortedClients.map(c => c.profit);
+  }
+  
+  // Destroy existing chart
+  if (waterfallChart) {
+    waterfallChart.destroy();
+  }
+  
+  if (groupBy === 'portfolio') {
+    // Special waterfall visualization for portfolio
+    const totals = activeJobs.reduce((acc, job) => {
+      acc.contract += job.revised_contract || 0;
+      acc.cost += job.revised_cost || 0;
+      return acc;
+    }, { contract: 0, cost: 0 });
+    totals.profit = totals.contract - totals.cost;
+    
+    // Waterfall: Contract full height, Cost shows deduction (floating bar), Profit is result
+    // Using floating bars: [base, top] format for each bar
+    waterfallChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Contract Value', 'Est. Cost (Deduction)', 'Gross Profit'],
+        datasets: [{
+          label: 'Amount',
+          data: [
+            [0, totals.contract],  // Contract: full bar from 0 to contract value
+            [totals.profit, totals.contract],  // Cost: floating bar from profit to contract (shows deduction)
+            totals.profit >= 0 ? [0, totals.profit] : [totals.profit, 0]  // Profit: from 0 to profit (or negative)
+          ],
+          backgroundColor: [
+            'rgba(99, 102, 241, 0.8)',  // Contract - blue
+            'rgba(239, 68, 68, 0.8)',   // Cost - red
+            totals.profit >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'  // Profit - green/red
+          ],
+          borderColor: [
+            'rgba(99, 102, 241, 1)',
+            'rgba(239, 68, 68, 1)',
+            totals.profit >= 0 ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)'
+          ],
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const idx = context.dataIndex;
+                const values = [totals.contract, totals.cost, totals.profit];
+                const labels = ['Contract Value', 'Est. Cost', 'Gross Profit'];
+                const prefix = idx === 2 && totals.profit < 0 ? 'Loss: ' : '';
+                return `${labels[idx]}: ${prefix}${formatCurrencyCompact(Math.abs(values[idx]))}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: textColor, font: { size: 11 } }
+          },
+          y: {
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              callback: value => formatCurrencyCompact(value)
+            }
+          }
+        }
+      }
+    });
+  } else {
+    // Grouped bar chart for PM/Client comparison
+    waterfallChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Contract Value',
+            data: contractData,
+            backgroundColor: 'rgba(99, 102, 241, 0.7)',
+            borderColor: 'rgba(99, 102, 241, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'Est. Cost',
+            data: costData,
+            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+            borderColor: 'rgba(239, 68, 68, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'Gross Profit',
+            data: profitData,
+            backgroundColor: profitData.map(p => p >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'),
+            borderColor: profitData.map(p => p >= 0 ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)'),
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              color: textColor,
+              usePointStyle: true,
+              pointStyle: 'rect',
+              padding: 15,
+              font: { size: 11 }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${formatCurrencyCompact(context.raw)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: {
+              color: textColor,
+              font: { size: 10 },
+              maxRotation: 45,
+              minRotation: 0
+            }
+          },
+          y: {
+            grid: { color: gridColor },
+            ticks: {
+              color: textColor,
+              callback: value => formatCurrencyCompact(value)
+            }
+          }
+        }
+      }
+    });
   }
 }
 
