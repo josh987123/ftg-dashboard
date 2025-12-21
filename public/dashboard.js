@@ -15769,24 +15769,8 @@ let pmRadarChart = null;
 let pmRadarData = null;
 
 function initPmRadarSelect() {
-  const select = document.getElementById('radarPmSelect');
-  if (!select || !jobBudgetsData || jobBudgetsData.length === 0) return;
-  
-  // Get active PMs only (excluding Josh Angelo)
-  const activePMs = [...new Set(
-    jobBudgetsData
-      .filter(j => j.job_status === 'A' && j.project_manager_name && j.project_manager_name !== 'Josh Angelo')
-      .map(j => j.project_manager_name)
-  )].sort();
-  
-  // Clear and repopulate
-  select.innerHTML = '<option value="">Select Project Manager</option>';
-  activePMs.forEach(pm => {
-    const option = document.createElement('option');
-    option.value = pm;
-    option.textContent = pm;
-    select.appendChild(option);
-  });
+  // Radar chart now uses pmrSelectedPm from main config - no separate dropdown needed
+  // This function is kept for compatibility but does nothing
 }
 
 function calculatePmRadarData() {
@@ -15880,7 +15864,10 @@ function renderPmRadarChart() {
   if (!canvas) return;
   
   const ctx = canvas.getContext('2d');
-  const selectedPm = document.getElementById('radarPmSelect')?.value;
+  // Use the PM selected in config options (pmrSelectedPm) - ignore '__ALL__' for radar comparison
+  const selectedPm = (pmrSelectedPm && pmrSelectedPm !== '__ALL__' && pmrSelectedPm !== 'Josh Angelo') 
+    ? pmrSelectedPm 
+    : null;
   
   // Calculate data if not already done
   if (!pmRadarData) {
@@ -16036,6 +16023,12 @@ function renderPmRadarChart() {
         <div class="radar-legend-item">
           <div class="radar-legend-color" style="background:rgba(16, 185, 129, 0.8);"></div>
           <span>${selectedPm}</span>
+        </div>
+      `;
+    } else {
+      legendHtml += `
+        <div class="radar-legend-hint" style="color:var(--text-muted);font-size:12px;margin-top:8px;">
+          Select a specific PM above to compare against portfolio average
         </div>
       `;
     }
