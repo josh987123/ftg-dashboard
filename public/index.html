@@ -1770,23 +1770,6 @@
           </div>
         </div>
 
-        <!-- PM Performance Radar Chart -->
-        <div class="pm-radar-section">
-          <div class="radar-header">
-            <h3 class="jo-section-header">PM Performance Radar</h3>
-            <div class="radar-controls">
-              <select id="radarPmSelect" onchange="renderPmRadarChart()">
-                <option value="">Select Project Manager</option>
-              </select>
-            </div>
-          </div>
-          <p class="radar-description">Compare PM performance across key metrics vs portfolio average. Higher values = better performance.</p>
-          <div class="radar-chart-container">
-            <canvas id="pmRadarChart"></canvas>
-          </div>
-          <div class="radar-legend-box" id="radarLegendBox"></div>
-        </div>
-
         <!-- Revenue to Profit Waterfall Chart -->
         <div class="waterfall-section">
           <div class="waterfall-header">
@@ -3451,6 +3434,23 @@
           <div id="pmrAiAnalysisBody" class="ai-analysis-body">
             <div id="pmrAiAnalysisContent" class="ai-analysis-content"></div>
           </div>
+        </div>
+
+        <!-- PM Performance Radar Chart -->
+        <div class="pm-radar-section">
+          <div class="radar-header">
+            <h3 class="pmr-section-title">PM Performance Radar</h3>
+            <div class="radar-controls">
+              <select id="radarPmSelect" onchange="renderPmRadarChart()">
+                <option value="">Select Project Manager</option>
+              </select>
+            </div>
+          </div>
+          <p class="radar-description">Compare PM performance across key metrics vs portfolio average. Higher values = better performance.</p>
+          <div class="radar-chart-container">
+            <canvas id="pmRadarChart"></canvas>
+          </div>
+          <div class="radar-legend-box" id="radarLegendBox"></div>
         </div>
 
         <!-- PM Comparison Toggle -->

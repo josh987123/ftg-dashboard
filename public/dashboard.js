@@ -15458,9 +15458,6 @@ function populateJobOverviewFilters() {
     custFilter.innerHTML = '<option value="">All Clients</option>' + 
       customers.map(c => `<option value="${c}">${c}</option>`).join('');
   }
-  
-  // Initialize PM Radar chart dropdown
-  initPmRadarSelect();
 }
 
 function filterJobOverview() {
@@ -15488,10 +15485,6 @@ function filterJobOverview() {
   updateJobOverviewMetrics();
   updateJobOverviewCharts();
   renderProfitabilityHeatmap();
-  
-  // Recalculate radar data and render
-  pmRadarData = null;
-  renderPmRadarChart();
   
   // Render waterfall chart
   renderWaterfallChart();
@@ -15775,11 +15768,11 @@ let pmRadarData = null;
 
 function initPmRadarSelect() {
   const select = document.getElementById('radarPmSelect');
-  if (!select || !joData) return;
+  if (!select || !jobBudgetsData || jobBudgetsData.length === 0) return;
   
   // Get active PMs only (excluding Josh Angelo)
   const activePMs = [...new Set(
-    joData
+    jobBudgetsData
       .filter(j => j.job_status === 'A' && j.project_manager_name && j.project_manager_name !== 'Josh Angelo')
       .map(j => j.project_manager_name)
   )].sort();
@@ -15795,22 +15788,31 @@ function initPmRadarSelect() {
 }
 
 function calculatePmRadarData() {
-  if (!joData || joData.length === 0) return null;
+  // Use jobActualsData which has billed/earned revenue, combined with jobBudgetsData for contract/cost
+  if ((!jobActualsData || jobActualsData.length === 0) && (!jobBudgetsData || jobBudgetsData.length === 0)) return null;
+  
+  // Build budget map for quick lookup
+  const budgetMap = new Map();
+  jobBudgetsData.forEach(b => budgetMap.set(String(b.job_no), b));
   
   // Filter to active jobs only, excluding Josh Angelo
-  const activeJobs = joData.filter(j => 
-    j.job_status === 'A' && 
-    j.project_manager_name && 
-    j.project_manager_name !== 'Josh Angelo' &&
-    (j.revised_contract || 0) > 0
-  );
+  const activeJobs = jobActualsData.filter(j => {
+    const budget = budgetMap.get(String(j.job_no));
+    const status = budget?.job_status || j.job_status;
+    const pmName = j.project_manager_name || budget?.project_manager_name;
+    const contract = parseFloat(budget?.revised_contract) || j.revised_contract || 0;
+    return status === 'A' && pmName && pmName !== 'Josh Angelo' && contract > 0;
+  });
   
   if (activeJobs.length === 0) return null;
   
   // Aggregate by PM
   const pmStats = {};
   activeJobs.forEach(job => {
-    const pm = job.project_manager_name;
+    const budget = budgetMap.get(String(job.job_no)) || {};
+    const pm = job.project_manager_name || budget.project_manager_name;
+    if (!pm) return;
+    
     if (!pmStats[pm]) {
       pmStats[pm] = {
         name: pm,
@@ -15822,8 +15824,8 @@ function calculatePmRadarData() {
       };
     }
     pmStats[pm].jobCount++;
-    pmStats[pm].contractValue += job.revised_contract || 0;
-    pmStats[pm].revisedCost += job.revised_cost || 0;
+    pmStats[pm].contractValue += parseFloat(budget.revised_contract) || job.revised_contract || 0;
+    pmStats[pm].revisedCost += parseFloat(budget.revised_cost) || job.revised_cost || 0;
     pmStats[pm].billedRevenue += job.billed_revenue || 0;
     pmStats[pm].earnedRevenue += job.earned_revenue || 0;
   });
@@ -18497,6 +18499,9 @@ function populatePmrPmSelect() {
       pmrSelectedPm = pmName;
     }
   }
+  
+  // Initialize PM Radar chart dropdown
+  initPmRadarSelect();
 }
 
 function setupPmrEventListeners() {
@@ -18598,6 +18603,10 @@ function updatePmReport() {
   
   // Render charts
   renderPmrCharts();
+  
+  // Render PM Performance Radar chart
+  pmRadarData = null;
+  renderPmRadarChart();
   
   // Render tables
   renderPmrOverUnderTable();
