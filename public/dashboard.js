@@ -12485,6 +12485,78 @@ function setupCashEventListeners() {
   document.getElementById("cashShowTotal")?.addEventListener("change", updateCashDisplay);
   document.getElementById("cashDataLabels")?.addEventListener("change", updateCashDisplay);
   
+  // Range buttons below chart (new UI)
+  document.querySelectorAll(".cash-range-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const range = btn.dataset.range;
+      const customRangeInline = document.getElementById("cashCustomRangeInline");
+      
+      // Update active button
+      document.querySelectorAll(".cash-range-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      
+      if (range === "custom") {
+        // Show inline custom date inputs
+        customRangeInline.style.display = "flex";
+        
+        // Set default dates if not set
+        const startInput = document.getElementById("cashCustomStartInline");
+        const endInput = document.getElementById("cashCustomEndInline");
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        if (!endInput.value) {
+          endInput.value = today.toISOString().split('T')[0];
+        }
+        if (!startInput.value) {
+          startInput.value = thirtyDaysAgo.toISOString().split('T')[0];
+        }
+      } else {
+        // Hide custom inputs and update dropdown to match
+        customRangeInline.style.display = "none";
+        
+        // Sync with the dropdown in config panel
+        const dropdown = document.getElementById("cashDaysRange");
+        if (dropdown) {
+          dropdown.value = range;
+          // Also hide the config panel custom range if visible
+          const configCustomRange = document.getElementById("cashCustomDateRange");
+          if (configCustomRange) configCustomRange.style.display = "none";
+        }
+        
+        updateCashDisplay();
+      }
+    });
+  });
+  
+  // Apply custom range button (inline)
+  document.getElementById("cashApplyCustomInline")?.addEventListener("click", () => {
+    const startDate = document.getElementById("cashCustomStartInline")?.value;
+    const endDate = document.getElementById("cashCustomEndInline")?.value;
+    
+    if (!startDate || !endDate) {
+      alert("Please select both start and end dates");
+      return;
+    }
+    
+    if (startDate > endDate) {
+      alert("Start date cannot be after end date");
+      return;
+    }
+    
+    // Sync with config panel dates and set to custom
+    const dropdown = document.getElementById("cashDaysRange");
+    if (dropdown) dropdown.value = "custom";
+    
+    const configStart = document.getElementById("cashStartDate");
+    const configEnd = document.getElementById("cashEndDate");
+    if (configStart) configStart.value = startDate;
+    if (configEnd) configEnd.value = endDate;
+    
+    updateCashDisplay();
+  });
+  
   // Tab switching
   document.querySelectorAll(".cash-tab").forEach(tab => {
     tab.addEventListener("click", () => {
@@ -12753,13 +12825,23 @@ function formatDateForDisplay(dateStr) {
 }
 
 function getCashDateRange() {
-  const rangeValue = document.getElementById("cashDaysRange")?.value || "30";
+  // First check the active button below the chart
+  const activeBtn = document.querySelector(".cash-range-btn.active");
+  let rangeValue = activeBtn?.dataset.range || document.getElementById("cashDaysRange")?.value || "90";
+  
   const today = new Date();
   let startDate, endDate;
   
   if (rangeValue === "custom") {
-    const startInput = document.getElementById("cashStartDate")?.value;
-    const endInput = document.getElementById("cashEndDate")?.value;
+    // Check inline custom inputs first, then config panel inputs
+    let startInput = document.getElementById("cashCustomStartInline")?.value;
+    let endInput = document.getElementById("cashCustomEndInline")?.value;
+    
+    // Fallback to config panel inputs
+    if (!startInput || !endInput) {
+      startInput = document.getElementById("cashStartDate")?.value;
+      endInput = document.getElementById("cashEndDate")?.value;
+    }
     
     if (startInput && endInput) {
       startDate = new Date(startInput + 'T12:00:00');

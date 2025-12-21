@@ -3650,6 +3650,18 @@
           <div class="chart-wrapper">
             <canvas id="cashChart"></canvas>
           </div>
+          <div class="cash-range-buttons" id="cashRangeButtons">
+            <button class="cash-range-btn" data-range="7">7 Days</button>
+            <button class="cash-range-btn" data-range="30">30 Days</button>
+            <button class="cash-range-btn active" data-range="90">90 Days</button>
+            <button class="cash-range-btn" data-range="custom">Custom</button>
+          </div>
+          <div id="cashCustomRangeInline" class="cash-custom-range-inline" style="display: none;">
+            <input type="date" id="cashCustomStartInline">
+            <span>to</span>
+            <input type="date" id="cashCustomEndInline">
+            <button class="cash-apply-btn" id="cashApplyCustomInline">Apply</button>
+          </div>
           <div class="cash-summary-tiles" id="cashSummaryTiles">
             <div class="summary-tile">
               <div class="tile-label">Average</div>
