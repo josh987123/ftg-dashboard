@@ -13503,10 +13503,17 @@ function updateCashStatsTilesGL(glData) {
   
   const growthEl = document.getElementById("cashGrowthValue");
   if (growthEl) {
-    growthEl.className = growth < 0 ? "tile-value negative" : "tile-value positive";
-    growthEl.style.color = growth < 0 ? "#dc2626" : "#10b981";
+    // Show N/A for "All" range since starting balance is essentially zero (infinite growth)
+    if (cashGLRange === 'all') {
+      growthEl.className = "tile-value";
+      growthEl.style.color = "";
+      growthEl.textContent = "N/A";
+    } else {
+      growthEl.className = growth < 0 ? "tile-value negative" : "tile-value positive";
+      growthEl.style.color = growth < 0 ? "#dc2626" : "#10b981";
+      animatePercent(growthEl, growth, 600);
+    }
   }
-  animatePercent(growthEl, growth, 600);
 }
 
 function renderCashDailyTable() {
