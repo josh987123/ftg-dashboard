@@ -4427,6 +4427,32 @@ let revenueDataCache = null;
 let revChartInstance = null;
 let currentTableData = { labels: [], datasets: [] };
 
+function buildRevenueFromGLHistory(data) {
+  if (data.revenue) return data;
+  if (!data.gl_history_all) return data;
+  
+  const revenueAccounts = ['4000', '4100', '4200', '4300', '4400'];
+  const revenue = {};
+  
+  data.gl_history_all.forEach(entry => {
+    const acctNum = String(entry.Account_Num || '');
+    if (!revenueAccounts.includes(acctNum)) return;
+    
+    Object.keys(entry).forEach(key => {
+      if (!/^\d{4}-\d{2}$/.test(key)) return;
+      const [year, month] = key.split('-').map(Number);
+      
+      if (!revenue[year]) revenue[year] = new Array(12).fill(0);
+      
+      const val = parseFloat(entry[key]) || 0;
+      revenue[year][month - 1] += Math.abs(val);
+    });
+  });
+  
+  data.revenue = revenue;
+  return data;
+}
+
 /* ------------------------------------------------------------
    INIT MODULE
 ------------------------------------------------------------ */
@@ -4440,6 +4466,7 @@ async function initRevenueModule() {
       const response = await fetch("/data/financials_gl.json");
       if (!response.ok) throw new Error("Failed to fetch revenue data");
       revenueDataCache = await response.json();
+      revenueDataCache = buildRevenueFromGLHistory(revenueDataCache);
     }
 
     setupRevenueUI(revenueDataCache);
