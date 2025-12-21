@@ -10552,7 +10552,7 @@ body.dark-mode .jo-metrics-chart-card .chart-title {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    gap: 4px !important;
+    gap: 6px !important;
     justify-content: flex-start;
     overflow-x: auto;
   }
@@ -10561,23 +10561,30 @@ body.dark-mode .jo-metrics-chart-card .chart-title {
     flex: 0 0 auto !important;
     min-width: auto !important;
     max-width: none !important;
-    padding: 4px 6px !important;
+    padding: 8px 10px !important;
+    flex-direction: row !important;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact .metric-icon {
-    width: 18px !important;
-    height: 18px !important;
-    font-size: 9px !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
     border-radius: 6px !important;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact .metric-value {
-    font-size: 10px !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact .metric-label {
-    font-size: 6px !important;
+    font-size: 9px !important;
     white-space: nowrap !important;
+    line-height: 1.2 !important;
+  }
+  
+  .jo-metrics-row-5 .job-metric-card.compact .metric-content {
+    text-align: left !important;
   }
 }
 
@@ -10765,7 +10772,7 @@ body.dark-mode .jo-chart-stats .stat-period {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    gap: 4px !important;
+    gap: 6px !important;
     overflow-x: auto;
   }
   
@@ -10773,16 +10780,29 @@ body.dark-mode .jo-chart-stats .stat-period {
     flex: 0 0 auto !important;
     min-width: auto !important;
     max-width: none !important;
-    padding: 4px 6px !important;
+    padding: 8px 10px !important;
+    flex-direction: row !important;
+  }
+  
+  .jo-key-metrics-constrained .job-metric-card.compact .metric-icon {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
   }
   
   .jo-key-metrics-constrained .job-metric-card.compact .metric-value {
-    font-size: 10px !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
   }
   
   .jo-key-metrics-constrained .job-metric-card.compact .metric-label {
-    font-size: 6px !important;
+    font-size: 9px !important;
     white-space: nowrap !important;
+    line-height: 1.2 !important;
+  }
+  
+  .jo-key-metrics-constrained .job-metric-card.compact .metric-content {
+    text-align: left !important;
   }
   
   .jo-chart-stats {
@@ -10812,28 +10832,36 @@ body.dark-mode .jo-chart-stats .stat-period {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    gap: 3px !important;
+    gap: 4px !important;
+    overflow-x: auto;
   }
   
   .jo-key-metrics-constrained .job-metric-card.compact {
     flex: 0 0 auto !important;
     min-width: auto !important;
     max-width: none !important;
-    padding: 3px 4px !important;
+    padding: 6px 8px !important;
+    flex-direction: row !important;
   }
   
   .jo-key-metrics-constrained .job-metric-card.compact .metric-icon {
-    width: 14px !important;
-    height: 14px !important;
-    font-size: 7px !important;
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 11px !important;
   }
   
   .jo-key-metrics-constrained .job-metric-card.compact .metric-value {
-    font-size: 9px !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
   }
   
   .jo-key-metrics-constrained .job-metric-card.compact .metric-label {
-    font-size: 5px !important;
+    font-size: 8px !important;
+    white-space: nowrap !important;
+  }
+  
+  .jo-key-metrics-constrained .job-metric-card.compact .metric-content {
+    text-align: left !important;
   }
   
   .jo-section-header {
@@ -11189,6 +11217,35 @@ body.dark-mode .job-budgets-table td.margin-cell {
   
   .job-metric-card .metric-content {
     text-align: center;
+  }
+  
+  /* Job Overview key metrics - keep horizontal layout */
+  #jobOverview .jo-metrics-row-5 .job-metric-card.compact {
+    flex-direction: row !important;
+    text-align: left !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+  
+  #jobOverview .jo-metrics-row-5 .job-metric-card.compact .metric-icon {
+    margin: 0 !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+  }
+  
+  #jobOverview .jo-metrics-row-5 .job-metric-card.compact .metric-content {
+    text-align: left !important;
+  }
+  
+  #jobOverview .jo-metrics-row-5 .job-metric-card.compact .metric-value {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+  }
+  
+  #jobOverview .jo-metrics-row-5 .job-metric-card.compact .metric-label {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
   }
 }
 
