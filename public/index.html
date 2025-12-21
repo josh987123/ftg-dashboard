@@ -3651,10 +3651,14 @@
             <canvas id="cashChart"></canvas>
           </div>
           <div class="cash-range-buttons" id="cashRangeButtons">
-            <button class="cash-range-btn" data-range="7">7 Days</button>
-            <button class="cash-range-btn" data-range="30">30 Days</button>
-            <button class="cash-range-btn active" data-range="90">90 Days</button>
-            <button class="cash-range-btn" data-range="custom">Custom</button>
+            <button class="cash-range-btn" data-range="7" data-mode="bank">7D</button>
+            <button class="cash-range-btn" data-range="30" data-mode="bank">30D</button>
+            <button class="cash-range-btn active" data-range="90" data-mode="bank">90D</button>
+            <button class="cash-range-btn" data-range="custom" data-mode="bank">Custom</button>
+            <span class="cash-range-divider"></span>
+            <button class="cash-range-btn" data-range="ttm" data-mode="gl">TTM</button>
+            <button class="cash-range-btn" data-range="5y" data-mode="gl">5Y</button>
+            <button class="cash-range-btn" data-range="all" data-mode="gl">All</button>
           </div>
           <div id="cashCustomRangeInline" class="cash-custom-range-inline" style="display: none;">
             <input type="date" id="cashCustomStartInline">

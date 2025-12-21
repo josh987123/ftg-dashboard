@@ -12273,6 +12273,110 @@ let cashDailyBalances = {};
 let cashTableExpanded = false;
 let cashTransactionsNeedRefresh = true;
 
+// GL mode variables for TTM/5Y/All views
+let cashGLMode = false; // true when showing GL data (TTM, 5Y, All)
+let cashGLRange = null; // 'ttm', '5y', or 'all'
+let cashGLData = null; // Cached GL data from financials_gl.json
+
+// Cash/Investment GL accounts (excluding Schwab 1004)
+const CASH_GL_ACCOUNTS = ['1001', '1003', '1005', '1006', '1007', '1040', '1090'];
+const SCHWAB_ACCOUNT = '1004'; // Excluded from GL mode
+
+async function loadCashGLData() {
+  if (cashGLData) return cashGLData;
+  
+  try {
+    const response = await fetch('/data/financials_gl.json');
+    const text = await response.text();
+    // Handle BOM if present
+    const cleanText = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+    cashGLData = JSON.parse(cleanText);
+    return cashGLData;
+  } catch (error) {
+    console.error('Error loading GL data:', error);
+    return null;
+  }
+}
+
+function getCashGLMonthlyData(range) {
+  if (!cashGLData || !cashGLData.gl_history_all) return { labels: [], datasets: [] };
+  
+  const glHistory = cashGLData.gl_history_all;
+  const accounts = cashGLData.accounts || [];
+  
+  // Get all month keys from the first entry
+  const sampleEntry = glHistory[0] || {};
+  const allMonthKeys = Object.keys(sampleEntry)
+    .filter(k => /^\d{4}-\d{2}$/.test(k))
+    .sort();
+  
+  if (allMonthKeys.length === 0) return { labels: [], datasets: [] };
+  
+  // Filter months based on range
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  
+  let startDate;
+  if (range === 'ttm') {
+    // Last 12 months
+    startDate = new Date(currentYear, currentMonth - 13, 1);
+  } else if (range === '5y') {
+    // Last 5 years
+    startDate = new Date(currentYear - 5, currentMonth - 1, 1);
+  } else {
+    // All years
+    startDate = new Date(2015, 0, 1);
+  }
+  
+  const startKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+  const endKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+  
+  const filteredMonths = allMonthKeys.filter(m => m >= startKey && m <= endKey);
+  
+  // Build dataset for each cash account (excluding Schwab)
+  const cashAccountData = {};
+  const accountDescriptions = {};
+  
+  // Map account numbers to descriptions
+  accounts.forEach(acct => {
+    accountDescriptions[acct.account_no] = acct.description;
+  });
+  
+  // Get data for each cash GL account
+  CASH_GL_ACCOUNTS.forEach(acctNo => {
+    const acctEntry = glHistory.find(e => String(e.Account_Num) === acctNo || String(e.Account) === acctNo);
+    if (acctEntry) {
+      const values = filteredMonths.map(month => {
+        const val = acctEntry[month];
+        return val === '' || val === null || val === undefined ? 0 : parseFloat(val) || 0;
+      });
+      const desc = accountDescriptions[acctNo] || `Account ${acctNo}`;
+      cashAccountData[desc] = values;
+    }
+  });
+  
+  // Calculate totals for each month
+  const totals = filteredMonths.map((_, idx) => {
+    return Object.values(cashAccountData).reduce((sum, values) => sum + (values[idx] || 0), 0);
+  });
+  
+  // Format labels as "MMM YYYY"
+  const labels = filteredMonths.map(m => {
+    const [year, month] = m.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  });
+  
+  return {
+    labels,
+    months: filteredMonths,
+    accountData: cashAccountData,
+    totals,
+    accountDescriptions
+  };
+}
+
 async function initCashReports() {
   const headerEl = document.getElementById("cashCurrentHeader");
   const dailyTableEl = document.getElementById("dailyBalanceTableContainer");
@@ -12487,45 +12591,85 @@ function setupCashEventListeners() {
   
   // Range buttons below chart (new UI)
   document.querySelectorAll(".cash-range-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const range = btn.dataset.range;
+      const mode = btn.dataset.mode;
       const customRangeInline = document.getElementById("cashCustomRangeInline");
       
       // Update active button
       document.querySelectorAll(".cash-range-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       
-      if (range === "custom") {
-        // Show inline custom date inputs
-        customRangeInline.style.display = "flex";
-        
-        // Set default dates if not set
-        const startInput = document.getElementById("cashCustomStartInline");
-        const endInput = document.getElementById("cashCustomEndInline");
-        const today = new Date();
-        const thirtyDaysAgo = new Date(today);
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        if (!endInput.value) {
-          endInput.value = today.toISOString().split('T')[0];
-        }
-        if (!startInput.value) {
-          startInput.value = thirtyDaysAgo.toISOString().split('T')[0];
-        }
-      } else {
-        // Hide custom inputs and update dropdown to match
+      // Check if switching to GL mode (TTM, 5Y, All)
+      if (mode === "gl") {
+        cashGLMode = true;
+        cashGLRange = range;
         customRangeInline.style.display = "none";
         
-        // Sync with the dropdown in config panel
-        const dropdown = document.getElementById("cashDaysRange");
-        if (dropdown) {
-          dropdown.value = range;
-          // Also hide the config panel custom range if visible
-          const configCustomRange = document.getElementById("cashCustomDateRange");
-          if (configCustomRange) configCustomRange.style.display = "none";
+        // Load GL data if not loaded
+        if (!cashGLData) {
+          const container = document.getElementById("cashCurrentHeader");
+          if (container) container.innerHTML = '<div class="loading-spinner">Loading GL data...</div>';
+          await loadCashGLData();
         }
         
+        // Update chart title
+        const chartTitle = document.querySelector('.cash-chart-section .chart-header h3');
+        if (chartTitle) {
+          const rangeLabel = range === 'ttm' ? 'TTM' : range === '5y' ? '5 Year' : 'All Years';
+          chartTitle.textContent = `Monthly Cash Balances (${rangeLabel})`;
+        }
+        
+        // Update tab label
+        const balancesTab = document.querySelector('.cash-tab[data-tab="balances"]');
+        if (balancesTab) balancesTab.textContent = 'Monthly Balances';
+        
         updateCashDisplay();
+      } else {
+        // Bank mode (7D, 30D, 90D, Custom)
+        cashGLMode = false;
+        cashGLRange = null;
+        
+        // Restore chart title
+        const chartTitle = document.querySelector('.cash-chart-section .chart-header h3');
+        if (chartTitle) chartTitle.textContent = 'Daily Cash Balances';
+        
+        // Restore tab label
+        const balancesTab = document.querySelector('.cash-tab[data-tab="balances"]');
+        if (balancesTab) balancesTab.textContent = 'Daily Balances';
+        
+        if (range === "custom") {
+          // Show inline custom date inputs
+          customRangeInline.style.display = "flex";
+          
+          // Set default dates if not set
+          const startInput = document.getElementById("cashCustomStartInline");
+          const endInput = document.getElementById("cashCustomEndInline");
+          const today = new Date();
+          const thirtyDaysAgo = new Date(today);
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          
+          if (!endInput.value) {
+            endInput.value = today.toISOString().split('T')[0];
+          }
+          if (!startInput.value) {
+            startInput.value = thirtyDaysAgo.toISOString().split('T')[0];
+          }
+        } else {
+          // Hide custom inputs and update dropdown to match
+          customRangeInline.style.display = "none";
+          
+          // Sync with the dropdown in config panel
+          const dropdown = document.getElementById("cashDaysRange");
+          if (dropdown) {
+            dropdown.value = range;
+            // Also hide the config panel custom range if visible
+            const configCustomRange = document.getElementById("cashCustomDateRange");
+            if (configCustomRange) configCustomRange.style.display = "none";
+          }
+          
+          updateCashDisplay();
+        }
       }
     });
   });
@@ -12687,6 +12831,27 @@ let cashHeaderExpanded = false;
 function renderCashCurrentHeader() {
   const container = document.getElementById("cashCurrentHeader");
   if (!container) return;
+  
+  // GL mode header
+  if (cashGLMode && cashGLData) {
+    const glData = getCashGLMonthlyData(cashGLRange);
+    if (glData.totals && glData.totals.length > 0) {
+      const latestTotal = glData.totals[glData.totals.length - 1];
+      const latestMonth = glData.labels[glData.labels.length - 1];
+      const rangeLabel = cashGLRange === 'ttm' ? 'TTM' : cashGLRange === '5y' ? '5 Year' : 'All Years';
+      
+      container.innerHTML = `
+        <div class="cash-header-content gl-mode">
+          <div class="cash-header-total-section">
+            <div class="cash-header-label">Cash & Investments (${rangeLabel} - GL Data, excl. Schwab)</div>
+            <div class="cash-header-total">${formatCurrency(latestTotal)}</div>
+            <div class="cash-header-sublabel">As of ${latestMonth}</div>
+          </div>
+        </div>
+      `;
+    }
+    return;
+  }
   
   // Build display accounts list - FTG combined + individual accounts
   const ftgBuildersSelected = cashSelectedAccounts.includes(FTG_BUILDERS_LABEL);
@@ -12873,6 +13038,12 @@ function getCashDateRange() {
 function renderCashChart() {
   const canvas = document.getElementById("cashChart");
   if (!canvas) return;
+  
+  // Check if in GL mode (TTM, 5Y, All)
+  if (cashGLMode && cashGLData) {
+    renderCashChartGL();
+    return;
+  }
   
   const isMobileView = window.innerWidth <= 768;
   const stackBars = document.getElementById("cashStackBars")?.checked !== false;
@@ -13147,7 +13318,170 @@ function updateCashStatsTiles(dates, accountsConfig) {
   animatePercent(growthEl, growth, 600);
 }
 
+// GL Mode Chart Rendering (for TTM, 5Y, All)
+function renderCashChartGL() {
+  const canvas = document.getElementById("cashChart");
+  if (!canvas) return;
+  
+  const glData = getCashGLMonthlyData(cashGLRange);
+  if (!glData.labels || glData.labels.length === 0) {
+    if (cashChartInstance) cashChartInstance.destroy();
+    return;
+  }
+  
+  const isMobileView = window.innerWidth <= 768;
+  const stackBars = document.getElementById("cashStackBars")?.checked !== false;
+  const dataLabelsCheckbox = document.getElementById("cashDataLabels");
+  const showDataLabels = isMobileView ? false : (dataLabelsCheckbox?.checked === true);
+  
+  const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains("dark-mode");
+  const themeColors = getChartThemeColors();
+  
+  // Colors for accounts
+  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#dc2626', '#8b5cf6', '#ec4899', '#06b6d4'];
+  
+  // Build datasets from GL account data
+  const accountNames = Object.keys(glData.accountData);
+  const datasets = accountNames.map((acctName, idx) => {
+    const isTopDataset = idx === accountNames.length - 1;
+    
+    return {
+      label: acctName,
+      data: glData.accountData[acctName],
+      backgroundColor: colors[idx % colors.length] + '80',
+      borderColor: colors[idx % colors.length],
+      borderWidth: 2,
+      fill: stackBars ? 'stack' : false,
+      tension: 0.3,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      datalabels: (showDataLabels && stackBars && isTopDataset) ? {
+        display: true,
+        align: 'end',
+        anchor: 'end',
+        offset: 2,
+        color: isDarkMode ? '#ffffff' : '#1e3a5f',
+        font: { weight: 'bold', size: 10 },
+        formatter: (value, context) => {
+          const total = glData.totals[context.dataIndex];
+          if (total === null || total === undefined) return '';
+          const millions = total / 1000000;
+          return '$' + millions.toFixed(1) + 'M';
+        }
+      } : { display: false }
+    };
+  });
+  
+  if (cashChartInstance) cashChartInstance.destroy();
+  
+  // Calculate Y-axis range
+  const dataMin = Math.min(...glData.totals.filter(v => v > 0));
+  const dataMax = Math.max(...glData.totals);
+  const yMin = Math.floor((dataMin * 0.9) / 1000000) * 1000000;
+  const yMax = Math.ceil(dataMax / 1000000) * 1000000;
+  
+  const isMobile = window.innerWidth <= 768;
+  
+  cashChartInstance = new Chart(canvas, {
+    type: 'line',
+    data: { labels: glData.labels, datasets },
+    plugins: showDataLabels ? [ChartDataLabels] : [],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 800, easing: 'easeOutQuart' },
+      layout: { padding: { top: showDataLabels ? 25 : 0 } },
+      plugins: {
+        legend: { 
+          display: accountNames.length > 1, 
+          position: 'bottom',
+          labels: {
+            color: themeColors.legendColor,
+            boxWidth: isMobile ? 10 : 12,
+            boxHeight: isMobile ? 10 : 12,
+            padding: isMobile ? 6 : 10,
+            font: { size: isMobile ? 9 : 11 }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
+          }
+        },
+        datalabels: { display: false }
+      },
+      scales: {
+        x: { 
+          stacked: stackBars,
+          grid: { color: themeColors.gridColor },
+          ticks: {
+            color: themeColors.textColor,
+            font: { size: isMobile ? 9 : 11 },
+            maxRotation: 45,
+            minRotation: 45,
+            autoSkip: true,
+            maxTicksLimit: isMobile ? 12 : 24
+          }
+        },
+        y: {
+          stacked: stackBars,
+          min: yMin,
+          max: yMax,
+          grid: { color: themeColors.gridColor },
+          ticks: {
+            color: themeColors.textColor,
+            font: { size: isMobile ? 10 : 12 },
+            callback: v => {
+              if (Math.abs(v) >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
+              if (Math.abs(v) >= 1000) return '$' + (v/1000).toFixed(0) + 'K';
+              return '$' + v;
+            }
+          }
+        }
+      }
+    }
+  });
+  
+  // Update stats tiles for GL mode
+  updateCashStatsTilesGL(glData);
+}
+
+function updateCashStatsTilesGL(glData) {
+  if (!glData.totals || glData.totals.length === 0) return;
+  
+  const totals = glData.totals.map((total, idx) => ({
+    date: glData.labels[idx],
+    total
+  }));
+  
+  const avg = totals.reduce((sum, t) => sum + t.total, 0) / totals.length;
+  const max = totals.reduce((m, t) => t.total > m.total ? t : m, totals[0]);
+  const min = totals.reduce((m, t) => t.total < m.total ? t : m, totals[0]);
+  
+  const firstTotal = totals[0].total;
+  const lastTotal = totals[totals.length - 1].total;
+  const growth = firstTotal !== 0 ? ((lastTotal - firstTotal) / Math.abs(firstTotal)) * 100 : 0;
+  
+  animateCurrency(document.getElementById("cashAvgValue"), avg, 600);
+  animateCurrency(document.getElementById("cashMaxValue"), max.total, 600);
+  document.getElementById("cashMaxDate").textContent = max.date;
+  animateCurrency(document.getElementById("cashMinValue"), min.total, 600);
+  document.getElementById("cashMinDate").textContent = min.date;
+  
+  const growthEl = document.getElementById("cashGrowthValue");
+  if (growthEl) {
+    growthEl.className = growth < 0 ? "tile-value negative" : "tile-value positive";
+    growthEl.style.color = growth < 0 ? "#dc2626" : "#10b981";
+  }
+  animatePercent(growthEl, growth, 600);
+}
+
 function renderCashDailyTable() {
+  // Check if in GL mode
+  if (cashGLMode && cashGLData) {
+    renderCashDailyTableGL();
+    return;
+  }
   const container = document.getElementById("dailyBalanceTableContainer");
   if (!container) return;
   
@@ -13241,6 +13575,68 @@ function renderCashDailyTable() {
 function toggleCashTableExpand() {
   cashTableExpanded = !cashTableExpanded;
   renderCashDailyTable();
+}
+
+// GL Mode Table Rendering (for TTM, 5Y, All)
+function renderCashDailyTableGL() {
+  const container = document.getElementById("dailyBalanceTableContainer");
+  if (!container) return;
+  
+  const glData = getCashGLMonthlyData(cashGLRange);
+  if (!glData.labels || glData.labels.length === 0) {
+    container.innerHTML = '<div class="error-message">No GL data available</div>';
+    return;
+  }
+  
+  const accountNames = Object.keys(glData.accountData);
+  
+  const expandedClass = cashTableExpanded ? 'expanded' : '';
+  const toggleText = cashTableExpanded ? 'Hide Accounts' : 'Show Accounts';
+  const toggleIcon = cashTableExpanded ? '◀' : '▶';
+  
+  let html = `
+    <div class="table-expand-toggle">
+      <button class="table-expand-btn" onclick="toggleCashTableExpand()">
+        <span class="expand-icon">${toggleIcon}</span> ${toggleText}
+      </button>
+    </div>
+    <div class="daily-balance-table-wrapper">
+      <table class="daily-balance-table ${expandedClass}">
+        <thead>
+          <tr>
+            <th class="date-col">Month</th>
+            ${accountNames.map(name => `<th class="balance-col account-col">${name}</th>`).join('')}
+            <th class="total-col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  // Reverse order for display (newest first)
+  const reversedLabels = [...glData.labels].reverse();
+  const reversedMonths = [...glData.months].reverse();
+  const reversedTotals = [...glData.totals].reverse();
+  
+  reversedLabels.forEach((label, idx) => {
+    const reverseIdx = glData.labels.length - 1 - idx;
+    
+    html += `<tr>`;
+    html += `<td class="date-col">${label}</td>`;
+    
+    accountNames.forEach(acctName => {
+      const val = glData.accountData[acctName][reverseIdx] || 0;
+      const balClass = val < 0 ? 'negative' : '';
+      html += `<td class="balance-col account-col ${balClass}">${formatCurrency(val)}</td>`;
+    });
+    
+    const total = reversedTotals[idx];
+    const totalClass = total < 0 ? 'negative' : '';
+    html += `<td class="total-col ${totalClass}">${formatCurrency(total)}</td>`;
+    html += `</tr>`;
+  });
+  
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
 }
 
 function renderCashTransactionTable() {

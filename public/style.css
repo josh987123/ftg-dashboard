@@ -6276,6 +6276,19 @@ body.dark-mode .nav-item.nav-parent.expanded {
   font-weight: 600;
 }
 
+.cash-range-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 4px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+[data-theme="light"] .cash-range-divider {
+  background: rgba(0, 0, 0, 0.15);
+}
+
 [data-theme="light"] .cash-range-buttons {
   background: #e5e7eb;
 }
