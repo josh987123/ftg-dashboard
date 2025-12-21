@@ -1069,7 +1069,7 @@ function setupDarkModeToggle() {
   const themeSelect = document.getElementById("themeSelect");
   
   // Load saved theme preference and apply immediately
-  const savedTheme = localStorage.getItem("ftg_theme") || "light";
+  const savedTheme = localStorage.getItem("ftg_theme") || "dark";
   applyTheme(savedTheme);
   
   // Sync dropdown with current theme
