@@ -15544,8 +15544,8 @@ function renderProfitabilityHeatmap() {
   // Get heat map's dedicated status filter (overrides page filters)
   const statusFilter = document.getElementById('heatmapStatusFilter')?.value || 'active';
   
-  // Start from raw jobs data, not joFiltered - this filter is independent
-  let baseJobs = window.jobsRawData || [];
+  // Start from joData (raw jobs), not joFiltered - this filter is independent
+  let baseJobs = joData || [];
   
   // Apply heat map's own status filter
   if (statusFilter === 'active') {
