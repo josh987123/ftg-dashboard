@@ -10840,6 +10840,23 @@ body.dark-mode .job-metric-card.profit .metric-value.negative {
   color: #f87171 !important;
 }
 
+/* Over/Under Bill metric - respect inline color styles */
+body.dark-mode #joOverUnderValue {
+  color: inherit !important;
+}
+#joOverUnderValue.positive {
+  color: #10b981 !important;
+}
+#joOverUnderValue.negative {
+  color: #ef4444 !important;
+}
+body.dark-mode #joOverUnderValue.positive {
+  color: #34d399 !important;
+}
+body.dark-mode #joOverUnderValue.negative {
+  color: #f87171 !important;
+}
+
 /* Metric labels */
 body.dark-mode .job-metric-card .metric-label,
 body.dark-mode .job-metrics-grid .metric-label {

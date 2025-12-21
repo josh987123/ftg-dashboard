@@ -15003,11 +15003,12 @@ function updateJobOverviewMetrics() {
   const overUnderTile = document.getElementById('joOverUnderTile');
   if (overUnderEl) {
     overUnderEl.textContent = formatCurrencyCompact(totalOverUnder);
+    overUnderEl.classList.remove('positive', 'negative');
     if (totalOverUnder >= 0) {
-      overUnderEl.style.color = '#10b981';
+      overUnderEl.classList.add('positive');
       if (overUnderTile) overUnderTile.style.borderLeftColor = '#10b981';
     } else {
-      overUnderEl.style.color = '#ef4444';
+      overUnderEl.classList.add('negative');
       if (overUnderTile) overUnderTile.style.borderLeftColor = '#ef4444';
     }
   }
