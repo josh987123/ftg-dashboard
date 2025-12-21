@@ -8094,8 +8094,9 @@ body.dark-mode .nav-item.nav-parent.expanded {
 
 .roles-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
   margin-bottom: 20px;
 }
 
@@ -8103,6 +8104,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
+  margin: 0;
 }
 
 .role-protected-badge {
