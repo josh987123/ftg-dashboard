@@ -19524,6 +19524,7 @@ let ccTopCategoriesChart = null;
 let ccTrendChart = null;
 let ccQuickFilter = 'all';
 let ccFilteredActualsCache = [];
+let ccJobActualsRaw = [];
 
 async function initCostCodes() {
   console.log('[CostCodes] Initializing...');
@@ -19551,7 +19552,9 @@ async function initCostCodes() {
     
     if (data.job_actuals) {
       // Normalize field names from JSON format to expected format (preserve all original fields)
-      jobActualsData = (data.job_actuals || []).map(a => ({
+      // Use ccJobActualsRaw for cost code module (raw line items per cost code)
+      // Don't overwrite jobActualsData which is used by PM Report (aggregated job-level data)
+      ccJobActualsRaw = (data.job_actuals || []).map(a => ({
         ...a,
         job_no: a.Job_No || a.job_no,
         job_description: a.Job_Description || a.job_description,
@@ -19791,7 +19794,7 @@ function updateCostCodes() {
 
 function updateCostCodesSync() {
   try {
-    if (!jobActualsData || !Array.isArray(jobActualsData)) {
+    if (!ccJobActualsRaw || !Array.isArray(ccJobActualsRaw)) {
       console.log('Cost codes: No actuals data available');
       return;
     }
@@ -19830,8 +19833,8 @@ function updateCostCodesSync() {
     const filteredActuals = [];
     const jobCosts = {};
     
-    for (let i = 0; i < jobActualsData.length; i++) {
-      const a = jobActualsData[i];
+    for (let i = 0; i < ccJobActualsRaw.length; i++) {
+      const a = ccJobActualsRaw[i];
       const budget = budgetLookup[a.job_no];
       if (!budget) continue;
       
