@@ -15222,7 +15222,8 @@ function updateJobOverviewCharts() {
   const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
   const showDataLabels = document.getElementById('joDataLabels')?.checked === true;
   
-  const pmData = aggregateJobsByField(joFiltered, 'project_manager_name');
+  const pmFilteredJobs = joFiltered.filter(j => j.project_manager_name !== 'Josh Angelo');
+  const pmData = aggregateJobsByField(pmFilteredJobs, 'project_manager_name');
   const customerData = aggregateJobsByField(joFiltered, 'customer_name');
   
   renderJoPmJobsChart(pmData, textColor, gridColor, showDataLabels);
