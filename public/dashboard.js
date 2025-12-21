@@ -15541,8 +15541,19 @@ function renderProfitabilityHeatmap() {
   const container = document.getElementById('profitabilityHeatmap');
   if (!container) return;
   
-  // Get heat map's dedicated status filter (overrides page filters)
+  // Get heat map's dedicated filters (overrides page filters)
   const statusFilter = document.getElementById('heatmapStatusFilter')?.value || 'active';
+  const groupByFilter = document.getElementById('heatmapGroupByFilter')?.value || 'pm';
+  
+  // Update description text based on groupBy selection
+  const descEl = document.getElementById('heatmapDescription');
+  if (descEl) {
+    if (groupByFilter === 'pm') {
+      descEl.textContent = 'Profit margin by Project Manager and job size. Darker green = higher margin, red = negative margin.';
+    } else {
+      descEl.textContent = 'Profit margin by Client and job size. Darker green = higher margin, red = negative margin.';
+    }
+  }
   
   // Start from joData (raw jobs), not joFiltered - this filter is independent
   let baseJobs = joData || [];
@@ -15555,10 +15566,10 @@ function renderProfitabilityHeatmap() {
   }
   // 'all' = no status filtering
   
-  // Exclude Josh Angelo and jobs without budgets
+  // Exclude Josh Angelo (for PM view) and jobs without budgets
   // Jobs must have both a contract value AND a budget (revised_cost) to be included
   const jobs = baseJobs.filter(j => 
-    j.project_manager_name !== 'Josh Angelo' &&
+    (groupByFilter === 'client' || j.project_manager_name !== 'Josh Angelo') &&
     j.revised_contract > 0 &&
     j.revised_cost > 0
   );
@@ -15577,15 +15588,19 @@ function renderProfitabilityHeatmap() {
     { label: '$5M+', min: 5000000, max: Infinity }
   ];
   
-  // Get unique PMs (excluding Josh Angelo)
-  const pms = [...new Set(jobs.map(j => j.project_manager_name).filter(Boolean))].sort();
+  // Determine grouping field based on filter
+  const groupField = groupByFilter === 'pm' ? 'project_manager_name' : 'customer_name';
+  const groupLabel = groupByFilter === 'pm' ? 'Project Manager' : 'Client';
   
-  // Build data matrix: PM x Size Range
+  // Get unique group values
+  const groups = [...new Set(jobs.map(j => j[groupField]).filter(Boolean))].sort();
+  
+  // Build data matrix: Group x Size Range
   const matrix = {};
-  pms.forEach(pm => {
-    matrix[pm] = {};
+  groups.forEach(group => {
+    matrix[group] = {};
     sizeRanges.forEach(range => {
-      matrix[pm][range.label] = {
+      matrix[group][range.label] = {
         jobs: [],
         totalContract: 0,
         totalCost: 0,
@@ -15597,8 +15612,8 @@ function renderProfitabilityHeatmap() {
   
   // Populate matrix with job data
   jobs.forEach(job => {
-    const pm = job.project_manager_name;
-    if (!pm || !matrix[pm]) return;
+    const group = job[groupField];
+    if (!group || !matrix[group]) return;
     
     const contract = job.revised_contract || 0;
     const cost = job.revised_cost || 0;
@@ -15607,7 +15622,7 @@ function renderProfitabilityHeatmap() {
     const range = sizeRanges.find(r => contract >= r.min && contract < r.max);
     if (!range) return;
     
-    const cell = matrix[pm][range.label];
+    const cell = matrix[group][range.label];
     cell.jobs.push(job);
     cell.totalContract += contract;
     cell.totalCost += cost;
@@ -15615,9 +15630,9 @@ function renderProfitabilityHeatmap() {
   });
   
   // Calculate average margin for each cell
-  Object.keys(matrix).forEach(pm => {
+  Object.keys(matrix).forEach(group => {
     sizeRanges.forEach(range => {
-      const cell = matrix[pm][range.label];
+      const cell = matrix[group][range.label];
       if (cell.jobCount > 0 && cell.totalContract > 0) {
         const profit = cell.totalContract - cell.totalCost;
         cell.avgMargin = (profit / cell.totalContract) * 100;
@@ -15641,31 +15656,31 @@ function renderProfitabilityHeatmap() {
   
   // Header row
   html += '<div class="heatmap-row header-row">';
-  html += '<div class="heatmap-cell header">Project Manager</div>';
+  html += `<div class="heatmap-cell header">${groupLabel}</div>`;
   sizeRanges.forEach(range => {
     html += `<div class="heatmap-cell header">${range.label}</div>`;
   });
   html += '</div>';
   
-  // Data rows - sort PMs by overall margin (highest first)
-  const pmStats = pms.map(pm => {
-    const row = matrix[pm];
+  // Data rows - sort groups by overall margin (highest first)
+  const groupStats = groups.map(group => {
+    const row = matrix[group];
     let totalContract = 0, totalCost = 0;
     Object.values(row).forEach(cell => {
       totalContract += cell.totalContract;
       totalCost += cell.totalCost;
     });
     const overallMargin = totalContract > 0 ? ((totalContract - totalCost) / totalContract) * 100 : 0;
-    return { pm, overallMargin };
+    return { group, overallMargin };
   });
-  pmStats.sort((a, b) => b.overallMargin - a.overallMargin);
+  groupStats.sort((a, b) => b.overallMargin - a.overallMargin);
   
-  pmStats.forEach(({ pm }) => {
+  groupStats.forEach(({ group }) => {
     html += '<div class="heatmap-row">';
-    html += `<div class="heatmap-cell pm-label">${pm}</div>`;
+    html += `<div class="heatmap-cell pm-label">${group}</div>`;
     
     sizeRanges.forEach(range => {
-      const cell = matrix[pm][range.label];
+      const cell = matrix[group][range.label];
       
       if (cell.avgMargin === null || cell.jobCount === 0) {
         html += '<div class="heatmap-cell no-data">-</div>';

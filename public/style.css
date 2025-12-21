@@ -17024,10 +17024,17 @@ body.dark-mode .dashboard-section > h2 {
   margin-bottom: 0;
 }
 
+.heatmap-filters {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
 .heatmap-filter {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 13px;
   color: var(--text-secondary);
 }
