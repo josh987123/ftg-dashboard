@@ -22032,6 +22032,10 @@ function renderTopVendorsChart(vendors) {
   
   if (topVendorsChart) topVendorsChart.destroy();
   
+  // Calculate max value rounded up to next $5M increment
+  const maxValue = vendors.length > 0 ? Math.max(...vendors.map(v => v.total)) : 0;
+  const xAxisMax = Math.ceil(maxValue / 5000000) * 5000000;
+  
   const ctx = canvas.getContext('2d');
   topVendorsChart = new Chart(ctx, {
     type: 'bar',
@@ -22071,6 +22075,7 @@ function renderTopVendorsChart(vendors) {
       },
       scales: {
         x: {
+          max: xAxisMax,
           ticks: {
             color: textColor,
             font: { size: 10 },
