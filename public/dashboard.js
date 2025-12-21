@@ -18901,6 +18901,8 @@ Over 90 days: ${formatCurrency(ap.over90 || 0)}
 Top Vendors with Outstanding AP:
 ${(ap.topVendors || []).map(v => `- ${v.name}: ${formatCurrency(v.amount)}`).join('\n')}
 
+IMPORTANT: Disregard Josh Angelo's numbers from your analysis and commentary. Do not include any data or mention of Josh Angelo in your response.
+
 Please provide a comprehensive analysis with the following sections (use markdown formatting):
 
 ## EXECUTIVE SUMMARY
@@ -18916,7 +18918,7 @@ Analysis of job portfolio, billing status, and project execution.
 Analysis of AR aging, AP management, and cash position.
 
 ## PROJECT MANAGER PERFORMANCE
-Comparison of PM performance and any concerns.
+Comparison of PM performance and any concerns (excluding Josh Angelo).
 
 ## STRATEGIC RECOMMENDATIONS
 Top 3-5 actionable recommendations prioritized by impact.`;

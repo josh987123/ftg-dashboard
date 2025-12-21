@@ -882,6 +882,8 @@ def api_ai_analysis():
         if section == 'comprehensive_insights':
             system_prompt = """You are a senior financial analyst for a construction company. Provide comprehensive business insights.
 
+IMPORTANT: Disregard Josh Angelo's numbers from your analysis and commentary. Do not include any data or mention of Josh Angelo in your response.
+
 Structure your response with these clear sections using markdown headers:
 ## Executive Summary
 Brief 2-3 sentence overview of overall business health.
@@ -896,7 +898,7 @@ Analysis of project portfolio, margins, and billing status.
 AR/AP aging analysis and cash position insights.
 
 ## PM Performance
-Project manager rankings and performance observations.
+Project manager rankings and performance observations (excluding Josh Angelo).
 
 ## Strategic Recommendations
 3-5 actionable recommendations for improvement.
@@ -907,9 +909,14 @@ Keep each section concise (2-4 bullet points). Use specific dollar amounts round
 - Overall performance metrics
 - Areas of concern (under-billing, missing budgets)
 - Recommendations for improvement
+
+IMPORTANT: Disregard Josh Angelo's numbers from your analysis and commentary. Do not include any data or mention of Josh Angelo in your response.
+
 Keep response concise with bullet points."""
         else:
-            system_prompt = """You are a financial analyst for a construction company. Provide clear, actionable insights based on the data provided. Use bullet points and be concise."""
+            system_prompt = """You are a financial analyst for a construction company. Provide clear, actionable insights based on the data provided. Use bullet points and be concise.
+
+IMPORTANT: Disregard Josh Angelo's numbers from your analysis and commentary. Do not include any data or mention of Josh Angelo in your response."""
         
         print(f"Calling Anthropic API...")
         response = client.messages.create(
