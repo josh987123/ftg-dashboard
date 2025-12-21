@@ -17011,6 +17011,42 @@ body.dark-mode .dashboard-section > h2 {
   border: 1px solid var(--border-color);
 }
 
+.heatmap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.heatmap-header .jo-section-header {
+  margin-bottom: 0;
+}
+
+.heatmap-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.heatmap-filter select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.heatmap-filter select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
 .heatmap-description {
   color: var(--text-muted);
   font-size: 13px;

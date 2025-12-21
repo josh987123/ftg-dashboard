@@ -15541,9 +15541,23 @@ function renderProfitabilityHeatmap() {
   const container = document.getElementById('profitabilityHeatmap');
   if (!container) return;
   
-  // Use filtered jobs but exclude Josh Angelo and jobs without budgets
+  // Get heat map's dedicated status filter (overrides page filters)
+  const statusFilter = document.getElementById('heatmapStatusFilter')?.value || 'active';
+  
+  // Start from raw jobs data, not joFiltered - this filter is independent
+  let baseJobs = window.jobsRawData || [];
+  
+  // Apply heat map's own status filter
+  if (statusFilter === 'active') {
+    baseJobs = baseJobs.filter(j => j.job_status === 'Active');
+  } else if (statusFilter === 'closed') {
+    baseJobs = baseJobs.filter(j => j.job_status === 'Closed');
+  }
+  // 'all' = no status filtering
+  
+  // Exclude Josh Angelo and jobs without budgets
   // Jobs must have both a contract value AND a budget (revised_cost) to be included
-  const jobs = joFiltered.filter(j => 
+  const jobs = baseJobs.filter(j => 
     j.project_manager_name !== 'Josh Angelo' &&
     j.revised_contract > 0 &&
     j.revised_cost > 0

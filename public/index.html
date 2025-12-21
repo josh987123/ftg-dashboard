@@ -1861,7 +1861,17 @@
 
         <!-- Profitability Heat Map -->
         <div class="profitability-heatmap-section">
-          <h3 class="jo-section-header">Profitability Heat Map</h3>
+          <div class="heatmap-header">
+            <h3 class="jo-section-header">Profitability Heat Map</h3>
+            <div class="heatmap-filter">
+              <label>Show:</label>
+              <select id="heatmapStatusFilter" onchange="renderProfitabilityHeatmap()">
+                <option value="active">Active Jobs</option>
+                <option value="closed">Closed Jobs</option>
+                <option value="all">All Jobs</option>
+              </select>
+            </div>
+          </div>
           <p class="heatmap-description">Profit margin by Project Manager and job size. Darker green = higher margin, red = negative margin.</p>
           <div class="heatmap-legend">
             <span class="legend-label">Loss</span>
