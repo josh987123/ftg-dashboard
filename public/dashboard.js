@@ -22590,6 +22590,7 @@ async function loadRoles() {
         <h3>Manage Roles</h3>
         <button class="btn-primary" onclick="openRoleModal()">+ Add Role</button>
       </div>
+      <div class="roles-grid">
     `;
     
     for (const role of adminRoles) {
@@ -22619,6 +22620,7 @@ async function loadRoles() {
       `;
     }
     
+    html += '</div>';
     container.innerHTML = html;
   } catch (err) {
     container.innerHTML = `<div class="loading-cell">Error: ${err.message}</div>`;
