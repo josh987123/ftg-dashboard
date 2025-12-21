@@ -14870,9 +14870,10 @@ async function loadJobOverviewData() {
     
     const actualCostMap = new Map();
     jobActualsRaw.forEach(row => {
-      const jobNo = row.job_no;
+      const jobNo = row.Job_No || row.job_no;
+      if (!jobNo) return;
       if (!actualCostMap.has(jobNo)) actualCostMap.set(jobNo, 0);
-      actualCostMap.set(jobNo, actualCostMap.get(jobNo) + (parseFloat(row.actual_cost) || 0));
+      actualCostMap.set(jobNo, actualCostMap.get(jobNo) + (parseFloat(row.Value || row.actual_cost) || 0));
     });
     
     const billedRevenueMap = new Map();
