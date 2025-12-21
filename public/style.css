@@ -10897,7 +10897,8 @@ body.dark-mode .jo-chart-stats .stat-period {
   #jobOverview > .config-panel,
   #jobOverview > #joAiAnalysisPanel,
   #jobOverview > .job-key-metrics-section,
-  #jobOverview > .job-key-metrics-section.jo-key-metrics-constrained {
+  #jobOverview > .job-key-metrics-section.jo-key-metrics-constrained,
+  #jobOverview > .profitability-heatmap-section {
     width: 100% !important;
     max-width: 100% !important;
   }
@@ -17011,6 +17012,13 @@ body.dark-mode .dashboard-section > h2 {
   border: 1px solid var(--border-color);
 }
 
+/* Match AI analysis section width on desktop */
+#jobOverview > .profitability-heatmap-section {
+  width: 60%;
+  max-width: 60%;
+  box-sizing: border-box;
+}
+
 .heatmap-header {
   display: flex;
   justify-content: space-between;
@@ -17088,7 +17096,7 @@ body.dark-mode .dashboard-section > h2 {
 .heatmap-grid {
   display: table;
   border-collapse: collapse;
-  width: 100%;
+  width: auto;
   table-layout: auto;
 }
 
@@ -17108,6 +17116,9 @@ body.dark-mode .dashboard-section > h2 {
   border: 1px solid var(--border-color);
   font-size: 12px;
   vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 .heatmap-cell.pm-label {
@@ -17117,6 +17128,8 @@ body.dark-mode .dashboard-section > h2 {
   background: var(--bg-tertiary);
   color: var(--text-primary);
   padding-right: 12px;
+  width: 1%;
+  max-width: none;
 }
 
 .heatmap-cell.header {
