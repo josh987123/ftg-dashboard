@@ -10549,31 +10549,35 @@ body.dark-mode .jo-metrics-chart-card .chart-title {
 
 @media (max-width: 768px) {
   .jo-metrics-row-5 {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
     justify-content: flex-start;
+    overflow-x: auto;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact {
-    flex: 0 0 auto;
-    min-width: auto;
-    max-width: none;
-    padding: 6px 8px !important;
+    flex: 0 0 auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+    padding: 4px 6px !important;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact .metric-icon {
-    width: 20px !important;
-    height: 20px !important;
-    font-size: 10px !important;
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 9px !important;
+    border-radius: 6px !important;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact .metric-value {
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact .metric-label {
-    font-size: 7px !important;
+    font-size: 6px !important;
+    white-space: nowrap !important;
   }
 }
 
@@ -10758,24 +10762,27 @@ body.dark-mode .jo-chart-stats .stat-period {
   }
   
   .jo-key-metrics-constrained .jo-metrics-row-5 {
-    flex-wrap: wrap;
-    justify-content: flex-start;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    overflow-x: auto;
   }
   
   .jo-key-metrics-constrained .job-metric-card.compact {
-    flex: 1 1 calc(50% - 8px);
-    min-width: 100px;
-    max-width: none;
+    flex: 0 0 auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+    padding: 4px 6px !important;
   }
   
   .jo-key-metrics-constrained .job-metric-card.compact .metric-value {
-    font-size: clamp(0.75rem, 3vw, 1rem);
+    font-size: 10px !important;
   }
   
   .jo-key-metrics-constrained .job-metric-card.compact .metric-label {
-    font-size: clamp(0.5rem, 1.8vw, 0.65rem);
-    white-space: normal;
-    word-wrap: break-word;
+    font-size: 6px !important;
+    white-space: nowrap !important;
   }
   
   .jo-chart-stats {
@@ -10801,9 +10808,32 @@ body.dark-mode .jo-chart-stats .stat-period {
 }
 
 @media (max-width: 480px) {
+  .jo-key-metrics-constrained .jo-metrics-row-5 {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 3px !important;
+  }
+  
   .jo-key-metrics-constrained .job-metric-card.compact {
-    flex: 1 1 100%;
-    max-width: 100%;
+    flex: 0 0 auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+    padding: 3px 4px !important;
+  }
+  
+  .jo-key-metrics-constrained .job-metric-card.compact .metric-icon {
+    width: 14px !important;
+    height: 14px !important;
+    font-size: 7px !important;
+  }
+  
+  .jo-key-metrics-constrained .job-metric-card.compact .metric-value {
+    font-size: 9px !important;
+  }
+  
+  .jo-key-metrics-constrained .job-metric-card.compact .metric-label {
+    font-size: 5px !important;
   }
   
   .jo-section-header {
@@ -11334,12 +11364,30 @@ body.dark-mode .job-budgets-table .margin-cell {
 /* 1. FILTER DROPDOWNS - Stack vertically with no titles */
 .job-filter-stack {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
 .job-filter-stack .filter-select {
   width: 200px;
+}
+
+@media (max-width: 768px) {
+  #jobOverview .job-filter-stack {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 6px !important;
+  }
+  
+  #jobOverview .job-filter-stack .filter-select {
+    flex: 1;
+    min-width: 120px;
+    max-width: none;
+    width: auto;
+    font-size: 11px;
+    padding: 6px 8px;
+  }
 }
 
 /* 2. BREAKDOWN CONTAINER - 60% screen width total, side by side */
