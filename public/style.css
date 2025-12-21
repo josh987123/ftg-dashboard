@@ -16998,3 +16998,180 @@ body.dark-mode .dashboard-section > h2 {
     max-width: 450px !important;
   }
 }
+
+/* ============================================================
+   PROFITABILITY HEAT MAP
+   ============================================================ */
+
+.profitability-heatmap-section {
+  margin-top: 30px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.heatmap-description {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 15px;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.legend-gradient {
+  width: 200px;
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #dc2626, #f59e0b, #fbbf24, #84cc16, #10b981, #059669);
+}
+
+.legend-label {
+  font-weight: 500;
+}
+
+.heatmap-container {
+  overflow-x: auto;
+}
+
+.heatmap-grid {
+  display: table;
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 600px;
+}
+
+.heatmap-row {
+  display: table-row;
+}
+
+.heatmap-row.header-row {
+  font-weight: 600;
+  background: var(--bg-tertiary);
+}
+
+.heatmap-cell {
+  display: table-cell;
+  padding: 12px 10px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+  min-width: 80px;
+  vertical-align: middle;
+}
+
+.heatmap-cell.pm-label {
+  text-align: left;
+  font-weight: 500;
+  min-width: 150px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.heatmap-cell.header {
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.heatmap-cell.data-cell {
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  transition: transform 0.15s ease;
+  cursor: default;
+}
+
+.heatmap-cell.data-cell:hover {
+  transform: scale(1.05);
+  z-index: 1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.heatmap-cell.no-data {
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.heatmap-tooltip {
+  position: relative;
+}
+
+.heatmap-tooltip .tooltip-content {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  border: 1px solid var(--border-color);
+  z-index: 100;
+  text-shadow: none;
+}
+
+.heatmap-tooltip:hover .tooltip-content {
+  display: block;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .profitability-heatmap-section {
+  background: rgba(30, 41, 59, 0.6);
+}
+
+[data-theme="dark"] .heatmap-cell.no-data {
+  background: rgba(30, 41, 59, 0.4);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .profitability-heatmap-section {
+    padding: 15px;
+    margin-top: 20px;
+  }
+  
+  .heatmap-cell {
+    padding: 8px 6px;
+    font-size: 10px;
+    min-width: 60px;
+  }
+  
+  .heatmap-cell.pm-label {
+    min-width: 100px;
+    font-size: 10px;
+  }
+  
+  .legend-gradient {
+    width: 120px;
+  }
+}
+
+/* Landscape mobile */
+@media (max-width: 900px) and (orientation: landscape) {
+  .profitability-heatmap-section {
+    padding: 12px;
+  }
+  
+  .heatmap-cell {
+    padding: 8px 5px;
+    font-size: 10px;
+    min-width: 55px;
+  }
+  
+  .heatmap-cell.pm-label {
+    min-width: 90px;
+  }
+}

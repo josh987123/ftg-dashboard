@@ -15484,6 +15484,7 @@ function filterJobOverview() {
   
   updateJobOverviewMetrics();
   updateJobOverviewCharts();
+  renderProfitabilityHeatmap();
 }
 
 function updateJobOverviewMetrics() {
@@ -15528,6 +15529,172 @@ function updateJobOverviewMetrics() {
     } else {
       overUnderEl.classList.add('negative');
       if (overUnderTile) overUnderTile.style.borderLeftColor = '#ef4444';
+    }
+  }
+}
+
+// ========================================
+// PROFITABILITY HEAT MAP
+// ========================================
+
+function renderProfitabilityHeatmap() {
+  const container = document.getElementById('profitabilityHeatmap');
+  if (!container) return;
+  
+  // Use filtered jobs but exclude Josh Angelo as per project requirements
+  const jobs = joFiltered.filter(j => j.project_manager_name !== 'Josh Angelo');
+  
+  if (jobs.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">No job data available for heat map</div>';
+    return;
+  }
+  
+  // Define job size ranges (contract value buckets)
+  const sizeRanges = [
+    { label: '<$100K', min: 0, max: 100000 },
+    { label: '$100K-$500K', min: 100000, max: 500000 },
+    { label: '$500K-$1M', min: 500000, max: 1000000 },
+    { label: '$1M-$5M', min: 1000000, max: 5000000 },
+    { label: '$5M+', min: 5000000, max: Infinity }
+  ];
+  
+  // Get unique PMs (excluding Josh Angelo)
+  const pms = [...new Set(jobs.map(j => j.project_manager_name).filter(Boolean))].sort();
+  
+  // Build data matrix: PM x Size Range
+  const matrix = {};
+  pms.forEach(pm => {
+    matrix[pm] = {};
+    sizeRanges.forEach(range => {
+      matrix[pm][range.label] = {
+        jobs: [],
+        totalContract: 0,
+        totalCost: 0,
+        avgMargin: null,
+        jobCount: 0
+      };
+    });
+  });
+  
+  // Populate matrix with job data
+  jobs.forEach(job => {
+    const pm = job.project_manager_name;
+    if (!pm || !matrix[pm]) return;
+    
+    const contract = job.revised_contract || 0;
+    const cost = job.revised_cost || 0;
+    
+    // Find size range
+    const range = sizeRanges.find(r => contract >= r.min && contract < r.max);
+    if (!range) return;
+    
+    const cell = matrix[pm][range.label];
+    cell.jobs.push(job);
+    cell.totalContract += contract;
+    cell.totalCost += cost;
+    cell.jobCount++;
+  });
+  
+  // Calculate average margin for each cell
+  Object.keys(matrix).forEach(pm => {
+    sizeRanges.forEach(range => {
+      const cell = matrix[pm][range.label];
+      if (cell.jobCount > 0 && cell.totalContract > 0) {
+        const profit = cell.totalContract - cell.totalCost;
+        cell.avgMargin = (profit / cell.totalContract) * 100;
+      }
+    });
+  });
+  
+  // Find min/max margins for color scaling
+  let minMargin = 0, maxMargin = 30;
+  Object.values(matrix).forEach(row => {
+    Object.values(row).forEach(cell => {
+      if (cell.avgMargin !== null) {
+        minMargin = Math.min(minMargin, cell.avgMargin);
+        maxMargin = Math.max(maxMargin, cell.avgMargin);
+      }
+    });
+  });
+  
+  // Build HTML table
+  let html = '<div class="heatmap-grid">';
+  
+  // Header row
+  html += '<div class="heatmap-row header-row">';
+  html += '<div class="heatmap-cell header">Project Manager</div>';
+  sizeRanges.forEach(range => {
+    html += `<div class="heatmap-cell header">${range.label}</div>`;
+  });
+  html += '</div>';
+  
+  // Data rows - sort PMs by overall margin (highest first)
+  const pmStats = pms.map(pm => {
+    const row = matrix[pm];
+    let totalContract = 0, totalCost = 0;
+    Object.values(row).forEach(cell => {
+      totalContract += cell.totalContract;
+      totalCost += cell.totalCost;
+    });
+    const overallMargin = totalContract > 0 ? ((totalContract - totalCost) / totalContract) * 100 : 0;
+    return { pm, overallMargin };
+  });
+  pmStats.sort((a, b) => b.overallMargin - a.overallMargin);
+  
+  pmStats.forEach(({ pm }) => {
+    html += '<div class="heatmap-row">';
+    html += `<div class="heatmap-cell pm-label">${pm}</div>`;
+    
+    sizeRanges.forEach(range => {
+      const cell = matrix[pm][range.label];
+      
+      if (cell.avgMargin === null || cell.jobCount === 0) {
+        html += '<div class="heatmap-cell no-data">-</div>';
+      } else {
+        const bgColor = getHeatmapColor(cell.avgMargin, minMargin, maxMargin);
+        const tooltip = `${cell.jobCount} job${cell.jobCount > 1 ? 's' : ''} | Avg: ${cell.avgMargin.toFixed(1)}% margin | Total: ${formatCurrencyCompact(cell.totalContract)}`;
+        
+        html += `<div class="heatmap-cell data-cell heatmap-tooltip" style="background:${bgColor}">
+          ${cell.avgMargin.toFixed(1)}%
+          <span class="tooltip-content">${tooltip}</span>
+        </div>`;
+      }
+    });
+    
+    html += '</div>';
+  });
+  
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function getHeatmapColor(value, min, max) {
+  // Normalize value between 0 and 1 (0 = loss/low, 1 = high profit)
+  // Use 0% as the neutral point
+  const scaleMax = Math.max(max, 30); // Ensure at least 30% scale for better color spread
+  let normalized;
+  
+  if (value < 0) {
+    // Negative margin: red gradient
+    normalized = Math.max(0, (value - min) / (0 - min));
+    // Interpolate from dark red to orange
+    const r = 220;
+    const g = Math.round(38 + (normalized * 80));
+    const b = Math.round(38 + (normalized * 20));
+    return `rgb(${r}, ${g}, ${b})`;
+  } else {
+    // Positive margin: green gradient
+    normalized = Math.min(1, value / scaleMax);
+    // Interpolate from yellow-green to dark green
+    if (normalized < 0.3) {
+      // Light green
+      return `rgb(${Math.round(250 - normalized * 200)}, ${Math.round(200 + normalized * 55)}, ${Math.round(100 - normalized * 50)})`;
+    } else if (normalized < 0.6) {
+      // Medium green
+      return `rgb(${Math.round(132 - (normalized - 0.3) * 200)}, ${Math.round(204 + (normalized - 0.3) * 30)}, ${Math.round(22 + (normalized - 0.3) * 50)})`;
+    } else {
+      // Dark green
+      return `rgb(${Math.round(16 - (normalized - 0.6) * 20)}, ${Math.round(185 - (normalized - 0.6) * 30)}, ${Math.round(129 - (normalized - 0.6) * 30)})`;
     }
   }
 }
