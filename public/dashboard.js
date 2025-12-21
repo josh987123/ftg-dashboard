@@ -15566,13 +15566,19 @@ function renderProfitabilityHeatmap() {
   }
   // 'all' = no status filtering
   
-  // Exclude Josh Angelo (for PM view) and jobs without budgets
-  // Jobs must have both a contract value AND a budget (revised_cost) to be included
-  const jobs = baseJobs.filter(j => 
-    (groupByFilter === 'client' || j.project_manager_name !== 'Josh Angelo') &&
-    j.revised_contract > 0 &&
-    j.revised_cost > 0
-  );
+  // Exclude Josh Angelo (for PM view) and jobs without valid financial data
+  // For closed jobs: must have billed revenue and actual cost
+  // For active jobs: must have revised contract and revised cost (budget)
+  const jobs = baseJobs.filter(j => {
+    if (groupByFilter === 'pm' && j.project_manager_name === 'Josh Angelo') return false;
+    
+    const isClosed = j.job_status === 'C';
+    if (isClosed) {
+      return (j.billed_revenue || 0) > 0 && (j.actual_cost || 0) > 0;
+    } else {
+      return (j.revised_contract || 0) > 0 && (j.revised_cost || 0) > 0;
+    }
+  });
   
   if (jobs.length === 0) {
     container.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">No job data available for heat map</div>';
@@ -15615,10 +15621,13 @@ function renderProfitabilityHeatmap() {
     const group = job[groupField];
     if (!group || !matrix[group]) return;
     
-    const contract = job.revised_contract || 0;
-    const cost = job.revised_cost || 0;
+    // For closed jobs, use actual billed revenue and actual cost
+    // For active jobs, use revised contract and revised cost (budget)
+    const isClosed = job.job_status === 'C';
+    const contract = isClosed ? (job.billed_revenue || 0) : (job.revised_contract || 0);
+    const cost = isClosed ? (job.actual_cost || 0) : (job.revised_cost || 0);
     
-    // Find size range
+    // Find size range based on contract/revenue value
     const range = sizeRanges.find(r => contract >= r.min && contract < r.max);
     if (!range) return;
     
