@@ -16299,12 +16299,50 @@ body.dark-mode .dashboard-section > h2 {
     flex-direction: row !important;
     flex-wrap: wrap !important;
     gap: 8px !important;
+    max-width: 100% !important;
   }
   
   .job-metrics-grid .job-metric-card {
     flex: 1 1 auto !important;
-    min-width: 140px !important;
+    min-width: 120px !important;
     max-width: none !important;
+  }
+  
+  /* --- JOB OVERVIEW PAGE SPECIFICS --- */
+  .jo-key-metrics-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  
+  .jo-metric-stack {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  .jo-metric-stack .job-metric-card {
+    flex: 1 1 auto !important;
+    min-height: auto !important;
+    min-width: 120px !important;
+  }
+  
+  .overview-chart-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  
+  .overview-chart-card {
+    padding: 10px !important;
+  }
+  
+  .overview-chart-card .chart-container {
+    height: 150px !important;
+  }
+  
+  .jo-metrics-chart-card .chart-container {
+    min-height: 140px !important;
   }
   
   /* --- JO METRICS ROW - Keep inline --- */
@@ -16451,16 +16489,36 @@ body.dark-mode .dashboard-section > h2 {
     padding: 12px !important;
   }
   
-  /* --- SUMMARY TILES (GENERIC) --- */
+  /* --- SUMMARY TILES (GENERIC - Revenue/Account Detail) --- */
   .summary-tiles {
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
+    max-width: 100% !important;
   }
   
   .summary-tiles .summary-tile {
-    flex: 1 1 auto !important;
-    min-width: 100px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+  
+  .summary-tile .tile-value {
+    font-size: 16px !important;
+    word-break: break-word !important;
+  }
+  
+  .summary-tile .tile-label {
+    font-size: 9px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  .summary-tile .tile-sub {
+    font-size: 8px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   
   /* --- CASH BALANCES --- */
@@ -16522,22 +16580,33 @@ body.dark-mode .dashboard-section > h2 {
     padding: 8px 6px !important;
   }
   
-  /* --- OVERVIEW TILES --- */
+  /* --- OVERVIEW/REVENUE/ACCOUNT DETAIL TILES --- */
   .overview-tiles-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 10px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    max-width: 100% !important;
   }
   
   .overview-metric-tile {
-    padding: 12px !important;
+    padding: 10px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
   }
   
   .overview-metric-tile .tile-value {
-    font-size: 18px !important;
+    font-size: 16px !important;
+    word-break: break-word !important;
   }
   
   .overview-metric-tile .tile-label {
-    font-size: 10px !important;
+    font-size: 9px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  .overview-metric-tile .tile-sub {
+    font-size: 8px !important;
   }
   
   /* --- AI ANALYSIS PANELS --- */
@@ -16558,11 +16627,26 @@ body.dark-mode .dashboard-section > h2 {
   
   /* --- SIDEBAR - Compact --- */
   .sidebar {
-    width: 200px !important;
+    width: 180px !important;
   }
   
   .sidebar.collapsed {
     width: 50px !important;
+  }
+  
+  /* --- PREVENT HORIZONTAL OVERFLOW --- */
+  .main-content {
+    overflow-x: hidden !important;
+    max-width: calc(100vw - 180px) !important;
+  }
+  
+  .sidebar.collapsed ~ .main-content {
+    max-width: calc(100vw - 50px) !important;
+  }
+  
+  .dashboard-section {
+    overflow-x: auto !important;
+    max-width: 100% !important;
   }
   
   /* --- PAYMENTS PAGE --- */
