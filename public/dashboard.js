@@ -15599,7 +15599,21 @@ function renderProfitabilityHeatmap() {
   const groupLabel = groupByFilter === 'pm' ? 'Project Manager' : 'Client';
   
   // Get unique group values
-  const groups = [...new Set(jobs.map(j => j[groupField]).filter(Boolean))].sort();
+  // For PM view: only show PMs who have active jobs (regardless of status filter)
+  // For Client view: show all clients from the filtered jobs
+  let groups;
+  if (groupByFilter === 'pm') {
+    // Get PMs with active jobs from the full joData
+    const activePMs = new Set(
+      (joData || [])
+        .filter(j => j.job_status === 'A' && j.project_manager_name && j.project_manager_name !== 'Josh Angelo')
+        .map(j => j.project_manager_name)
+    );
+    // Only include PMs that have active jobs AND appear in our filtered data
+    groups = [...new Set(jobs.map(j => j[groupField]).filter(pm => pm && activePMs.has(pm)))].sort();
+  } else {
+    groups = [...new Set(jobs.map(j => j[groupField]).filter(Boolean))].sort();
+  }
   
   // Build data matrix: Group x Size Range
   const matrix = {};
