@@ -12342,25 +12342,37 @@ function getCashGLMonthlyData(range) {
   });
   
   // Filter months based on range for display
+  // IMPORTANT: Only show through the LAST COMPLETE month (month before current)
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
   
+  // Last complete month is the previous month
+  let lastCompleteMonth, lastCompleteYear;
+  if (currentMonth === 1) {
+    lastCompleteMonth = 12;
+    lastCompleteYear = currentYear - 1;
+  } else {
+    lastCompleteMonth = currentMonth - 1;
+    lastCompleteYear = currentYear;
+  }
+  
   let startDate;
   if (range === 'ttm') {
-    // Last 12 months
-    startDate = new Date(currentYear, currentMonth - 13, 1);
+    // Last 12 complete months (12 months ending at last complete month)
+    startDate = new Date(lastCompleteYear, lastCompleteMonth - 12, 1);
   } else if (range === '5y') {
-    // Last 5 years
-    startDate = new Date(currentYear - 5, currentMonth - 1, 1);
+    // Last 5 years from last complete month
+    startDate = new Date(lastCompleteYear - 5, lastCompleteMonth - 1, 1);
   } else {
     // All years
     startDate = new Date(2015, 0, 1);
   }
   
   const startKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
-  const endKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+  const endKey = `${lastCompleteYear}-${String(lastCompleteMonth).padStart(2, '0')}`;
   
+  // Filter to only include months within range AND that exist in the data
   const filteredMonths = allMonthKeys.filter(m => m >= startKey && m <= endKey);
   
   // Extract cumulative values for filtered months
@@ -13392,11 +13404,14 @@ function renderCashChartGL() {
   
   if (cashChartInstance) cashChartInstance.destroy();
   
-  // Calculate Y-axis range
-  const dataMin = Math.min(...glData.totals.filter(v => v > 0));
+  // Calculate Y-axis range with buffer for visibility
+  const dataMin = Math.min(...glData.totals.filter(v => v !== 0));
   const dataMax = Math.max(...glData.totals);
-  const yMin = Math.floor((dataMin * 0.9) / 1000000) * 1000000;
-  const yMax = Math.ceil(dataMax / 1000000) * 1000000;
+  // Floor the min to nearest million, leaving some room below
+  const yMin = Math.max(0, Math.floor((dataMin * 0.8) / 1000000) * 1000000);
+  // Add 2-3 million buffer above max to prevent cutoff at top
+  const yMaxRounded = Math.ceil(dataMax / 1000000) * 1000000;
+  const yMax = yMaxRounded + 2000000;
   
   const isMobile = window.innerWidth <= 768;
   
