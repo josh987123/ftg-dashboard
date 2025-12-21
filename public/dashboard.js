@@ -16392,7 +16392,7 @@ function renderJobActualsTable() {
     actualCost: jobActualsFiltered.reduce((sum, j) => sum + (j.actual_cost || 0), 0)
   };
   const totalOverUnder = allTotals.billedRevenue - allTotals.earnedRevenue;
-  const totalOverUnderColor = totalOverUnder >= 0 ? '#d1fae5' : '#fce7f3';
+  const totalOverUnderTextColor = totalOverUnder >= 0 ? '#10b981' : '#ef4444';
   const avgPctComplete = jobActualsFiltered.length > 0 
     ? jobActualsFiltered.reduce((sum, j) => sum + (j.percent_complete || 0), 0) / jobActualsFiltered.length 
     : 0;
@@ -16401,7 +16401,7 @@ function renderJobActualsTable() {
     <td colspan="5"><strong>Totals (${jobActualsFiltered.length} jobs)</strong></td>
     <td class="number-col"><strong>${formatCurrency(allTotals.billedRevenue)}</strong></td>
     <td class="number-col"><strong>${formatCurrency(allTotals.earnedRevenue)}</strong></td>
-    <td class="number-col" style="background-color: ${totalOverUnderColor}; color: #1e293b;"><strong>${formatCurrency(totalOverUnder)}</strong></td>
+    <td class="number-col" style="color: ${totalOverUnderTextColor};"><strong>${formatCurrency(totalOverUnder)}</strong></td>
     <td class="number-col"><strong>${formatCurrency(allTotals.actualCost)}</strong></td>
     <td class="number-col"><strong>${Math.round(avgPctComplete)}%</strong></td>
   </tr>`;
@@ -16410,7 +16410,7 @@ function renderJobActualsTable() {
     const status = getJobStatusLabel(job.job_status);
     const pctComplete = job.percent_complete || 0;
     const overUnderBill = (job.billed_revenue || 0) - (job.earned_revenue || 0);
-    const overUnderColor = overUnderBill >= 0 ? '#d1fae5' : '#fce7f3';
+    const overUnderTextColor = overUnderBill >= 0 ? '#10b981' : '#ef4444';
     
     return `<tr>
       <td>${job.job_no}</td>
@@ -16420,7 +16420,7 @@ function renderJobActualsTable() {
       <td>${job.project_manager_name || ''}</td>
       <td class="number-col">${formatCurrency(job.billed_revenue || 0)}</td>
       <td class="number-col">${formatCurrency(job.earned_revenue)}</td>
-      <td class="number-col" style="background-color: ${overUnderColor}; color: #1e293b;">${formatCurrency(overUnderBill)}</td>
+      <td class="number-col" style="color: ${overUnderTextColor};">${formatCurrency(overUnderBill)}</td>
       <td class="number-col">${formatCurrency(job.actual_cost)}</td>
       <td class="number-col">${Math.round(pctComplete)}%</td>
     </tr>`;
