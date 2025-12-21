@@ -16626,6 +16626,75 @@ body.dark-mode .dashboard-section > h2 {
     gap: 8px !important;
   }
   
+  /* --- SCHEDULED REPORTS --- */
+  .scheduled-reports-list {
+    max-height: 50vh !important;
+  }
+  
+  .scheduled-report-item {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  .scheduled-report-info {
+    flex: 1 1 auto !important;
+  }
+  
+  /* --- EXPORT BARS --- */
+  .export-bar,
+  .export-ribbon {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  
+  .export-dropdown-btn {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+  
+  /* --- USER DROPDOWN --- */
+  .user-dropdown {
+    max-width: 150px !important;
+  }
+  
+  .user-dropdown-btn .user-label {
+    max-width: 80px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  /* --- ACCOUNT/CHECKBOX LISTS --- */
+  .account-checkbox-list {
+    max-height: 30vh !important;
+    overflow-y: auto !important;
+  }
+  
+  .account-select-buttons {
+    flex-direction: row !important;
+    gap: 6px !important;
+  }
+  
+  /* --- REPORT HEADER --- */
+  .report-header {
+    padding: 10px !important;
+  }
+  
+  .report-header-title {
+    font-size: 16px !important;
+  }
+  
+  .report-header-period {
+    font-size: 11px !important;
+  }
+  
+  /* --- CHART CONTAINERS --- */
+  .chart-container {
+    min-height: auto !important;
+    height: auto !important;
+  }
+  
   /* --- MIN FONT SIZE FLOOR --- */
   .metric-value,
   .tile-value,
