@@ -15927,9 +15927,30 @@ function renderPmRadarChart() {
   const textColor = isDarkMode ? '#e2e8f0' : '#374151';
   const gridColor = isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)';
   
+  // Function to get color based on normalized value (0-100)
+  // Red (low) -> Yellow (middle) -> Green (high)
+  function getValueColor(value) {
+    const v = Math.max(0, Math.min(100, value));
+    if (v <= 50) {
+      // Red to Yellow (0-50)
+      const ratio = v / 50;
+      const r = 239;
+      const g = Math.round(68 + (180 * ratio)); // 68 to 248
+      const b = Math.round(68 * (1 - ratio)); // 68 to 0
+      return `rgba(${r}, ${g}, ${b}, 1)`;
+    } else {
+      // Yellow to Green (50-100)
+      const ratio = (v - 50) / 50;
+      const r = Math.round(248 - (232 * ratio)); // 248 to 16
+      const g = Math.round(180 + (5 * ratio)); // 180 to 185
+      const b = Math.round(0 + (129 * ratio)); // 0 to 129
+      return `rgba(${r}, ${g}, ${b}, 1)`;
+    }
+  }
+  
   // Build datasets
   const datasets = [{
-    label: 'Portfolio Average',
+    label: 'Company Average',
     data: portfolioData,
     backgroundColor: 'rgba(99, 102, 241, 0.2)',
     borderColor: 'rgba(99, 102, 241, 0.8)',
@@ -15939,14 +15960,19 @@ function renderPmRadarChart() {
   }];
   
   if (pmChartData) {
+    // Generate per-point colors based on value
+    const pointColors = pmChartData.map(v => getValueColor(v));
+    
     datasets.push({
       label: selectedPm,
       data: pmChartData,
-      backgroundColor: 'rgba(16, 185, 129, 0.25)',
-      borderColor: 'rgba(16, 185, 129, 0.9)',
+      backgroundColor: 'rgba(100, 100, 100, 0.15)',
+      borderColor: 'rgba(150, 150, 150, 0.6)',
       borderWidth: 2,
-      pointBackgroundColor: 'rgba(16, 185, 129, 1)',
-      pointRadius: 5
+      pointBackgroundColor: pointColors,
+      pointBorderColor: pointColors,
+      pointRadius: 7,
+      pointHoverRadius: 9
     });
   }
   
@@ -15971,7 +15997,7 @@ function renderPmRadarChart() {
             label: function(context) {
               const idx = context.dataIndex;
               const pm = context.dataset.label;
-              const isPortfolio = pm === 'Portfolio Average';
+              const isPortfolio = pm === 'Company Average';
               const source = isPortfolio ? portfolio : pmInfo;
               if (!source) return '';
               
@@ -16015,20 +16041,20 @@ function renderPmRadarChart() {
     let legendHtml = `
       <div class="radar-legend-item">
         <div class="radar-legend-color" style="background:rgba(99, 102, 241, 0.7);"></div>
-        <span>Portfolio Average</span>
+        <span>Company Average</span>
       </div>
     `;
     if (selectedPm) {
       legendHtml += `
         <div class="radar-legend-item">
-          <div class="radar-legend-color" style="background:rgba(16, 185, 129, 0.8);"></div>
-          <span>${selectedPm}</span>
+          <div class="radar-legend-gradient" style="width:80px;height:16px;border-radius:3px;background:linear-gradient(to right, #ef4444, #f59e0b, #10b981);"></div>
+          <span>${selectedPm} (color = performance)</span>
         </div>
       `;
     } else {
       legendHtml += `
         <div class="radar-legend-hint" style="color:var(--text-muted);font-size:12px;margin-top:8px;">
-          Select a specific PM above to compare against portfolio average
+          Select a specific PM above to compare against company average
         </div>
       `;
     }
