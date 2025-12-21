@@ -15000,6 +15000,17 @@ body.dark-mode .ar-aging-table th:hover {
    PM REPORT STYLES
 ===================================================== */
 
+/* Desktop: 70% width for key sections, aligned left */
+#pmReport > .pmr-filter-bar,
+#pmReport > #pmrAiAnalysisPanel,
+#pmReport > .pm-radar-section,
+#pmReport > .pmr-comparison-bar,
+#pmReport > .pmr-metrics-wrapper {
+  width: 70%;
+  max-width: 70%;
+  box-sizing: border-box;
+}
+
 .pmr-filter-bar {
   background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
   border-radius: 8px;
@@ -15044,12 +15055,30 @@ body.dark-mode .ar-aging-table th:hover {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
+/* PM Report Metrics Wrapper with title */
+.pmr-metrics-wrapper {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.pmr-metrics-wrapper > .pmr-section-title {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
 /* PM Report Metrics Row - Compact tiles */
 .pmr-metrics-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
+}
+
+.pmr-metrics-row:last-child {
+  margin-bottom: 0;
 }
 
 .pmr-metric-tile {
@@ -15481,6 +15510,8 @@ body.dark-mode .pmr-status-select {
   color: #e2e8f0;
 }
 
+[data-theme="dark"] .pmr-metrics-wrapper,
+body.dark-mode .pmr-metrics-wrapper,
 [data-theme="dark"] .pmr-metric-tile,
 body.dark-mode .pmr-metric-tile,
 [data-theme="dark"] .pmr-section,
@@ -15557,6 +15588,15 @@ body.dark-mode .pmr-subtotal-row td {
 
 /* Mobile Responsive - Compact Heights */
 @media (max-width: 768px) {
+  #pmReport > .pmr-filter-bar,
+  #pmReport > #pmrAiAnalysisPanel,
+  #pmReport > .pm-radar-section,
+  #pmReport > .pmr-comparison-bar,
+  #pmReport > .pmr-metrics-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
   .pmr-filter-bar {
     padding: 8px 12px;
     margin-bottom: 12px;
