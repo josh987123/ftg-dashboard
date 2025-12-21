@@ -19335,7 +19335,8 @@ function updateOubMetrics() {
   if (elTotalEarned) elTotalEarned.textContent = formatCurrencyCompact(totalEarned);
   if (elNetOverUnder) {
     elNetOverUnder.textContent = formatCurrencyCompact(netOverUnder);
-    elNetOverUnder.style.color = netOverUnder >= 0 ? '#10b981' : '#dc2626';
+    elNetOverUnder.classList.remove('positive', 'negative');
+    elNetOverUnder.classList.add(netOverUnder >= 0 ? 'positive' : 'negative');
   }
   
   // Apply conditional styling to Over/Under card

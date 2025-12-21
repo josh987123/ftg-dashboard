@@ -13843,6 +13843,24 @@ body.dark-mode #overUnderBilling .search-input {
   white-space: nowrap;
 }
 
+#oubTotalOverUnder.metric-value.positive {
+  color: #10b981 !important;
+}
+
+#oubTotalOverUnder.metric-value.negative {
+  color: #ef4444 !important;
+}
+
+body.dark-mode #oubTotalOverUnder.metric-value.positive,
+[data-theme="dark"] #oubTotalOverUnder.metric-value.positive {
+  color: #10b981 !important;
+}
+
+body.dark-mode #oubTotalOverUnder.metric-value.negative,
+[data-theme="dark"] #oubTotalOverUnder.metric-value.negative {
+  color: #ef4444 !important;
+}
+
 #overUnderBilling .job-metric-card.compact .metric-label {
   font-size: 9px;
   white-space: nowrap;
