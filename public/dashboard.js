@@ -1163,6 +1163,56 @@ const ChartThemeManager = {
   }
 };
 
+/* ------------------------------------------------------------
+   CHART THEME PLUGIN - Auto-applies theme colors on every chart update
+   This eliminates the need for manual re-render calls
+------------------------------------------------------------ */
+const ChartThemePlugin = {
+  id: 'chartThemePlugin',
+  
+  beforeUpdate(chart) {
+    const p = ChartThemeManager.getPalette();
+    if (!p || !chart.options) return;
+    
+    // Update all scales (x, y, r, etc.)
+    if (chart.options.scales) {
+      Object.keys(chart.options.scales).forEach(scaleKey => {
+        const scale = chart.options.scales[scaleKey];
+        if (scale) {
+          scale.ticks = scale.ticks || {};
+          scale.ticks.color = p.text;
+          scale.grid = scale.grid || {};
+          scale.grid.color = p.grid;
+        }
+      });
+    }
+    
+    // Update legend labels
+    if (chart.options.plugins?.legend?.labels) {
+      chart.options.plugins.legend.labels.color = p.legend;
+    }
+    
+    // Update datalabels
+    if (chart.options.plugins?.datalabels) {
+      chart.options.plugins.datalabels.color = p.datalabel;
+    }
+    
+    // Regenerate gradients for datasets flagged with useThemeGradient
+    if (chart.data?.datasets && chart.ctx) {
+      chart.data.datasets.forEach(dataset => {
+        if (dataset._useThemeGradient) {
+          dataset.backgroundColor = ChartThemeManager.createGradient(chart.ctx, dataset._gradientVertical !== false);
+        }
+      });
+    }
+  }
+};
+
+// Register the plugin globally when Chart.js is available
+if (typeof Chart !== 'undefined') {
+  Chart.register(ChartThemePlugin);
+}
+
 function getChartThemeColors() {
   const p = ChartThemeManager.getPalette();
   return {
@@ -1205,102 +1255,16 @@ function initChartJsThemeDefaults(theme) {
 function updateChartColorsForTheme(theme) {
   // Refresh the palette from CSS variables (CSS vars change when data-theme changes)
   initChartJsThemeDefaults(theme);
-  const p = ChartThemeManager.getPalette();
   
-  // Update all existing Chart.js instances with new colors from palette
+  // The ChartThemePlugin will automatically apply colors during chart.update()
+  // Just trigger an update on all existing charts
   if (typeof Chart !== "undefined" && Chart.instances) {
     Object.values(Chart.instances).forEach(chart => {
-      if (!chart || !chart.options) return;
-      
-      // Update scales
-      if (chart.options.scales) {
-        Object.keys(chart.options.scales).forEach(scaleKey => {
-          const scale = chart.options.scales[scaleKey];
-          if (scale) {
-            scale.ticks = scale.ticks || {};
-            scale.ticks.color = p.text;
-            scale.grid = scale.grid || {};
-            scale.grid.color = p.grid;
-          }
-        });
+      if (chart) {
+        chart.update('none');
       }
-      
-      // Update legend
-      if (chart.options.plugins?.legend?.labels) {
-        chart.options.plugins.legend.labels.color = p.legend;
-      }
-      
-      // Update datalabels
-      if (chart.options.plugins?.datalabels) {
-        chart.options.plugins.datalabels.color = p.datalabel;
-      }
-      
-      // Update dataset colors that use gradients (need to recreate gradient)
-      if (chart.data?.datasets && chart.ctx) {
-        chart.data.datasets.forEach((dataset, index) => {
-          // Recreate gradient for bar charts
-          if (dataset.backgroundColor && typeof dataset.backgroundColor === 'object' && dataset.backgroundColor.addColorStop) {
-            dataset.backgroundColor = ChartThemeManager.createGradient(chart.ctx);
-          }
-        });
-      }
-      
-      chart.update('none');
     });
   }
-  
-  // Re-render charts that need full reconstruction (complex gradients, special colors)
-  requestAnimationFrame(() => {
-    // Job Overview charts
-    if (typeof updateJobOverviewCharts === 'function' && typeof joPmJobsChart !== 'undefined' && joPmJobsChart) {
-      updateJobOverviewCharts();
-    }
-    
-    // Overview tile charts
-    if (typeof overviewChartInstances !== 'undefined' && Object.keys(overviewChartInstances).length > 0 && typeof updateOverviewCharts === 'function') {
-      updateOverviewCharts();
-    }
-    
-    // Cash chart
-    if (typeof renderCashChart === 'function' && typeof cashChartInstance !== 'undefined' && cashChartInstance) {
-      renderCashChart();
-    }
-    
-    // PM Report charts
-    if (typeof renderPmrMarginChart === 'function' && typeof pmrMarginChart !== 'undefined' && pmrMarginChart) {
-      renderPmrMarginChart();
-    }
-    if (typeof renderPmrBudgetActualChart === 'function' && typeof pmrBudgetActualChart !== 'undefined' && pmrBudgetActualChart) {
-      renderPmrBudgetActualChart();
-    }
-    if (typeof renderPmrBillingChart === 'function' && typeof pmrBillingChart !== 'undefined' && pmrBillingChart) {
-      renderPmrBillingChart();
-    }
-    
-    // Donut charts
-    if (typeof renderPmDonutChart === 'function' && typeof pmDonutChart !== 'undefined' && pmDonutChart) {
-      renderPmDonutChart();
-    }
-    if (typeof renderCustomerDonutChart === 'function' && typeof customerDonutChart !== 'undefined' && customerDonutChart) {
-      renderCustomerDonutChart();
-    }
-    if (typeof renderJaPmDonutChart === 'function' && typeof jaPmDonutChart !== 'undefined' && jaPmDonutChart) {
-      renderJaPmDonutChart();
-    }
-    if (typeof renderJaCustomerDonutChart === 'function' && typeof jaCustomerDonutChart !== 'undefined' && jaCustomerDonutChart) {
-      renderJaCustomerDonutChart();
-    }
-    
-    // Over/Under Billing charts
-    if (typeof renderOubCharts === 'function' && (typeof oubOverbilledChart !== 'undefined' && oubOverbilledChart || typeof oubUnderbilledChart !== 'undefined' && oubUnderbilledChart)) {
-      renderOubCharts();
-    }
-    
-    // AP/AR Aging charts
-    if (typeof loadTopVendorsChart === 'function' && typeof topVendorsChart !== 'undefined' && topVendorsChart) {
-      loadTopVendorsChart();
-    }
-  });
 }
 
 function setupMetricInfoButtons() {
@@ -15350,7 +15314,6 @@ function renderJoPmJobsChart(data, textColor, gridColor, showDataLabels) {
   
   const sortedData = [...data].sort((a, b) => b.jobCount - a.jobCount);
   const context = ctx.getContext('2d');
-  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joPmJobsChart = new Chart(ctx, {
     type: 'bar',
@@ -15358,8 +15321,9 @@ function renderJoPmJobsChart(data, textColor, gridColor, showDataLabels) {
       labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: sortedData.map(d => d.jobCount),
-        backgroundColor: blueGradient,
-        borderRadius: 4
+        backgroundColor: ChartThemeManager.createGradient(context),
+        borderRadius: 4,
+        _useThemeGradient: true
       }]
     },
     plugins: showDataLabels ? [ChartDataLabels] : [],
@@ -15372,13 +15336,13 @@ function renderJoPmJobsChart(data, textColor, gridColor, showDataLabels) {
         tooltip: { callbacks: { label: (ctx) => ctx.raw + ' jobs' } },
         datalabels: showDataLabels ? {
           display: true, anchor: 'end', align: 'top', offset: 2,
-          color: textColor, font: { weight: 'bold', size: 10 },
+          font: { weight: 'bold', size: 10 },
           formatter: (val) => val
         } : { display: false }
       },
       scales: {
-        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }
+        x: { ticks: { maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { stepSize: 1 } }
       }
     }
   });
@@ -15391,7 +15355,6 @@ function renderJoPmContractChart(data, textColor, gridColor, showDataLabels) {
   if (joPmContractChart) joPmContractChart.destroy();
   
   const context = ctx.getContext('2d');
-  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joPmContractChart = new Chart(ctx, {
     type: 'bar',
@@ -15399,8 +15362,9 @@ function renderJoPmContractChart(data, textColor, gridColor, showDataLabels) {
       labels: data.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: data.map(d => d.contractValue),
-        backgroundColor: blueGradient,
-        borderRadius: 4
+        backgroundColor: ChartThemeManager.createGradient(context),
+        borderRadius: 4,
+        _useThemeGradient: true
       }]
     },
     plugins: showDataLabels ? [ChartDataLabels] : [],
@@ -15413,13 +15377,13 @@ function renderJoPmContractChart(data, textColor, gridColor, showDataLabels) {
         tooltip: { callbacks: { label: (ctx) => formatCurrency(ctx.raw) } },
         datalabels: showDataLabels ? {
           display: true, anchor: 'end', align: 'top', offset: 2,
-          color: textColor, font: { weight: 'bold', size: 10 },
+          font: { weight: 'bold', size: 10 },
           formatter: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
         } : { display: false }
       },
       scales: {
-        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { color: textColor, callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M' }, grid: { color: gridColor } }
+        x: { ticks: { maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M' } }
       }
     }
   });
@@ -15431,11 +15395,9 @@ function renderJoPmMarginChart(data, textColor, gridColor, showDataLabels) {
   
   if (joPmMarginChart) joPmMarginChart.destroy();
   
-  // Filter out entries with zero contract value or zero estimated costs
   const filteredData = data.filter(d => d.contractValue > 0 && d.revisedCost > 0);
   const sortedData = [...filteredData].sort((a, b) => b.profitMargin - a.profitMargin);
   const context = ctx.getContext('2d');
-  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joPmMarginChart = new Chart(ctx, {
     type: 'bar',
@@ -15443,8 +15405,9 @@ function renderJoPmMarginChart(data, textColor, gridColor, showDataLabels) {
       labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: sortedData.map(d => d.profitMargin),
-        backgroundColor: blueGradient,
-        borderRadius: 4
+        backgroundColor: ChartThemeManager.createGradient(context),
+        borderRadius: 4,
+        _useThemeGradient: true
       }]
     },
     plugins: showDataLabels ? [ChartDataLabels] : [],
@@ -15457,13 +15420,13 @@ function renderJoPmMarginChart(data, textColor, gridColor, showDataLabels) {
         tooltip: { callbacks: { label: (ctx) => ctx.raw.toFixed(1) + '%' } },
         datalabels: showDataLabels ? {
           display: true, anchor: 'end', align: 'top', offset: 2,
-          color: textColor, font: { weight: 'bold', size: 10 },
+          font: { weight: 'bold', size: 10 },
           formatter: (val) => val.toFixed(1) + '%'
         } : { display: false }
       },
       scales: {
-        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { color: textColor, callback: (val) => val + '%' }, grid: { color: gridColor } }
+        x: { ticks: { maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { callback: (val) => val + '%' } }
       }
     }
   });
@@ -15490,7 +15453,6 @@ function renderJoClientJobsChart(data, textColor, gridColor, showDataLabels) {
   }
   
   const context = ctx.getContext('2d');
-  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joClientJobsChart = new Chart(ctx, {
     type: 'bar',
@@ -15498,8 +15460,9 @@ function renderJoClientJobsChart(data, textColor, gridColor, showDataLabels) {
       labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: sortedData.map(d => d.jobCount),
-        backgroundColor: blueGradient,
-        borderRadius: 4
+        backgroundColor: ChartThemeManager.createGradient(context),
+        borderRadius: 4,
+        _useThemeGradient: true
       }]
     },
     plugins: showDataLabels ? [ChartDataLabels] : [],
@@ -15512,13 +15475,13 @@ function renderJoClientJobsChart(data, textColor, gridColor, showDataLabels) {
         tooltip: { callbacks: { label: (ctx) => ctx.raw + ' jobs' } },
         datalabels: showDataLabels ? {
           display: true, anchor: 'end', align: 'top', offset: 2,
-          color: textColor, font: { weight: 'bold', size: 10 },
+          font: { weight: 'bold', size: 10 },
           formatter: (val) => val
         } : { display: false }
       },
       scales: {
-        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }
+        x: { ticks: { maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { stepSize: 1 } }
       }
     }
   });
@@ -15532,7 +15495,6 @@ function renderJoClientContractChart(data, textColor, gridColor, showDataLabels)
   
   let sortedData = [...data].sort((a, b) => b.contractValue - a.contractValue);
   
-  // Limit to 10 items, with 10th being "All Others"
   if (sortedData.length > 10) {
     const top9 = sortedData.slice(0, 9);
     const others = sortedData.slice(9);
@@ -15545,7 +15507,6 @@ function renderJoClientContractChart(data, textColor, gridColor, showDataLabels)
   }
   
   const context = ctx.getContext('2d');
-  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joClientContractChart = new Chart(ctx, {
     type: 'bar',
@@ -15553,8 +15514,9 @@ function renderJoClientContractChart(data, textColor, gridColor, showDataLabels)
       labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: sortedData.map(d => d.contractValue),
-        backgroundColor: blueGradient,
-        borderRadius: 4
+        backgroundColor: ChartThemeManager.createGradient(context),
+        borderRadius: 4,
+        _useThemeGradient: true
       }]
     },
     plugins: showDataLabels ? [ChartDataLabels] : [],
@@ -15567,13 +15529,13 @@ function renderJoClientContractChart(data, textColor, gridColor, showDataLabels)
         tooltip: { callbacks: { label: (ctx) => formatCurrency(ctx.raw) } },
         datalabels: showDataLabels ? {
           display: true, anchor: 'end', align: 'top', offset: 2,
-          color: textColor, font: { weight: 'bold', size: 10 },
+          font: { weight: 'bold', size: 10 },
           formatter: (val) => '$' + (val / 1000000).toFixed(1) + 'M'
         } : { display: false }
       },
       scales: {
-        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { color: textColor, callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M' }, grid: { color: gridColor } }
+        x: { ticks: { maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M' } }
       }
     }
   });
@@ -15585,11 +15547,9 @@ function renderJoClientMarginChart(data, textColor, gridColor, showDataLabels) {
   
   if (joClientMarginChart) joClientMarginChart.destroy();
   
-  // Filter out entries with zero contract value or zero estimated costs
   const filteredData = data.filter(d => d.contractValue > 0 && d.revisedCost > 0);
   let sortedData = [...filteredData].sort((a, b) => b.profitMargin - a.profitMargin);
   
-  // Limit to 10 items, with 10th being "All Others"
   if (sortedData.length > 10) {
     const top9 = sortedData.slice(0, 9);
     const others = sortedData.slice(9);
@@ -15602,7 +15562,6 @@ function renderJoClientMarginChart(data, textColor, gridColor, showDataLabels) {
   }
   
   const context = ctx.getContext('2d');
-  const blueGradient = createJoGradient(context, '#2563eb', '#60a5fa');
   
   joClientMarginChart = new Chart(ctx, {
     type: 'bar',
@@ -15610,8 +15569,9 @@ function renderJoClientMarginChart(data, textColor, gridColor, showDataLabels) {
       labels: sortedData.map(d => d.name.length > 12 ? d.name.substring(0, 12) + '...' : d.name),
       datasets: [{
         data: sortedData.map(d => d.profitMargin),
-        backgroundColor: blueGradient,
-        borderRadius: 4
+        backgroundColor: ChartThemeManager.createGradient(context),
+        borderRadius: 4,
+        _useThemeGradient: true
       }]
     },
     plugins: showDataLabels ? [ChartDataLabels] : [],
@@ -15624,13 +15584,13 @@ function renderJoClientMarginChart(data, textColor, gridColor, showDataLabels) {
         tooltip: { callbacks: { label: (ctx) => ctx.raw.toFixed(1) + '%' } },
         datalabels: showDataLabels ? {
           display: true, anchor: 'end', align: 'top', offset: 2,
-          color: textColor, font: { weight: 'bold', size: 10 },
+          font: { weight: 'bold', size: 10 },
           formatter: (val) => val.toFixed(1) + '%'
         } : { display: false }
       },
       scales: {
-        x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { color: textColor, callback: (val) => val + '%' }, grid: { color: gridColor } }
+        x: { ticks: { maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { callback: (val) => val + '%' } }
       }
     }
   });
