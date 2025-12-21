@@ -19953,10 +19953,10 @@ function renderCCRevenueChart() {
   const labels = top10.map(cc => cc.description.length > 30 ? cc.description.substring(0, 28) + '...' : cc.description);
   const values = top10.map(cc => cc.pct_of_revenue);
   
-  const colors = [
-    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-    '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
-  ];
+  const canvas = document.getElementById('ccRevenueChart');
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+  gradient.addColorStop(0, '#1e3a8a');
+  gradient.addColorStop(1, '#3b82f6');
   
   ccRevenueChart = new Chart(ctx, {
     type: 'bar',
@@ -19965,7 +19965,7 @@ function renderCCRevenueChart() {
       datasets: [{
         label: '% of Earned Revenue',
         data: values,
-        backgroundColor: colors,
+        backgroundColor: gradient,
         borderRadius: 4,
         maxBarThickness: 50
       }]
