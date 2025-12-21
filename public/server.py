@@ -2554,7 +2554,7 @@ def api_delete_role(role_id):
             return jsonify({'error': 'Cannot delete the admin role'}), 400
         
         # Check if any users are assigned to this role
-        cur.execute("SELECT id, username FROM users WHERE role_id = %s", (role_id,))
+        cur.execute("SELECT id, display_name FROM users WHERE role_id = %s", (role_id,))
         assigned_users = cur.fetchall()
         if len(assigned_users) > 0:
             # Get available roles for reassignment (exclude the role being deleted and admin)
@@ -2564,7 +2564,7 @@ def api_delete_role(role_id):
             conn.close()
             return jsonify({
                 'error': 'users_assigned',
-                'users': [{'id': u['id'], 'username': u['username']} for u in assigned_users],
+                'users': [{'id': u['id'], 'username': u['display_name']} for u in assigned_users],
                 'availableRoles': [{'id': r['id'], 'name': r['name']} for r in available_roles]
             }), 400
         
@@ -2624,7 +2624,7 @@ def api_reassign_and_delete_role(role_id):
             return jsonify({'error': 'New role not found'}), 404
         
         # Get users being reassigned for audit log
-        cur.execute("SELECT id, username FROM users WHERE role_id = %s", (role_id,))
+        cur.execute("SELECT id, display_name FROM users WHERE role_id = %s", (role_id,))
         reassigned_users = cur.fetchall()
         
         # Reassign all users to the new role
@@ -2644,7 +2644,7 @@ def api_reassign_and_delete_role(role_id):
         log_audit(request.current_user['id'], 'reassign_users_and_delete_role', 'role', role_id, {
             'deletedRole': role['name'],
             'newRole': new_role['name'],
-            'reassignedUsers': [u['username'] for u in reassigned_users]
+            'reassignedUsers': [u['display_name'] for u in reassigned_users]
         })
         
         return jsonify({'success': True, 'reassignedCount': len(reassigned_users)})
