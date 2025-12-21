@@ -1319,7 +1319,7 @@
 
               <div class="is-compare-detail-wrapper">
                 <div id="isSingleControls" class="is-options-stack is-compare-box">
-                  <label style="font-weight: 600;">Compare:</label>
+                  <label class="config-section-label">Compare:</label>
                   <div class="radio-group-stacked">
                     <label class="radio-label"><input type="radio" name="isCompareRadio" value="none" checked> None</label>
                     <label class="radio-label"><input type="radio" name="isCompareRadio" value="prior_period"> Prior Period</label>
@@ -1328,7 +1328,7 @@
                 </div>
 
                 <div class="is-options-stack is-detail-box">
-                  <label style="font-weight: 600;">Detail:</label>
+                  <label class="config-section-label">Detail:</label>
                   <div class="radio-group-stacked">
                     <label class="radio-label"><input type="radio" name="isDetailLevel" value="summary" checked> Summary</label>
                     <label class="radio-label"><input type="radio" name="isDetailLevel" value="medium"> Medium</label>
@@ -1390,6 +1390,12 @@
           <p class="waterfall-description">Flow from revenue through direct costs, indirect costs, and operating expenses to operating income.</p>
           <div class="waterfall-chart-container">
             <canvas id="isWaterfallChart"></canvas>
+          </div>
+          <div class="waterfall-options">
+            <label class="is-checkbox-label small">
+              <input type="checkbox" id="isWaterfallDataLabels" onchange="renderIsWaterfallChart()">
+              Show Data Labels
+            </label>
           </div>
         </div>
 

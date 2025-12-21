@@ -17485,6 +17485,17 @@ body.dark-mode .dashboard-section > h2 {
   background: rgba(30, 41, 59, 0.6);
 }
 
+.waterfall-options {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.config-section-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 /* Dark mode select option styling for Income Statement config */
 [data-theme="dark"] .is-controls select,
 [data-theme="dark"] .is-controls select option {

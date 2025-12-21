@@ -16233,6 +16233,8 @@ function renderIsWaterfallChart() {
   const backgroundColors = labels.map((label, i) => getColor(label, waterfallData[i]));
   const borderColors = backgroundColors.map(c => c.replace('0.8', '1'));
   
+  const showDataLabels = document.getElementById('isWaterfallDataLabels')?.checked || false;
+  
   isWaterfallChart = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -16264,6 +16266,28 @@ function renderIsWaterfallChart() {
               return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             }
           }
+        },
+        datalabels: {
+          display: showDataLabels,
+          color: textColor,
+          anchor: 'end',
+          align: 'top',
+          offset: 2,
+          font: { size: 10, weight: 'bold' },
+          formatter: function(value) {
+            let amount;
+            if (Array.isArray(value)) {
+              amount = Math.abs(value[1] - value[0]);
+            } else {
+              amount = Math.abs(value);
+            }
+            if (amount >= 1000000) {
+              return '$' + (amount / 1000000).toFixed(1) + 'M';
+            } else if (amount >= 1000) {
+              return '$' + (amount / 1000).toFixed(0) + 'K';
+            }
+            return '$' + amount.toFixed(0);
+          }
         }
       },
       scales: {
@@ -16286,7 +16310,8 @@ function renderIsWaterfallChart() {
           }
         }
       }
-    }
+    },
+    plugins: [ChartDataLabels]
   });
 }
 
