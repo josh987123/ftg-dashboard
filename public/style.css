@@ -16648,6 +16648,36 @@ body.dark-mode .dashboard-section > h2 {
   }
   
   /* --- CASH BALANCES --- */
+  .cash-range-buttons {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 10px 0 6px !important;
+  }
+  
+  .cash-range-btn {
+    flex: 1 !important;
+    padding: 6px 6px !important;
+    font-size: 11px !important;
+  }
+  
+  .cash-custom-range-inline {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    justify-content: center !important;
+  }
+  
+  .cash-custom-range-inline input[type="date"] {
+    flex: 1 1 100px !important;
+    min-width: 90px !important;
+    font-size: 11px !important;
+    padding: 5px 6px !important;
+  }
+  
+  .cash-apply-btn {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+  }
+  
   .cash-summary-tiles {
     flex-direction: row !important;
     flex-wrap: wrap !important;
