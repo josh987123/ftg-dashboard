@@ -16707,6 +16707,15 @@ body.dark-mode .dashboard-section > h2 {
     max-width: 100% !important;
   }
   
+  .cash-chart-section .chart-wrapper {
+    min-height: 280px !important;
+    height: 280px !important;
+  }
+  
+  .cash-chart-section .chart-wrapper canvas {
+    min-height: 260px !important;
+  }
+  
   /* --- AP/AR AGING --- */
   .ap-aging-summary {
     flex-direction: row !important;
