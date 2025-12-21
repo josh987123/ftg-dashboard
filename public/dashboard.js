@@ -15541,8 +15541,13 @@ function renderProfitabilityHeatmap() {
   const container = document.getElementById('profitabilityHeatmap');
   if (!container) return;
   
-  // Use filtered jobs but exclude Josh Angelo as per project requirements
-  const jobs = joFiltered.filter(j => j.project_manager_name !== 'Josh Angelo');
+  // Use filtered jobs but exclude Josh Angelo and jobs without budgets
+  // Jobs must have both a contract value AND a budget (revised_cost) to be included
+  const jobs = joFiltered.filter(j => 
+    j.project_manager_name !== 'Josh Angelo' &&
+    j.revised_contract > 0 &&
+    j.revised_cost > 0
+  );
   
   if (jobs.length === 0) {
     container.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">No job data available for heat map</div>';
