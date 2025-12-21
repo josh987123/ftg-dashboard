@@ -9746,6 +9746,8 @@ function renderIncomeStatement() {
       addResizeHandlesToTable("incomeStatementTable");
       autoScaleFontSize("incomeStatementTable", "isTableBox");
       hideTableLoading('incomeStatementTable');
+      // Render waterfall chart (only shows in single period mode)
+      renderIsWaterfallChart();
     }, 50);
   });
 }
@@ -16042,7 +16044,176 @@ function renderPmRadarChart() {
 }
 
 // ========================================
-// REVENUE TO PROFIT WATERFALL CHART
+// INCOME STATEMENT WATERFALL CHART
+// ========================================
+
+let isWaterfallChart = null;
+
+function renderIsWaterfallChart() {
+  const canvas = document.getElementById('isWaterfallChart');
+  const section = document.getElementById('isWaterfallSection');
+  
+  // Check if we're in single period mode
+  const viewMode = document.getElementById('isViewMode')?.value || 'single';
+  
+  // Hide/show section based on view mode
+  if (section) {
+    if (viewMode !== 'single') {
+      section.style.display = 'none';
+      return;
+    }
+    section.style.display = 'block';
+  }
+  
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  
+  // Get current period settings
+  const periodType = document.getElementById('isPeriodType')?.value || 'month';
+  const periodValue = document.getElementById('isPeriodSelect')?.value;
+  
+  if (!periodValue || !isAccountGroups?.income_statement?.groups) return;
+  
+  // Build income statement rows for current period
+  const periodMonths = getPeriodMonths(periodValue, periodType);
+  const groups = isAccountGroups.income_statement.groups;
+  const rows = buildIncomeStatementRows(periodMonths, groups);
+  
+  // Extract key values for waterfall - using medium detail level logic
+  const getValue = (label) => {
+    const row = rows.find(r => r.label === label);
+    return row ? (row.value || 0) : 0;
+  };
+  
+  const revenue = getValue('Revenue');
+  const costOfSales = getValue('Total Cost of Sales');
+  const grossProfit = getValue('Gross Profit');
+  const operatingExpenses = getValue('Operating Expenses');
+  const operatingIncome = getValue('Operating Income');
+  const otherIncomeExpense = getValue('Other Income/Expense');
+  const netProfit = getValue('Net Profit Before Taxes');
+  
+  // Calculate deduction amounts
+  const costDeduction = Math.abs(costOfSales);
+  const opExpDeduction = Math.abs(operatingExpenses);
+  const otherAdj = otherIncomeExpense; // Can be positive or negative
+  
+  const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDarkMode ? '#e2e8f0' : '#374151';
+  const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+  
+  // Destroy existing chart
+  if (isWaterfallChart) {
+    isWaterfallChart.destroy();
+  }
+  
+  // Build waterfall data using floating bars [base, top]
+  // Revenue → Cost of Sales → Gross Profit → Op Expenses → Operating Income → Other → Net Profit
+  const waterfallData = [
+    [0, revenue],                                    // Revenue: full bar
+    [grossProfit, revenue],                          // Cost of Sales: deduction from revenue to gross profit
+    [0, grossProfit],                                // Gross Profit: result bar
+    [operatingIncome, grossProfit],                  // Op Expenses: deduction from gross to operating income
+    [0, operatingIncome],                            // Operating Income: result bar
+  ];
+  
+  // Add Other Income/Expense if non-zero
+  let labels = ['Revenue', 'Cost of Sales', 'Gross Profit', 'Op Expenses', 'Operating Income'];
+  let colors = [];
+  
+  if (Math.abs(otherAdj) > 0.01) {
+    if (otherAdj >= 0) {
+      waterfallData.push([operatingIncome, operatingIncome + otherAdj]);
+    } else {
+      waterfallData.push([netProfit, operatingIncome]);
+    }
+    labels.push('Other Inc/Exp');
+    waterfallData.push(netProfit >= 0 ? [0, netProfit] : [netProfit, 0]);
+    labels.push('Net Profit');
+  } else {
+    waterfallData.push(netProfit >= 0 ? [0, netProfit] : [netProfit, 0]);
+    labels.push('Net Profit');
+  }
+  
+  // Assign colors: blue for totals, red for deductions, green for profit
+  const getColor = (label, value) => {
+    if (label === 'Revenue') return 'rgba(99, 102, 241, 0.8)';
+    if (label === 'Cost of Sales' || label === 'Op Expenses') return 'rgba(239, 68, 68, 0.8)';
+    if (label === 'Other Inc/Exp') return value >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+    if (label === 'Gross Profit' || label === 'Operating Income' || label === 'Net Profit') {
+      const val = Array.isArray(value) ? value[1] - value[0] : value;
+      return val >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+    }
+    return 'rgba(99, 102, 241, 0.8)';
+  };
+  
+  const backgroundColors = labels.map((label, i) => {
+    if (label === 'Other Inc/Exp') return getColor(label, otherAdj);
+    return getColor(label, waterfallData[i]);
+  });
+  
+  const borderColors = backgroundColors.map(c => c.replace('0.8', '1'));
+  
+  isWaterfallChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Amount',
+        data: waterfallData,
+        backgroundColor: backgroundColors,
+        borderColor: borderColors,
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const data = context.raw;
+              let value;
+              if (Array.isArray(data)) {
+                value = Math.abs(data[1] - data[0]);
+              } else {
+                value = Math.abs(data);
+              }
+              return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: textColor, font: { size: 10 } }
+        },
+        y: {
+          grid: { color: gridColor },
+          ticks: {
+            color: textColor,
+            callback: function(value) {
+              if (Math.abs(value) >= 1000000) {
+                return '$' + (value / 1000000).toFixed(1) + 'M';
+              } else if (Math.abs(value) >= 1000) {
+                return '$' + (value / 1000).toFixed(0) + 'K';
+              }
+              return '$' + value;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ========================================
+// REVENUE TO PROFIT WATERFALL CHART (JOB OVERVIEW)
 // ========================================
 
 let waterfallChart = null;

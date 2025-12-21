@@ -31,6 +31,8 @@ The dashboard provides several key views for financial analysis:
   - **Profitability Heat Map** (Job Overview): Visualizes profit margins by Project Manager or Client and job size range (contract value buckets), with color-coded cells (green = high margin, red = loss) and hover tooltips showing job counts and totals.
   - **Revenue-to-Profit Waterfall Chart** (Job Overview): Shows flow from contract value through estimated costs to gross profit. Supports Portfolio Total, By Project Manager, and By Top Clients groupings. Uses floating bars for proper waterfall visualization and shows losses in red.
   - **PM Performance Radar Chart** (PM Report): Located under AI Analysis section. Compares individual PM metrics to portfolio average across 5 normalized dimensions (profit margin, job count, contract value, avg job size, billing position). Excludes Josh Angelo.
+- **Income Statement**: Supports single period and matrix views with AI analysis.
+  - **Revenue to Net Income Waterfall Chart**: Displayed under AI Analysis section, only visible in single period mode. Shows waterfall flow from Revenue → Cost of Sales → Gross Profit → Operating Expenses → Operating Income → Net Profit, using floating bars for proper deduction visualization. Profit bars shown in green, deduction bars in red.
 
 ### AI Insights
 A dedicated AI-powered analysis page aggregates data from all sources to provide strategic business intelligence, including executive summaries, financial health, job performance, cash flow, AR/AP, PM performance, and strategic recommendations.
