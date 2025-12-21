@@ -12480,11 +12480,10 @@ function setupCashEventListeners() {
     updateCashDisplay();
   });
   
-  // Stack bars / Show total / Data labels / Trendline
+  // Stack bars / Show total / Data labels
   document.getElementById("cashStackBars")?.addEventListener("change", updateCashDisplay);
   document.getElementById("cashShowTotal")?.addEventListener("change", updateCashDisplay);
   document.getElementById("cashDataLabels")?.addEventListener("change", updateCashDisplay);
-  document.getElementById("cashTrendline")?.addEventListener("change", updateCashDisplay);
   
   // Tab switching
   document.querySelectorAll(".cash-tab").forEach(tab => {
@@ -12898,25 +12897,6 @@ function renderCashChart() {
     const date = new Date(d + 'T12:00:00');
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
-  
-  // Add trendline if enabled
-  const showTrendline = document.getElementById("cashTrendline")?.checked === true;
-  if (showTrendline && dateTotals.length > 1) {
-    const trendData = calculateTrendline(dateTotals);
-    datasets.push({
-      label: "Trendline",
-      data: trendData,
-      type: "line",
-      borderColor: "#1e3a5f",
-      backgroundColor: "transparent",
-      borderWidth: 2,
-      borderDash: [5, 5],
-      pointRadius: 0,
-      tension: 0,
-      order: 0,
-      datalabels: { display: false }
-    });
-  }
   
   if (cashChartInstance) cashChartInstance.destroy();
   
