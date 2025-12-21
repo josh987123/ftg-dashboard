@@ -16254,3 +16254,359 @@ body.dark-mode .dashboard-section > h2 {
     display: none;
   }
 }
+
+/* ============================================================
+   LANDSCAPE MOBILE/TABLET COMPATIBILITY
+   Comprehensive fixes for phones and tablets in landscape mode
+   ============================================================ */
+
+/* Phone landscape (narrow height, wider width) */
+@media (max-width: 900px) and (orientation: landscape) {
+  
+  /* --- GLOBAL METRIC CARDS - Keep horizontal layout --- */
+  .job-metric-card {
+    flex-direction: row !important;
+    text-align: left !important;
+    padding: 8px 12px !important;
+    gap: 10px !important;
+  }
+  
+  .job-metric-card .metric-icon {
+    margin: 0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .job-metric-card .metric-content {
+    text-align: left !important;
+  }
+  
+  .job-metric-card .metric-value {
+    font-size: 15px !important;
+    line-height: 1.3 !important;
+  }
+  
+  .job-metric-card .metric-label {
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* --- JOB METRICS GRIDS - Side by side --- */
+  .job-metrics-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  .job-metrics-grid .job-metric-card {
+    flex: 1 1 auto !important;
+    min-width: 140px !important;
+    max-width: none !important;
+  }
+  
+  /* --- JO METRICS ROW - Keep inline --- */
+  .jo-metrics-row,
+  .jo-metrics-row-5 {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+  }
+  
+  .jo-metrics-row .job-metric-card.compact,
+  .jo-metrics-row-5 .job-metric-card.compact {
+    flex: 0 0 auto !important;
+    min-width: auto !important;
+    padding: 8px 12px !important;
+    flex-direction: row !important;
+  }
+  
+  /* --- FILTER BARS - Keep horizontal --- */
+  .job-filter-stack,
+  .page-filter-bar,
+  .filter-group,
+  .job-budgets-controls {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  .filter-select {
+    min-width: 120px !important;
+    max-width: 180px !important;
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+  }
+  
+  .checkbox-stack {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  /* --- CONFIG PANELS - Compact --- */
+  .config-panel,
+  .overview-config-box {
+    padding: 10px !important;
+  }
+  
+  .config-body {
+    padding: 10px !important;
+  }
+  
+  /* --- BREAKDOWN CONTAINERS - Side by side --- */
+  .breakdown-container,
+  .breakdown-container.stacked {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+  
+  .breakdown-card {
+    flex: 1 1 280px !important;
+    min-width: 250px !important;
+    max-width: 400px !important;
+    min-height: auto !important;
+  }
+  
+  /* --- CHARTS - Remove fixed heights --- */
+  .chart-wrapper,
+  .breakdown-chart-wrapper {
+    min-height: auto !important;
+    height: auto !important;
+  }
+  
+  .breakdown-chart-wrapper {
+    height: 180px !important;
+  }
+  
+  .jo-chart-box {
+    min-height: auto !important;
+  }
+  
+  .jo-chart-box canvas {
+    max-height: 200px !important;
+  }
+  
+  /* --- CHART GRIDS - 2-column minimum --- */
+  .jo-chart-grid-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  
+  .jo-chart-grid-2x2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  
+  /* --- PM REPORT METRICS --- */
+  .pm-metrics-container,
+  .pm-summary-metrics {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  .pm-metric-card {
+    flex: 1 1 auto !important;
+    min-width: 120px !important;
+    flex-direction: row !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+  
+  .pm-metric-card .metric-value {
+    font-size: 14px !important;
+  }
+  
+  .pm-metric-card .metric-label {
+    font-size: 9px !important;
+  }
+  
+  /* --- OVER/UNDER BILLING METRICS --- */
+  .oub-metrics-container,
+  .oub-key-metrics-section {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  .oub-metric-card,
+  .oub-key-metrics-section .job-metric-card {
+    flex: 1 1 auto !important;
+    min-width: 120px !important;
+  }
+  
+  /* --- AI INSIGHTS PAGE --- */
+  .ai-insights-grid,
+  .ai-section-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+  
+  .ai-insight-card {
+    padding: 12px !important;
+  }
+  
+  /* --- CASH BALANCES --- */
+  .cash-summary-tiles {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  .cash-summary-tiles .summary-tile {
+    flex: 1 1 auto !important;
+    min-width: 100px !important;
+  }
+  
+  .cash-chart-section {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* --- AP/AR AGING --- */
+  .ap-aging-summary {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  
+  .ap-aging-summary .summary-card {
+    flex: 1 1 auto !important;
+    min-width: 80px !important;
+  }
+  
+  .ap-aging-chart-section {
+    display: block !important;
+  }
+  
+  .ap-aging-chart-wrapper {
+    min-width: 100% !important;
+    max-width: 100% !important;
+    height: 160px !important;
+  }
+  
+  /* --- TABLES - Scrollable with readable text --- */
+  .table-wrapper {
+    overflow-x: auto !important;
+  }
+  
+  .job-budgets-table,
+  .ap-aging-table,
+  .ar-aging-table {
+    font-size: 11px !important;
+  }
+  
+  .job-budgets-table th,
+  .job-budgets-table td,
+  .ap-aging-table th,
+  .ap-aging-table td,
+  .ar-aging-table th,
+  .ar-aging-table td {
+    padding: 8px 6px !important;
+  }
+  
+  /* --- OVERVIEW TILES --- */
+  .overview-tiles-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+  }
+  
+  .overview-metric-tile {
+    padding: 12px !important;
+  }
+  
+  .overview-metric-tile .tile-value {
+    font-size: 18px !important;
+  }
+  
+  .overview-metric-tile .tile-label {
+    font-size: 10px !important;
+  }
+  
+  /* --- AI ANALYSIS PANELS --- */
+  .ai-analysis-panel {
+    padding: 10px !important;
+  }
+  
+  .ai-analysis-content {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* --- MODALS - Full width in landscape --- */
+  .modal-dialog {
+    max-width: 90vw !important;
+    max-height: 85vh !important;
+  }
+  
+  /* --- SIDEBAR - Compact --- */
+  .sidebar {
+    width: 200px !important;
+  }
+  
+  .sidebar.collapsed {
+    width: 50px !important;
+  }
+  
+  /* --- PAYMENTS PAGE --- */
+  .payments-summary,
+  .payments-metrics {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  /* --- COST CODES PAGE --- */
+  .cost-codes-metrics,
+  .cc-summary-row {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  /* --- MIN FONT SIZE FLOOR --- */
+  .metric-value,
+  .tile-value,
+  .summary-value,
+  .stat-value {
+    font-size: clamp(14px, 3vw, 18px) !important;
+  }
+  
+  .metric-label,
+  .tile-label,
+  .summary-label,
+  .stat-label {
+    font-size: clamp(9px, 2vw, 12px) !important;
+  }
+}
+
+/* Tablet landscape (more space available) */
+@media (min-width: 901px) and (max-width: 1200px) and (orientation: landscape) {
+  
+  /* Slightly larger sizing for tablets */
+  .job-metric-card .metric-value {
+    font-size: 16px !important;
+  }
+  
+  .job-metric-card .metric-label {
+    font-size: 11px !important;
+  }
+  
+  .jo-chart-grid-3 {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  
+  .overview-tiles-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  
+  .breakdown-card {
+    flex: 1 1 300px !important;
+    max-width: 450px !important;
+  }
+}

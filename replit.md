@@ -33,7 +33,7 @@ The dashboard provides several key views for financial analysis:
 A dedicated AI-powered analysis page aggregates data from all sources to provide strategic business intelligence, including executive summaries, financial health, job performance, cash flow, AR/AP, PM performance, and strategic recommendations.
 
 ### Responsive Design
-The application uses a mobile-first approach with a responsive sidebar, hamburger menu, and CSS flexbox layouts.
+The application uses a mobile-first approach with a responsive sidebar, hamburger menu, and CSS flexbox layouts. A dedicated "LANDSCAPE MOBILE/TABLET COMPATIBILITY" section in `style.css` provides orientation-aware media queries (`@media (orientation: landscape)`) to ensure proper display on phones and tablets in landscape mode. This includes horizontal metric tile layouts, readable font sizes (14px minimum for values, 9px for labels), and appropriate chart sizing.
 
 ### Session & Navigation State
 Authentication status, user roles, and sidebar collapse state are cached in `localStorage` for immediate UI responsiveness.
