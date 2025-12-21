@@ -17413,10 +17413,32 @@ body.dark-mode .dashboard-section > h2 {
 .waterfall-chart-container {
   position: relative;
   height: 300px;
+  width: 100%;
+}
+
+/* Make Income Statement waterfall full width like AI analysis section */
+#incomeStatement .waterfall-section {
+  width: 100%;
+  max-width: 100%;
 }
 
 [data-theme="dark"] .waterfall-section {
   background: rgba(30, 41, 59, 0.6);
+}
+
+/* Dark mode select option styling for Income Statement config */
+[data-theme="dark"] .is-controls select,
+[data-theme="dark"] .is-controls select option {
+  background-color: #1e293b;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] #isCompareMode,
+[data-theme="dark"] #isCompareMode option,
+[data-theme="dark"] #isDetailLevel,
+[data-theme="dark"] #isDetailLevel option {
+  background-color: #1e293b;
+  color: #e2e8f0;
 }
 
 /* Mobile responsive */

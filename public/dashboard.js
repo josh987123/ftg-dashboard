@@ -16187,23 +16187,21 @@ function renderIsWaterfallChart() {
   waterfallData.push(operatingIncome >= 0 ? [0, operatingIncome] : [operatingIncome, 0]);
   labels.push('Op Income');
   
-  // Assign colors: blue for starting, red for deductions, green for profit subtotals
+  // Assign colors: green for revenue/profit, red for deductions/expenses
   const getColor = (label, data) => {
     const val = Array.isArray(data) ? data[1] - data[0] : data;
-    // Starting point
-    if (label === 'Revenue') return 'rgba(99, 102, 241, 0.8)';
-    // Deductions (expenses)
-    if (['Direct Exp', 'Indirect Exp', 'Salaries', 'Facility', 'Travel/Ent', 
-         'Insurance', 'Prof Svcs', 'Admin/Other', 'Other Exp'].includes(label)) {
+    // Revenue (green - same as profit)
+    if (label === 'Revenue') return 'rgba(16, 185, 129, 0.8)';
+    // All expense/deduction categories (red)
+    if (['Direct Labor', 'Materials', 'Subcontracts', 'Other Direct',
+         'Indirect Labor', 'Other Indirect', 'Operating Exp'].includes(label)) {
       return 'rgba(239, 68, 68, 0.8)';
     }
-    // Income additions
-    if (label === 'Other Inc') return 'rgba(16, 185, 129, 0.8)';
     // Profit subtotals (green if positive, red if negative)
-    if (['Gross Profit', 'Op Income', 'Net Profit'].includes(label)) {
+    if (['Gross Profit', 'Op Income'].includes(label)) {
       return val >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)';
     }
-    return 'rgba(99, 102, 241, 0.8)';
+    return 'rgba(16, 185, 129, 0.8)';
   };
   
   const backgroundColors = labels.map((label, i) => getColor(label, waterfallData[i]));
