@@ -6271,6 +6271,12 @@ body.dark-mode .nav-item.nav-parent.expanded {
   color: #1e3a5f;
 }
 
+.summary-tile .tile-value.positive,
+.summary-tile .tile-value.negative {
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .summary-tile .tile-subvalue {
   font-size: 11px;
   color: #9ca3af;
