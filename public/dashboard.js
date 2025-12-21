@@ -12312,7 +12312,36 @@ function getCashGLMonthlyData(range) {
   
   if (allMonthKeys.length === 0) return { labels: [], datasets: [] };
   
-  // Filter months based on range
+  // Map account numbers to descriptions
+  const accountDescriptions = {};
+  accounts.forEach(acct => {
+    accountDescriptions[acct.account_no] = acct.description;
+  });
+  
+  // Calculate CUMULATIVE balances for each account from beginning (2015-01)
+  // gl_history_all contains monthly ACTIVITY, so we sum from start to get cumulative balance
+  const cumulativeByAccount = {};
+  
+  CASH_GL_ACCOUNTS.forEach(acctNo => {
+    const acctEntry = glHistory.find(e => String(e.Account_Num) === acctNo || String(e.Account) === acctNo);
+    if (acctEntry) {
+      const desc = accountDescriptions[acctNo] || `Account ${acctNo}`;
+      let runningTotal = 0;
+      const cumulativeValues = [];
+      
+      // Sum activity from beginning to get cumulative balance at each month
+      allMonthKeys.forEach(month => {
+        const activity = acctEntry[month];
+        const activityVal = activity === '' || activity === null || activity === undefined ? 0 : parseFloat(activity) || 0;
+        runningTotal += activityVal;
+        cumulativeValues.push({ month, balance: runningTotal });
+      });
+      
+      cumulativeByAccount[desc] = cumulativeValues;
+    }
+  });
+  
+  // Filter months based on range for display
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
@@ -12334,29 +12363,18 @@ function getCashGLMonthlyData(range) {
   
   const filteredMonths = allMonthKeys.filter(m => m >= startKey && m <= endKey);
   
-  // Build dataset for each cash account (excluding Schwab)
+  // Extract cumulative values for filtered months
   const cashAccountData = {};
-  const accountDescriptions = {};
-  
-  // Map account numbers to descriptions
-  accounts.forEach(acct => {
-    accountDescriptions[acct.account_no] = acct.description;
+  Object.keys(cumulativeByAccount).forEach(acctDesc => {
+    const allCumulative = cumulativeByAccount[acctDesc];
+    const filteredValues = filteredMonths.map(month => {
+      const entry = allCumulative.find(e => e.month === month);
+      return entry ? entry.balance : 0;
+    });
+    cashAccountData[acctDesc] = filteredValues;
   });
   
-  // Get data for each cash GL account
-  CASH_GL_ACCOUNTS.forEach(acctNo => {
-    const acctEntry = glHistory.find(e => String(e.Account_Num) === acctNo || String(e.Account) === acctNo);
-    if (acctEntry) {
-      const values = filteredMonths.map(month => {
-        const val = acctEntry[month];
-        return val === '' || val === null || val === undefined ? 0 : parseFloat(val) || 0;
-      });
-      const desc = accountDescriptions[acctNo] || `Account ${acctNo}`;
-      cashAccountData[desc] = values;
-    }
-  });
-  
-  // Calculate totals for each month
+  // Calculate totals for each month (sum of all account cumulative balances)
   const totals = filteredMonths.map((_, idx) => {
     return Object.values(cashAccountData).reduce((sum, values) => sum + (values[idx] || 0), 0);
   });
