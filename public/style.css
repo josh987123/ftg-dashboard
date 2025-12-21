@@ -17039,13 +17039,14 @@ body.dark-mode .dashboard-section > h2 {
 
 .heatmap-container {
   overflow-x: auto;
+  width: 100%;
 }
 
 .heatmap-grid {
   display: table;
   border-collapse: collapse;
   width: 100%;
-  min-width: 600px;
+  table-layout: fixed;
 }
 
 .heatmap-row {
@@ -17059,18 +17060,18 @@ body.dark-mode .dashboard-section > h2 {
 
 .heatmap-cell {
   display: table-cell;
-  padding: 12px 10px;
+  padding: 10px 6px;
   text-align: center;
   border: 1px solid var(--border-color);
   font-size: 12px;
-  min-width: 80px;
   vertical-align: middle;
 }
 
 .heatmap-cell.pm-label {
   text-align: left;
   font-weight: 500;
-  min-width: 150px;
+  width: auto;
+  white-space: nowrap;
   background: var(--bg-tertiary);
   color: var(--text-primary);
 }
@@ -17136,42 +17137,74 @@ body.dark-mode .dashboard-section > h2 {
   background: rgba(30, 41, 59, 0.4);
 }
 
-/* Mobile responsive */
+/* Mobile responsive - Portrait */
 @media (max-width: 768px) {
   .profitability-heatmap-section {
-    padding: 15px;
-    margin-top: 20px;
+    padding: 12px;
+    margin-top: 15px;
+  }
+  
+  .heatmap-grid {
+    width: 100%;
+    table-layout: fixed;
   }
   
   .heatmap-cell {
-    padding: 8px 6px;
-    font-size: 10px;
-    min-width: 60px;
+    padding: 6px 3px;
+    font-size: 9px;
   }
   
   .heatmap-cell.pm-label {
-    min-width: 100px;
-    font-size: 10px;
+    font-size: 9px;
+    padding: 6px 4px;
+    width: 1%;
+    white-space: nowrap;
+  }
+  
+  .heatmap-cell.header {
+    font-size: 8px;
+    padding: 5px 2px;
   }
   
   .legend-gradient {
-    width: 120px;
+    width: 100px;
+  }
+  
+  .heatmap-legend {
+    font-size: 10px;
+    gap: 6px;
+    flex-wrap: wrap;
   }
 }
 
-/* Landscape mobile */
+/* Landscape mobile/tablet */
 @media (max-width: 900px) and (orientation: landscape) {
   .profitability-heatmap-section {
-    padding: 12px;
+    padding: 10px;
+  }
+  
+  .heatmap-grid {
+    width: 100%;
+    table-layout: fixed;
   }
   
   .heatmap-cell {
-    padding: 8px 5px;
+    padding: 6px 4px;
     font-size: 10px;
-    min-width: 55px;
   }
   
   .heatmap-cell.pm-label {
-    min-width: 90px;
+    font-size: 10px;
+    padding: 6px 5px;
+    width: 1%;
+    white-space: nowrap;
+  }
+  
+  .heatmap-cell.header {
+    font-size: 9px;
+  }
+  
+  .heatmap-legend {
+    font-size: 10px;
   }
 }
