@@ -16073,27 +16073,31 @@ function renderIsWaterfallChart() {
   const groups = isAccountGroups.income_statement.groups;
   const rows = buildIncomeStatementRows(periodMonths, groups);
   
-  // Extract key values for waterfall - using MEDIUM DETAIL LEVEL
+  // Extract key values for waterfall - DETAILED breakdown
   const getValue = (label) => {
     const row = rows.find(r => r.label === label);
     return row ? (row.value || 0) : 0;
   };
   
-  // Medium detail level categories from account_groups.json
+  // Detailed categories from account_groups.json
   const revenue = getValue('Revenue');
-  const totalDirectExpenses = getValue('Total Direct Expenses');
-  const totalIndirectExpenses = getValue('Total Indirect Expenses');
+  
+  // Direct Expenses breakdown
+  const directLabor = getValue('Direct Labor');
+  const materials = getValue('Materials');
+  const subcontracts = getValue('Subcontracts');
+  const rentedEquipment = getValue('Rented Equipment');
+  const otherDirectCosts = getValue('Other Direct Costs');
+  
+  // Indirect Expenses breakdown
+  const indirectLabor = getValue('Indirect Labor');
+  const depreciation = getValue('Depreciation');
+  const vehicleExpense = getValue('Vehicle Expense');
+  const otherIndirectCosts = getValue('Other Indirect Costs');
+  
   const grossProfit = getValue('Gross Profit');
-  const salariesBenefits = getValue('Salaries & Benefits');
-  const facility = getValue('Facility');
-  const travelEntertainment = getValue('Travel & Entertainment');
-  const insurance = getValue('Insurance');
-  const professionalServices = getValue('Professional Services');
-  const adminOther = getValue('Administrative & Other');
   const operatingExpenses = getValue('Operating Expenses');
   const operatingIncome = getValue('Operating Income');
-  const otherIncomeExpense = getValue('Other Income/Expense');
-  const netProfit = getValue('Net Profit Before Taxes');
   
   const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
   const textColor = isDarkMode ? '#e2e8f0' : '#374151';
@@ -16104,9 +16108,9 @@ function renderIsWaterfallChart() {
     isWaterfallChart.destroy();
   }
   
-  // Build waterfall data using floating bars [base, top] - MEDIUM DETAIL LEVEL
-  // Sequence: Revenue → Direct Expenses → Indirect Expenses → Gross Profit → 
-  //           (Op Expense categories) → Operating Income → Other → Net Profit
+  // Build waterfall data using floating bars [base, top] - DETAILED breakdown
+  // Sequence: Revenue → Direct Labor → Materials → Subcontracts → Other Direct →
+  //           Indirect Labor → Other Indirect → Gross Profit → Operating Exp → Operating Income
   
   let waterfallData = [];
   let labels = [];
@@ -16116,66 +16120,72 @@ function renderIsWaterfallChart() {
   waterfallData.push([0, revenue]);
   labels.push('Revenue');
   
-  // 2. Total Direct Expenses (deduction)
-  if (Math.abs(totalDirectExpenses) > 0.01) {
-    const afterDirect = runningTotal - Math.abs(totalDirectExpenses);
-    waterfallData.push([afterDirect, runningTotal]);
-    labels.push('Direct Exp');
-    runningTotal = afterDirect;
+  // 2. Direct Labor (deduction)
+  if (Math.abs(directLabor) > 0.01) {
+    const afterDirectLabor = runningTotal - Math.abs(directLabor);
+    waterfallData.push([afterDirectLabor, runningTotal]);
+    labels.push('Direct Labor');
+    runningTotal = afterDirectLabor;
   }
   
-  // 3. Total Indirect Expenses (deduction)
-  if (Math.abs(totalIndirectExpenses) > 0.01) {
-    const afterIndirect = runningTotal - Math.abs(totalIndirectExpenses);
-    waterfallData.push([afterIndirect, runningTotal]);
-    labels.push('Indirect Exp');
-    runningTotal = afterIndirect;
+  // 3. Materials (deduction)
+  if (Math.abs(materials) > 0.01) {
+    const afterMaterials = runningTotal - Math.abs(materials);
+    waterfallData.push([afterMaterials, runningTotal]);
+    labels.push('Materials');
+    runningTotal = afterMaterials;
   }
   
-  // 4. Gross Profit (subtotal)
+  // 4. Subcontracts (deduction)
+  if (Math.abs(subcontracts) > 0.01) {
+    const afterSubcontracts = runningTotal - Math.abs(subcontracts);
+    waterfallData.push([afterSubcontracts, runningTotal]);
+    labels.push('Subcontracts');
+    runningTotal = afterSubcontracts;
+  }
+  
+  // 5. Other Direct Costs (Rented Equipment + Other Direct)
+  const otherDirect = Math.abs(rentedEquipment) + Math.abs(otherDirectCosts);
+  if (otherDirect > 0.01) {
+    const afterOtherDirect = runningTotal - otherDirect;
+    waterfallData.push([afterOtherDirect, runningTotal]);
+    labels.push('Other Direct');
+    runningTotal = afterOtherDirect;
+  }
+  
+  // 6. Indirect Labor (deduction)
+  if (Math.abs(indirectLabor) > 0.01) {
+    const afterIndirectLabor = runningTotal - Math.abs(indirectLabor);
+    waterfallData.push([afterIndirectLabor, runningTotal]);
+    labels.push('Indirect Labor');
+    runningTotal = afterIndirectLabor;
+  }
+  
+  // 7. Other Indirect Costs (Depreciation + Vehicle + Other Indirect)
+  const otherIndirect = Math.abs(depreciation) + Math.abs(vehicleExpense) + Math.abs(otherIndirectCosts);
+  if (otherIndirect > 0.01) {
+    const afterOtherIndirect = runningTotal - otherIndirect;
+    waterfallData.push([afterOtherIndirect, runningTotal]);
+    labels.push('Other Indirect');
+    runningTotal = afterOtherIndirect;
+  }
+  
+  // 8. Gross Profit (subtotal)
   waterfallData.push(grossProfit >= 0 ? [0, grossProfit] : [grossProfit, 0]);
   labels.push('Gross Profit');
   runningTotal = grossProfit;
   
-  // 5. Operating Expense Categories (medium detail level)
-  const opExpCategories = [
-    { label: 'Salaries', value: salariesBenefits },
-    { label: 'Facility', value: facility },
-    { label: 'Travel/Ent', value: travelEntertainment },
-    { label: 'Insurance', value: insurance },
-    { label: 'Prof Svcs', value: professionalServices },
-    { label: 'Admin/Other', value: adminOther }
-  ];
-  
-  opExpCategories.forEach(cat => {
-    if (Math.abs(cat.value) > 0.01) {
-      const afterExp = runningTotal - Math.abs(cat.value);
-      waterfallData.push([afterExp, runningTotal]);
-      labels.push(cat.label);
-      runningTotal = afterExp;
-    }
-  });
-  
-  // 6. Operating Income (subtotal)
-  waterfallData.push(operatingIncome >= 0 ? [0, operatingIncome] : [operatingIncome, 0]);
-  labels.push('Op Income');
-  runningTotal = operatingIncome;
-  
-  // 7. Other Income/Expense (if non-zero)
-  if (Math.abs(otherIncomeExpense) > 0.01) {
-    if (otherIncomeExpense >= 0) {
-      waterfallData.push([runningTotal, runningTotal + otherIncomeExpense]);
-      labels.push('Other Inc');
-    } else {
-      const afterOther = runningTotal + otherIncomeExpense;
-      waterfallData.push([afterOther, runningTotal]);
-      labels.push('Other Exp');
-    }
+  // 9. Operating Expenses (grouped as one bar)
+  if (Math.abs(operatingExpenses) > 0.01) {
+    const afterOpExp = runningTotal - Math.abs(operatingExpenses);
+    waterfallData.push([afterOpExp, runningTotal]);
+    labels.push('Operating Exp');
+    runningTotal = afterOpExp;
   }
   
-  // 8. Net Profit (final result)
-  waterfallData.push(netProfit >= 0 ? [0, netProfit] : [netProfit, 0]);
-  labels.push('Net Profit');
+  // 10. Operating Income (final result)
+  waterfallData.push(operatingIncome >= 0 ? [0, operatingIncome] : [operatingIncome, 0]);
+  labels.push('Op Income');
   
   // Assign colors: blue for starting, red for deductions, green for profit subtotals
   const getColor = (label, data) => {
