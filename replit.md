@@ -27,7 +27,10 @@ The dashboard provides several key views for financial analysis:
 - **Statement of Cash Flows**: Indirect method with AI analysis.
 - **Cash Balances**: Tracks cash position from balance sheet and Google Sheets.
 - **AP/AR Aging**: Reports grouped by vendor/customer with aging buckets, bar charts, and detailed invoice modals.
-- **Jobs Module**: Contains Job Overview, Budgets, Job Actuals, Cost Codes, and PM Report views for detailed job costing and performance analysis. Includes a **Profitability Heat Map** on the Job Overview page that visualizes profit margins by Project Manager and job size range (contract value buckets), with color-coded cells (green = high margin, red = loss) and hover tooltips showing job counts and totals.
+- **Jobs Module**: Contains Job Overview, Budgets, Job Actuals, Cost Codes, and PM Report views for detailed job costing and performance analysis. Includes:
+  - **Profitability Heat Map**: Visualizes profit margins by Project Manager or Client and job size range (contract value buckets), with color-coded cells (green = high margin, red = loss) and hover tooltips showing job counts and totals.
+  - **PM Performance Radar Chart**: Compares individual PM metrics to portfolio average across 5 normalized dimensions (profit margin, job count, contract value, avg job size, billing position). Excludes Josh Angelo.
+  - **Revenue-to-Profit Waterfall Chart**: Shows flow from contract value through estimated costs to gross profit. Supports Portfolio Total, By Project Manager, and By Top Clients groupings. Uses floating bars for proper waterfall visualization and shows losses in red.
 
 ### AI Insights
 A dedicated AI-powered analysis page aggregates data from all sources to provide strategic business intelligence, including executive summaries, financial health, job performance, cash flow, AR/AP, PM performance, and strategic recommendations.
