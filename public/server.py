@@ -784,10 +784,34 @@ Period: {period_info}
         
         import json
         
+        # Handle potential empty or malformed response
+        if not response.content or len(response.content) == 0:
+            print(f"AI Analysis error: Empty response from API")
+            return jsonify({'error': 'AI returned empty response. Please try again.'}), 500
+        
         content_block = response.content[0]
         raw_content = getattr(content_block, 'text', '') or ""
         
-        result = json.loads(raw_content)
+        if not raw_content or not raw_content.strip():
+            print(f"AI Analysis error: Empty text content from API")
+            return jsonify({'error': 'AI returned empty analysis. Please try again.'}), 500
+        
+        # Clean up potential markdown code blocks
+        cleaned_content = raw_content.strip()
+        if cleaned_content.startswith('```json'):
+            cleaned_content = cleaned_content[7:]
+        if cleaned_content.startswith('```'):
+            cleaned_content = cleaned_content[3:]
+        if cleaned_content.endswith('```'):
+            cleaned_content = cleaned_content[:-3]
+        cleaned_content = cleaned_content.strip()
+        
+        try:
+            result = json.loads(cleaned_content)
+        except json.JSONDecodeError as je:
+            print(f"JSON decode error: {str(je)}")
+            print(f"Raw content received: {raw_content[:500]}...")
+            return jsonify({'error': f'Failed to parse AI response. Please try again.'}), 500
         
         analysis = "## Key Observations\n"
         for item in result.get("key_observations", [])[:4]:
