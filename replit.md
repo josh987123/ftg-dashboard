@@ -27,7 +27,7 @@ The dashboard provides several key views for financial analysis:
 - **Statement of Cash Flows**: Indirect method with AI analysis.
 - **Cash Balances**: Tracks cash position from balance sheet and Google Sheets.
 - **AP/AR Aging**: Reports grouped by vendor/customer with aging buckets, bar charts, and detailed invoice modals.
-- **Jobs Module**: Contains Job Overview, Budgets, Job Actuals, Cost Codes, and PM Report views for detailed job costing and performance analysis.
+- **Jobs Module**: Contains Job Overview, Budgets, Job Actuals, Cost Codes, and PM Report views for detailed job costing and performance analysis. Includes a **Profitability Heat Map** on the Job Overview page that visualizes profit margins by Project Manager and job size range (contract value buckets), with color-coded cells (green = high margin, red = loss) and hover tooltips showing job counts and totals.
 
 ### AI Insights
 A dedicated AI-powered analysis page aggregates data from all sources to provide strategic business intelligence, including executive summaries, financial health, job performance, cash flow, AR/AP, PM performance, and strategic recommendations.
