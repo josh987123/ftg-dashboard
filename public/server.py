@@ -339,24 +339,30 @@ def init_database():
                         ON CONFLICT DO NOTHING
                     """, (roles['project_manager'], perms[page_key]))
         
-        # Seed default users if they don't exist
-        default_users = [
-            ('rodney@ftgbuilders.com', 'Rodney', 'admin'),
-            ('sergio@ftghbuilders.com', 'Sergio', 'admin'),
-            ('joshl@ftgbuilders.com', 'Josh', 'manager'),
-            ('greg@ftgbuilders.com', 'Greg', 'manager'),
-            ('bailey@ftgbuilders.com', 'Bailey', 'manager')
-        ]
+        # Only seed default users on first-time initialization (when no users exist)
+        cur.execute("SELECT COUNT(*) as count FROM users")
+        user_count = cur.fetchone()['count']
         
-        default_password_hash = hash_password('Ftgb2025$')
-        
-        for email, display_name, role_name in default_users:
-            role_id = roles.get(role_name)
-            cur.execute("""
-                INSERT INTO users (email, display_name, password_hash, role_id, is_active)
-                VALUES (%s, %s, %s, %s, TRUE)
-                ON CONFLICT (email) DO UPDATE SET role_id = COALESCE(users.role_id, EXCLUDED.role_id)
-            """, (email, display_name, default_password_hash, role_id))
+        if user_count == 0:
+            print("No users found - seeding default users...")
+            default_users = [
+                ('rodney@ftgbuilders.com', 'Rodney', 'admin'),
+                ('joshl@ftgbuilders.com', 'Josh', 'manager'),
+                ('greg@ftgbuilders.com', 'Greg', 'manager'),
+                ('bailey@ftgbuilders.com', 'Bailey', 'manager')
+            ]
+            
+            default_password_hash = hash_password('Ftgb2025$')
+            
+            for email, display_name, role_name in default_users:
+                role_id = roles.get(role_name)
+                cur.execute("""
+                    INSERT INTO users (email, display_name, password_hash, role_id, is_active)
+                    VALUES (%s, %s, %s, %s, TRUE)
+                    ON CONFLICT (email) DO NOTHING
+                """, (email, display_name, default_password_hash, role_id))
+        else:
+            print(f"Found {user_count} existing users - skipping default user seeding")
         
         conn.commit()
         cur.close()
