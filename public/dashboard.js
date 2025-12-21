@@ -16080,24 +16080,27 @@ function renderIsWaterfallChart() {
   const groups = isAccountGroups.income_statement.groups;
   const rows = buildIncomeStatementRows(periodMonths, groups);
   
-  // Extract key values for waterfall - using medium detail level logic
+  // Extract key values for waterfall - using MEDIUM DETAIL LEVEL
   const getValue = (label) => {
     const row = rows.find(r => r.label === label);
     return row ? (row.value || 0) : 0;
   };
   
+  // Medium detail level categories from account_groups.json
   const revenue = getValue('Revenue');
-  const costOfSales = getValue('Total Cost of Sales');
+  const totalDirectExpenses = getValue('Total Direct Expenses');
+  const totalIndirectExpenses = getValue('Total Indirect Expenses');
   const grossProfit = getValue('Gross Profit');
+  const salariesBenefits = getValue('Salaries & Benefits');
+  const facility = getValue('Facility');
+  const travelEntertainment = getValue('Travel & Entertainment');
+  const insurance = getValue('Insurance');
+  const professionalServices = getValue('Professional Services');
+  const adminOther = getValue('Administrative & Other');
   const operatingExpenses = getValue('Operating Expenses');
   const operatingIncome = getValue('Operating Income');
   const otherIncomeExpense = getValue('Other Income/Expense');
   const netProfit = getValue('Net Profit Before Taxes');
-  
-  // Calculate deduction amounts
-  const costDeduction = Math.abs(costOfSales);
-  const opExpDeduction = Math.abs(operatingExpenses);
-  const otherAdj = otherIncomeExpense; // Can be positive or negative
   
   const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
   const textColor = isDarkMode ? '#e2e8f0' : '#374151';
@@ -16108,51 +16111,99 @@ function renderIsWaterfallChart() {
     isWaterfallChart.destroy();
   }
   
-  // Build waterfall data using floating bars [base, top]
-  // Revenue → Cost of Sales → Gross Profit → Op Expenses → Operating Income → Other → Net Profit
-  const waterfallData = [
-    [0, revenue],                                    // Revenue: full bar
-    [grossProfit, revenue],                          // Cost of Sales: deduction from revenue to gross profit
-    [0, grossProfit],                                // Gross Profit: result bar
-    [operatingIncome, grossProfit],                  // Op Expenses: deduction from gross to operating income
-    [0, operatingIncome],                            // Operating Income: result bar
-  ];
+  // Build waterfall data using floating bars [base, top] - MEDIUM DETAIL LEVEL
+  // Sequence: Revenue → Direct Expenses → Indirect Expenses → Gross Profit → 
+  //           (Op Expense categories) → Operating Income → Other → Net Profit
   
-  // Add Other Income/Expense if non-zero
-  let labels = ['Revenue', 'Cost of Sales', 'Gross Profit', 'Op Expenses', 'Operating Income'];
-  let colors = [];
+  let waterfallData = [];
+  let labels = [];
+  let runningTotal = revenue;
   
-  if (Math.abs(otherAdj) > 0.01) {
-    if (otherAdj >= 0) {
-      waterfallData.push([operatingIncome, operatingIncome + otherAdj]);
-    } else {
-      waterfallData.push([netProfit, operatingIncome]);
-    }
-    labels.push('Other Inc/Exp');
-    waterfallData.push(netProfit >= 0 ? [0, netProfit] : [netProfit, 0]);
-    labels.push('Net Profit');
-  } else {
-    waterfallData.push(netProfit >= 0 ? [0, netProfit] : [netProfit, 0]);
-    labels.push('Net Profit');
+  // 1. Revenue (starting point)
+  waterfallData.push([0, revenue]);
+  labels.push('Revenue');
+  
+  // 2. Total Direct Expenses (deduction)
+  if (Math.abs(totalDirectExpenses) > 0.01) {
+    const afterDirect = runningTotal - Math.abs(totalDirectExpenses);
+    waterfallData.push([afterDirect, runningTotal]);
+    labels.push('Direct Exp');
+    runningTotal = afterDirect;
   }
   
-  // Assign colors: blue for totals, red for deductions, green for profit
-  const getColor = (label, value) => {
+  // 3. Total Indirect Expenses (deduction)
+  if (Math.abs(totalIndirectExpenses) > 0.01) {
+    const afterIndirect = runningTotal - Math.abs(totalIndirectExpenses);
+    waterfallData.push([afterIndirect, runningTotal]);
+    labels.push('Indirect Exp');
+    runningTotal = afterIndirect;
+  }
+  
+  // 4. Gross Profit (subtotal)
+  waterfallData.push(grossProfit >= 0 ? [0, grossProfit] : [grossProfit, 0]);
+  labels.push('Gross Profit');
+  runningTotal = grossProfit;
+  
+  // 5. Operating Expense Categories (medium detail level)
+  const opExpCategories = [
+    { label: 'Salaries', value: salariesBenefits },
+    { label: 'Facility', value: facility },
+    { label: 'Travel/Ent', value: travelEntertainment },
+    { label: 'Insurance', value: insurance },
+    { label: 'Prof Svcs', value: professionalServices },
+    { label: 'Admin/Other', value: adminOther }
+  ];
+  
+  opExpCategories.forEach(cat => {
+    if (Math.abs(cat.value) > 0.01) {
+      const afterExp = runningTotal - Math.abs(cat.value);
+      waterfallData.push([afterExp, runningTotal]);
+      labels.push(cat.label);
+      runningTotal = afterExp;
+    }
+  });
+  
+  // 6. Operating Income (subtotal)
+  waterfallData.push(operatingIncome >= 0 ? [0, operatingIncome] : [operatingIncome, 0]);
+  labels.push('Op Income');
+  runningTotal = operatingIncome;
+  
+  // 7. Other Income/Expense (if non-zero)
+  if (Math.abs(otherIncomeExpense) > 0.01) {
+    if (otherIncomeExpense >= 0) {
+      waterfallData.push([runningTotal, runningTotal + otherIncomeExpense]);
+      labels.push('Other Inc');
+    } else {
+      const afterOther = runningTotal + otherIncomeExpense;
+      waterfallData.push([afterOther, runningTotal]);
+      labels.push('Other Exp');
+    }
+  }
+  
+  // 8. Net Profit (final result)
+  waterfallData.push(netProfit >= 0 ? [0, netProfit] : [netProfit, 0]);
+  labels.push('Net Profit');
+  
+  // Assign colors: blue for starting, red for deductions, green for profit subtotals
+  const getColor = (label, data) => {
+    const val = Array.isArray(data) ? data[1] - data[0] : data;
+    // Starting point
     if (label === 'Revenue') return 'rgba(99, 102, 241, 0.8)';
-    if (label === 'Cost of Sales' || label === 'Op Expenses') return 'rgba(239, 68, 68, 0.8)';
-    if (label === 'Other Inc/Exp') return value >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)';
-    if (label === 'Gross Profit' || label === 'Operating Income' || label === 'Net Profit') {
-      const val = Array.isArray(value) ? value[1] - value[0] : value;
+    // Deductions (expenses)
+    if (['Direct Exp', 'Indirect Exp', 'Salaries', 'Facility', 'Travel/Ent', 
+         'Insurance', 'Prof Svcs', 'Admin/Other', 'Other Exp'].includes(label)) {
+      return 'rgba(239, 68, 68, 0.8)';
+    }
+    // Income additions
+    if (label === 'Other Inc') return 'rgba(16, 185, 129, 0.8)';
+    // Profit subtotals (green if positive, red if negative)
+    if (['Gross Profit', 'Op Income', 'Net Profit'].includes(label)) {
       return val >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)';
     }
     return 'rgba(99, 102, 241, 0.8)';
   };
   
-  const backgroundColors = labels.map((label, i) => {
-    if (label === 'Other Inc/Exp') return getColor(label, otherAdj);
-    return getColor(label, waterfallData[i]);
-  });
-  
+  const backgroundColors = labels.map((label, i) => getColor(label, waterfallData[i]));
   const borderColors = backgroundColors.map(c => c.replace('0.8', '1'));
   
   isWaterfallChart = new Chart(ctx, {
