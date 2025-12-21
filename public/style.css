@@ -13721,13 +13721,11 @@ body.dark-mode .skeleton-text,
 ======================================== */
 
 .oub-positive {
-  background-color: #dcfce7 !important;
-  color: #000 !important;
+  color: #10b981 !important;
 }
 
 .oub-negative {
-  background-color: #fee2e2 !important;
-  color: #000 !important;
+  color: #ef4444 !important;
 }
 
 #oubTable .totals-row {
@@ -13741,24 +13739,20 @@ body.dark-mode .skeleton-text,
 }
 
 #oubTable .totals-row .oub-positive {
-  background-color: #dcfce7 !important;
-  color: #000 !important;
+  color: #10b981 !important;
 }
 
 #oubTable .totals-row .oub-negative {
-  background-color: #fee2e2 !important;
-  color: #000 !important;
+  color: #ef4444 !important;
 }
 
-/* Dark mode - keep same light colors with black text */
+/* Dark mode */
 [data-theme="dark"] .oub-positive {
-  background-color: #dcfce7 !important;
-  color: #000 !important;
+  color: #10b981 !important;
 }
 
 [data-theme="dark"] .oub-negative {
-  background-color: #fee2e2 !important;
-  color: #000 !important;
+  color: #ef4444 !important;
 }
 
 [data-theme="dark"] #oubTable .totals-row {
@@ -13766,19 +13760,20 @@ body.dark-mode .skeleton-text,
   border-bottom-color: #60a5fa;
 }
 
-[data-theme="dark"] #oubTable .totals-row .oub-positive,
+[data-theme="dark"] #oubTable .totals-row .oub-positive {
+  color: #10b981 !important;
+}
+
 [data-theme="dark"] #oubTable .totals-row .oub-negative {
-  color: #000 !important;
+  color: #ef4444 !important;
 }
 
 body.dark-mode .oub-positive {
-  background-color: #dcfce7 !important;
-  color: #000 !important;
+  color: #10b981 !important;
 }
 
 body.dark-mode .oub-negative {
-  background-color: #fee2e2 !important;
-  color: #000 !important;
+  color: #ef4444 !important;
 }
 
 /* Over/(Under) Billing filters */
