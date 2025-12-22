@@ -15050,6 +15050,155 @@ body.dark-mode .ar-aging-table th:hover {
 }
 
 /* =====================================================
+   AR AGING EXPANDABLE ROWS
+===================================================== */
+
+.ar-customer-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.ar-customer-row:hover {
+  background-color: rgba(59, 130, 246, 0.08);
+}
+
+.ar-customer-row.ar-expanded {
+  background-color: rgba(59, 130, 246, 0.12);
+  font-weight: 600;
+}
+
+.ar-expand-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.ar-expand-icon {
+  transition: transform 0.2s ease;
+  color: #6b7280;
+}
+
+.ar-customer-row.ar-expanded .ar-expand-icon {
+  transform: rotate(90deg);
+  color: #3b82f6;
+}
+
+.ar-invoice-container {
+  background-color: #f8fafc;
+}
+
+[data-theme="dark"] .ar-invoice-container,
+body.dark-mode .ar-invoice-container {
+  background-color: #0f172a;
+}
+
+.ar-invoice-cell {
+  padding: 8px 12px !important;
+}
+
+.ar-invoice-loading,
+.ar-invoice-empty,
+.ar-invoice-error {
+  padding: 12px;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.ar-invoice-error {
+  color: #ef4444;
+}
+
+/* Expanded invoice table */
+.ar-invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  table-layout: fixed;
+}
+
+.ar-invoice-table th {
+  background: #e5e7eb;
+  padding: 4px 6px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 10px;
+  color: #374151;
+  border-bottom: 1px solid #d1d5db;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ar-invoice-table th.text-right {
+  text-align: right;
+}
+
+[data-theme="dark"] .ar-invoice-table th,
+body.dark-mode .ar-invoice-table th {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+
+.ar-invoice-row td {
+  padding: 4px 6px;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-theme="dark"] .ar-invoice-row td,
+body.dark-mode .ar-invoice-row td {
+  border-bottom-color: #334155;
+}
+
+.ar-invoice-row:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Column widths for invoice table */
+.ar-inv-num { width: 7%; }
+.ar-inv-job { width: 6%; }
+.ar-inv-desc { width: 22%; }
+.ar-inv-pm { width: 12%; }
+.ar-inv-date { width: 8%; }
+
+/* Ensure text doesn't overflow */
+.ar-invoice-table td {
+  max-width: 0;
+}
+
+.ar-invoice-table td.text-right {
+  text-align: right;
+  width: 8%;
+}
+
+/* Mobile adjustments for expanded rows */
+@media (max-width: 768px) {
+  .ar-invoice-table {
+    font-size: 9px;
+  }
+  
+  .ar-invoice-table th {
+    font-size: 8px;
+    padding: 3px 4px;
+  }
+  
+  .ar-invoice-row td {
+    padding: 3px 4px;
+  }
+  
+  .ar-inv-desc { width: 18%; }
+  .ar-inv-pm { width: 10%; }
+}
+
+/* =====================================================
    PM REPORT STYLES
 ===================================================== */
 

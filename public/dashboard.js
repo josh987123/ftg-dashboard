@@ -24772,6 +24772,9 @@ function loadArAgingData() {
     });
 }
 
+// Track expanded customers
+const arAgingExpandedCustomers = new Set();
+
 function renderArAgingTable(customers, totals) {
   const tbody = document.getElementById('arAgingTableBody');
   if (!tbody) return;
@@ -24793,9 +24796,16 @@ function renderArAgingTable(customers, totals) {
     return;
   }
   
-  const dataRows = customers.map(c => `
-    <tr>
-      <td><span class="vendor-link" data-customer="${escapeHtml(c.customer_name)}">${escapeHtml(c.customer_name)}</span></td>
+  const dataRows = customers.map((c, idx) => `
+    <tr class="ar-customer-row" data-customer="${escapeHtml(c.customer_name)}" data-idx="${idx}">
+      <td>
+        <span class="ar-expand-toggle" title="Click to expand">
+          <svg class="ar-expand-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </span>
+        <span class="customer-name">${escapeHtml(c.customer_name)}</span>
+      </td>
       <td class="text-right">${formatCurrency(c.total_due)}</td>
       <td class="text-right">${formatCurrency(c.current)}</td>
       <td class="text-right">${formatCurrency(c.days_31_60)}</td>
@@ -24803,16 +24813,116 @@ function renderArAgingTable(customers, totals) {
       <td class="text-right ${c.days_90_plus > 0 ? 'negative' : ''}">${formatCurrency(c.days_90_plus)}</td>
       <td class="text-right">${formatCurrency(c.retainage)}</td>
     </tr>
+    <tr class="ar-invoice-container" id="ar-invoices-${idx}" style="display: none;">
+      <td colspan="7" class="ar-invoice-cell">
+        <div class="ar-invoice-loading">Loading invoices...</div>
+      </td>
+    </tr>
   `).join('');
   
   tbody.innerHTML = totalsRow + dataRows;
   
-  tbody.querySelectorAll('.vendor-link').forEach(link => {
-    link.addEventListener('click', () => {
-      const customerName = link.dataset.customer;
-      if (customerName) showCustomerInvoicesModal(customerName);
+  // Add click handlers for expandable rows
+  tbody.querySelectorAll('.ar-customer-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const customerName = row.dataset.customer;
+      const idx = row.dataset.idx;
+      toggleArCustomerExpand(customerName, idx, row);
     });
   });
+}
+
+function toggleArCustomerExpand(customerName, idx, row) {
+  const invoiceContainer = document.getElementById(`ar-invoices-${idx}`);
+  if (!invoiceContainer) return;
+  
+  const isExpanded = invoiceContainer.style.display !== 'none';
+  
+  if (isExpanded) {
+    // Collapse
+    invoiceContainer.style.display = 'none';
+    row.classList.remove('ar-expanded');
+    arAgingExpandedCustomers.delete(customerName);
+  } else {
+    // Expand and load invoices
+    invoiceContainer.style.display = '';
+    row.classList.add('ar-expanded');
+    arAgingExpandedCustomers.add(customerName);
+    loadArCustomerInvoices(customerName, idx);
+  }
+}
+
+function loadArCustomerInvoices(customerName, idx) {
+  const container = document.getElementById(`ar-invoices-${idx}`);
+  if (!container) return;
+  
+  const cell = container.querySelector('.ar-invoice-cell');
+  cell.innerHTML = '<div class="ar-invoice-loading">Loading invoices...</div>';
+  
+  fetch(`/api/ar-aging/customer?customer=${encodeURIComponent(customerName)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success && data.invoices && data.invoices.length > 0) {
+        renderArInvoiceRows(data.invoices, cell);
+      } else {
+        cell.innerHTML = '<div class="ar-invoice-empty">No invoices found</div>';
+      }
+    })
+    .catch(err => {
+      console.error('Error loading invoices:', err);
+      cell.innerHTML = '<div class="ar-invoice-error">Error loading invoices</div>';
+    });
+}
+
+function renderArInvoiceRows(invoices, cell) {
+  // Build invoice rows table
+  let html = `<table class="ar-invoice-table">
+    <thead>
+      <tr>
+        <th>Invoice #</th>
+        <th>Job #</th>
+        <th>Job Description</th>
+        <th>PM</th>
+        <th>Due Date</th>
+        <th class="text-right">Total Due</th>
+        <th class="text-right">0-30</th>
+        <th class="text-right">31-60</th>
+        <th class="text-right">61-90</th>
+        <th class="text-right">90+</th>
+        <th class="text-right">Retainage</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  
+  invoices.forEach(inv => {
+    const collectible = inv.collectible || 0;
+    const retainage = inv.retainage || 0;
+    const totalDue = collectible + retainage;
+    const bucket = inv.aging_bucket || 'current';
+    
+    // Place collectible in appropriate bucket column
+    const current = bucket === 'current' ? collectible : 0;
+    const days31_60 = bucket === 'days_31_60' ? collectible : 0;
+    const days61_90 = bucket === 'days_61_90' ? collectible : 0;
+    const days90_plus = bucket === 'days_90_plus' ? collectible : 0;
+    
+    html += `<tr class="ar-invoice-row">
+      <td class="ar-inv-num">${escapeHtml(inv.invoice_number || '')}</td>
+      <td class="ar-inv-job">${escapeHtml(inv.job_number || '')}</td>
+      <td class="ar-inv-desc" title="${escapeHtml(inv.job_description || '')}">${escapeHtml(inv.job_description || '')}</td>
+      <td class="ar-inv-pm" title="${escapeHtml(inv.project_manager || '')}">${escapeHtml(inv.project_manager || '')}</td>
+      <td class="ar-inv-date">${escapeHtml(inv.due_date || '')}</td>
+      <td class="text-right">${totalDue > 0 ? formatCurrency(totalDue) : ''}</td>
+      <td class="text-right">${current > 0 ? formatCurrency(current) : ''}</td>
+      <td class="text-right">${days31_60 > 0 ? formatCurrency(days31_60) : ''}</td>
+      <td class="text-right">${days61_90 > 0 ? formatCurrency(days61_90) : ''}</td>
+      <td class="text-right ${days90_plus > 0 ? 'negative' : ''}">${days90_plus > 0 ? formatCurrency(days90_plus) : ''}</td>
+      <td class="text-right">${retainage > 0 ? formatCurrency(retainage) : ''}</td>
+    </tr>`;
+  });
+  
+  html += '</tbody></table>';
+  cell.innerHTML = html;
 }
 
 function updateArAgingSummary(totals) {

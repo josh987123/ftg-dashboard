@@ -4273,31 +4273,45 @@ def api_get_customer_invoices():
             total_cash = float(inv.get('total_cash_applied', 0) or 0)
             total_adj = float(inv.get('total_adjustments_applied', 0) or 0)
             total_applied = total_cash + total_adj
-            days = int(float(inv.get('days_outstanding', 0) or 0))
             
-            # Parse invoice date from Excel serial
-            invoice_date = ''
-            date_val = inv.get('invoice_date')
-            if date_val:
+            # Collectible amount excludes retainage
+            collectible = max(0, calc_due - retainage)
+            
+            # Parse due date and calculate days past due dynamically
+            due_date_str = ''
+            days_past_due = 0
+            due_date_val = inv.get('due_date')
+            if due_date_val:
                 try:
-                    excel_date = float(date_val)
+                    excel_date = float(due_date_val)
                     if excel_date > 0:
-                        date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
-                        invoice_date = date_obj.strftime('%m/%d/%Y')
+                        due_date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
+                        due_date_str = due_date_obj.strftime('%m/%d/%Y')
+                        days_past_due = (datetime.now() - due_date_obj).days
+                        if days_past_due < 0:
+                            days_past_due = 0
                 except (ValueError, TypeError):
-                    invoice_date = str(date_val)
+                    due_date_str = str(due_date_val)
+            
+            # Determine aging bucket
+            aging_bucket = 'current'
+            if days_past_due > 90:
+                aging_bucket = 'days_90_plus'
+            elif days_past_due > 60:
+                aging_bucket = 'days_61_90'
+            elif days_past_due > 30:
+                aging_bucket = 'days_31_60'
             
             customer_invoices.append({
                 'invoice_number': inv.get('invoice_no', ''),
-                'invoice_date': invoice_date,
+                'due_date': due_date_str,
                 'job_number': inv.get('job_no', ''),
                 'job_description': inv.get('job_description', ''),
                 'project_manager': inv.get('project_manager_name', ''),
-                'invoice_amount': invoice_amount,
-                'amount_paid': total_applied,
-                'amount_due': calc_due,
+                'collectible': collectible,
                 'retainage': retainage,
-                'days_outstanding': days
+                'aging_bucket': aging_bucket,
+                'days_past_due': days_past_due
             })
             
             totals['invoice_amount'] += invoice_amount
