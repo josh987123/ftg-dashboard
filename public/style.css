@@ -13064,7 +13064,24 @@ body.dark-mode .skeleton-text,
 }
 
 #paymentsTable {
-  width: auto;
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Desktop: Payments table fits to full width with text wrapping */
+@media (min-width: 769px) {
+  #paymentsTable th,
+  #paymentsTable td {
+    font-size: 12px;
+    padding: 8px 6px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  #paymentsTable th {
+    font-size: 11px;
+  }
 }
 
 #paymentsTable .collapsible-col {
