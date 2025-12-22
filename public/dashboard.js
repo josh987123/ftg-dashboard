@@ -4080,11 +4080,11 @@ async function renderArApSummaryCharts() {
       ratioEl.className = data.ratio >= 1 ? 'stat-value' : 'stat-value negative';
     }
     
-    // Update AR Aging stats
-    const arCurrentEl = document.getElementById('arAgingCurrent');
-    const ar31El = document.getElementById('arAging31to60');
-    const ar61El = document.getElementById('arAging61to90');
-    const ar90El = document.getElementById('arAging90plus');
+    // Update AR Aging stats (Overview page - use ovw prefix)
+    const arCurrentEl = document.getElementById('ovwArAgingCurrent');
+    const ar31El = document.getElementById('ovwArAging31to60');
+    const ar61El = document.getElementById('ovwArAging61to90');
+    const ar90El = document.getElementById('ovwArAging90plus');
     
     if (arCurrentEl) arCurrentEl.textContent = formatCurrencyCompact(data.ar.current);
     if (ar31El) ar31El.textContent = formatCurrencyCompact(data.ar.days_31_60);
@@ -4094,11 +4094,11 @@ async function renderArApSummaryCharts() {
       ar90El.className = data.ar.days_90_plus > 0 ? 'stat-value negative' : 'stat-value';
     }
     
-    // Update AP Aging stats
-    const apCurrentEl = document.getElementById('apAgingCurrent');
-    const ap31El = document.getElementById('apAging31to60');
-    const ap61El = document.getElementById('apAging61to90');
-    const ap90El = document.getElementById('apAging90plus');
+    // Update AP Aging stats (Overview page - use ovw prefix)
+    const apCurrentEl = document.getElementById('ovwApAgingCurrent');
+    const ap31El = document.getElementById('ovwApAging31to60');
+    const ap61El = document.getElementById('ovwApAging61to90');
+    const ap90El = document.getElementById('ovwApAging90plus');
     
     if (apCurrentEl) apCurrentEl.textContent = formatCurrencyCompact(data.ap.current);
     if (ap31El) ap31El.textContent = formatCurrencyCompact(data.ap.days_31_60);
