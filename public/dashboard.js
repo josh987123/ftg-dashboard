@@ -19701,7 +19701,17 @@ function renderPmrMissingBudgetsTable() {
     return;
   }
   
-  tbody.innerHTML = missingBudgets.map(job => {
+  // Calculate total actual cost
+  const totalActualCost = missingBudgets.reduce((sum, job) => sum + (job.actual_cost || 0), 0);
+  
+  // Build subtotal row first, then data rows
+  const subtotalRow = `<tr class="pmr-subtotal-row">
+    <td colspan="4"><strong>Total (${missingBudgets.length} jobs)</strong></td>
+    <td class="text-right"><strong>${formatCurrency(totalActualCost)}</strong></td>
+    <td colspan="3"></td>
+  </tr>`;
+  
+  const dataRows = missingBudgets.map(job => {
     const status = getJobStatusLabel(job.job_status);
     return `<tr>
       <td>${job.job_no || ''}</td>
@@ -19714,6 +19724,8 @@ function renderPmrMissingBudgetsTable() {
       <td><span class="pmr-issue-badge ${job.issueClass}">${job.issue}</span></td>
     </tr>`;
   }).join('');
+  
+  tbody.innerHTML = subtotalRow + dataRows;
   
   // Update toggle button and apply column visibility
   const toggleBtn = document.getElementById('pmrMissingBudgetsToggle');
