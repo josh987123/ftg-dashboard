@@ -24402,6 +24402,9 @@ function loadApAgingData() {
     });
 }
 
+// Track expanded vendors
+const apAgingExpandedVendors = new Set();
+
 function renderApAgingTable(vendors, totals) {
   const tbody = document.getElementById('apAgingTableBody');
   if (!tbody) return;
@@ -24424,9 +24427,16 @@ function renderApAgingTable(vendors, totals) {
     return;
   }
   
-  const dataRows = vendors.map(v => `
-    <tr>
-      <td><span class="vendor-link" data-vendor="${escapeHtml(v.vendor_name)}">${escapeHtml(v.vendor_name)}</span></td>
+  const dataRows = vendors.map((v, idx) => `
+    <tr class="ap-vendor-row" data-vendor="${escapeHtml(v.vendor_name)}" data-idx="${idx}">
+      <td>
+        <span class="ap-expand-toggle" title="Click to expand">
+          <svg class="ap-expand-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </span>
+        <span class="vendor-name">${escapeHtml(v.vendor_name)}</span>
+      </td>
       <td class="text-right">${formatCurrency(v.total_due)}</td>
       <td class="text-right">${formatCurrency(v.current)}</td>
       <td class="text-right">${formatCurrency(v.days_31_60)}</td>
@@ -24434,17 +24444,116 @@ function renderApAgingTable(vendors, totals) {
       <td class="text-right ${v.days_90_plus > 0 ? 'negative' : ''}">${formatCurrency(v.days_90_plus)}</td>
       <td class="text-right">${formatCurrency(v.retainage)}</td>
     </tr>
+    <tr class="ap-invoice-container" id="ap-invoices-${idx}" style="display: none;">
+      <td colspan="7" class="ap-invoice-cell">
+        <div class="ap-invoice-loading">Loading invoices...</div>
+      </td>
+    </tr>
   `).join('');
   
   tbody.innerHTML = totalsRow + dataRows;
   
-  // Add click handlers to vendor links
-  tbody.querySelectorAll('.vendor-link').forEach(link => {
-    link.addEventListener('click', () => {
-      const vendorName = link.dataset.vendor;
-      if (vendorName) showVendorInvoicesModal(vendorName);
+  // Add click handlers for expandable rows
+  tbody.querySelectorAll('.ap-vendor-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const vendorName = row.dataset.vendor;
+      const idx = row.dataset.idx;
+      toggleApVendorExpand(vendorName, idx, row);
     });
   });
+}
+
+function toggleApVendorExpand(vendorName, idx, row) {
+  const invoiceContainer = document.getElementById(`ap-invoices-${idx}`);
+  if (!invoiceContainer) return;
+  
+  const isExpanded = invoiceContainer.style.display !== 'none';
+  
+  if (isExpanded) {
+    // Collapse
+    invoiceContainer.style.display = 'none';
+    row.classList.remove('ap-expanded');
+    apAgingExpandedVendors.delete(vendorName);
+  } else {
+    // Expand and load invoices
+    invoiceContainer.style.display = '';
+    row.classList.add('ap-expanded');
+    apAgingExpandedVendors.add(vendorName);
+    loadApVendorInvoices(vendorName, idx);
+  }
+}
+
+function loadApVendorInvoices(vendorName, idx) {
+  const container = document.getElementById(`ap-invoices-${idx}`);
+  if (!container) return;
+  
+  const cell = container.querySelector('.ap-invoice-cell');
+  cell.innerHTML = '<div class="ap-invoice-loading">Loading invoices...</div>';
+  
+  fetch(`/api/ap-aging/vendor?vendor=${encodeURIComponent(vendorName)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success && data.invoices && data.invoices.length > 0) {
+        renderApInvoiceRows(data.invoices, cell);
+      } else {
+        cell.innerHTML = '<div class="ap-invoice-empty">No invoices found</div>';
+      }
+    })
+    .catch(err => {
+      console.error('Error loading vendor invoices:', err);
+      cell.innerHTML = '<div class="ap-invoice-error">Error loading invoices</div>';
+    });
+}
+
+function renderApInvoiceRows(invoices, cell) {
+  // Build invoice rows table
+  let html = `<table class="ap-invoice-table">
+    <thead>
+      <tr>
+        <th>Invoice #</th>
+        <th>Invoice Date</th>
+        <th>Job #</th>
+        <th>Job Description</th>
+        <th>PM</th>
+        <th class="text-right">Total Due</th>
+        <th class="text-right">0-30</th>
+        <th class="text-right">31-60</th>
+        <th class="text-right">61-90</th>
+        <th class="text-right">90+</th>
+        <th class="text-right">Retainage</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  
+  invoices.forEach(inv => {
+    const collectible = inv.collectible || 0;
+    const retainage = inv.retainage || 0;
+    const totalDue = collectible + retainage;
+    const bucket = inv.aging_bucket || 'current';
+    
+    // Place collectible in appropriate bucket column
+    const current = bucket === 'current' ? collectible : 0;
+    const days31_60 = bucket === 'days_31_60' ? collectible : 0;
+    const days61_90 = bucket === 'days_61_90' ? collectible : 0;
+    const days90_plus = bucket === 'days_90_plus' ? collectible : 0;
+    
+    html += `<tr class="ap-invoice-row">
+      <td class="ap-inv-num">${escapeHtml(inv.invoice_number || '')}</td>
+      <td class="ap-inv-date">${escapeHtml(inv.invoice_date || '')}</td>
+      <td class="ap-inv-job">${escapeHtml(inv.job_number || '')}</td>
+      <td class="ap-inv-desc" title="${escapeHtml(inv.job_description || '')}">${escapeHtml(inv.job_description || '')}</td>
+      <td class="ap-inv-pm" title="${escapeHtml(inv.project_manager || '')}">${escapeHtml(inv.project_manager || '')}</td>
+      <td class="text-right">${totalDue > 0 ? formatCurrency(totalDue) : ''}</td>
+      <td class="text-right">${current > 0 ? formatCurrency(current) : ''}</td>
+      <td class="text-right">${days31_60 > 0 ? formatCurrency(days31_60) : ''}</td>
+      <td class="text-right">${days61_90 > 0 ? formatCurrency(days61_90) : ''}</td>
+      <td class="text-right ${days90_plus > 0 ? 'negative' : ''}">${days90_plus > 0 ? formatCurrency(days90_plus) : ''}</td>
+      <td class="text-right">${retainage > 0 ? formatCurrency(retainage) : ''}</td>
+    </tr>`;
+  });
+  
+  html += '</tbody></table>';
+  cell.innerHTML = html;
 }
 
 function updateApAgingSummary(totals) {
@@ -24464,104 +24573,6 @@ function updateApAgingSummary(totals) {
   
   // Update chart
   updateApAgingChart(totals);
-}
-
-function showVendorInvoicesModal(vendorName) {
-  const modal = document.getElementById('apAgingVendorModal');
-  const title = document.getElementById('apAgingVendorModalTitle');
-  const loading = document.getElementById('apAgingVendorModalLoading');
-  const content = document.getElementById('apAgingVendorModalContent');
-  const closeBtn = document.getElementById('apAgingVendorModalClose');
-  
-  if (!modal) return;
-  
-  // Show modal with loading state
-  title.textContent = vendorName;
-  loading.classList.remove('hidden');
-  content.classList.add('hidden');
-  modal.classList.remove('hidden');
-  
-  // Close handler
-  const closeModal = () => modal.classList.add('hidden');
-  closeBtn.onclick = closeModal;
-  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
-  
-  // Fetch vendor invoices
-  fetch(`/api/ap-aging/vendor?vendor=${encodeURIComponent(vendorName)}`)
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        renderVendorInvoicesModal(data.invoices || [], data.totals || {});
-      } else {
-        document.getElementById('vendorInvoicesTableBody').innerHTML = 
-          '<tr><td colspan="10" class="empty-cell">Error loading invoices</td></tr>';
-      }
-      loading.classList.add('hidden');
-      content.classList.remove('hidden');
-    })
-    .catch(err => {
-      console.error('Error loading vendor invoices:', err);
-      document.getElementById('vendorInvoicesTableBody').innerHTML = 
-        '<tr><td colspan="10" class="empty-cell">Error loading invoices</td></tr>';
-      loading.classList.add('hidden');
-      content.classList.remove('hidden');
-    });
-}
-
-function renderVendorInvoicesModal(invoices, totals) {
-  const tbody = document.getElementById('vendorInvoicesTableBody');
-  const summary = document.getElementById('vendorInvoiceSummary');
-  
-  if (!tbody) return;
-  
-  // Render summary
-  if (summary) {
-    summary.innerHTML = `
-      <div class="summary-item">
-        <span class="label">Invoices</span>
-        <span class="value">${totals.count || 0}</span>
-      </div>
-      <div class="summary-item">
-        <span class="label">Invoice Total</span>
-        <span class="value">${formatCurrency(totals.invoice_amount || 0)}</span>
-      </div>
-      <div class="summary-item">
-        <span class="label">Amount Paid</span>
-        <span class="value">${formatCurrency(totals.amount_paid || 0)}</span>
-      </div>
-      <div class="summary-item">
-        <span class="label">Amount Due</span>
-        <span class="value">${formatCurrency(totals.amount_due || 0)}</span>
-      </div>
-      <div class="summary-item">
-        <span class="label">Retainage</span>
-        <span class="value">${formatCurrency(totals.retainage || 0)}</span>
-      </div>
-    `;
-  }
-  
-  // Render table
-  if (!invoices || invoices.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">No invoices found</td></tr>';
-    return;
-  }
-  
-  const rows = invoices.map(inv => `
-    <tr>
-      <td>${escapeHtml(inv.invoice_number || '')}</td>
-      <td>${escapeHtml(inv.invoice_date || '')}</td>
-      <td>${escapeHtml(inv.job_number || '')}</td>
-      <td>${escapeHtml(inv.job_description || '')}</td>
-      <td>${escapeHtml(inv.project_manager || '')}</td>
-      <td class="text-right">${formatCurrency(inv.invoice_amount || 0)}</td>
-      <td class="text-right">${formatCurrency(inv.amount_paid || 0)}</td>
-      <td class="text-right">${formatCurrency(inv.amount_due || 0)}</td>
-      <td class="text-right">${formatCurrency(inv.retainage || 0)}</td>
-      <td class="text-right ${inv.days_outstanding > 90 ? 'negative' : ''}">${inv.days_outstanding}</td>
-    </tr>
-  `).join('');
-  
-  tbody.innerHTML = rows;
 }
 
 function updateApAgingChart(totals) {

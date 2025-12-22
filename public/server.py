@@ -4048,7 +4048,9 @@ def api_get_vendor_invoices():
             invoice_amount = float(inv.get('invoice_amount', 0) or 0)
             retainage = float(inv.get('retainage_amount', 0) or 0)
             amount_paid = invoice_amount - remaining
-            days = int(float(inv.get('days_outstanding', 0) or 0))
+            
+            # Collectible amount excludes retainage
+            collectible = max(0, remaining - retainage)
             
             # Get job info
             job_num = str(inv.get('job_number', '') or '').strip()
@@ -4058,29 +4060,41 @@ def api_get_vendor_invoices():
                 job_desc = job_info[job_num].get('description', '')
                 pm_name = job_info[job_num].get('pm', '')
             
-            # Parse invoice date
-            invoice_date = ''
+            # Parse invoice date and calculate days outstanding dynamically
+            invoice_date_str = ''
+            days_outstanding = 0
             date_val = inv.get('invoice_date')
             if date_val:
                 try:
                     excel_date = float(date_val)
                     if excel_date > 0:
                         date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
-                        invoice_date = date_obj.strftime('%m/%d/%Y')
+                        invoice_date_str = date_obj.strftime('%m/%d/%Y')
+                        days_outstanding = (datetime.now() - date_obj).days
+                        if days_outstanding < 0:
+                            days_outstanding = 0
                 except (ValueError, TypeError):
-                    invoice_date = str(date_val)
+                    invoice_date_str = str(date_val)
+            
+            # Determine aging bucket based on days outstanding
+            aging_bucket = 'current'
+            if days_outstanding > 90:
+                aging_bucket = 'days_90_plus'
+            elif days_outstanding > 60:
+                aging_bucket = 'days_61_90'
+            elif days_outstanding > 30:
+                aging_bucket = 'days_31_60'
             
             vendor_invoices.append({
                 'invoice_number': inv.get('invoice_number', ''),
-                'invoice_date': invoice_date,
+                'invoice_date': invoice_date_str,
                 'job_number': job_num,
                 'job_description': job_desc,
                 'project_manager': pm_name,
-                'invoice_amount': invoice_amount,
-                'amount_paid': amount_paid,
-                'amount_due': remaining - retainage,
+                'collectible': collectible,
                 'retainage': retainage,
-                'days_outstanding': days
+                'aging_bucket': aging_bucket,
+                'days_outstanding': days_outstanding
             })
             
             totals['invoice_amount'] += invoice_amount

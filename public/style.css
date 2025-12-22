@@ -15050,23 +15050,27 @@ body.dark-mode .ar-aging-table th:hover {
 }
 
 /* =====================================================
-   AR AGING EXPANDABLE ROWS
+   AP/AR AGING EXPANDABLE ROWS
 ===================================================== */
 
+.ap-vendor-row,
 .ar-customer-row {
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
 
+.ap-vendor-row:hover,
 .ar-customer-row:hover {
   background-color: rgba(59, 130, 246, 0.08);
 }
 
+.ap-vendor-row.ap-expanded,
 .ar-customer-row.ar-expanded {
   background-color: rgba(59, 130, 246, 0.12);
   font-weight: 600;
 }
 
+.ap-expand-toggle,
 .ar-expand-toggle {
   display: inline-flex;
   align-items: center;
@@ -15077,29 +15081,38 @@ body.dark-mode .ar-aging-table th:hover {
   vertical-align: middle;
 }
 
+.ap-expand-icon,
 .ar-expand-icon {
   transition: transform 0.2s ease;
   color: #6b7280;
 }
 
+.ap-vendor-row.ap-expanded .ap-expand-icon,
 .ar-customer-row.ar-expanded .ar-expand-icon {
   transform: rotate(90deg);
   color: #3b82f6;
 }
 
+.ap-invoice-container,
 .ar-invoice-container {
   background-color: #f8fafc;
 }
 
+[data-theme="dark"] .ap-invoice-container,
+body.dark-mode .ap-invoice-container,
 [data-theme="dark"] .ar-invoice-container,
 body.dark-mode .ar-invoice-container {
   background-color: #0f172a;
 }
 
+.ap-invoice-cell,
 .ar-invoice-cell {
   padding: 8px 12px !important;
 }
 
+.ap-invoice-loading,
+.ap-invoice-empty,
+.ap-invoice-error,
 .ar-invoice-loading,
 .ar-invoice-empty,
 .ar-invoice-error {
@@ -15109,11 +15122,13 @@ body.dark-mode .ar-invoice-container {
   font-style: italic;
 }
 
+.ap-invoice-error,
 .ar-invoice-error {
   color: #ef4444;
 }
 
 /* Expanded invoice table */
+.ap-invoice-table,
 .ar-invoice-table {
   width: 100%;
   border-collapse: collapse;
@@ -15121,6 +15136,7 @@ body.dark-mode .ar-invoice-container {
   table-layout: fixed;
 }
 
+.ap-invoice-table th,
 .ar-invoice-table th {
   background: #e5e7eb;
   padding: 4px 6px;
@@ -15134,10 +15150,13 @@ body.dark-mode .ar-invoice-container {
   text-overflow: ellipsis;
 }
 
+.ap-invoice-table th.text-right,
 .ar-invoice-table th.text-right {
   text-align: right;
 }
 
+[data-theme="dark"] .ap-invoice-table th,
+body.dark-mode .ap-invoice-table th,
 [data-theme="dark"] .ar-invoice-table th,
 body.dark-mode .ar-invoice-table th {
   background: #1e293b;
@@ -15145,6 +15164,7 @@ body.dark-mode .ar-invoice-table th {
   border-bottom-color: #334155;
 }
 
+.ap-invoice-row td,
 .ar-invoice-row td {
   padding: 4px 6px;
   border-bottom: 1px solid #e5e7eb;
@@ -15153,27 +15173,37 @@ body.dark-mode .ar-invoice-table th {
   text-overflow: ellipsis;
 }
 
+[data-theme="dark"] .ap-invoice-row td,
+body.dark-mode .ap-invoice-row td,
 [data-theme="dark"] .ar-invoice-row td,
 body.dark-mode .ar-invoice-row td {
   border-bottom-color: #334155;
 }
 
+.ap-invoice-row:hover,
 .ar-invoice-row:hover {
   background-color: rgba(59, 130, 246, 0.05);
 }
 
-/* Column widths for invoice table */
+/* Column widths for invoice tables */
+.ap-inv-num,
 .ar-inv-num { width: 7%; }
+.ap-inv-job,
 .ar-inv-job { width: 6%; }
-.ar-inv-desc { width: 22%; }
-.ar-inv-pm { width: 12%; }
+.ap-inv-desc,
+.ar-inv-desc { width: 20%; }
+.ap-inv-pm,
+.ar-inv-pm { width: 10%; }
+.ap-inv-date,
 .ar-inv-date { width: 8%; }
 
 /* Ensure text doesn't overflow */
+.ap-invoice-table td,
 .ar-invoice-table td {
   max-width: 0;
 }
 
+.ap-invoice-table td.text-right,
 .ar-invoice-table td.text-right {
   text-align: right;
   width: 8%;
@@ -15181,20 +15211,25 @@ body.dark-mode .ar-invoice-row td {
 
 /* Mobile adjustments for expanded rows */
 @media (max-width: 768px) {
+  .ap-invoice-table,
   .ar-invoice-table {
     font-size: 9px;
   }
   
+  .ap-invoice-table th,
   .ar-invoice-table th {
     font-size: 8px;
     padding: 3px 4px;
   }
   
+  .ap-invoice-row td,
   .ar-invoice-row td {
     padding: 3px 4px;
   }
   
+  .ap-inv-desc,
   .ar-inv-desc { width: 18%; }
+  .ap-inv-pm,
   .ar-inv-pm { width: 10%; }
 }
 
