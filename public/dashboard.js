@@ -4071,6 +4071,7 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
 // AR/AP Summary Charts for Overview
 let overviewArApRatioChart = null;
 let overviewArAgingChart = null;
+let overviewApAgingChart = null;
 
 async function renderArApSummaryCharts() {
   try {
@@ -4110,6 +4111,20 @@ async function renderArApSummaryCharts() {
     if (ar90El) {
       ar90El.textContent = formatCurrencyCompact(data.ar.days_90_plus);
       ar90El.className = data.ar.days_90_plus > 0 ? 'stat-value negative' : 'stat-value';
+    }
+    
+    // Update AP Aging stats
+    const apCurrentEl = document.getElementById('apAgingCurrent');
+    const ap31El = document.getElementById('apAging31to60');
+    const ap61El = document.getElementById('apAging61to90');
+    const ap90El = document.getElementById('apAging90plus');
+    
+    if (apCurrentEl) apCurrentEl.textContent = formatCurrencyCompact(data.ap.current);
+    if (ap31El) ap31El.textContent = formatCurrencyCompact(data.ap.days_31_60);
+    if (ap61El) ap61El.textContent = formatCurrencyCompact(data.ap.days_61_90);
+    if (ap90El) {
+      ap90El.textContent = formatCurrencyCompact(data.ap.days_90_plus);
+      ap90El.className = data.ap.days_90_plus > 0 ? 'stat-value negative' : 'stat-value';
     }
     
     // Render AR/AP Ratio Chart (side-by-side bar)
@@ -4212,6 +4227,86 @@ async function renderArApSummaryCharts() {
             {
               label: '0-30 Days',
               data: [data.ar.current],
+              backgroundColor: '#22c55e',
+              borderRadius: { topLeft: 4, topRight: 4 }
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: { color: textColor, boxWidth: 12, padding: 6, font: { size: 10 } },
+              reverse: true
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.dataset.label || '';
+                  const value = formatCurrency(context.raw);
+                  return label + ': ' + value;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              display: false,
+              stacked: true
+            },
+            x: {
+              display: true,
+              stacked: true,
+              grid: { color: gridColor, drawBorder: false },
+              ticks: {
+                color: textColor,
+                callback: function(value) {
+                  return formatCurrencyCompact(value);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Render AP Aging Stacked Bar Chart
+    const apAgingCtx = document.getElementById('overviewApAgingChart');
+    if (apAgingCtx) {
+      if (overviewApAgingChart) {
+        overviewApAgingChart.destroy();
+      }
+      
+      overviewApAgingChart = new Chart(apAgingCtx, {
+        type: 'bar',
+        data: {
+          labels: ['AP Aging'],
+          datasets: [
+            {
+              label: '90+ Days',
+              data: [data.ap.days_90_plus],
+              backgroundColor: '#ef4444',
+              borderRadius: 0
+            },
+            {
+              label: '61-90 Days',
+              data: [data.ap.days_61_90],
+              backgroundColor: '#f97316',
+              borderRadius: 0
+            },
+            {
+              label: '31-60 Days',
+              data: [data.ap.days_31_60],
+              backgroundColor: '#eab308',
+              borderRadius: 0
+            },
+            {
+              label: '0-30 Days',
+              data: [data.ap.current],
               backgroundColor: '#22c55e',
               borderRadius: { topLeft: 4, topRight: 4 }
             }

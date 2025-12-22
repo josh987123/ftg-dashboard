@@ -945,6 +945,25 @@
           <div class="overview-metric-tile">
             <div class="metric-tile-header">
               <div class="metric-tile-title-wrapper">
+                <span class="metric-tile-title" title="Current AP aging breakdown by days outstanding (excluding retainage)">AP Aging</span>
+                <button class="metric-info-btn" data-info="Accounts Payable aging breakdown showing amounts in 0-30, 31-60, 61-90, and 90+ day buckets (excluding retainage)" aria-label="Info about AP Aging">ⓘ</button>
+              </div>
+              <div class="metric-tile-buttons">
+                <button class="chart-expand-btn" data-chart="overviewApAgingChart" data-title="AP Aging" title="Expand chart"><svg viewBox="0 0 16 16" width="10" height="10"><path fill="currentColor" d="M2 2h5V0H0v7h2V2zm12 0h-5V0h7v7h-2V2zM2 14h5v2H0V9h2v5zm12 0h-5v2h7V9h-2v5z"/></svg></button>
+                <button class="chart-close-btn" data-metric="showApAging" title="Hide this metric"><svg viewBox="0 0 16 16" width="12" height="12"><path fill="currentColor" d="M2.5 1L8 6.5 13.5 1 15 2.5 9.5 8 15 13.5 13.5 15 8 9.5 2.5 15 1 13.5 6.5 8 1 2.5 2.5 1z"/></svg></button>
+              </div>
+            </div>
+            <canvas id="overviewApAgingChart"></canvas>
+            <div class="metric-stats" id="overviewApAgingStats">
+              <div class="stat-box"><div class="stat-label">0-30 Days</div><div class="stat-value" id="apAgingCurrent">-</div></div>
+              <div class="stat-box"><div class="stat-label">31-60 Days</div><div class="stat-value" id="apAging31to60">-</div></div>
+              <div class="stat-box"><div class="stat-label">61-90 Days</div><div class="stat-value" id="apAging61to90">-</div></div>
+              <div class="stat-box"><div class="stat-label">90+ Days</div><div class="stat-value" id="apAging90plus">-</div></div>
+            </div>
+          </div>
+          <div class="overview-metric-tile">
+            <div class="metric-tile-header">
+              <div class="metric-tile-title-wrapper">
                 <span class="metric-tile-title" title="Current Assets divided by Current Liabilities - measures ability to pay short-term obligations. Above 1.0 is healthy.">Current Ratio</span>
                 <button class="metric-info-btn" data-info="Current Assets divided by Current Liabilities - measures ability to pay short-term obligations. Above 1.0 is healthy." aria-label="Info about Current Ratio">ⓘ</button>
               </div>
