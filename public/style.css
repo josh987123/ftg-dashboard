@@ -15575,6 +15575,8 @@ body.dark-mode .ar-invoice-row td {
   transition: transform 0.15s, box-shadow 0.15s;
   flex: 0 0 auto;
   min-width: 90px;
+  max-width: 140px;
+  overflow: hidden;
 }
 
 .pmr-metric-tile:hover {
@@ -15597,6 +15599,13 @@ body.dark-mode .ar-invoice-row td {
   font-weight: 700;
   color: #1f2937;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.pmr-metric-value.fit-text {
+  font-size: clamp(11px, 2.5vw, 15px);
 }
 
 .pmr-metric-value.positive {
