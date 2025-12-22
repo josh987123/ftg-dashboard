@@ -7442,7 +7442,7 @@ function updateSummaryTiles(prefix, values, labels) {
   document.getElementById(prefix + "MinPeriod").innerText = validLabels[minIdx] || "-";
   const cagrEl = document.getElementById(prefix + "CagrValue");
   cagrEl.innerText = (cagr >= 0 ? "+" : "") + cagr.toFixed(1) + "%";
-  cagrEl.style.color = cagr < 0 ? "#dc2626" : "";
+  cagrEl.style.color = cagr < 0 ? "#dc2626" : cagr > 0 ? "#10b981" : "";
 }
 
 function updateRevenueView(data) {
