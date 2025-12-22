@@ -735,7 +735,12 @@ def api_analyze_financial_data():
         endpoint = request.path
         if 'ai-insights' in endpoint:
             title = "Comprehensive Business Analysis"
-            focus = "overall business health including financials, job portfolio, accounts receivable, accounts payable, project managers, and strategic recommendations"
+            focus = """strategic business intelligence including:
+- Job portfolio health: margin performance, workload distribution across PMs, and completion status
+- Cash position: AR collection efficiency, AP management, and working capital
+- PM performance: compare margins and workload balance, identify top performers and those needing support
+- Risk factors: concentration risk, underperforming segments, and collection concerns
+- Actionable next steps with specific dollar impact where possible"""
         elif 'overview' in endpoint:
             title = "Executive Overview"
             focus = "P&L and balance sheet metrics"

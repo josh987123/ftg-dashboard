@@ -20111,7 +20111,8 @@ async function extractAiInsightsData() {
       text += "=== JOB PORTFOLIO ===\n";
       const budgets = jobsData.job_budgets || [];
       const actuals = jobsData.job_actuals || [];
-      const activeJobs = budgets.filter(j => j.job_status === 'A');
+      // Exclude Josh Angelo's jobs from analysis (not a full-time PM)
+      const activeJobs = budgets.filter(j => j.job_status === 'A' && j.project_manager_name !== 'Josh Angelo');
       
       const totalContract = activeJobs.reduce((s, j) => s + (parseFloat(j.revised_contract) || 0), 0);
       const totalCost = activeJobs.reduce((s, j) => s + (parseFloat(j.revised_cost) || 0), 0);
@@ -20124,7 +20125,7 @@ async function extractAiInsightsData() {
       (actuals || []).forEach(a => {
         const jobNum = String(a.Job_No || a.job_no || a.job_number || a.Job_Number || '');
         const cost = parseFloat(a.Value || a.value || a.actual_cost || a.Actual_Cost) || 0;
-        // Only include actuals for active jobs
+        // Only include actuals for active jobs (Josh Angelo already excluded)
         if (jobNum && activeJobNumbers.has(jobNum)) {
           actualCostByJob[jobNum] = (actualCostByJob[jobNum] || 0) + cost;
         }
@@ -20138,10 +20139,12 @@ async function extractAiInsightsData() {
       text += `Estimated Profit: $${estProfit.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}\n`;
       text += `Estimated Margin: ${margin.toFixed(1)}%\n\n`;
       
-      // PM Summary
+      // PM Summary - Exclude Josh Angelo (not a full-time PM)
       const pmStats = {};
       activeJobs.forEach(j => {
         const pm = j.project_manager_name || 'Unassigned';
+        // Exclude Josh Angelo from PM analysis
+        if (pm === 'Josh Angelo') return;
         if (!pmStats[pm]) pmStats[pm] = {jobs: 0, contract: 0, cost: 0};
         pmStats[pm].jobs++;
         pmStats[pm].contract += parseFloat(j.revised_contract) || 0;
