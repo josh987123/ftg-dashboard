@@ -17481,6 +17481,7 @@ body.dark-mode .dashboard-section > h2 {
 
 .waterfall-section {
   margin-top: 20px;
+  margin-bottom: 30px;
   padding: 20px;
   background: var(--bg-secondary);
   border-radius: 12px;

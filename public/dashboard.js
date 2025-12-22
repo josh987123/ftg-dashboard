@@ -16072,7 +16072,7 @@ function renderPmRadarChart() {
 
 let isWaterfallChart = null;
 
-function renderIsWaterfallChart() {
+function renderIsWaterfallChart(retryCount = 0) {
   const canvas = document.getElementById('isWaterfallChart');
   const section = document.getElementById('isWaterfallSection');
   
@@ -16102,7 +16102,13 @@ function renderIsWaterfallChart() {
     periodValue = periodSelect.options[0].value;
   }
   
-  if (!periodValue || !isAccountGroups?.income_statement?.groups) return;
+  // If still no data, retry a few times (handles page reload timing)
+  if (!periodValue || !isAccountGroups?.income_statement?.groups) {
+    if (retryCount < 3) {
+      setTimeout(() => renderIsWaterfallChart(retryCount + 1), 150);
+    }
+    return;
+  }
   
   // Build income statement rows for current period
   const periodMonths = getPeriodMonths(periodValue, periodType);
