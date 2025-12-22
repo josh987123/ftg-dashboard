@@ -3482,8 +3482,13 @@
 
         <!-- Client Summary Section -->
         <div class="pmr-section">
-          <h3 class="pmr-section-title">Client Summary</h3>
-          <div class="pmr-section-desc">All clients with active jobs for this PM</div>
+          <div class="pmr-section-header">
+            <div>
+              <h3 class="pmr-section-title">Client Summary</h3>
+              <div class="pmr-section-desc">All clients with active jobs for this PM</div>
+            </div>
+            <button class="pmr-toggle-btn" id="pmrClientSummaryToggle" onclick="togglePmrClientSummaryDetail()">Expand</button>
+          </div>
           <div class="table-container pmr-table-container">
             <table class="data-table pmr-client-summary-table" id="pmrClientSummaryTable">
               <thead>

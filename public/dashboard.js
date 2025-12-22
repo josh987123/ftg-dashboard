@@ -19769,6 +19769,8 @@ function formatCurrencyShort(value) {
 // Track collapse state for Over/Under section (now controls columns, not rows)
 let pmrOverUnderExpanded = false;
 let pmrMissingBudgetsExpanded = false;
+let pmrMissingBudgetsRowsExpanded = false; // Collapsed by default - only show subtotal
+let pmrClientSummaryRowsExpanded = false; // Collapsed by default - only show subtotal
 
 function renderPmrOverUnderTable() {
   const tbody = document.getElementById('pmrOverUnderTableBody');
@@ -19886,15 +19888,40 @@ function applyMissingBudgetsColumnVisibility() {
 }
 
 function togglePmrMissingBudgetsDetail() {
-  pmrMissingBudgetsExpanded = !pmrMissingBudgetsExpanded;
+  pmrMissingBudgetsRowsExpanded = !pmrMissingBudgetsRowsExpanded;
   
-  // Toggle column visibility
-  applyMissingBudgetsColumnVisibility();
+  // Toggle row visibility
+  const table = document.getElementById('pmrMissingBudgetsTable');
+  if (table) {
+    const dataRows = table.querySelectorAll('.pmr-mb-data-row');
+    dataRows.forEach(row => {
+      row.style.display = pmrMissingBudgetsRowsExpanded ? '' : 'none';
+    });
+  }
   
   // Update button text
   const toggleBtn = document.getElementById('pmrMissingBudgetsToggle');
   if (toggleBtn) {
-    toggleBtn.textContent = pmrMissingBudgetsExpanded ? 'Collapse' : 'Expand';
+    toggleBtn.textContent = pmrMissingBudgetsRowsExpanded ? 'Collapse' : 'Expand';
+  }
+}
+
+function togglePmrClientSummaryDetail() {
+  pmrClientSummaryRowsExpanded = !pmrClientSummaryRowsExpanded;
+  
+  // Toggle row visibility
+  const table = document.getElementById('pmrClientSummaryTable');
+  if (table) {
+    const dataRows = table.querySelectorAll('.pmr-client-data-row');
+    dataRows.forEach(row => {
+      row.style.display = pmrClientSummaryRowsExpanded ? '' : 'none';
+    });
+  }
+  
+  // Update button text
+  const toggleBtn = document.getElementById('pmrClientSummaryToggle');
+  if (toggleBtn) {
+    toggleBtn.textContent = pmrClientSummaryRowsExpanded ? 'Collapse' : 'Expand';
   }
 }
 
@@ -19983,9 +20010,10 @@ function renderPmrMissingBudgetsTable() {
     <td colspan="3"></td>
   </tr>`;
   
+  const rowDisplayStyle = pmrMissingBudgetsRowsExpanded ? '' : 'display:none;';
   const dataRows = missingBudgets.map(job => {
     const status = getJobStatusLabel(job.job_status);
-    return `<tr>
+    return `<tr class="pmr-mb-data-row" style="${rowDisplayStyle}">
       <td>${job.job_no || ''}</td>
       <td>${job.job_description || ''}</td>
       <td class="pmr-mb-expandable-col">${job.customer_name || ''}</td>
@@ -19999,10 +20027,10 @@ function renderPmrMissingBudgetsTable() {
   
   tbody.innerHTML = subtotalRow + dataRows;
   
-  // Update toggle button and apply column visibility
+  // Update toggle button text for rows
   const toggleBtn = document.getElementById('pmrMissingBudgetsToggle');
   if (toggleBtn) {
-    toggleBtn.textContent = pmrMissingBudgetsExpanded ? 'Collapse' : 'Expand';
+    toggleBtn.textContent = pmrMissingBudgetsRowsExpanded ? 'Collapse' : 'Expand';
   }
   applyMissingBudgetsColumnVisibility();
   
@@ -20116,10 +20144,11 @@ function renderPmrClientSummaryTable() {
     <td class="text-right">${formatCurrencyCompact(totals.cost_to_date)}</td>
   </tr>`;
   
+  const clientRowDisplayStyle = pmrClientSummaryRowsExpanded ? '' : 'display:none;';
   const detailRows = clients.map(c => {
     // Margin color classes: green >= 20%, red < 10%, neutral adapts to dark/light mode
     const marginClass = c.margin_pct >= 20 ? 'margin-good' : c.margin_pct < 10 ? 'margin-bad' : 'margin-neutral';
-    return `<tr>
+    return `<tr class="pmr-client-data-row" style="${clientRowDisplayStyle}">
       <td>${c.customer_name}</td>
       <td class="text-right">${formatCurrencyCompact(c.est_contract)}</td>
       <td class="text-right">${formatCurrencyCompact(c.est_cost)}</td>
@@ -20132,6 +20161,12 @@ function renderPmrClientSummaryTable() {
   }).join('');
   
   tbody.innerHTML = subtotalRow + detailRows;
+  
+  // Update toggle button text for client summary rows
+  const clientToggleBtn = document.getElementById('pmrClientSummaryToggle');
+  if (clientToggleBtn) {
+    clientToggleBtn.textContent = pmrClientSummaryRowsExpanded ? 'Collapse' : 'Expand';
+  }
   
   document.getElementById('pmrClientSummaryCount').textContent = `${clients.length} client${clients.length !== 1 ? 's' : ''}`;
 }
