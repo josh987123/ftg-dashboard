@@ -16094,7 +16094,13 @@ function renderIsWaterfallChart() {
   
   // Get current period settings
   const periodType = document.getElementById('isPeriodType')?.value || 'month';
-  const periodValue = document.getElementById('isPeriodSelect')?.value;
+  const periodSelect = document.getElementById('isPeriodSelect');
+  let periodValue = periodSelect?.value;
+  
+  // If no period value, try to get the first option as fallback
+  if (!periodValue && periodSelect?.options?.length > 0) {
+    periodValue = periodSelect.options[0].value;
+  }
   
   if (!periodValue || !isAccountGroups?.income_statement?.groups) return;
   

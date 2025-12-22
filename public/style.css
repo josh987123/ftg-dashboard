@@ -17534,10 +17534,11 @@ body.dark-mode .dashboard-section > h2 {
   width: 100%;
 }
 
-/* Make Income Statement waterfall full width like AI analysis section */
+/* Make Income Statement waterfall same width as AI analysis section */
 #incomeStatement .waterfall-section {
-  width: 800px;
+  width: 70%;
   max-width: 100%;
+  box-sizing: border-box;
 }
 
 [data-theme="dark"] .waterfall-section {
@@ -17572,9 +17573,12 @@ body.dark-mode .dashboard-section > h2 {
 
 /* Mobile responsive */
 @media (max-width: 768px) {
-  .waterfall-section {
+  .waterfall-section,
+  #incomeStatement .waterfall-section {
     padding: 12px;
     margin-top: 15px;
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
   .waterfall-chart-container {
