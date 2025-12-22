@@ -4188,15 +4188,9 @@ async function renderArApSummaryCharts() {
           labels: ['AR Aging'],
           datasets: [
             {
-              label: '90+ Days',
-              data: [data.ar.days_90_plus],
-              backgroundColor: '#ef4444',
-              borderRadius: 0
-            },
-            {
-              label: '61-90 Days',
-              data: [data.ar.days_61_90],
-              backgroundColor: '#f97316',
+              label: '0-30 Days',
+              data: [data.ar.current],
+              backgroundColor: '#22c55e',
               borderRadius: 0
             },
             {
@@ -4206,9 +4200,15 @@ async function renderArApSummaryCharts() {
               borderRadius: 0
             },
             {
-              label: '0-30 Days',
-              data: [data.ar.current],
-              backgroundColor: '#22c55e',
+              label: '61-90 Days',
+              data: [data.ar.days_61_90],
+              backgroundColor: '#f97316',
+              borderRadius: 0
+            },
+            {
+              label: '90+ Days',
+              data: [data.ar.days_90_plus],
+              backgroundColor: '#ef4444',
               borderRadius: { topLeft: 4, topRight: 4 }
             }
           ]
@@ -4216,13 +4216,11 @@ async function renderArApSummaryCharts() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          indexAxis: 'y',
           plugins: {
             legend: {
               display: true,
               position: 'bottom',
-              labels: { color: textColor, boxWidth: 12, padding: 6, font: { size: 10 } },
-              reverse: true
+              labels: { color: textColor, boxWidth: 12, padding: 6, font: { size: 10 } }
             },
             tooltip: {
               callbacks: {
@@ -4235,11 +4233,11 @@ async function renderArApSummaryCharts() {
             }
           },
           scales: {
-            y: {
+            x: {
               display: false,
               stacked: true
             },
-            x: {
+            y: {
               display: true,
               stacked: true,
               grid: { color: gridColor, drawBorder: false },
@@ -4268,15 +4266,9 @@ async function renderArApSummaryCharts() {
           labels: ['AP Aging'],
           datasets: [
             {
-              label: '90+ Days',
-              data: [data.ap.days_90_plus],
-              backgroundColor: '#ef4444',
-              borderRadius: 0
-            },
-            {
-              label: '61-90 Days',
-              data: [data.ap.days_61_90],
-              backgroundColor: '#f97316',
+              label: '0-30 Days',
+              data: [data.ap.current],
+              backgroundColor: '#22c55e',
               borderRadius: 0
             },
             {
@@ -4286,9 +4278,15 @@ async function renderArApSummaryCharts() {
               borderRadius: 0
             },
             {
-              label: '0-30 Days',
-              data: [data.ap.current],
-              backgroundColor: '#22c55e',
+              label: '61-90 Days',
+              data: [data.ap.days_61_90],
+              backgroundColor: '#f97316',
+              borderRadius: 0
+            },
+            {
+              label: '90+ Days',
+              data: [data.ap.days_90_plus],
+              backgroundColor: '#ef4444',
               borderRadius: { topLeft: 4, topRight: 4 }
             }
           ]
@@ -4296,13 +4294,11 @@ async function renderArApSummaryCharts() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          indexAxis: 'y',
           plugins: {
             legend: {
               display: true,
               position: 'bottom',
-              labels: { color: textColor, boxWidth: 12, padding: 6, font: { size: 10 } },
-              reverse: true
+              labels: { color: textColor, boxWidth: 12, padding: 6, font: { size: 10 } }
             },
             tooltip: {
               callbacks: {
@@ -4315,11 +4311,11 @@ async function renderArApSummaryCharts() {
             }
           },
           scales: {
-            y: {
+            x: {
               display: false,
               stacked: true
             },
-            x: {
+            y: {
               display: true,
               stacked: true,
               grid: { color: gridColor, drawBorder: false },
