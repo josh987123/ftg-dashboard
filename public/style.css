@@ -7062,6 +7062,16 @@ body.dark-mode .nav-item.nav-parent.expanded {
   border-color: var(--border-primary);
 }
 
+/* Dark mode text colors for config options */
+[data-theme="dark"] .is-options-stack label,
+[data-theme="dark"] .is-options-stack .radio-label,
+[data-theme="dark"] .is-compare-box label,
+[data-theme="dark"] .is-detail-box label,
+[data-theme="dark"] .config-section-label,
+[data-theme="dark"] .is-checkbox-label {
+  color: #e2e8f0 !important;
+}
+
 /* Compare detail wrapper mobile */
 @media (max-width: 768px) {
   [data-theme="dark"] .is-compare-detail-wrapper {
@@ -17477,7 +17487,7 @@ body.dark-mode .dashboard-section > h2 {
 
 /* Make Income Statement waterfall full width like AI analysis section */
 #incomeStatement .waterfall-section {
-  width: 100%;
+  width: 800px;
   max-width: 100%;
 }
 
