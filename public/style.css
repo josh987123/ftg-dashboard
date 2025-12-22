@@ -15053,15 +15053,27 @@ body.dark-mode .ar-aging-table th:hover {
    PM REPORT STYLES
 ===================================================== */
 
-/* Desktop: 70% width for key sections, aligned left */
+/* Desktop: 50% width for key sections, aligned left */
 #pmReport > .pmr-filter-bar,
 #pmReport > #pmrAiAnalysisPanel,
 #pmReport > .pm-radar-section,
 #pmReport > .pmr-comparison-bar,
 #pmReport > .pmr-metrics-wrapper {
-  width: 70%;
-  max-width: 70%;
+  width: 50%;
+  max-width: 50%;
   box-sizing: border-box;
+}
+
+/* Make metric tiles equal width within their container */
+#pmReport .pmr-metrics-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+#pmReport .pmr-metric-tile {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .pmr-filter-bar {
