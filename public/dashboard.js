@@ -3749,10 +3749,7 @@ function updateOverviewCharts() {
   
   const metrics = {
     revenue: { label: "Revenue", values: [], priorValues: [] },
-    grossProfit: { label: "Gross Profit", values: [], priorValues: [] },
     grossMargin: { label: "Gross Profit Margin %", values: [], priorValues: [], isPercent: true },
-    opex: { label: "Operating Expenses", values: [], priorValues: [] },
-    opProfit: { label: "Operating Profit", values: [], priorValues: [] },
     opMargin: { label: "Operating Profit %", values: [], priorValues: [], isPercent: true },
     cash: { label: "Cash", values: [], priorValues: [], isBalance: true },
     currentRatio: { label: "Current Ratio", values: [], priorValues: [], isRatio: true }
@@ -3766,19 +3763,14 @@ function updateOverviewCharts() {
     const rows = buildIncomeStatementRows(periodMonths, groups);
     const revenueRow = rows.find(r => r.label === "Revenue");
     const grossProfitRow = rows.find(r => r.label === "Gross Profit");
-    const opexRow = rows.find(r => r.label === "Operating Expenses");
     const opIncomeRow = rows.find(r => r.label === "Operating Income");
     
     const rev = revenueRow ? revenueRow.value : 0;
     const gp = grossProfitRow ? grossProfitRow.value : 0;
-    const opex = opexRow ? opexRow.value : 0;
     const opInc = opIncomeRow ? opIncomeRow.value : 0;
     
     metrics.revenue.values.push(rev);
-    metrics.grossProfit.values.push(gp);
     metrics.grossMargin.values.push(rev ? (gp / rev) * 100 : 0);
-    metrics.opex.values.push(opex);
-    metrics.opProfit.values.push(opInc);
     metrics.opMargin.values.push(rev ? (opInc / rev) * 100 : 0);
     
     const endOfPeriod = periodMonths[periodMonths.length - 1];
@@ -3799,19 +3791,14 @@ function updateOverviewCharts() {
       const priorRows = buildIncomeStatementRows(priorPeriods[idx], groups);
       const pRevRow = priorRows.find(r => r.label === "Revenue");
       const pGpRow = priorRows.find(r => r.label === "Gross Profit");
-      const pOpexRow = priorRows.find(r => r.label === "Operating Expenses");
       const pOpIncRow = priorRows.find(r => r.label === "Operating Income");
       
       const pRev = pRevRow ? pRevRow.value : 0;
       const pGp = pGpRow ? pGpRow.value : 0;
-      const pOpex = pOpexRow ? pOpexRow.value : 0;
       const pOpInc = pOpIncRow ? pOpIncRow.value : 0;
       
       metrics.revenue.priorValues.push(pRev);
-      metrics.grossProfit.priorValues.push(pGp);
       metrics.grossMargin.priorValues.push(pRev ? (pGp / pRev) * 100 : 0);
-      metrics.opex.priorValues.push(pOpex);
-      metrics.opProfit.priorValues.push(pOpInc);
       metrics.opMargin.priorValues.push(pRev ? (pOpInc / pRev) * 100 : 0);
       
       const priorEndOfPeriod = priorPeriods[idx][priorPeriods[idx].length - 1];
@@ -3866,10 +3853,7 @@ function updateOverviewCharts() {
   
   const chartConfigs = [
     { id: "overviewRevenueChart", data: metrics.revenue },
-    { id: "overviewGrossProfitChart", data: metrics.grossProfit },
     { id: "overviewGrossMarginChart", data: metrics.grossMargin },
-    { id: "overviewOpexChart", data: metrics.opex },
-    { id: "overviewOpProfitChart", data: metrics.opProfit },
     { id: "overviewOpMarginChart", data: metrics.opMargin },
     { id: "overviewCashChart", data: metrics.cash },
     { id: "overviewCurrentRatioChart", data: metrics.currentRatio }
@@ -3892,10 +3876,7 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
   try {
   const statConfigs = [
     { key: "revenue", avgId: "revenueAvg", highId: "revenueHigh", lowId: "revenueLow", cagrId: "revenueCagr", highPeriodId: "revenueHighPeriod", lowPeriodId: "revenueLowPeriod", growthLabelId: "revenueGrowthLabel", isPercent: false },
-    { key: "grossProfit", avgId: "grossProfitAvg", highId: "grossProfitHigh", lowId: "grossProfitLow", cagrId: "grossProfitCagr", highPeriodId: "grossProfitHighPeriod", lowPeriodId: "grossProfitLowPeriod", growthLabelId: "grossProfitGrowthLabel", isPercent: false },
     { key: "grossMargin", avgId: "grossMarginAvg", highId: "grossMarginHigh", lowId: "grossMarginLow", cagrId: "grossMarginCagr", highPeriodId: "grossMarginHighPeriod", lowPeriodId: "grossMarginLowPeriod", growthLabelId: "grossMarginGrowthLabel", isPercent: true },
-    { key: "opex", avgId: "opexAvg", highId: "opexHigh", lowId: "opexLow", cagrId: "opexCagr", highPeriodId: "opexHighPeriod", lowPeriodId: "opexLowPeriod", growthLabelId: "opexGrowthLabel", isPercent: false },
-    { key: "opProfit", avgId: "opProfitAvg", highId: "opProfitHigh", lowId: "opProfitLow", cagrId: "opProfitCagr", highPeriodId: "opProfitHighPeriod", lowPeriodId: "opProfitLowPeriod", growthLabelId: "opProfitGrowthLabel", isPercent: false },
     { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", highPeriodId: "opMarginHighPeriod", lowPeriodId: "opMarginLowPeriod", growthLabelId: "opMarginGrowthLabel", isPercent: true },
     { key: "cash", avgId: "cashAvg", highId: "cashHigh", lowId: "cashLow", cagrId: "cashCagr", highPeriodId: "cashHighPeriod", lowPeriodId: "cashLowPeriod", growthLabelId: "cashGrowthLabel", isPercent: false },
     { key: "currentRatio", avgId: "currentRatioAvg", highId: "currentRatioHigh", lowId: "currentRatioLow", cagrId: "currentRatioCagr", highPeriodId: "currentRatioHighPeriod", lowPeriodId: "currentRatioLowPeriod", growthLabelId: "currentRatioGrowthLabel", isPercent: false, isRatio: true }
