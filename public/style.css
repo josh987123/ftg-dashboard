@@ -17501,6 +17501,35 @@ body.dark-mode .dashboard-section > h2 {
   margin-bottom: 0;
 }
 
+.waterfall-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.waterfall-refresh-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.waterfall-refresh-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.waterfall-refresh-btn:hover svg {
+  transform: rotate(180deg);
+}
+
 .waterfall-controls {
   display: flex;
   align-items: center;
