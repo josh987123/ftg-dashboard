@@ -4248,6 +4248,8 @@ def api_get_ar_aging():
         search = request.args.get('search', '').strip().lower()
         sort_column = request.args.get('sortColumn', 'total_due')
         sort_direction = request.args.get('sortDirection', 'desc')
+        pm_filter = request.args.get('pm', '').strip()
+        customer_filter = request.args.get('customer', '').strip()
         
         # Load AR invoices data
         invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ar_invoices.json')
@@ -4265,9 +4267,20 @@ def api_get_ar_aging():
             if calc_due <= 0:
                 continue  # Skip fully paid invoices
             
+            # Filter by PM if specified
+            if pm_filter:
+                inv_pm = (inv.get('project_manager_name', '') or '').strip()
+                if inv_pm.lower() != pm_filter.lower():
+                    continue
+            
             customer = (inv.get('customer_name', '') or '').strip()
             if not customer:
                 customer = 'Unknown Customer'
+            
+            # Filter by customer if specified
+            if customer_filter:
+                if customer.lower() != customer_filter.lower():
+                    continue
             
             if customer not in customer_aging:
                 customer_aging[customer] = {
@@ -4360,6 +4373,45 @@ def api_get_ar_aging():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'customers': [], 'totals': {}, 'error': str(e)}), 500
+
+@app.route('/api/ar-aging/filters', methods=['GET', 'OPTIONS'])
+def api_get_ar_aging_filters():
+    """Get distinct customers and PMs for filter dropdowns"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ar_invoices.json')
+        with open(invoices_path, 'r', encoding='utf-8-sig') as f:
+            invoices_json = json.load(f)
+        
+        invoices = invoices_json.get('invoices', [])
+        
+        customers = set()
+        pms = set()
+        
+        for inv in invoices:
+            calc_due = float(inv.get('calculated_amount_due', 0) or 0)
+            if calc_due <= 0:
+                continue
+            
+            customer = (inv.get('customer_name', '') or '').strip()
+            if customer:
+                customers.add(customer)
+            
+            pm = (inv.get('project_manager_name', '') or '').strip()
+            if pm:
+                pms.add(pm)
+        
+        return jsonify({
+            'success': True,
+            'customers': sorted(list(customers)),
+            'pms': sorted(list(pms))
+        })
+        
+    except Exception as e:
+        print(f"[AR-AGING-FILTERS] Error: {e}")
+        return jsonify({'success': False, 'customers': [], 'pms': [], 'error': str(e)}), 500
 
 @app.route('/api/ar-aging/customer', methods=['GET', 'OPTIONS'])
 def api_get_customer_invoices():

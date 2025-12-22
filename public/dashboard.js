@@ -19780,55 +19780,43 @@ function renderPmrArAgingChart() {
   const canvas = document.getElementById('pmrArAgingChart');
   if (!canvas) return;
   
-  // Calculate AR aging for selected PM's jobs
   const isAllPms = pmrSelectedPm === '__ALL__';
-  const pmJobNos = new Set(pmrData.jobs.map(j => String(j.job_no)));
   
-  // Get current date for age calculation
-  const today = new Date();
-  const excelEpoch = new Date(1899, 11, 30);
-  
-  // Initialize aging buckets
-  const aging = {
-    current: 0,    // 0-30 days
-    days31_60: 0,  // 31-60 days
-    days61_90: 0,  // 61-90 days
-    days90Plus: 0  // 90+ days
-  };
-  
-  // Process AR invoices for this PM's jobs
-  pmrArInvoices.forEach(inv => {
-    // Filter by PM if not All PMs
-    if (!isAllPms && inv.project_manager_name !== pmrSelectedPm) return;
-    
-    // Filter to only PM's jobs
-    if (!pmJobNos.has(String(inv.job_no))) return;
-    
-    // Skip if no balance or already paid
-    const balance = parseFloat(inv.balance) || 0;
-    if (balance <= 0) return;
-    
-    // Skip retainage invoices
-    const invoiceType = (inv.invoice_type || '').toLowerCase();
-    if (invoiceType.includes('retainage') || invoiceType.includes('retention')) return;
-    
-    // Calculate age
-    const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
-    const invoiceDate = new Date(excelEpoch.getTime() + invoiceDateSerial * 24 * 60 * 60 * 1000);
-    const ageInDays = Math.floor((today - invoiceDate) / (1000 * 60 * 60 * 24));
-    
-    // Bucket the balance
-    if (ageInDays <= 30) {
-      aging.current += balance;
-    } else if (ageInDays <= 60) {
-      aging.days31_60 += balance;
-    } else if (ageInDays <= 90) {
-      aging.days61_90 += balance;
-    } else {
-      aging.days90Plus += balance;
-    }
+  // Use same data source as AR Aging page - fetch from API
+  const params = new URLSearchParams({
+    sortColumn: 'days_90_plus',
+    sortDirection: 'desc'
   });
   
+  // If specific PM selected, filter by PM name
+  if (!isAllPms && pmrSelectedPm) {
+    params.set('pm', pmrSelectedPm);
+  }
+  
+  fetch(`/api/ar-aging?${params.toString()}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success && data.totals) {
+        const totals = data.totals;
+        const aging = {
+          current: totals.current || 0,
+          days31_60: totals.days_31_60 || 0,
+          days61_90: totals.days_61_90 || 0,
+          days90Plus: totals.days_90_plus || 0
+        };
+        renderPmrArAgingChartWithData(canvas, aging);
+      } else {
+        // Fallback to empty chart
+        renderPmrArAgingChartWithData(canvas, { current: 0, days31_60: 0, days61_90: 0, days90Plus: 0 });
+      }
+    })
+    .catch(err => {
+      console.error('Error loading AR aging for PM Report:', err);
+      renderPmrArAgingChartWithData(canvas, { current: 0, days31_60: 0, days61_90: 0, days90Plus: 0 });
+    });
+}
+
+function renderPmrArAgingChartWithData(canvas, aging) {
   // Destroy existing chart
   if (pmrArAgingChart) {
     pmrArAgingChart.destroy();
@@ -25116,11 +25104,14 @@ let arAgingInitialized = false;
 let arAgingSortColumn = 'days_90_plus';
 let arAgingSortDirection = 'desc';
 let arAgingSearchTerm = '';
+let arAgingCustomerFilter = '';
+let arAgingPmFilter = '';
 let arAgingChart = null;
 
 function initArAging() {
   if (!arAgingInitialized) {
     setupArAgingEventHandlers();
+    loadArAgingFilters();
     arAgingInitialized = true;
   }
   
@@ -25133,6 +25124,32 @@ function initArAging() {
   }
 }
 
+function loadArAgingFilters() {
+  fetch('/api/ar-aging/filters')
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const customerSelect = document.getElementById('arAgingCustomerFilter');
+        const pmSelect = document.getElementById('arAgingPmFilter');
+        
+        if (customerSelect) {
+          customerSelect.innerHTML = '<option value="">All Customers</option>';
+          (data.customers || []).forEach(c => {
+            customerSelect.innerHTML += `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`;
+          });
+        }
+        
+        if (pmSelect) {
+          pmSelect.innerHTML = '<option value="">All PMs</option>';
+          (data.pms || []).forEach(pm => {
+            pmSelect.innerHTML += `<option value="${escapeHtml(pm)}">${escapeHtml(pm)}</option>`;
+          });
+        }
+      }
+    })
+    .catch(err => console.error('Error loading AR aging filters:', err));
+}
+
 function setupArAgingEventHandlers() {
   const searchInput = document.getElementById('arAgingSearch');
   if (searchInput) {
@@ -25140,6 +25157,22 @@ function setupArAgingEventHandlers() {
       arAgingSearchTerm = searchInput.value.trim();
       loadArAgingData();
     }, 300));
+  }
+  
+  const customerFilter = document.getElementById('arAgingCustomerFilter');
+  if (customerFilter) {
+    customerFilter.addEventListener('change', () => {
+      arAgingCustomerFilter = customerFilter.value;
+      loadArAgingData();
+    });
+  }
+  
+  const pmFilter = document.getElementById('arAgingPmFilter');
+  if (pmFilter) {
+    pmFilter.addEventListener('change', () => {
+      arAgingPmFilter = pmFilter.value;
+      loadArAgingData();
+    });
   }
   
   const table = document.getElementById('arAgingTable');
@@ -25168,6 +25201,12 @@ function loadArAgingData() {
   
   if (arAgingSearchTerm) {
     params.set('search', arAgingSearchTerm);
+  }
+  if (arAgingCustomerFilter) {
+    params.set('customer', arAgingCustomerFilter);
+  }
+  if (arAgingPmFilter) {
+    params.set('pm', arAgingPmFilter);
   }
   
   fetch(`/api/ar-aging?${params.toString()}`)

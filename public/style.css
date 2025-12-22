@@ -14987,6 +14987,63 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
    AP AGING REPORT STYLES
 ============================================================ */
 
+/* AR Aging Filter Bar */
+.ar-aging-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  width: 85%;
+  max-width: 900px;
+}
+
+.ar-aging-filter-bar .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ar-aging-filter-bar label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.ar-aging-filter-bar .filter-select {
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-width: 180px;
+  cursor: pointer;
+}
+
+.ar-aging-filter-bar .filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+@media (max-width: 768px) {
+  .ar-aging-filter-bar {
+    width: 100%;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .ar-aging-filter-bar .filter-select {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
 /* Common width for AP/AR Aging sections to match table */
 #apAging .ap-aging-summary,
 #apAging .ap-aging-chart-section,
