@@ -20086,12 +20086,14 @@ async function extractAiInsightsData() {
       const estProfit = totalContract - totalCost;
       const margin = totalContract > 0 ? (estProfit / totalContract * 100) : 0;
       
-      // Calculate actual costs from job_actuals
+      // Calculate actual costs from job_actuals - uses Job_No and Value fields
       const actualCostByJob = {};
       (actuals || []).forEach(a => {
-        const jobNum = a.job_number || a.Job_Number;
-        const cost = parseFloat(a.actual_cost || a.Actual_Cost) || 0;
-        actualCostByJob[jobNum] = (actualCostByJob[jobNum] || 0) + cost;
+        const jobNum = a.Job_No || a.job_no || a.job_number || a.Job_Number;
+        const cost = parseFloat(a.Value || a.value || a.actual_cost || a.Actual_Cost) || 0;
+        if (jobNum) {
+          actualCostByJob[jobNum] = (actualCostByJob[jobNum] || 0) + cost;
+        }
       });
       const totalActualCost = Object.values(actualCostByJob).reduce((s, v) => s + v, 0);
       
