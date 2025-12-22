@@ -2533,6 +2533,7 @@ const PageViewConfigs = {
         detailLevel: document.querySelector('input[name="isDetailLevel"]:checked')?.value,
         showThousands: document.getElementById("isShowThousands")?.checked,
         excludeCurrent: document.getElementById("isExcludeCurrent")?.checked,
+        waterfallDataLabels: document.getElementById("isWaterfallDataLabels")?.checked,
         matrixMonths: document.getElementById("isMatrixMonths")?.value,
         matrixYearStart: document.getElementById("isMatrixYearStart")?.value,
         matrixYearEnd: document.getElementById("isMatrixYearEnd")?.value
@@ -2567,6 +2568,10 @@ const PageViewConfigs = {
       if (cfg.excludeCurrent !== undefined) {
         const el = document.getElementById("isExcludeCurrent");
         if (el) el.checked = cfg.excludeCurrent;
+      }
+      if (cfg.waterfallDataLabels !== undefined) {
+        const el = document.getElementById("isWaterfallDataLabels");
+        if (el) el.checked = cfg.waterfallDataLabels;
       }
       if (cfg.matrixMonths) {
         const el = document.getElementById("isMatrixMonths");
@@ -3009,6 +3014,7 @@ function saveIncomeStatementConfig() {
     detailLevel: document.querySelector('input[name="isDetailLevel"]:checked')?.value,
     showThousands: document.getElementById("isShowThousands")?.checked,
     excludeCurrent: document.getElementById("isExcludeCurrent")?.checked,
+    waterfallDataLabels: document.getElementById("isWaterfallDataLabels")?.checked,
     matrixMonths: document.getElementById("isMatrixMonths")?.value,
     matrixYearStart: document.getElementById("isMatrixYearStart")?.value,
     matrixYearEnd: document.getElementById("isMatrixYearEnd")?.value
@@ -9008,6 +9014,14 @@ function initIncomeStatementControls() {
     renderIncomeStatement(); 
     saveIncomeStatementConfig(); 
   };
+  
+  const waterfallDataLabels = document.getElementById("isWaterfallDataLabels");
+  if (waterfallDataLabels) {
+    waterfallDataLabels.onchange = () => { 
+      renderIsWaterfallChart(); 
+      saveIncomeStatementConfig(); 
+    };
+  }
   
   const detailRadios = document.querySelectorAll('input[name="isDetailLevel"]');
   detailRadios.forEach(radio => {

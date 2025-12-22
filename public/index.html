@@ -1322,6 +1322,10 @@
                   <input type="checkbox" id="isExcludeCurrent" checked>
                   Exclude Month in Progress
                 </label>
+                <label class="is-checkbox-label small">
+                  <input type="checkbox" id="isWaterfallDataLabels" checked>
+                  Waterfall Data Labels
+                </label>
               </div>
             </div>
           </div>
@@ -1348,12 +1352,6 @@
           <p class="waterfall-description">Flow from revenue through direct costs, indirect costs, and operating expenses to operating income.</p>
           <div class="waterfall-chart-container">
             <canvas id="isWaterfallChart"></canvas>
-          </div>
-          <div class="waterfall-options">
-            <label class="is-checkbox-label small">
-              <input type="checkbox" id="isWaterfallDataLabels" onchange="renderIsWaterfallChart()">
-              Show Data Labels
-            </label>
           </div>
         </div>
 
