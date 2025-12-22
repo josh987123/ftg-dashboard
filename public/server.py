@@ -4151,20 +4151,23 @@ def api_get_ar_aging():
             
             retainage = float(inv.get('retainage_amount', 0) or 0)
             
+            # Collectible amount excludes retainage (retainage tracked separately)
+            collectible = max(0, calc_due - retainage)
+            
             # Get days outstanding
             days = int(float(inv.get('days_outstanding', 0) or 0))
             
-            # Add to appropriate bucket using calculated_amount_due
+            # Add collectible amount to appropriate aging bucket (excludes retainage)
             if days <= 30:
-                customer_aging[customer]['current'] += calc_due
+                customer_aging[customer]['current'] += collectible
             elif days <= 60:
-                customer_aging[customer]['days_31_60'] += calc_due
+                customer_aging[customer]['days_31_60'] += collectible
             elif days <= 90:
-                customer_aging[customer]['days_61_90'] += calc_due
+                customer_aging[customer]['days_61_90'] += collectible
             else:
-                customer_aging[customer]['days_90_plus'] += calc_due
+                customer_aging[customer]['days_90_plus'] += collectible
             
-            customer_aging[customer]['total_due'] += calc_due
+            customer_aging[customer]['total_due'] += collectible
             customer_aging[customer]['retainage'] += retainage
         
         # Convert to list
