@@ -17117,10 +17117,10 @@ body.dark-mode .dashboard-section > h2 {
   border: 1px solid var(--border-color);
 }
 
-/* Match AI analysis section width on desktop */
+/* Match AI analysis section width on desktop (60%) */
 #jobOverview > .profitability-heatmap-section {
-  width: auto;
-  max-width: fit-content;
+  width: 60% !important;
+  max-width: 60% !important;
   box-sizing: border-box;
 }
 
