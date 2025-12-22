@@ -4154,16 +4154,19 @@ def api_get_ar_aging():
             # Collectible amount excludes retainage (retainage tracked separately)
             collectible = max(0, calc_due - retainage)
             
-            # Calculate days outstanding dynamically from invoice date
-            # The days_outstanding field in the file may be stale
+            # Calculate days past due dynamically from due date
+            # AR aging is based on how many days past the due date, not invoice date
             days = 0
-            date_val = inv.get('invoice_date')
+            date_val = inv.get('due_date')
             if date_val:
                 try:
                     excel_date = float(date_val)
                     if excel_date > 0:
-                        invoice_date = datetime.fromtimestamp((excel_date - 25569) * 86400)
-                        days = (datetime.now() - invoice_date).days
+                        due_date = datetime.fromtimestamp((excel_date - 25569) * 86400)
+                        days = (datetime.now() - due_date).days
+                        # If not yet past due, treat as current (0 days)
+                        if days < 0:
+                            days = 0
                 except (ValueError, TypeError):
                     # Fall back to days_outstanding from file
                     days = int(float(inv.get('days_outstanding', 0) or 0))
