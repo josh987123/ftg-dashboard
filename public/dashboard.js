@@ -15495,8 +15495,12 @@ function filterJobOverview() {
 function updateJobOverviewMetrics() {
   const totalJobs = joFiltered.length;
   const totalContract = joFiltered.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
-  const totalBilled = joFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
-  const totalEarned = joFiltered.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  
+  // For Over/Under calculation, only include jobs with valid budget data (contract > 0 and cost > 0)
+  // This matches the Over/Under Billing page logic for consistency
+  const jobsWithValidBudget = joFiltered.filter(j => (j.revised_contract || 0) > 0 && (j.revised_cost || 0) > 0);
+  const totalBilled = jobsWithValidBudget.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const totalEarned = jobsWithValidBudget.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
   const totalOverUnder = totalBilled - totalEarned;
   
   const jobsWithValidMargin = joFiltered.filter(j => j.revised_contract > 0 && j.revised_cost > 0);
@@ -17647,9 +17651,13 @@ function updateJobActualsSummaryMetrics() {
     return true;
   });
   const totalJobs = activeJobs.length;
-  const totalBilledRevenue = activeJobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
-  const totalEarnedRevenue = activeJobs.reduce((sum, j) => sum + j.earned_revenue, 0);
   const totalActualCost = activeJobs.reduce((sum, j) => sum + j.actual_cost, 0);
+  
+  // For Over/Under calculation, only include jobs with valid budget data (contract > 0 and cost > 0)
+  // This matches the Over/Under Billing page logic for consistency
+  const jobsWithValidBudget = activeJobs.filter(j => (j.revised_contract || 0) > 0 && (j.revised_cost || 0) > 0);
+  const totalBilledRevenue = jobsWithValidBudget.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const totalEarnedRevenue = jobsWithValidBudget.reduce((sum, j) => sum + j.earned_revenue, 0);
   const totalOverUnder = totalBilledRevenue - totalEarnedRevenue;
   
   document.getElementById('jaTotalCount').textContent = totalJobs.toLocaleString();
