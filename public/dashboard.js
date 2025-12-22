@@ -3755,14 +3755,10 @@ function updateOverviewCharts() {
     opProfit: { label: "Operating Profit", values: [], priorValues: [] },
     opMargin: { label: "Operating Profit %", values: [], priorValues: [], isPercent: true },
     cash: { label: "Cash", values: [], priorValues: [], isBalance: true },
-    receivables: { label: "Receivables", values: [], priorValues: [], isBalance: true },
-    payables: { label: "Accounts Payable", values: [], priorValues: [], isBalance: true },
     currentRatio: { label: "Current Ratio", values: [], priorValues: [], isRatio: true }
   };
   
   const cashAccounts = [1001, 1003, 1004, 1005, 1006, 1007, 1040, 1090];
-  const receivablesAccounts = [1100, 1105, 1110, 1120, 1130, 1050];
-  const payablesAccounts = [2000, 2005, 2010, 2015, 2016, 2017, 2018];
   const currentAssetAccounts = [1001, 1003, 1004, 1005, 1006, 1007, 1040, 1090, 1100, 1105, 1110, 1120, 1130, 1050, 1030];
   const currentLiabilityAccounts = [2000, 2005, 2010, 2015, 2016, 2017, 2018, 2021, 2023, 2025, 2028, 2030, 2070, 2100, 2110, 2120, 2130, 2140, 2200, 2250];
   
@@ -3789,19 +3785,13 @@ function updateOverviewCharts() {
     
     if (typeof getCumulativeBalance === 'function' && typeof bsGLLookup !== 'undefined') {
       const cashBal = getCumulativeBalance(cashAccounts, endOfPeriod, true);
-      const recBal = getCumulativeBalance(receivablesAccounts, endOfPeriod, true);
-      const payBal = getCumulativeBalance(payablesAccounts, endOfPeriod, false);
       metrics.cash.values.push(cashBal);
-      metrics.receivables.values.push(recBal);
-      metrics.payables.values.push(payBal);
       
       const caBal = getCumulativeBalance(currentAssetAccounts, endOfPeriod, true);
       const clBal = getCumulativeBalance(currentLiabilityAccounts, endOfPeriod, false);
       metrics.currentRatio.values.push(clBal !== 0 ? caBal / Math.abs(clBal) : 0);
     } else {
       metrics.cash.values.push(0);
-      metrics.receivables.values.push(0);
-      metrics.payables.values.push(0);
       metrics.currentRatio.values.push(0);
     }
     
@@ -3827,19 +3817,13 @@ function updateOverviewCharts() {
       const priorEndOfPeriod = priorPeriods[idx][priorPeriods[idx].length - 1];
       if (typeof getCumulativeBalance === 'function' && typeof bsGLLookup !== 'undefined') {
         const pCashBal = getCumulativeBalance(cashAccounts, priorEndOfPeriod, true);
-        const pRecBal = getCumulativeBalance(receivablesAccounts, priorEndOfPeriod, true);
-        const pPayBal = getCumulativeBalance(payablesAccounts, priorEndOfPeriod, false);
         metrics.cash.priorValues.push(pCashBal);
-        metrics.receivables.priorValues.push(pRecBal);
-        metrics.payables.priorValues.push(pPayBal);
         
         const pCaBal = getCumulativeBalance(currentAssetAccounts, priorEndOfPeriod, true);
         const pClBal = getCumulativeBalance(currentLiabilityAccounts, priorEndOfPeriod, false);
         metrics.currentRatio.priorValues.push(pClBal !== 0 ? pCaBal / Math.abs(pClBal) : 0);
       } else {
         metrics.cash.priorValues.push(0);
-        metrics.receivables.priorValues.push(0);
-        metrics.payables.priorValues.push(0);
         metrics.currentRatio.priorValues.push(0);
       }
     }
@@ -3888,8 +3872,6 @@ function updateOverviewCharts() {
     { id: "overviewOpProfitChart", data: metrics.opProfit },
     { id: "overviewOpMarginChart", data: metrics.opMargin },
     { id: "overviewCashChart", data: metrics.cash },
-    { id: "overviewReceivablesChart", data: metrics.receivables },
-    { id: "overviewPayablesChart", data: metrics.payables },
     { id: "overviewCurrentRatioChart", data: metrics.currentRatio }
   ];
   
@@ -3898,6 +3880,9 @@ function updateOverviewCharts() {
   });
   
   updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndices);
+  
+  // Render AR/AP Ratio and AR Aging charts (fetch live data)
+  renderArApSummaryCharts();
   } catch (err) {
     console.error("Error updating overview charts:", err);
   }
@@ -3913,8 +3898,6 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
     { key: "opProfit", avgId: "opProfitAvg", highId: "opProfitHigh", lowId: "opProfitLow", cagrId: "opProfitCagr", highPeriodId: "opProfitHighPeriod", lowPeriodId: "opProfitLowPeriod", growthLabelId: "opProfitGrowthLabel", isPercent: false },
     { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", highPeriodId: "opMarginHighPeriod", lowPeriodId: "opMarginLowPeriod", growthLabelId: "opMarginGrowthLabel", isPercent: true },
     { key: "cash", avgId: "cashAvg", highId: "cashHigh", lowId: "cashLow", cagrId: "cashCagr", highPeriodId: "cashHighPeriod", lowPeriodId: "cashLowPeriod", growthLabelId: "cashGrowthLabel", isPercent: false },
-    { key: "receivables", avgId: "receivablesAvg", highId: "receivablesHigh", lowId: "receivablesLow", cagrId: "receivablesCagr", highPeriodId: "receivablesHighPeriod", lowPeriodId: "receivablesLowPeriod", growthLabelId: "receivablesGrowthLabel", isPercent: false },
-    { key: "payables", avgId: "payablesAvg", highId: "payablesHigh", lowId: "payablesLow", cagrId: "payablesCagr", highPeriodId: "payablesHighPeriod", lowPeriodId: "payablesLowPeriod", growthLabelId: "payablesGrowthLabel", isPercent: false },
     { key: "currentRatio", avgId: "currentRatioAvg", highId: "currentRatioHigh", lowId: "currentRatioLow", cagrId: "currentRatioCagr", highPeriodId: "currentRatioHighPeriod", lowPeriodId: "currentRatioLowPeriod", growthLabelId: "currentRatioGrowthLabel", isPercent: false, isRatio: true }
   ];
   
@@ -4082,6 +4065,202 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
   });
   } catch (err) {
     console.error("Error updating overview stats:", err);
+  }
+}
+
+// AR/AP Summary Charts for Overview
+let overviewArApRatioChart = null;
+let overviewArAgingChart = null;
+
+async function renderArApSummaryCharts() {
+  try {
+    const response = await fetch('/api/ar-ap-summary');
+    const data = await response.json();
+    
+    if (!data.success) {
+      console.error('Failed to load AR/AP summary:', data.error);
+      return;
+    }
+    
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+    const textColor = isDark ? '#e2e8f0' : '#374151';
+    const gridColor = isDark ? '#334155' : '#e5e7eb';
+    
+    // Update AR/AP Ratio stats
+    const arEl = document.getElementById('arApRatioAr');
+    const apEl = document.getElementById('arApRatioAp');
+    const ratioEl = document.getElementById('arApRatioValue');
+    
+    if (arEl) arEl.textContent = formatCurrencyCompact(data.ar.total);
+    if (apEl) apEl.textContent = formatCurrencyCompact(data.ap.total);
+    if (ratioEl) {
+      ratioEl.textContent = data.ratio.toFixed(2) + 'x';
+      ratioEl.className = data.ratio >= 1 ? 'stat-value' : 'stat-value negative';
+    }
+    
+    // Update AR Aging stats
+    const arCurrentEl = document.getElementById('arAgingCurrent');
+    const ar31El = document.getElementById('arAging31to60');
+    const ar61El = document.getElementById('arAging61to90');
+    const ar90El = document.getElementById('arAging90plus');
+    
+    if (arCurrentEl) arCurrentEl.textContent = formatCurrencyCompact(data.ar.current);
+    if (ar31El) ar31El.textContent = formatCurrencyCompact(data.ar.days_31_60);
+    if (ar61El) ar61El.textContent = formatCurrencyCompact(data.ar.days_61_90);
+    if (ar90El) {
+      ar90El.textContent = formatCurrencyCompact(data.ar.days_90_plus);
+      ar90El.className = data.ar.days_90_plus > 0 ? 'stat-value negative' : 'stat-value';
+    }
+    
+    // Render AR/AP Ratio Chart (side-by-side bar)
+    const ratioCtx = document.getElementById('overviewArApRatioChart');
+    if (ratioCtx) {
+      if (overviewArApRatioChart) {
+        overviewArApRatioChart.destroy();
+      }
+      
+      overviewArApRatioChart = new Chart(ratioCtx, {
+        type: 'bar',
+        data: {
+          labels: ['AR vs AP'],
+          datasets: [
+            {
+              label: 'AR Due',
+              data: [data.ar.total],
+              backgroundColor: '#22c55e',
+              borderRadius: 4
+            },
+            {
+              label: 'AP Due',
+              data: [data.ap.total],
+              backgroundColor: '#ef4444',
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: { color: textColor, boxWidth: 12, padding: 8 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.dataset.label || '';
+                  const value = formatCurrency(context.raw);
+                  return label + ': ' + value;
+                },
+                afterBody: function() {
+                  return ['', 'AR: ' + formatCurrency(data.ar.total), 'AP: ' + formatCurrency(data.ap.total), 'Ratio: ' + data.ratio.toFixed(2) + 'x'];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              display: false
+            },
+            y: {
+              display: true,
+              grid: { color: gridColor, drawBorder: false },
+              ticks: {
+                color: textColor,
+                callback: function(value) {
+                  return formatCurrencyCompact(value);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Render AR Aging Stacked Bar Chart
+    const agingCtx = document.getElementById('overviewArAgingChart');
+    if (agingCtx) {
+      if (overviewArAgingChart) {
+        overviewArAgingChart.destroy();
+      }
+      
+      overviewArAgingChart = new Chart(agingCtx, {
+        type: 'bar',
+        data: {
+          labels: ['AR Aging'],
+          datasets: [
+            {
+              label: '90+ Days',
+              data: [data.ar.days_90_plus],
+              backgroundColor: '#ef4444',
+              borderRadius: 0
+            },
+            {
+              label: '61-90 Days',
+              data: [data.ar.days_61_90],
+              backgroundColor: '#f97316',
+              borderRadius: 0
+            },
+            {
+              label: '31-60 Days',
+              data: [data.ar.days_31_60],
+              backgroundColor: '#eab308',
+              borderRadius: 0
+            },
+            {
+              label: '0-30 Days',
+              data: [data.ar.current],
+              backgroundColor: '#22c55e',
+              borderRadius: { topLeft: 4, topRight: 4 }
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: { color: textColor, boxWidth: 12, padding: 6, font: { size: 10 } },
+              reverse: true
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.dataset.label || '';
+                  const value = formatCurrency(context.raw);
+                  return label + ': ' + value;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              display: false,
+              stacked: true
+            },
+            x: {
+              display: true,
+              stacked: true,
+              grid: { color: gridColor, drawBorder: false },
+              ticks: {
+                color: textColor,
+                callback: function(value) {
+                  return formatCurrencyCompact(value);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+  } catch (err) {
+    console.error('Error rendering AR/AP summary charts:', err);
   }
 }
 

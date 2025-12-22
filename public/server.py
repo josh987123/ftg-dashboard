@@ -4119,6 +4119,123 @@ def api_get_vendor_invoices():
         traceback.print_exc()
         return jsonify({'success': False, 'invoices': [], 'error': str(e)}), 500
 
+# ============== AR/AP SUMMARY FOR OVERVIEW ==============
+
+@app.route('/api/ar-ap-summary', methods=['GET', 'OPTIONS'])
+def api_get_ar_ap_summary():
+    """Get AR and AP totals excluding retainage for overview charts"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        # Load AR invoices
+        ar_invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ar_invoices.json')
+        with open(ar_invoices_path, 'r', encoding='utf-8-sig') as f:
+            ar_json = json.load(f)
+        
+        ar_invoices = ar_json.get('invoices', [])
+        
+        # Calculate AR totals excluding retainage
+        ar_totals = {'current': 0, 'days_31_60': 0, 'days_61_90': 0, 'days_90_plus': 0, 'total': 0, 'retainage': 0}
+        
+        for inv in ar_invoices:
+            calc_due = float(inv.get('calculated_amount_due', 0) or 0)
+            if calc_due <= 0:
+                continue
+            
+            retainage = float(inv.get('retainage_amount', 0) or 0)
+            collectible = max(0, calc_due - retainage)
+            
+            ar_totals['retainage'] += retainage
+            
+            # Calculate days past due from due_date
+            due_date_val = inv.get('due_date')
+            days_past_due = 0
+            if due_date_val:
+                try:
+                    excel_date = float(due_date_val)
+                    if excel_date > 0:
+                        due_date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
+                        days_past_due = (datetime.now() - due_date_obj).days
+                        if days_past_due < 0:
+                            days_past_due = 0
+                except (ValueError, TypeError):
+                    pass
+            
+            # Assign to aging bucket
+            if days_past_due > 90:
+                ar_totals['days_90_plus'] += collectible
+            elif days_past_due > 60:
+                ar_totals['days_61_90'] += collectible
+            elif days_past_due > 30:
+                ar_totals['days_31_60'] += collectible
+            else:
+                ar_totals['current'] += collectible
+        
+        ar_totals['total'] = ar_totals['current'] + ar_totals['days_31_60'] + ar_totals['days_61_90'] + ar_totals['days_90_plus']
+        
+        # Load AP invoices
+        ap_invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ap_invoices.json')
+        with open(ap_invoices_path, 'r', encoding='utf-8-sig') as f:
+            ap_json = json.load(f)
+        
+        ap_invoices = ap_json.get('invoices', [])
+        
+        # Calculate AP totals excluding retainage
+        ap_totals = {'current': 0, 'days_31_60': 0, 'days_61_90': 0, 'days_90_plus': 0, 'total': 0, 'retainage': 0}
+        
+        for inv in ap_invoices:
+            remaining = float(inv.get('remaining_balance', 0) or 0)
+            if remaining <= 0:
+                continue
+            
+            retainage = float(inv.get('retainage_amount', 0) or 0)
+            collectible = max(0, remaining - retainage)
+            
+            ap_totals['retainage'] += retainage
+            
+            # Calculate days outstanding from invoice_date
+            date_val = inv.get('invoice_date')
+            days_outstanding = 0
+            if date_val:
+                try:
+                    excel_date = float(date_val)
+                    if excel_date > 0:
+                        date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
+                        days_outstanding = (datetime.now() - date_obj).days
+                        if days_outstanding < 0:
+                            days_outstanding = 0
+                except (ValueError, TypeError):
+                    pass
+            
+            # Assign to aging bucket
+            if days_outstanding > 90:
+                ap_totals['days_90_plus'] += collectible
+            elif days_outstanding > 60:
+                ap_totals['days_61_90'] += collectible
+            elif days_outstanding > 30:
+                ap_totals['days_31_60'] += collectible
+            else:
+                ap_totals['current'] += collectible
+        
+        ap_totals['total'] = ap_totals['current'] + ap_totals['days_31_60'] + ap_totals['days_61_90'] + ap_totals['days_90_plus']
+        
+        # Calculate ratio
+        ratio = ar_totals['total'] / ap_totals['total'] if ap_totals['total'] > 0 else 0
+        
+        return jsonify({
+            'success': True,
+            'ar': ar_totals,
+            'ap': ap_totals,
+            'ratio': round(ratio, 2)
+        })
+        
+    except Exception as e:
+        print(f"[AR-AP-SUMMARY] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # ============== AR AGING API ==============
 
 @app.route('/api/ar-aging', methods=['GET', 'OPTIONS'])
