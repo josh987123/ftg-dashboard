@@ -3404,10 +3404,11 @@
               <div class="radar-legend-box" id="radarLegendBox"></div>
             </div>
 
-            <!-- Key Metrics Summary -->
+            <!-- Key Metrics Summary - 4 columns layout -->
             <div class="pmr-metrics-wrapper">
               <h3 class="pmr-section-title">Key Metrics</h3>
-              <div class="pmr-metrics-row">
+              <!-- Row 1: 4 tiles -->
+              <div class="pmr-metrics-row pmr-metrics-4col">
                 <div class="pmr-metric-tile">
                   <div class="pmr-metric-label">Active Jobs</div>
                   <div class="pmr-metric-value" id="pmrTotalJobs">-</div>
@@ -3429,14 +3430,15 @@
                   <div class="pmr-metric-subtext" id="pmrGrossMarginAmt">-</div>
                   <div class="pmr-metric-trend" id="pmrMarginTrend"></div>
                 </div>
+              </div>
+
+              <!-- Row 2: 4 tiles -->
+              <div class="pmr-metrics-row pmr-metrics-4col">
                 <div class="pmr-metric-tile">
                   <div class="pmr-metric-label">Net Over/(Under)</div>
                   <div class="pmr-metric-value" id="pmrNetOverUnder">-</div>
                   <div class="pmr-metric-trend" id="pmrOverUnderTrend"></div>
                 </div>
-              </div>
-
-              <div class="pmr-metrics-row pmr-metrics-row-2">
                 <div class="pmr-metric-tile">
                   <div class="pmr-metric-label">Avg % Complete</div>
                   <div class="pmr-metric-value" id="pmrAvgPctComplete">-</div>
@@ -3452,6 +3454,10 @@
                   <div class="pmr-metric-value" id="pmrArExposure">-</div>
                   <div class="pmr-metric-subtext" id="pmrArOver60">-</div>
                 </div>
+              </div>
+
+              <!-- Row 3: 2 tiles (left-aligned, 2 empty spaces on right) -->
+              <div class="pmr-metrics-row pmr-metrics-4col pmr-metrics-partial">
                 <div class="pmr-metric-tile">
                   <div class="pmr-metric-label">Actual Cost</div>
                   <div class="pmr-metric-value" id="pmrTotalActualCost">-</div>

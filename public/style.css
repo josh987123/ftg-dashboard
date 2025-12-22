@@ -15704,6 +15704,42 @@ body.dark-mode .ar-invoice-row td {
   min-width: 0;
 }
 
+/* PM Report 4-column grid layout for Key Metrics */
+.pmr-metrics-4col {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+/* Partial row (2 tiles) - keep them sized like 4-col but left-aligned */
+.pmr-metrics-4col.pmr-metrics-partial {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.pmr-metrics-4col.pmr-metrics-partial .pmr-metric-tile {
+  grid-column: span 1;
+}
+
+@media (max-width: 900px) {
+  .pmr-metrics-4col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .pmr-metrics-4col.pmr-metrics-partial {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .pmr-metrics-4col {
+    grid-template-columns: 1fr;
+  }
+  
+  .pmr-metrics-4col.pmr-metrics-partial {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pmr-filter-bar {
   background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
   border-radius: 8px;
