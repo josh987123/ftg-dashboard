@@ -14357,13 +14357,15 @@ body.dark-mode .chart-footnote,
 .payments-year-range {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
 }
 
 .payments-year-range label {
   font-weight: 500;
+  font-size: 12px;
   color: #374151;
 }
 
@@ -14372,19 +14374,22 @@ body.dark-mode .payments-year-range label {
 }
 
 .payments-year-range .year-slider {
-  width: 120px;
+  width: 80px;
+  height: 4px;
   cursor: pointer;
 }
 
 .payments-year-range .year-label {
   font-weight: 600;
+  font-size: 12px;
   color: #3b82f6;
-  min-width: 40px;
+  min-width: 32px;
   text-align: center;
 }
 
 .payments-year-range .range-separator {
   color: #6b7280;
+  font-size: 12px;
 }
 
 body.dark-mode .payments-year-range .range-separator {
