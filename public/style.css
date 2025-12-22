@@ -17103,8 +17103,8 @@ body.dark-mode .dashboard-section > h2 {
 
 /* Match AI analysis section width on desktop */
 #jobOverview > .profitability-heatmap-section {
-  width: 60%;
-  max-width: 60%;
+  width: auto;
+  max-width: fit-content;
   box-sizing: border-box;
 }
 
@@ -17200,7 +17200,7 @@ body.dark-mode .dashboard-section > h2 {
 
 .heatmap-cell {
   display: table-cell;
-  padding: 10px 6px;
+  padding: 6px 6px;
   text-align: center;
   border: 1px solid var(--border-color);
   font-size: 12px;
