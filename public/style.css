@@ -6388,6 +6388,21 @@ body.dark-mode .nav-item.nav-parent.expanded {
   border-top: 1px solid #e5e7eb;
 }
 
+/* Desktop: Larger font sizes for Cash Balances tiles */
+@media (min-width: 769px) {
+  .cash-summary-tiles .summary-tile .tile-label {
+    font-size: 14px;
+  }
+  
+  .cash-summary-tiles .summary-tile .tile-value {
+    font-size: 24px;
+  }
+  
+  .cash-summary-tiles .summary-tile .tile-subvalue {
+    font-size: 12px;
+  }
+}
+
 .summary-tile {
   text-align: center;
   padding: 12px;
