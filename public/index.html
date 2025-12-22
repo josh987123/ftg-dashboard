@@ -675,9 +675,12 @@
                 </div>
               </div>
 
-              <div class="overview-config-box">
-                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Visuals:</div>
-                <div class="checkbox-stack">
+            </div>
+
+            <div class="overview-config-row">
+              <div class="overview-config-box overview-visuals-box">
+                <label class="section-label" style="font-weight: 600;">Visuals:</label>
+                <div class="visuals-checkboxes">
                   <label class="checkbox-label">
                     <input type="checkbox" id="overviewCompare">
                     Compare to Prior Year
@@ -696,8 +699,10 @@
                   </label>
                 </div>
               </div>
+            </div>
 
-              <div class="overview-config-box">
+            <div class="overview-config-row">
+              <div class="overview-config-box overview-metrics-box">
                 <label class="section-label" style="font-weight: 600;">Show Metrics:</label>
                 <div class="metric-checkboxes">
                   <label class="checkbox-label">
@@ -742,8 +747,9 @@
                   </label>
                 </div>
               </div>
+            </div>
 
-              <div id="overviewRangeWrapper" class="range-wrapper hidden">
+            <div id="overviewRangeWrapper" class="range-wrapper hidden">
                 <label>Select Range:</label>
                 <div class="range-container">
                   <input type="range" id="overviewRangeStart" min="2015" max="2025" value="2018" step="1">

@@ -554,6 +554,33 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-bottom: 12px;
 }
 
+/* Overview Config Rows - Separate row for Visuals and Metrics */
+.overview-config-row {
+  margin-bottom: 12px;
+}
+
+.overview-config-row .overview-config-box {
+  margin-bottom: 0;
+}
+
+/* Visuals and Metrics boxes - same width */
+.overview-visuals-box,
+.overview-metrics-box {
+  max-width: 100%;
+}
+
+/* Visuals checkboxes - 2x2 grid */
+.visuals-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 16px;
+}
+
+.visuals-checkboxes .checkbox-label {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 /* SAVED VIEWS ROW */
 .saved-views-row {
   display: flex;
@@ -2284,15 +2311,13 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 .metric-checkboxes {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  gap: 0 12px;
-  max-height: calc(3 * 1.4em + 2px);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 16px;
 }
 
 .metric-checkboxes .checkbox-label {
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
