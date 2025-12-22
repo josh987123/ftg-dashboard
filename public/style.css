@@ -11701,6 +11701,16 @@ body.dark-mode .job-budgets-table .margin-cell {
 #jobActuals .job-key-metrics-section {
   width: 60%;
   max-width: 60%;
+  box-sizing: border-box;
+}
+
+#jobBudgets .job-key-metrics-section .job-metrics-grid,
+#jobActuals .job-key-metrics-section .job-metrics-grid,
+#jobBudgets .job-key-metrics-section .job-metrics-grid.five-col,
+#jobActuals .job-key-metrics-section .job-metrics-grid.five-col {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
