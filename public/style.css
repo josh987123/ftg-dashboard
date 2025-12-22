@@ -619,6 +619,8 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 
 .year-slider-section .range-container {
   width: 100%;
+  min-width: 600px;
+  max-width: 700px;
 }
 
 .year-slider-section .range-labels {
