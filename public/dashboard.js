@@ -19439,11 +19439,13 @@ let pmrStatusChart = null;
 let pmrMarginChart = null;
 let pmrBillingChart = null;
 let pmrBudgetActualChart = null;
+let pmrArAgingChart = null;
 
 function renderPmrCharts() {
   renderPmrMarginChart();
   renderPmrBudgetActualChart();
   renderPmrBillingChart();
+  renderPmrArAgingChart();
 }
 
 function renderPmrStatusChart() {
@@ -19764,6 +19766,110 @@ function formatCurrencyShort(value) {
     return '$' + (value / 1000).toFixed(0) + 'K';
   }
   return '$' + value.toFixed(0);
+}
+
+function renderPmrArAgingChart() {
+  const canvas = document.getElementById('pmrArAgingChart');
+  if (!canvas) return;
+  
+  // Calculate AR aging for selected PM's jobs
+  const isAllPms = pmrSelectedPm === '__ALL__';
+  const pmJobNos = new Set(pmrData.jobs.map(j => String(j.job_no)));
+  
+  // Get current date for age calculation
+  const today = new Date();
+  const excelEpoch = new Date(1899, 11, 30);
+  
+  // Initialize aging buckets
+  const aging = {
+    current: 0,    // 0-30 days
+    days31_60: 0,  // 31-60 days
+    days61_90: 0,  // 61-90 days
+    days90Plus: 0  // 90+ days
+  };
+  
+  // Process AR invoices for this PM's jobs
+  pmrArInvoices.forEach(inv => {
+    // Filter by PM if not All PMs
+    if (!isAllPms && inv.project_manager_name !== pmrSelectedPm) return;
+    
+    // Filter to only PM's jobs
+    if (!pmJobNos.has(String(inv.job_no))) return;
+    
+    // Skip if no balance or already paid
+    const balance = parseFloat(inv.balance) || 0;
+    if (balance <= 0) return;
+    
+    // Skip retainage invoices
+    const invoiceType = (inv.invoice_type || '').toLowerCase();
+    if (invoiceType.includes('retainage') || invoiceType.includes('retention')) return;
+    
+    // Calculate age
+    const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
+    const invoiceDate = new Date(excelEpoch.getTime() + invoiceDateSerial * 24 * 60 * 60 * 1000);
+    const ageInDays = Math.floor((today - invoiceDate) / (1000 * 60 * 60 * 24));
+    
+    // Bucket the balance
+    if (ageInDays <= 30) {
+      aging.current += balance;
+    } else if (ageInDays <= 60) {
+      aging.days31_60 += balance;
+    } else if (ageInDays <= 90) {
+      aging.days61_90 += balance;
+    } else {
+      aging.days90Plus += balance;
+    }
+  });
+  
+  // Destroy existing chart
+  if (pmrArAgingChart) {
+    pmrArAgingChart.destroy();
+    pmrArAgingChart = null;
+  }
+  
+  // Theme-adaptive colors
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#1f2937';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+  
+  const ctx = canvas.getContext('2d');
+  pmrArAgingChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['0-30', '31-60', '61-90', '90+'],
+      datasets: [{
+        label: 'AR Aging',
+        data: [aging.current, aging.days31_60, aging.days61_90, aging.days90Plus],
+        backgroundColor: ['#22c55e', '#eab308', '#f97316', '#ef4444'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return formatCurrency(context.raw);
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: (v) => formatCurrencyShort(v), color: textColor, font: { size: 10 } },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor, font: { size: 10 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
 }
 
 // Track collapse state for Over/Under section (now controls columns, not rows)
@@ -20195,6 +20301,7 @@ function clearPmrTables() {
   if (pmrMarginChart) { pmrMarginChart.destroy(); pmrMarginChart = null; }
   if (pmrBudgetActualChart) { pmrBudgetActualChart.destroy(); pmrBudgetActualChart = null; }
   if (pmrBillingChart) { pmrBillingChart.destroy(); pmrBillingChart = null; }
+  if (pmrArAgingChart) { pmrArAgingChart.destroy(); pmrArAgingChart = null; }
   
   const emptyRow = '<tr><td colspan="9" class="pmr-empty-state"><div class="pmr-empty-state-icon">👤</div><div class="pmr-empty-state-text">Select a Project Manager to view their report</div></td></tr>';
   

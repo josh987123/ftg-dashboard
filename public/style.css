@@ -15239,13 +15239,73 @@ body.dark-mode .ar-invoice-row td {
 
 /* Desktop: 50% width for key sections, aligned left */
 #pmReport > .pmr-filter-bar,
-#pmReport > #pmrAiAnalysisPanel,
-#pmReport > .pm-radar-section,
-#pmReport > .pmr-comparison-bar,
-#pmReport > .pmr-metrics-wrapper {
+#pmReport > #pmrAiAnalysisPanel {
   width: 50%;
   max-width: 50%;
   box-sizing: border-box;
+}
+
+/* PM Report Desktop Layout - Two Column */
+.pmr-desktop-layout {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.pmr-left-column {
+  flex: 1;
+  min-width: 0;
+  max-width: 50%;
+}
+
+.pmr-right-column {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pmr-right-column .pmr-chart-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.pmr-right-column .pmr-chart-title {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+}
+
+.pmr-right-column canvas {
+  width: 100% !important;
+  height: 130px !important;
+}
+
+/* Mobile: Stack columns vertically */
+@media (max-width: 1024px) {
+  .pmr-desktop-layout {
+    flex-direction: column;
+  }
+  
+  .pmr-left-column {
+    max-width: 100%;
+  }
+  
+  .pmr-right-column {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .pmr-right-column .pmr-chart-container {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 200px;
+  }
 }
 
 /* Make metric tiles equal width within their container */
