@@ -20094,12 +20094,14 @@ async function extractAiInsightsData() {
       const estProfit = totalContract - totalCost;
       const margin = totalContract > 0 ? (estProfit / totalContract * 100) : 0;
       
-      // Calculate actual costs from job_actuals - uses Job_No and Value fields
+      // Calculate actual costs from job_actuals - only for ACTIVE jobs to match Job Actuals page
+      const activeJobNumbers = new Set(activeJobs.map(j => String(j.job_no)));
       const actualCostByJob = {};
       (actuals || []).forEach(a => {
-        const jobNum = a.Job_No || a.job_no || a.job_number || a.Job_Number;
+        const jobNum = String(a.Job_No || a.job_no || a.job_number || a.Job_Number || '');
         const cost = parseFloat(a.Value || a.value || a.actual_cost || a.Actual_Cost) || 0;
-        if (jobNum) {
+        // Only include actuals for active jobs
+        if (jobNum && activeJobNumbers.has(jobNum)) {
           actualCostByJob[jobNum] = (actualCostByJob[jobNum] || 0) + cost;
         }
       });
@@ -20250,13 +20252,16 @@ async function aggregateAllBusinessData() {
     });
     
     let totalContract = 0, totalCost = 0, totalActualCost = 0, totalBilled = 0;
-    let activeJobs = 0, closedJobs = 0;
+    let activeJobCount = 0;
     let totalOverUnder = 0;
     const pmStats = new Map();
     const clientStats = new Map();
     const missingBudgetJobs = [];
     
-    budgets.forEach(job => {
+    // Filter to active jobs only for totals to match Job Actuals page
+    const activeJobsList = budgets.filter(j => (j.job_status || '').toUpperCase() === 'A');
+    
+    activeJobsList.forEach(job => {
       const jobNo = String(job.job_no);
       const contract = parseFloat(job.revised_contract) || 0;
       const cost = parseFloat(job.revised_cost) || 0;
@@ -20271,8 +20276,7 @@ async function aggregateAllBusinessData() {
       totalActualCost += actualCost;
       totalBilled += billed;
       
-      if (status === 'A') activeJobs++;
-      if (status === 'C') closedJobs++;
+      activeJobCount++;
       
       // Calculate over/under
       const earnedRev = cost > 0 ? (actualCost / cost) * contract : 0;
@@ -20306,8 +20310,8 @@ async function aggregateAllBusinessData() {
     
     data.jobs = {
       totalJobs: budgets.length,
-      activeJobs,
-      closedJobs,
+      activeJobs: activeJobCount,
+      closedJobs: budgets.filter(j => (j.job_status || '').toUpperCase() === 'C').length,
       totalContract,
       totalCost,
       totalActualCost,
