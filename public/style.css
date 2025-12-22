@@ -2409,13 +2409,25 @@ body.dark-mode .nav-item.nav-parent.expanded {
 
 .metric-checkboxes {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px 16px;
 }
 
 .metric-checkboxes .checkbox-label {
   font-size: 12px;
   white-space: nowrap;
+}
+
+@media (max-width: 1200px) {
+  .metric-checkboxes {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .metric-checkboxes {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
@@ -5447,9 +5459,13 @@ body.dark-mode .nav-item.nav-parent.expanded {
   }
 }
 
-/* Config and AI panels - 70% screen width */
+/* Config and AI panels - width by section */
 #overview > .config-panel,
-#overview > .ai-analysis-panel,
+#overview > .ai-analysis-panel {
+  width: 80%;
+  box-sizing: border-box;
+}
+
 #revenue > .config-panel,
 #revenue > .ai-analysis-panel,
 #revenue > .chart-with-tiles,
@@ -5491,6 +5507,30 @@ body.dark-mode .nav-item.nav-parent.expanded {
 
 #overview .config-body .overview-config-box {
   flex: 0 0 auto;
+}
+
+/* Time period and year slider inline on desktop */
+.overview-time-period-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.overview-time-period-row .time-period-group {
+  flex: 0 0 auto;
+}
+
+.overview-time-period-row .year-slider-section {
+  flex: 0 0 auto;
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .overview-time-period-row {
+    flex-direction: column;
+    gap: 12px;
+  }
 }
 
 /* Mobile overrides for equal-width panels */
