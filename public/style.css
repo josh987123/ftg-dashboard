@@ -11846,6 +11846,32 @@ body.dark-mode .job-budgets-table .margin-cell {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box;
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 8px !important;
+}
+
+#jobBudgets > .job-key-metrics-section .job-metric-card,
+#jobActuals > .job-key-metrics-section .job-metric-card {
+  min-width: 0;
+  overflow: hidden;
+  padding: 10px 8px;
+}
+
+#jobBudgets > .job-key-metrics-section .job-metric-card .metric-value,
+#jobActuals > .job-key-metrics-section .job-metric-card .metric-value {
+  font-size: clamp(12px, 1.8vw, 18px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#jobBudgets > .job-key-metrics-section .job-metric-card .metric-label,
+#jobActuals > .job-key-metrics-section .job-metric-card .metric-label {
+  font-size: clamp(8px, 1vw, 11px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 900px) {
