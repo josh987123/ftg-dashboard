@@ -581,6 +581,54 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   white-space: nowrap;
 }
 
+/* Time Period Buttons */
+.time-period-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.time-period-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.time-period-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border-secondary);
+  color: var(--text-primary);
+}
+
+.time-period-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.year-slider-section {
+  margin-top: 8px;
+}
+
+.year-slider-section .range-container {
+  width: 100%;
+}
+
+.year-slider-section .range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
 /* SAVED VIEWS ROW */
 .saved-views-row {
   display: flex;

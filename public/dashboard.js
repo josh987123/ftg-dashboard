@@ -2365,14 +2365,8 @@ const PageViewConfigs = {
         });
       }
       const viewType = document.getElementById("overviewViewType")?.value;
-      const yearWrapper = document.getElementById("overviewYearWrapper");
-      const rangeWrapper = document.getElementById("overviewRangeWrapper");
-      if (viewType === "annual") {
-        if (yearWrapper) yearWrapper.classList.add("hidden");
-        if (rangeWrapper) rangeWrapper.classList.remove("hidden");
-      } else {
-        if (yearWrapper) yearWrapper.classList.remove("hidden");
-        if (rangeWrapper) rangeWrapper.classList.add("hidden");
+      if (viewType) {
+        syncTimePeriodButtons(viewType);
       }
     },
     refresh() {
@@ -2892,22 +2886,16 @@ function loadUserPreferences() {
     }
     
     const viewEl = document.getElementById("overviewViewType");
-    const yearWrapper = document.getElementById("overviewYearWrapper");
-    const rangeWrapper = document.getElementById("overviewRangeWrapper");
     
-    if (yearWrapper) yearWrapper.classList.remove("hidden");
-    if (rangeWrapper) rangeWrapper.classList.add("hidden");
-    if (viewEl) viewEl.value = "monthly";
+    if (viewEl) viewEl.value = "quarterly";
+    syncTimePeriodButtons("quarterly");
     
     if (prefs.overviewConfig) {
       const cfg = prefs.overviewConfig;
       
       if (cfg.viewType && viewEl) {
         viewEl.value = cfg.viewType;
-        if (cfg.viewType === "annual") {
-          if (yearWrapper) yearWrapper.classList.add("hidden");
-          if (rangeWrapper) rangeWrapper.classList.remove("hidden");
-        }
+        syncTimePeriodButtons(cfg.viewType);
       }
       if (cfg.year) {
         const yearEl = document.getElementById("overviewYear");
@@ -2936,6 +2924,12 @@ function loadUserPreferences() {
   } finally {
     isLoadingPreferences = false;
   }
+}
+
+function syncTimePeriodButtons(viewType) {
+  document.querySelectorAll('.time-period-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === viewType);
+  });
 }
 
 function applyMetricVisibility() {
@@ -3574,15 +3568,13 @@ async function initOverviewModule() {
 
 function setupOverviewUI() {
   try {
-    const viewType = document.getElementById("overviewViewType");
+    const viewTypeInput = document.getElementById("overviewViewType");
     const yearSelect = document.getElementById("overviewYear");
-    const yearWrapper = document.getElementById("overviewYearWrapper");
-    const rangeWrapper = document.getElementById("overviewRangeWrapper");
     const compareCheck = document.getElementById("overviewCompare");
     const rangeStart = document.getElementById("overviewRangeStart");
     const rangeEnd = document.getElementById("overviewRangeEnd");
     
-    if (!viewType || !yearSelect || !rangeStart || !rangeEnd) {
+    if (!viewTypeInput || !rangeStart || !rangeEnd) {
       console.error("Overview UI elements not found");
       return;
     }
@@ -3607,30 +3599,32 @@ function setupOverviewUI() {
       return;
     }
     
-    yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
-    yearSelect.value = Math.max(...years);
-  
-  rangeStart.min = rangeEnd.min = years[0];
-  rangeStart.max = rangeEnd.max = years[years.length - 1];
-  rangeStart.value = years[0];
-  rangeEnd.value = years[years.length - 1];
-  document.getElementById("overviewRangeStartLabel").textContent = rangeStart.value;
-  document.getElementById("overviewRangeEndLabel").textContent = rangeEnd.value;
-  
-  const trendCheck = document.getElementById("overviewTrend");
-  
-  viewType.onchange = () => {
-    const v = viewType.value;
-    if (v === "annual") {
-      yearWrapper.classList.add("hidden");
-      rangeWrapper.classList.remove("hidden");
-    } else {
-      yearWrapper.classList.remove("hidden");
-      rangeWrapper.classList.add("hidden");
+    // Populate hidden year select for compatibility
+    if (yearSelect) {
+      yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
+      yearSelect.value = Math.max(...years);
     }
-    updateOverviewCharts();
-    saveOverviewConfig();
-  };
+  
+    // Initialize year range slider
+    rangeStart.min = rangeEnd.min = years[0];
+    rangeStart.max = rangeEnd.max = years[years.length - 1];
+    rangeStart.value = years[0];
+    rangeEnd.value = years[years.length - 1];
+    document.getElementById("overviewRangeStartLabel").textContent = rangeStart.value;
+    document.getElementById("overviewRangeEndLabel").textContent = rangeEnd.value;
+  
+    const trendCheck = document.getElementById("overviewTrend");
+  
+    // Time period button click handlers
+    document.querySelectorAll('.time-period-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.time-period-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        viewTypeInput.value = btn.dataset.view;
+        updateOverviewCharts();
+        saveOverviewConfig();
+      });
+    });
   
   const excludeCheck = document.getElementById("overviewExclude");
   const dataLabelsCheck = document.getElementById("overviewDataLabels");

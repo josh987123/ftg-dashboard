@@ -658,23 +658,26 @@
             </div>
             <div class="rev-controls">
               <div class="overview-config-box">
-                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Time Period:</div>
-                <div class="dropdown-stack">
-                  <div class="dropdown-row">
-                    <label>View:</label>
-                    <select id="overviewViewType">
-                      <option value="monthly">Monthly</option>
-                      <option value="quarterly" selected>Quarterly</option>
-                      <option value="annual">Annual</option>
-                    </select>
+                <div style="font-weight: 600; margin-bottom: 8px;">Time Period:</div>
+                <div class="time-period-buttons">
+                  <button type="button" class="time-period-btn" data-view="monthly">Monthly</button>
+                  <button type="button" class="time-period-btn active" data-view="quarterly">Quarterly</button>
+                  <button type="button" class="time-period-btn" data-view="annual">Annual</button>
+                </div>
+                <input type="hidden" id="overviewViewType" value="quarterly">
+                <div class="year-slider-section" id="overviewYearSliderSection">
+                  <label style="font-weight: 500; font-size: 12px; margin-bottom: 4px; display: block;">Year Range:</label>
+                  <div class="range-container">
+                    <input type="range" id="overviewRangeStart" min="2015" max="2025" value="2018" step="1">
+                    <input type="range" id="overviewRangeEnd" min="2015" max="2025" value="2025" step="1">
                   </div>
-                  <div class="dropdown-row" id="overviewYearWrapper">
-                    <label>Year:</label>
-                    <select id="overviewYear"></select>
+                  <div class="range-labels">
+                    <span id="overviewRangeStartLabel">2018</span>
+                    <span id="overviewRangeEndLabel">2025</span>
                   </div>
                 </div>
+                <select id="overviewYear" style="display: none;"></select>
               </div>
-
             </div>
 
             <div class="overview-config-row">
@@ -749,18 +752,6 @@
               </div>
             </div>
 
-            <div id="overviewRangeWrapper" class="range-wrapper hidden">
-                <label>Select Range:</label>
-                <div class="range-container">
-                  <input type="range" id="overviewRangeStart" min="2015" max="2025" value="2018" step="1">
-                  <input type="range" id="overviewRangeEnd" min="2015" max="2025" value="2025" step="1">
-                </div>
-                <div class="range-labels">
-                  <span id="overviewRangeStartLabel">2018</span>
-                  <span id="overviewRangeEndLabel">2025</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
