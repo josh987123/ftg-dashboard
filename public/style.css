@@ -13337,15 +13337,54 @@ body.dark-mode .skeleton-text,
   table-layout: fixed;
 }
 
+#paymentsTable th,
+#paymentsTable td {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+  vertical-align: middle;
+}
+
+#paymentsTable th {
+  font-size: 10px;
+  padding: 6px 4px;
+  line-height: 1.2;
+  hyphens: auto;
+}
+
+#paymentsTable th .column-header-text {
+  display: block;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+#paymentsTable td {
+  font-size: 11px;
+  padding: 6px 4px;
+}
+
 /* Desktop: Payments table fits to full width with text wrapping */
 @media (min-width: 769px) {
   #paymentsTable th,
   #paymentsTable td {
-    font-size: 12px;
+    font-size: 11px;
     padding: 8px 6px;
-    white-space: normal;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+  }
+  
+  #paymentsTable th {
+    font-size: 10px;
+  }
+}
+
+@media (min-width: 1200px) {
+  #paymentsTable th,
+  #paymentsTable td {
+    font-size: 12px;
+    padding: 8px 8px;
   }
   
   #paymentsTable th {
