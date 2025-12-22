@@ -1189,7 +1189,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
 }
 
 .nav-section-items.expanded {
-  max-height: 500px;
+  max-height: 700px;
   opacity: 1;
 }
 
@@ -1450,7 +1450,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
   }
   
   .nav-section-items.expanded {
-    max-height: 600px;
+    max-height: 800px;
   }
   
   .nav-section-items .nav-item.nav-child {
