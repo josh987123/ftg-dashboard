@@ -4503,8 +4503,8 @@ def api_get_customer_invoices():
             totals['retainage'] += retainage
             totals['count'] += 1
         
-        # Sort by days outstanding descending
-        customer_invoices.sort(key=lambda x: x['days_outstanding'], reverse=True)
+        # Sort by days past due descending
+        customer_invoices.sort(key=lambda x: x['days_past_due'], reverse=True)
         
         return jsonify({
             'success': True,
