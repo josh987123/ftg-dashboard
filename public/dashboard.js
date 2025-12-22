@@ -24409,7 +24409,7 @@ function updateApAgingSummary(totals) {
   
   for (const [id, value] of Object.entries(ids)) {
     const el = document.getElementById(id);
-    if (el) el.textContent = formatCurrency(value);
+    if (el) el.textContent = formatCurrencyCompact(value);
   }
   
   // Update chart
@@ -24777,7 +24777,7 @@ function updateArAgingSummary(totals) {
   
   for (const [id, value] of Object.entries(ids)) {
     const el = document.getElementById(id);
-    if (el) el.textContent = formatCurrency(value);
+    if (el) el.textContent = formatCurrencyCompact(value);
   }
   
   updateArAgingChart(totals);

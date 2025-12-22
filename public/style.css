@@ -14715,7 +14715,8 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
 /* AP Aging Chart */
 .ap-aging-chart-section {
   margin-bottom: 16px;
-  display: inline-block;
+  display: block;
+  text-align: left;
 }
 
 .ap-aging-chart-wrapper {
