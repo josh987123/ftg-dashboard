@@ -3752,12 +3752,17 @@ function updateOverviewCharts() {
     grossMargin: { label: "Gross Profit Margin %", values: [], priorValues: [], isPercent: true },
     opMargin: { label: "Operating Profit %", values: [], priorValues: [], isPercent: true },
     cash: { label: "Cash", values: [], priorValues: [], isBalance: true },
-    currentRatio: { label: "Current Ratio", values: [], priorValues: [], isRatio: true }
+    currentRatio: { label: "Current Ratio", values: [], priorValues: [], isRatio: true },
+    arApRatio: { label: "AR/AP Ratio", values: [], priorValues: [], isRatio: true }
   };
   
   const cashAccounts = [1001, 1003, 1004, 1005, 1006, 1007, 1040, 1090];
   const currentAssetAccounts = [1001, 1003, 1004, 1005, 1006, 1007, 1040, 1090, 1100, 1105, 1110, 1120, 1130, 1050, 1030];
   const currentLiabilityAccounts = [2000, 2005, 2010, 2015, 2016, 2017, 2018, 2021, 2023, 2025, 2028, 2030, 2070, 2100, 2110, 2120, 2130, 2140, 2200, 2250];
+  // AR accounts excluding retention (1110)
+  const arAccountsNoRetention = [1100, 1050, 1105];
+  // AP accounts excluding retention (2010, 2015)
+  const apAccountsNoRetention = [2000, 2005];
   
   periods.forEach((periodMonths, idx) => {
     const rows = buildIncomeStatementRows(periodMonths, groups);
@@ -3782,9 +3787,15 @@ function updateOverviewCharts() {
       const caBal = getCumulativeBalance(currentAssetAccounts, endOfPeriod, true);
       const clBal = getCumulativeBalance(currentLiabilityAccounts, endOfPeriod, false);
       metrics.currentRatio.values.push(clBal !== 0 ? caBal / Math.abs(clBal) : 0);
+      
+      // AR/AP Ratio (excluding retention)
+      const arBal = getCumulativeBalance(arAccountsNoRetention, endOfPeriod, true);
+      const apBal = getCumulativeBalance(apAccountsNoRetention, endOfPeriod, false);
+      metrics.arApRatio.values.push(apBal !== 0 ? arBal / Math.abs(apBal) : 0);
     } else {
       metrics.cash.values.push(0);
       metrics.currentRatio.values.push(0);
+      metrics.arApRatio.values.push(0);
     }
     
     if ((compare || needPriorForYoY) && priorPeriods[idx]) {
@@ -3809,9 +3820,15 @@ function updateOverviewCharts() {
         const pCaBal = getCumulativeBalance(currentAssetAccounts, priorEndOfPeriod, true);
         const pClBal = getCumulativeBalance(currentLiabilityAccounts, priorEndOfPeriod, false);
         metrics.currentRatio.priorValues.push(pClBal !== 0 ? pCaBal / Math.abs(pClBal) : 0);
+        
+        // Prior AR/AP Ratio (excluding retention)
+        const pArBal = getCumulativeBalance(arAccountsNoRetention, priorEndOfPeriod, true);
+        const pApBal = getCumulativeBalance(apAccountsNoRetention, priorEndOfPeriod, false);
+        metrics.arApRatio.priorValues.push(pApBal !== 0 ? pArBal / Math.abs(pApBal) : 0);
       } else {
         metrics.cash.priorValues.push(0);
         metrics.currentRatio.priorValues.push(0);
+        metrics.arApRatio.priorValues.push(0);
       }
     }
   });
@@ -3856,7 +3873,8 @@ function updateOverviewCharts() {
     { id: "overviewGrossMarginChart", data: metrics.grossMargin },
     { id: "overviewOpMarginChart", data: metrics.opMargin },
     { id: "overviewCashChart", data: metrics.cash },
-    { id: "overviewCurrentRatioChart", data: metrics.currentRatio }
+    { id: "overviewCurrentRatioChart", data: metrics.currentRatio },
+    { id: "overviewArApRatioChart", data: metrics.arApRatio }
   ];
   
   chartConfigs.forEach(cfg => {
@@ -3865,7 +3883,7 @@ function updateOverviewCharts() {
   
   updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndices);
   
-  // Render AR/AP Ratio and AR Aging charts (fetch live data)
+  // Render AR Aging and AP Aging charts (fetch live data)
   renderArApSummaryCharts();
   } catch (err) {
     console.error("Error updating overview charts:", err);
@@ -3879,7 +3897,8 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
     { key: "grossMargin", avgId: "grossMarginAvg", highId: "grossMarginHigh", lowId: "grossMarginLow", cagrId: "grossMarginCagr", highPeriodId: "grossMarginHighPeriod", lowPeriodId: "grossMarginLowPeriod", growthLabelId: "grossMarginGrowthLabel", isPercent: true },
     { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", highPeriodId: "opMarginHighPeriod", lowPeriodId: "opMarginLowPeriod", growthLabelId: "opMarginGrowthLabel", isPercent: true },
     { key: "cash", avgId: "cashAvg", highId: "cashHigh", lowId: "cashLow", cagrId: "cashCagr", highPeriodId: "cashHighPeriod", lowPeriodId: "cashLowPeriod", growthLabelId: "cashGrowthLabel", isPercent: false },
-    { key: "currentRatio", avgId: "currentRatioAvg", highId: "currentRatioHigh", lowId: "currentRatioLow", cagrId: "currentRatioCagr", highPeriodId: "currentRatioHighPeriod", lowPeriodId: "currentRatioLowPeriod", growthLabelId: "currentRatioGrowthLabel", isPercent: false, isRatio: true }
+    { key: "currentRatio", avgId: "currentRatioAvg", highId: "currentRatioHigh", lowId: "currentRatioLow", cagrId: "currentRatioCagr", highPeriodId: "currentRatioHighPeriod", lowPeriodId: "currentRatioLowPeriod", growthLabelId: "currentRatioGrowthLabel", isPercent: false, isRatio: true },
+    { key: "arApRatio", avgId: "arApRatioAvg", highId: "arApRatioHigh", lowId: "arApRatioLow", cagrId: "arApRatioCagr", highPeriodId: "arApRatioHighPeriod", lowPeriodId: "arApRatioLowPeriod", growthLabelId: "arApRatioGrowthLabel", isPercent: false, isRatio: true }
   ];
   
   const viewType = document.getElementById("overviewViewType").value;
@@ -4049,8 +4068,7 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
   }
 }
 
-// AR/AP Summary Charts for Overview
-let overviewArApRatioChart = null;
+// AR/AP Aging Charts for Overview
 let overviewArAgingChart = null;
 let overviewApAgingChart = null;
 
@@ -4067,18 +4085,6 @@ async function renderArApSummaryCharts() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
     const textColor = isDark ? '#e2e8f0' : '#374151';
     const gridColor = isDark ? '#334155' : '#e5e7eb';
-    
-    // Update AR/AP Ratio stats
-    const arEl = document.getElementById('arApRatioAr');
-    const apEl = document.getElementById('arApRatioAp');
-    const ratioEl = document.getElementById('arApRatioValue');
-    
-    if (arEl) arEl.textContent = formatCurrencyCompact(data.ar.total);
-    if (apEl) apEl.textContent = formatCurrencyCompact(data.ap.total);
-    if (ratioEl) {
-      ratioEl.textContent = data.ratio.toFixed(2) + 'x';
-      ratioEl.className = data.ratio >= 1 ? 'stat-value' : 'stat-value negative';
-    }
     
     // Update AR Aging stats (Overview page - use ovw prefix)
     const arCurrentEl = document.getElementById('ovwArAgingCurrent');
@@ -4106,73 +4112,6 @@ async function renderArApSummaryCharts() {
     if (ap90El) {
       ap90El.textContent = formatCurrencyCompact(data.ap.days_90_plus);
       ap90El.className = data.ap.days_90_plus > 0 ? 'stat-value negative' : 'stat-value';
-    }
-    
-    // Render AR/AP Ratio Chart (side-by-side bar)
-    const ratioCtx = document.getElementById('overviewArApRatioChart');
-    if (ratioCtx) {
-      if (overviewArApRatioChart) {
-        overviewArApRatioChart.destroy();
-      }
-      
-      overviewArApRatioChart = new Chart(ratioCtx, {
-        type: 'bar',
-        data: {
-          labels: ['AR vs AP'],
-          datasets: [
-            {
-              label: 'AR Due',
-              data: [data.ar.total],
-              backgroundColor: '#22c55e',
-              borderRadius: 4
-            },
-            {
-              label: 'AP Due',
-              data: [data.ap.total],
-              backgroundColor: '#ef4444',
-              borderRadius: 4
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: true,
-              position: 'bottom',
-              labels: { color: textColor, boxWidth: 12, padding: 8 }
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const label = context.dataset.label || '';
-                  const value = formatCurrency(context.raw);
-                  return label + ': ' + value;
-                },
-                afterBody: function() {
-                  return ['', 'AR: ' + formatCurrency(data.ar.total), 'AP: ' + formatCurrency(data.ap.total), 'Ratio: ' + data.ratio.toFixed(2) + 'x'];
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              display: false
-            },
-            y: {
-              display: true,
-              grid: { color: gridColor, drawBorder: false },
-              ticks: {
-                color: textColor,
-                callback: function(value) {
-                  return formatCurrencyCompact(value);
-                }
-              }
-            }
-          }
-        }
-      });
     }
     
     // Render AR Aging Stacked Bar Chart
