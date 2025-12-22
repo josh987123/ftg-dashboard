@@ -5339,7 +5339,9 @@ body.dark-mode .nav-item.nav-parent.expanded {
 #balanceSheet > .config-panel,
 #balanceSheet > .ai-analysis-panel,
 #cashFlows > .config-panel,
-#cashFlows > .ai-analysis-panel {
+#cashFlows > .ai-analysis-panel,
+#costCodes > .config-panel,
+#costCodes > .cc-charts-row {
   width: 70%;
   box-sizing: border-box;
 }
@@ -5384,7 +5386,9 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #balanceSheet > .config-panel,
   #balanceSheet > .ai-analysis-panel,
   #cashFlows > .config-panel,
-  #cashFlows > .ai-analysis-panel {
+  #cashFlows > .ai-analysis-panel,
+  #costCodes > .config-panel,
+  #costCodes > .cc-charts-row {
     display: block;
     width: 100%;
   }
