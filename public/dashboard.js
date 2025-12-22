@@ -8677,6 +8677,17 @@ async function loadIncomeStatement() {
   if (!isControlsInitialized) {
     initIncomeStatementControls();
     loadIncomeStatementConfig();
+    // Re-populate period options after loading config (in case periodType changed)
+    populatePeriodOptions();
+    // Re-apply period select value after options are populated
+    const prefs = getUserPreferences();
+    const cfg = prefs.incomeStatementConfig || {};
+    if (cfg.periodSelect) {
+      const el = document.getElementById("isPeriodSelect");
+      if (el && el.querySelector(`option[value="${cfg.periodSelect}"]`)) {
+        el.value = cfg.periodSelect;
+      }
+    }
     isControlsInitialized = true;
   }
   
@@ -9746,8 +9757,8 @@ function renderIncomeStatement() {
       addResizeHandlesToTable("incomeStatementTable");
       autoScaleFontSize("incomeStatementTable", "isTableBox");
       hideTableLoading('incomeStatementTable');
-      // Render waterfall chart (only shows in single period mode)
-      renderIsWaterfallChart();
+      // Render waterfall chart (only shows in single period mode) - use longer delay for reliable init
+      setTimeout(() => renderIsWaterfallChart(), 100);
     }, 50);
   });
 }
