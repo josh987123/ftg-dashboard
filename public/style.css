@@ -15627,12 +15627,15 @@ body.dark-mode .ar-invoice-row td {
   display: flex;
   gap: 20px;
   margin-bottom: 20px;
+  align-items: stretch;
 }
 
 .pmr-left-column {
   flex: 1;
   min-width: 0;
   max-width: 50%;
+  display: flex;
+  flex-direction: column;
 }
 
 .pmr-right-column {
@@ -15640,26 +15643,30 @@ body.dark-mode .ar-invoice-row td {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .pmr-right-column .pmr-chart-container {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .pmr-right-column .pmr-chart-title {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
   color: var(--text-primary);
 }
 
 .pmr-right-column canvas {
   width: 100% !important;
-  height: 130px !important;
+  flex: 1;
+  min-height: 100px;
 }
 
 /* Mobile: Stack columns vertically */
@@ -15771,13 +15778,12 @@ body.dark-mode .ar-invoice-row td {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
-  padding: 8px 12px;
+  padding: 6px 8px;
   text-align: center;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   transition: transform 0.15s, box-shadow 0.15s;
-  flex: 0 0 auto;
-  min-width: 90px;
-  max-width: 140px;
+  flex: 1 1 0;
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -15787,17 +15793,19 @@ body.dark-mode .ar-invoice-row td {
 }
 
 .pmr-metric-label {
-  font-size: 10px;
+  font-size: 9px;
   color: #6b7280;
   font-weight: 500;
   margin-bottom: 2px;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pmr-metric-value {
-  font-size: 15px;
+  font-size: clamp(10px, 2vw, 14px);
   font-weight: 700;
   color: #1f2937;
   white-space: nowrap;
@@ -15819,18 +15827,24 @@ body.dark-mode .ar-invoice-row td {
 }
 
 .pmr-metric-subtext {
-  font-size: 11px;
+  font-size: clamp(8px, 1.5vw, 10px);
   color: #6b7280;
-  margin-top: 4px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pmr-metric-trend {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  font-size: 11px;
-  margin-top: 4px;
+  gap: 3px;
+  font-size: clamp(8px, 1.5vw, 10px);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pmr-metric-trend.up { color: #10b981; }
