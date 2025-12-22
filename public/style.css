@@ -11830,19 +11830,19 @@ body.dark-mode .job-budgets-table .margin-cell {
   box-sizing: border-box;
 }
 
-#jobBudgets .job-key-metrics-section,
-#jobActuals .job-key-metrics-section {
-  width: 60%;
-  max-width: 60%;
+#jobBudgets > .job-key-metrics-section,
+#jobActuals > .job-key-metrics-section {
+  width: 60% !important;
+  max-width: 60% !important;
   box-sizing: border-box;
 }
 
-#jobBudgets .job-key-metrics-section .job-metrics-grid,
-#jobActuals .job-key-metrics-section .job-metrics-grid,
-#jobBudgets .job-key-metrics-section .job-metrics-grid.five-col,
-#jobActuals .job-key-metrics-section .job-metrics-grid.five-col {
-  width: 100%;
-  max-width: 100%;
+#jobBudgets > .job-key-metrics-section .job-metrics-grid,
+#jobActuals > .job-key-metrics-section .job-metrics-grid,
+#jobBudgets > .job-key-metrics-section .job-metrics-grid.five-col,
+#jobActuals > .job-key-metrics-section .job-metrics-grid.five-col {
+  width: 100% !important;
+  max-width: 100% !important;
   box-sizing: border-box;
 }
 
@@ -11851,10 +11851,10 @@ body.dark-mode .job-budgets-table .margin-cell {
   #jobActuals > .config-panel,
   #jobBudgets > #jbAiAnalysisPanel,
   #jobActuals > #jaAiAnalysisPanel,
-  #jobBudgets .job-key-metrics-section,
-  #jobActuals .job-key-metrics-section {
-    width: 100%;
-    max-width: 100%;
+  #jobBudgets > .job-key-metrics-section,
+  #jobActuals > .job-key-metrics-section {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 
