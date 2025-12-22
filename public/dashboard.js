@@ -24906,7 +24906,7 @@ function renderApInvoiceRows(invoices, cell) {
         <th>Invoice #</th>
         <th>Invoice Date</th>
         <th>Job #</th>
-        <th>Job Description</th>
+        <th>Job Desc.</th>
         <th>PM</th>
         <th class="text-right">Total Due</th>
         <th class="text-right">0-30</th>
@@ -25336,7 +25336,7 @@ function renderArInvoiceRows(invoices, cell) {
       <tr>
         <th>Invoice #</th>
         <th>Job #</th>
-        <th>Job Description</th>
+        <th>Job Desc.</th>
         <th>PM</th>
         <th>Due Date</th>
         <th class="text-right">Total Due</th>

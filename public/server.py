@@ -4010,21 +4010,21 @@ def api_get_vendor_invoices():
         
         invoices = invoices_json.get('invoices', [])
         
-        # Load job budgets for job descriptions and PM names
-        budgets_path = os.path.join(os.path.dirname(__file__), 'data', 'job_budgets.json')
+        # Load financials_jobs for job descriptions and PM names
+        jobs_path = os.path.join(os.path.dirname(__file__), 'data', 'financials_jobs.json')
         job_info = {}
         try:
-            with open(budgets_path, 'r', encoding='utf-8-sig') as f:
-                budgets_json = json.load(f)
-            for job in budgets_json.get('jobs', []):
-                job_num = str(job.get('job_number', '')).strip()
+            with open(jobs_path, 'r', encoding='utf-8-sig') as f:
+                jobs_json = json.load(f)
+            for job in jobs_json.get('job_budgets', []):
+                job_num = str(job.get('job_no', '')).strip()
                 if job_num:
                     job_info[job_num] = {
                         'description': job.get('job_description', ''),
-                        'pm': job.get('project_manager', '')
+                        'pm': job.get('project_manager_name', '')
                     }
         except Exception as e:
-            print(f"[AP-AGING] Could not load job budgets: {e}")
+            print(f"[AP-AGING] Could not load jobs data: {e}")
         
         # Filter invoices for this vendor with remaining balance
         vendor_invoices = []
@@ -4052,13 +4052,17 @@ def api_get_vendor_invoices():
             # Collectible amount excludes retainage
             collectible = max(0, remaining - retainage)
             
-            # Get job info
-            job_num = str(inv.get('job_number', '') or '').strip()
-            job_desc = ''
-            pm_name = ''
+            # Get job info from AP invoice and cross-reference with jobs data
+            job_num = str(inv.get('job_no', '') or '').strip()
+            job_desc = (inv.get('job_description', '') or '').strip()
+            pm_name = (inv.get('project_manager_name', '') or '').strip()
+            
+            # If job_desc or pm_name not in invoice, try to get from jobs data
             if job_num and job_num in job_info:
-                job_desc = job_info[job_num].get('description', '')
-                pm_name = job_info[job_num].get('pm', '')
+                if not job_desc:
+                    job_desc = job_info[job_num].get('description', '')
+                if not pm_name:
+                    pm_name = job_info[job_num].get('pm', '')
             
             # Parse invoice date and calculate days outstanding dynamically
             invoice_date_str = ''
