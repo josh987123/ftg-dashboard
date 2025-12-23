@@ -25475,7 +25475,7 @@ function renderArInvoiceRows(invoices, cell) {
         <th>Job #</th>
         <th>Job Desc.</th>
         <th>PM</th>
-        <th>Due Date</th>
+        <th>Invoice Date</th>
         <th class="text-right">Total Due</th>
         <th class="text-right">0-30</th>
         <th class="text-right">31-60</th>
@@ -25503,7 +25503,7 @@ function renderArInvoiceRows(invoices, cell) {
       <td class="ar-inv-job">${escapeHtml(inv.job_number || '')}</td>
       <td class="ar-inv-desc" title="${escapeHtml(inv.job_description || '')}">${escapeHtml(inv.job_description || '')}</td>
       <td class="ar-inv-pm" title="${escapeHtml(inv.project_manager || '')}">${escapeHtml(inv.project_manager || '')}</td>
-      <td class="ar-inv-date">${escapeHtml(inv.due_date || '')}</td>
+      <td class="ar-inv-date">${escapeHtml(inv.invoice_date || '')}</td>
       <td class="text-right">${totalDue > 0 ? formatCurrency(totalDue) : ''}</td>
       <td class="text-right">${current > 0 ? formatCurrency(current) : ''}</td>
       <td class="text-right">${days31_60 > 0 ? formatCurrency(days31_60) : ''}</td>

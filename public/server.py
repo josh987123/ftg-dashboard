@@ -4318,17 +4318,17 @@ def api_get_ar_aging():
             # Collectible amount excludes retainage (retainage tracked separately)
             collectible = max(0, calc_due - retainage)
             
-            # Calculate days past due dynamically from due date
-            # AR aging is based on how many days past the due date, not invoice date
+            # Calculate days outstanding from invoice date
+            # AR aging is based on how many days since the invoice date
             days = 0
-            date_val = inv.get('due_date')
+            date_val = inv.get('invoice_date')
             if date_val:
                 try:
                     excel_date = float(date_val)
                     if excel_date > 0:
-                        due_date = datetime.fromtimestamp((excel_date - 25569) * 86400)
-                        days = (datetime.now() - due_date).days
-                        # If not yet past due, treat as current (0 days)
+                        invoice_date = datetime.fromtimestamp((excel_date - 25569) * 86400)
+                        days = (datetime.now() - invoice_date).days
+                        # If negative (future date), treat as current (0 days)
                         if days < 0:
                             days = 0
                 except (ValueError, TypeError):
@@ -4480,41 +4480,41 @@ def api_get_customer_invoices():
             # Collectible amount excludes retainage
             collectible = max(0, calc_due - retainage)
             
-            # Parse due date and calculate days past due dynamically
-            due_date_str = ''
-            days_past_due = 0
-            due_date_val = inv.get('due_date')
-            if due_date_val:
+            # Parse invoice date and calculate days outstanding dynamically
+            invoice_date_str = ''
+            days_outstanding = 0
+            invoice_date_val = inv.get('invoice_date')
+            if invoice_date_val:
                 try:
-                    excel_date = float(due_date_val)
+                    excel_date = float(invoice_date_val)
                     if excel_date > 0:
-                        due_date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
-                        due_date_str = due_date_obj.strftime('%m/%d/%Y')
-                        days_past_due = (datetime.now() - due_date_obj).days
-                        if days_past_due < 0:
-                            days_past_due = 0
+                        invoice_date_obj = datetime.fromtimestamp((excel_date - 25569) * 86400)
+                        invoice_date_str = invoice_date_obj.strftime('%m/%d/%Y')
+                        days_outstanding = (datetime.now() - invoice_date_obj).days
+                        if days_outstanding < 0:
+                            days_outstanding = 0
                 except (ValueError, TypeError):
-                    due_date_str = str(due_date_val)
+                    invoice_date_str = str(invoice_date_val)
             
-            # Determine aging bucket
+            # Determine aging bucket based on days since invoice date
             aging_bucket = 'current'
-            if days_past_due > 90:
+            if days_outstanding > 90:
                 aging_bucket = 'days_90_plus'
-            elif days_past_due > 60:
+            elif days_outstanding > 60:
                 aging_bucket = 'days_61_90'
-            elif days_past_due > 30:
+            elif days_outstanding > 30:
                 aging_bucket = 'days_31_60'
             
             customer_invoices.append({
                 'invoice_number': inv.get('invoice_no', ''),
-                'due_date': due_date_str,
+                'invoice_date': invoice_date_str,
                 'job_number': inv.get('job_no', ''),
                 'job_description': inv.get('job_description', ''),
                 'project_manager': inv.get('project_manager_name', ''),
                 'collectible': collectible,
                 'retainage': retainage,
                 'aging_bucket': aging_bucket,
-                'days_past_due': days_past_due
+                'days_outstanding': days_outstanding
             })
             
             totals['invoice_amount'] += invoice_amount
@@ -4523,8 +4523,8 @@ def api_get_customer_invoices():
             totals['retainage'] += retainage
             totals['count'] += 1
         
-        # Sort by days past due descending
-        customer_invoices.sort(key=lambda x: x['days_past_due'], reverse=True)
+        # Sort by days outstanding descending
+        customer_invoices.sort(key=lambda x: x['days_outstanding'], reverse=True)
         
         return jsonify({
             'success': True,
