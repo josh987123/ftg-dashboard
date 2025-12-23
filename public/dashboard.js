@@ -907,31 +907,40 @@ function openPageChartFullscreen(chartId, title) {
     sourceChart = revChartInstance;
     const summaryTiles = document.getElementById("revSummaryTiles");
     if (summaryTiles) {
+      const cagrValue = document.getElementById("revCagrValue")?.textContent || "-";
+      const cagrNum = parseFloat(cagrValue.replace(/[%+]/g, '')) || 0;
+      const cagrColor = cagrNum >= 0 ? '#10b981' : '#ef4444';
       statsHtml = `
         <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value">${document.getElementById("revAvgValue")?.textContent || "-"}</div></div>
         <div class="stat-box"><div class="stat-label">Largest</div><div class="stat-value">${document.getElementById("revMaxValue")?.textContent || "-"}</div></div>
         <div class="stat-box"><div class="stat-label">Smallest</div><div class="stat-value">${document.getElementById("revMinValue")?.textContent || "-"}</div></div>
-        <div class="stat-box"><div class="stat-label">CAGR</div><div class="stat-value">${document.getElementById("revCagrValue")?.textContent || "-"}</div></div>
+        <div class="stat-box"><div class="stat-label">CAGR</div><div class="stat-value" style="color: ${cagrColor}">${cagrValue}</div></div>
       `;
     }
   } else if (chartId === "acctChart" && acctChartInstance) {
     sourceChart = acctChartInstance;
     const summaryTiles = document.getElementById("acctSummaryTiles");
     if (summaryTiles) {
+      const cagrValue = document.getElementById("acctCagrValue")?.textContent || "-";
+      const cagrNum = parseFloat(cagrValue.replace(/[%+]/g, '')) || 0;
+      const cagrColor = cagrNum >= 0 ? '#10b981' : '#ef4444';
       statsHtml = `
         <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value">${document.getElementById("acctAvgValue")?.textContent || "-"}</div></div>
         <div class="stat-box"><div class="stat-label">Largest</div><div class="stat-value">${document.getElementById("acctMaxValue")?.textContent || "-"}</div></div>
         <div class="stat-box"><div class="stat-label">Smallest</div><div class="stat-value">${document.getElementById("acctMinValue")?.textContent || "-"}</div></div>
-        <div class="stat-box"><div class="stat-label">CAGR</div><div class="stat-value">${document.getElementById("acctCagrValue")?.textContent || "-"}</div></div>
+        <div class="stat-box"><div class="stat-label">CAGR</div><div class="stat-value" style="color: ${cagrColor}">${cagrValue}</div></div>
       `;
     }
   } else if (chartId === "cashChart" && cashChartInstance) {
     sourceChart = cashChartInstance;
+    const growthValue = document.getElementById("cashGrowthValue")?.textContent || "-";
+    const growthNum = parseFloat(growthValue.replace(/[%+]/g, '')) || 0;
+    const growthColor = growthNum >= 0 ? '#10b981' : '#ef4444';
     statsHtml = `
       <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value">${document.getElementById("cashAvgValue")?.textContent || "-"}</div></div>
       <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value">${document.getElementById("cashMaxValue")?.textContent || "-"}</div></div>
       <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value">${document.getElementById("cashMinValue")?.textContent || "-"}</div></div>
-      <div class="stat-box"><div class="stat-label">Growth</div><div class="stat-value">${document.getElementById("cashGrowthValue")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">Growth</div><div class="stat-value" style="color: ${growthColor}">${growthValue}</div></div>
     `;
   }
   
