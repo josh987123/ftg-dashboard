@@ -18829,21 +18829,16 @@ function sortJobActuals() {
 }
 
 function updateJobActualsSummaryMetrics() {
-  // Filter to Active jobs only for key metrics, also respect PM filter
-  const pmFilter = document.getElementById('jaPmFilter')?.value || '';
-  const activeJobs = jobActualsData.filter(j => {
-    if (j.job_status !== 'A') return false;
-    if (pmFilter && j.project_manager_name !== pmFilter) return false;
-    return true;
-  });
-  const totalJobs = activeJobs.length;
-  const totalActualCost = activeJobs.reduce((sum, j) => sum + j.actual_cost, 0);
+  // Use filtered data based on PM tabs and status checkboxes
+  const jobs = jobActualsFiltered || [];
+  const totalJobs = jobs.length;
+  const totalActualCost = jobs.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
   
   // For Over/Under calculation, only include jobs with valid budget data (contract > 0 and cost > 0)
   // This matches the Over/Under Billing page logic for consistency
-  const jobsWithValidBudget = activeJobs.filter(j => (j.revised_contract || 0) > 0 && (j.revised_cost || 0) > 0);
+  const jobsWithValidBudget = jobs.filter(j => (j.revised_contract || 0) > 0 && (j.revised_cost || 0) > 0);
   const totalBilledRevenue = jobsWithValidBudget.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
-  const totalEarnedRevenue = jobsWithValidBudget.reduce((sum, j) => sum + j.earned_revenue, 0);
+  const totalEarnedRevenue = jobsWithValidBudget.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
   const totalOverUnder = totalBilledRevenue - totalEarnedRevenue;
   
   document.getElementById('jaTotalCount').textContent = totalJobs.toLocaleString();
