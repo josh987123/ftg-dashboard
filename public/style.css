@@ -9962,20 +9962,37 @@ body.dark-mode .page-size-select {
     margin: 0 !important;
   }
   
-  /* Quick sort buttons - more compact */
-  .quick-sort-buttons {
+  /* Quick sort buttons - compact single row on mobile */
+  .quick-sort-buttons,
+  #jobBudgets .quick-sort-buttons,
+  #jobActuals .quick-sort-buttons {
+    display: flex !important;
+    flex-wrap: nowrap !important;
     gap: 4px !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
-  .quick-sort-label {
-    font-size: 10px !important;
+  .quick-sort-label,
+  #jobBudgets .quick-sort-label,
+  #jobActuals .quick-sort-label {
+    font-size: 9px !important;
     margin-right: 2px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
   
-  .quick-sort-btn {
-    padding: 4px 8px !important;
-    font-size: 10px !important;
+  .quick-sort-btn,
+  #jobBudgets .quick-sort-btn,
+  #jobActuals .quick-sort-btn {
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   
   /* Config panels */
