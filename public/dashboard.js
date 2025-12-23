@@ -976,13 +976,16 @@ function openPageChartFullscreen(chartId, title) {
   } else if (chartId === "oubUnderbilledChart" && oubUnderbilledChart) {
     sourceChart = oubUnderbilledChart;
     statsHtml = "";
+  } else if (chartId === "ccRevenueChart" && ccRevenueChart) {
+    sourceChart = ccRevenueChart;
+    statsHtml = "";
   }
   
   if (!sourceChart) return;
   
   // Determine chart type
   const isDonutChart = chartId === "pmDonutChart" || chartId === "customerDonutChart";
-  const isHorizontalBarChart = chartId === "oubOverbilledChart" || chartId === "oubUnderbilledChart";
+  const isHorizontalBarChart = chartId === "oubOverbilledChart" || chartId === "oubUnderbilledChart" || chartId === "ccRevenueChart";
   
   const modal = document.getElementById("chartFullscreenModal");
   const titleEl = document.getElementById("chartFullscreenTitle");
@@ -1063,7 +1066,9 @@ function openPageChartFullscreen(chartId, title) {
       }
     });
   } else if (isHorizontalBarChart) {
-    // Horizontal bar chart for Over/Under billing
+    // Horizontal bar chart for Over/Under billing and Cost Codes
+    const isPercentageChart = chartId === "ccRevenueChart";
+    
     fullscreenChartInstance = new Chart(ctx, {
       type: "bar",
       data: {
@@ -1090,6 +1095,7 @@ function openPageChartFullscreen(chartId, title) {
             color: "#fff",
             formatter: (value) => {
               if (value === 0 || value === null) return "";
+              if (isPercentageChart) return value.toFixed(1) + "%";
               if (Math.abs(value) >= 1000000) return "$" + (value / 1000000).toFixed(1) + "M";
               if (Math.abs(value) >= 1000) return "$" + (value / 1000).toFixed(0) + "K";
               return "$" + value.toFixed(0);
@@ -1098,16 +1104,19 @@ function openPageChartFullscreen(chartId, title) {
         },
         scales: {
           x: { 
+            beginAtZero: true,
             grid: { color: "rgba(255,255,255,0.1)" },
             ticks: { 
               color: "#fff", 
               font: { size: 12 },
               callback: v => {
+                if (isPercentageChart) return v + "%";
                 if (Math.abs(v) >= 1000000) return "$" + (v / 1000000).toFixed(1) + "M";
                 if (Math.abs(v) >= 1000) return "$" + (v / 1000).toFixed(0) + "K";
                 return "$" + v;
               }
-            }
+            },
+            title: isPercentageChart ? { display: true, text: '% of Revenue', color: '#fff' } : undefined
           },
           y: {
             grid: { display: false },
