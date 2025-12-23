@@ -617,14 +617,18 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-top: 8px;
 }
 
+.year-slider-section > label {
+  display: block;
+  margin-bottom: 16px;
+}
+
 .year-slider-section .range-container {
   width: 100%;
   min-width: 200px;
   max-width: 700px;
   position: relative;
-  height: 30px;
-  display: flex;
-  align-items: center;
+  height: 24px;
+  margin-top: 12px;
 }
 
 .year-slider-section .range-container input[type="range"] {
@@ -632,29 +636,56 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   appearance: none;
   width: 100%;
   height: 6px;
-  background: var(--border-primary, #e2e8f0);
-  border-radius: 3px;
+  background: transparent;
   cursor: pointer;
   position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   pointer-events: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* First slider shows the track */
+.year-slider-section .range-container input[type="range"]:first-of-type {
+  background: var(--border-primary, #e2e8f0);
+  border-radius: 3px;
+}
+
+/* Second slider is transparent track */
+.year-slider-section .range-container input[type="range"]:last-of-type {
+  background: transparent;
+}
+
+.year-slider-section .range-container input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  background: transparent;
+  border-radius: 3px;
+}
+
+.year-slider-section .range-container input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: transparent;
+  border-radius: 3px;
 }
 
 .year-slider-section .range-container input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   background: #2563eb;
   border-radius: 50%;
   cursor: pointer;
   pointer-events: auto;
   border: 2px solid #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-top: -7px;
 }
 
 .year-slider-section .range-container input[type="range"]::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   background: #2563eb;
   border-radius: 50%;
   cursor: pointer;
@@ -663,7 +694,7 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-body.dark-mode .year-slider-section .range-container input[type="range"] {
+body.dark-mode .year-slider-section .range-container input[type="range"]:first-of-type {
   background: #475569;
 }
 
@@ -683,7 +714,7 @@ body.dark-mode .year-slider-section .range-container input[type="range"]::-moz-r
   font-size: 12px;
   font-weight: 600;
   color: #2563eb;
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 body.dark-mode .year-slider-section .range-labels {
@@ -702,6 +733,7 @@ body.dark-mode .year-slider-section .range-labels {
   
   .year-slider-section .range-labels {
     font-size: 11px;
+    margin-top: 10px;
   }
 }
 
