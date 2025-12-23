@@ -2289,8 +2289,9 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 .overview-metric-tile canvas {
-  width: 100% !important;
-  height: 180px !important;
+  display: block;
+  max-width: 100%;
+  height: 180px;
 }
 
 .metric-stats {
@@ -2437,7 +2438,8 @@ body.dark-mode .nav-item.nav-parent.expanded {
   }
   
   .overview-metric-tile canvas {
-    height: 160px !important;
+    max-width: 100%;
+    height: 160px;
   }
   
   .metric-stats {
