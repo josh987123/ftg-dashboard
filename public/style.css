@@ -617,9 +617,18 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-top: 8px;
 }
 
-.year-slider-section > label {
+.year-slider-section > label,
+.year-slider-section .year-range-label {
   display: block;
-  margin-bottom: 16px;
+  font-weight: 500;
+  font-size: 12px;
+  margin-bottom: 12px;
+  color: var(--text-primary, #374151);
+}
+
+body.dark-mode .year-slider-section > label,
+body.dark-mode .year-slider-section .year-range-label {
+  color: #e2e8f0;
 }
 
 .year-slider-section .range-container {
