@@ -6860,18 +6860,19 @@ body.dark-mode #accounts .summary-tile .tile-label {
     grid-template-columns: 1fr;
   }
   
-  .cash-chart-section {
-    width: 100%;
-    box-sizing: border-box;
-  }
-  
-  .cash-chart-section .chart-wrapper {
-    width: 100%;
-  }
-  
-  .cash-chart-section .chart-wrapper canvas {
+  #cashReports .cash-chart-section {
     width: 100% !important;
-    max-width: 100%;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  #cashReports .cash-chart-section .chart-wrapper {
+    width: 100% !important;
+  }
+  
+  #cashReports .cash-chart-section .chart-wrapper canvas {
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
   .cash-history-section {
