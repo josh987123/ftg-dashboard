@@ -16500,10 +16500,13 @@ function renderSinglePmHeatmap(container, pmName) {
     descEl.textContent = `Profit margin by job status for ${pmName}. Active = estimated margin, Closed = actual margin.`;
   }
   
-  // Use joFiltered which is already filtered by page-level PM tabs and status checkboxes
-  let baseJobs = joFiltered || [];
+  // Use joData (full dataset) filtered only by PM - NOT joFiltered
+  // The heatmap should always show all status rows regardless of checkbox selections
+  let baseJobs = (joData || []).filter(j => j.project_manager_name === pmName);
   
-  // Filter to only this PM's jobs with valid financial data
+  // Filter to only jobs with valid financial data
+  // For closed jobs: profit margin = (billed_revenue - actual_cost) / billed_revenue
+  // For active jobs: profit margin = (revised_contract - revised_cost) / revised_contract
   const jobs = baseJobs.filter(j => {
     const isClosed = j.job_status === 'C';
     if (isClosed) {
