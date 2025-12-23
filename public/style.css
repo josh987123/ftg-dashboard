@@ -16153,12 +16153,14 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
 }
 
 .ap-aging-summary .summary-label {
-  font-size: 10px;
+  font-size: clamp(7px, 0.7vw, 10px);
   color: #6b7280;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   margin-bottom: 6px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ap-aging-summary .summary-value {
@@ -16191,7 +16193,7 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
 /* Responsive font scaling for larger screens */
 @media (min-width: 1200px) {
   .ap-aging-summary .summary-label {
-    font-size: 11px;
+    font-size: clamp(8px, 0.65vw, 11px);
   }
   .ap-aging-summary .summary-value {
     font-size: 22px;
@@ -16203,7 +16205,7 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
 
 @media (min-width: 1600px) {
   .ap-aging-summary .summary-label {
-    font-size: 12px;
+    font-size: clamp(9px, 0.6vw, 12px);
   }
   .ap-aging-summary .summary-value {
     font-size: 24px;
@@ -16253,7 +16255,7 @@ body.dark-mode .ap-aging-chart-wrapper {
     font-size: 14px;
   }
   .ap-aging-summary .summary-label {
-    font-size: 9px;
+    font-size: 7px;
   }
 }
 
