@@ -17751,6 +17751,39 @@ body.dark-mode .pmr-legend-item {
   font-size: 14px;
 }
 
+/* Expandable columns for Job Overview tables */
+.pmr-over-under-table .pmr-expandable-col,
+.pmr-over-under-table th.pmr-expandable-col,
+.pmr-missing-budgets-table .pmr-mb-expandable-col,
+.pmr-missing-budgets-table th.pmr-mb-expandable-col {
+  display: none;
+}
+
+.pmr-over-under-table.expanded .pmr-expandable-col,
+.pmr-over-under-table.expanded th.pmr-expandable-col,
+.pmr-missing-budgets-table.expanded .pmr-mb-expandable-col,
+.pmr-missing-budgets-table.expanded th.pmr-mb-expandable-col {
+  display: table-cell;
+}
+
+/* Subtotal row styling */
+.pmr-subtotal-row td {
+  font-weight: 600;
+  background: #f3f4f6;
+  border-top: 2px solid #9ca3af;
+  border-bottom: 2px solid #9ca3af;
+}
+
+.pmr-subtotal-row td:first-child {
+  font-weight: 700;
+}
+
+[data-theme="dark"] .pmr-subtotal-row td,
+body.dark-mode .pmr-subtotal-row td {
+  background: #334155;
+  border-color: #64748b;
+}
+
 /* Dark Mode */
 [data-theme="dark"] .pmr-filter-bar,
 body.dark-mode .pmr-filter-bar {

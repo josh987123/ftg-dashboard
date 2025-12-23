@@ -16873,12 +16873,15 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
     return;
   }
   
-  // Calculate portfolio averages and PM metrics
+  // Calculate portfolio averages and PM metrics using full joData (not status-filtered)
   const allActiveJobs = joData.filter(j => j.job_status === 'A' && !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name));
-  const pmJobs = jobs.filter(j => j.job_status === 'A');
+  // Get PM's active jobs from full dataset (not filtered by status checkboxes)
+  const pmJobs = joData.filter(j => j.job_status === 'A' && j.project_manager_name === selectedPm);
   
   if (pmJobs.length === 0) {
     if (legendBox) legendBox.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">No active jobs for selected PM</div>';
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     return;
   }
   
@@ -17015,7 +17018,31 @@ function renderJoClientSummaryTable(jobs) {
     margin: data.contract > 0 ? (data.profit / data.contract * 100) : 0
   })).sort((a, b) => b.contract - a.contract);
   
-  tbody.innerHTML = clients.slice(0, 10).map(c => `
+  // Calculate totals for subtotal row
+  const totals = clients.reduce((acc, c) => ({
+    contract: acc.contract + c.contract,
+    cost: acc.cost + c.cost,
+    profit: acc.profit + c.profit,
+    billedToDate: acc.billedToDate + c.billedToDate,
+    costToDate: acc.costToDate + c.costToDate
+  }), { contract: 0, cost: 0, profit: 0, billedToDate: 0, costToDate: 0 });
+  const avgMargin = totals.contract > 0 ? (totals.profit / totals.contract * 100) : 0;
+  
+  // Subtotal row first
+  let html = `
+    <tr class="pmr-subtotal-row">
+      <td>TOTAL (${clients.length})</td>
+      <td class="text-right">${formatCurrencyCompact(totals.contract)}</td>
+      <td class="text-right">${formatCurrencyCompact(totals.cost)}</td>
+      <td class="text-right">${formatCurrencyCompact(totals.profit)}</td>
+      <td class="text-right" style="color:${avgMargin >= 0 ? '#10b981' : '#ef4444'}">${avgMargin.toFixed(1)}%</td>
+      <td class="text-right">-</td>
+      <td class="text-right">${formatCurrencyCompact(totals.billedToDate)}</td>
+      <td class="text-right">${formatCurrencyCompact(totals.costToDate)}</td>
+    </tr>
+  `;
+  
+  html += clients.slice(0, 10).map(c => `
     <tr>
       <td>${c.name}</td>
       <td class="text-right">${formatCurrencyCompact(c.contract)}</td>
@@ -17027,6 +17054,8 @@ function renderJoClientSummaryTable(jobs) {
       <td class="text-right">${formatCurrencyCompact(c.costToDate)}</td>
     </tr>
   `).join('');
+  
+  tbody.innerHTML = html;
   
   if (countEl) countEl.textContent = `${clients.length} clients`;
 }
@@ -17042,7 +17071,30 @@ function renderJoOverUnderTable(jobs) {
     pctComplete: j.revised_contract > 0 ? ((j.earned_revenue || 0) / j.revised_contract * 100) : 0
   })).sort((a, b) => Math.abs(b.overUnder) - Math.abs(a.overUnder));
   
-  tbody.innerHTML = jobsWithOverUnder.slice(0, 15).map(j => `
+  // Calculate totals for subtotal row
+  const totals = jobsWithOverUnder.reduce((acc, j) => ({
+    contract: acc.contract + (j.revised_contract || 0),
+    actualCost: acc.actualCost + (j.actual_cost || 0),
+    earnedRevenue: acc.earnedRevenue + (j.earned_revenue || 0),
+    billedRevenue: acc.billedRevenue + (j.billed_revenue || 0),
+    overUnder: acc.overUnder + j.overUnder
+  }), { contract: 0, actualCost: 0, earnedRevenue: 0, billedRevenue: 0, overUnder: 0 });
+  const avgPctComplete = totals.contract > 0 ? (totals.earnedRevenue / totals.contract * 100) : 0;
+  
+  // Subtotal row first
+  let html = `
+    <tr class="pmr-subtotal-row">
+      <td colspan="3">TOTAL (${jobsWithOverUnder.length} jobs)</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.contract)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.actualCost)}</td>
+      <td class="text-right pmr-expandable-col">${avgPctComplete.toFixed(1)}%</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.earnedRevenue)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.billedRevenue)}</td>
+      <td class="text-right" style="color:${totals.overUnder >= 0 ? '#10b981' : '#ef4444'};font-weight:600;">${formatCurrencyCompact(totals.overUnder)}</td>
+    </tr>
+  `;
+  
+  html += jobsWithOverUnder.slice(0, 15).map(j => `
     <tr>
       <td>${j.job_no}</td>
       <td>${j.job_description || '-'}</td>
@@ -17055,6 +17107,8 @@ function renderJoOverUnderTable(jobs) {
       <td class="text-right" style="color:${j.overUnder >= 0 ? '#10b981' : '#ef4444'};font-weight:600;">${formatCurrencyCompact(j.overUnder)}</td>
     </tr>
   `).join('');
+  
+  tbody.innerHTML = html;
   
   if (countEl) countEl.textContent = `${jobsWithOverUnder.length} jobs`;
 }
@@ -17072,7 +17126,27 @@ function renderJoMissingBudgetsTable(jobs) {
     return actualCost > 2500 && (budgetedRev === 0 || budgetedCost === 0);
   }).sort((a, b) => (b.actual_cost || 0) - (a.actual_cost || 0));
   
-  tbody.innerHTML = missingBudgets.slice(0, 15).map(j => {
+  // Calculate totals for subtotal row
+  const totals = missingBudgets.reduce((acc, j) => ({
+    actualCost: acc.actualCost + (j.actual_cost || 0),
+    budgetedRev: acc.budgetedRev + (j.revised_contract || 0),
+    budgetedCost: acc.budgetedCost + (j.revised_cost || 0)
+  }), { actualCost: 0, budgetedRev: 0, budgetedCost: 0 });
+  
+  // Subtotal row first
+  let html = `
+    <tr class="pmr-subtotal-row">
+      <td colspan="2">TOTAL (${missingBudgets.length} jobs)</td>
+      <td class="pmr-mb-expandable-col">-</td>
+      <td class="pmr-mb-expandable-col">-</td>
+      <td class="text-right">${formatCurrencyCompact(totals.actualCost)}</td>
+      <td class="text-right">${formatCurrencyCompact(totals.budgetedRev)}</td>
+      <td class="text-right">${formatCurrencyCompact(totals.budgetedCost)}</td>
+      <td>-</td>
+    </tr>
+  `;
+  
+  html += missingBudgets.slice(0, 15).map(j => {
     const issue = [];
     if (!j.revised_contract) issue.push('No Revenue');
     if (!j.revised_cost) issue.push('No Cost');
@@ -17089,6 +17163,8 @@ function renderJoMissingBudgetsTable(jobs) {
       </tr>
     `;
   }).join('');
+  
+  tbody.innerHTML = html;
   
   if (countEl) countEl.textContent = `${missingBudgets.length} jobs`;
 }
