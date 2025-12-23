@@ -8954,27 +8954,42 @@ function updateAccountView(data) {
       currentValues = currentValues.map((v, i) => i === currentMonth ? null : v);
     }
     
-    const barColors = currentValues.map((v, i) => {
-      if (isCurrentYear && i === currentMonth && !excludeCurrent) {
-        hasPartialPeriod = true;
-        return "#f59e0b";
-      }
-      return "#3b82f6";
-    });
+    // Track which indices are current month (partial period)
+    const currentMonthIdx = isCurrentYear && !excludeCurrent ? currentMonth : -1;
+    if (isCurrentYear && !excludeCurrent) hasPartialPeriod = true;
     
     if (compare) {
       const priorValues = getAccountMonthlyValues(acctNum, year - 1, data);
       datasets.push({
         label: `${year - 1}`,
         data: priorValues,
-        backgroundColor: "#dc2626"
+        backgroundColor: function(context) {
+          const chart = context.chart;
+          const { ctx, chartArea } = chart;
+          return createBarGradient(ctx, chartArea, gradientColors.red.start, gradientColors.red.end);
+        },
+        borderRadius: 4,
+        barPercentage: 0.9,
+        categoryPercentage: 0.85
       });
     }
     
     datasets.push({
       label: `${year}`,
       data: currentValues,
-      backgroundColor: barColors
+      backgroundColor: function(context) {
+        const chart = context.chart;
+        const { ctx, chartArea } = chart;
+        const dataIndex = context.dataIndex;
+        // Use orange gradient for current month
+        if (dataIndex === currentMonthIdx) {
+          return createBarGradient(ctx, chartArea, gradientColors.orange.start, gradientColors.orange.end);
+        }
+        return createBarGradient(ctx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
+      },
+      borderRadius: 4,
+      barPercentage: 0.9,
+      categoryPercentage: 0.85
     });
     
     subtitle = `Monthly – ${year}`;
@@ -8994,27 +9009,42 @@ function updateAccountView(data) {
       monthly.slice(9, 12).reduce((a, b) => a + b, 0)
     ];
     
-    const barColors = currentValues.map((v, i) => {
-      if (isCurrentYear && i === currentQuarter) {
-        hasPartialPeriod = true;
-        return "#f59e0b";
-      }
-      return "#3b82f6";
-    });
+    // Track which index is current quarter (partial period)
+    const currentQuarterIdx = isCurrentYear ? currentQuarter : -1;
+    if (isCurrentYear) hasPartialPeriod = true;
     
     if (compare) {
       const priorValues = getAccountQuarterlyValues(acctNum, year - 1, data);
       datasets.push({
         label: `${year - 1}`,
         data: priorValues,
-        backgroundColor: "#dc2626"
+        backgroundColor: function(context) {
+          const chart = context.chart;
+          const { ctx, chartArea } = chart;
+          return createBarGradient(ctx, chartArea, gradientColors.red.start, gradientColors.red.end);
+        },
+        borderRadius: 4,
+        barPercentage: 0.9,
+        categoryPercentage: 0.85
       });
     }
     
     datasets.push({
       label: `${year}`,
       data: currentValues,
-      backgroundColor: barColors
+      backgroundColor: function(context) {
+        const chart = context.chart;
+        const { ctx, chartArea } = chart;
+        const dataIndex = context.dataIndex;
+        // Use orange gradient for current quarter
+        if (dataIndex === currentQuarterIdx) {
+          return createBarGradient(ctx, chartArea, gradientColors.orange.start, gradientColors.orange.end);
+        }
+        return createBarGradient(ctx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
+      },
+      borderRadius: 4,
+      barPercentage: 0.9,
+      categoryPercentage: 0.85
     });
     
     subtitle = `Quarterly – ${year}`;
@@ -9022,7 +9052,7 @@ function updateAccountView(data) {
     const start = +document.getElementById("acctRangeStart").value;
     const end = +document.getElementById("acctRangeEnd").value;
     const annualValues = [];
-    const barColors = [];
+    const currentYearIndices = [];
     
     for (let y = start; y <= end; y++) {
       labels.push(y.toString());
@@ -9036,16 +9066,26 @@ function updateAccountView(data) {
       
       if (y === currentYear) {
         hasPartialPeriod = true;
-        barColors.push("#f59e0b");
-      } else {
-        barColors.push("#3b82f6");
+        currentYearIndices.push(annualValues.length - 1);
       }
     }
     
     datasets.push({
       label: `Account ${acctNum}`,
       data: annualValues,
-      backgroundColor: barColors
+      backgroundColor: function(context) {
+        const chart = context.chart;
+        const { ctx, chartArea } = chart;
+        const dataIndex = context.dataIndex;
+        // Use orange gradient for current year
+        if (currentYearIndices.includes(dataIndex)) {
+          return createBarGradient(ctx, chartArea, gradientColors.orange.start, gradientColors.orange.end);
+        }
+        return createBarGradient(ctx, chartArea, gradientColors.blue.start, gradientColors.blue.end);
+      },
+      borderRadius: 4,
+      barPercentage: 0.9,
+      categoryPercentage: 0.85
     });
     subtitle = `Annual – ${start} to ${end}`;
   }
@@ -26086,12 +26126,13 @@ function updateApAgingChart(totals) {
   const yMax = maxValue > 0 ? maxValue * 1.15 : undefined; // 15% padding above max
   
   // Aging bucket colors: green, yellow, orange, red, blue (retainage)
+  // Colors go from darker (bottom) to lighter (top) for consistency with other charts
   const agingColors = [
-    { start: '#22c55e', end: '#16a34a' },  // 0-30 days - green
-    { start: '#eab308', end: '#ca8a04' },  // 31-60 days - yellow
-    { start: '#f97316', end: '#ea580c' },  // 61-90 days - orange
-    { start: '#ef4444', end: '#dc2626' },  // 90+ days - red
-    { start: '#3b82f6', end: '#2563eb' }   // Retainage - blue
+    { start: '#15803d', end: '#4ade80' },  // 0-30 days - green (dark→light)
+    { start: '#a16207', end: '#fde047' },  // 31-60 days - yellow (dark→light)
+    { start: '#c2410c', end: '#fdba74' },  // 61-90 days - orange (dark→light)
+    { start: '#b91c1c', end: '#fca5a5' },  // 90+ days - red (dark→light)
+    { start: '#1d4ed8', end: '#93c5fd' }   // Retainage - blue (dark→light)
   ];
   
   const data = {
@@ -26577,12 +26618,13 @@ function updateArAgingChart(totals) {
   const yMax = maxValue > 0 ? maxValue * 1.15 : undefined;
   
   // Aging bucket colors: green, yellow, orange, red, blue (retainage)
+  // Colors go from darker (bottom) to lighter (top) for consistency with other charts
   const agingColors = [
-    { start: '#22c55e', end: '#16a34a' },  // 0-30 days - green
-    { start: '#eab308', end: '#ca8a04' },  // 31-60 days - yellow
-    { start: '#f97316', end: '#ea580c' },  // 61-90 days - orange
-    { start: '#ef4444', end: '#dc2626' },  // 90+ days - red
-    { start: '#3b82f6', end: '#2563eb' }   // Retainage - blue
+    { start: '#15803d', end: '#4ade80' },  // 0-30 days - green (dark→light)
+    { start: '#a16207', end: '#fde047' },  // 31-60 days - yellow (dark→light)
+    { start: '#c2410c', end: '#fdba74' },  // 61-90 days - orange (dark→light)
+    { start: '#b91c1c', end: '#fca5a5' },  // 90+ days - red (dark→light)
+    { start: '#1d4ed8', end: '#93c5fd' }   // Retainage - blue (dark→light)
   ];
   
   const data = {
