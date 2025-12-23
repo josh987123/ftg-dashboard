@@ -13737,6 +13737,43 @@ function getOldestTransactionDate() {
   return oldestDate.toISOString().split('T')[0];
 }
 
+function getDailyDepositsAndPayments(dates, selectedAccounts) {
+  const result = { deposits: {}, payments: {} };
+  dates.forEach(d => {
+    result.deposits[d] = 0;
+    result.payments[d] = 0;
+  });
+  
+  if (!cashData.transactions || cashData.transactions.length === 0) return result;
+  
+  const excludePatterns = ['transfer', 'deposit system'];
+  
+  cashData.transactions.forEach(txn => {
+    if (!txn.date || !txn.account) return;
+    
+    const txnDate = new Date(txn.date);
+    if (isNaN(txnDate.getTime())) return;
+    const dateKey = txnDate.toISOString().split('T')[0];
+    
+    if (!dates.includes(dateKey)) return;
+    
+    const desc = (txn.description || '').toLowerCase();
+    const shouldExclude = excludePatterns.some(pattern => desc.includes(pattern));
+    if (shouldExclude) return;
+    
+    const amount = parseFloat(txn.amount) || 0;
+    if (amount === 0) return;
+    
+    if (amount > 0) {
+      result.deposits[dateKey] += amount;
+    } else {
+      result.payments[dateKey] += Math.abs(amount);
+    }
+  });
+  
+  return result;
+}
+
 function formatDateForDisplay(dateStr) {
   const date = new Date(dateStr + 'T12:00:00');
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -13873,6 +13910,8 @@ function renderCashChart() {
     return {
       label: cfg.label,
       data: data,
+      type: 'line',
+      yAxisID: 'y',
       backgroundColor: colors[idx % colors.length] + '80',
       borderColor: colors[idx % colors.length],
       borderWidth: 2,
@@ -13880,6 +13919,7 @@ function renderCashChart() {
       tension: 0.3,
       pointRadius: 0,
       pointHoverRadius: 4,
+      order: 1,
       datalabels: (showDataLabels && stackBars && isTopDataset) ? {
         display: true,
         align: 'end',
@@ -13896,6 +13936,43 @@ function renderCashChart() {
         }
       } : { display: false }
     };
+  });
+  
+  // Get daily deposits and payments (excluding transfers)
+  const dailyTxns = getDailyDepositsAndPayments(dates, cashSelectedAccounts);
+  const depositData = dates.map(d => dailyTxns.deposits[d] || 0);
+  const paymentData = dates.map(d => -(dailyTxns.payments[d] || 0));
+  
+  // Add deposit bars (green, positive)
+  datasets.push({
+    label: 'Deposits',
+    data: depositData,
+    type: 'bar',
+    yAxisID: 'y2',
+    backgroundColor: 'rgba(34, 197, 94, 0.7)',
+    borderColor: '#22c55e',
+    borderWidth: 1,
+    borderRadius: 2,
+    order: 2,
+    barPercentage: 0.6,
+    categoryPercentage: 0.8,
+    datalabels: { display: false }
+  });
+  
+  // Add payment bars (red, negative)
+  datasets.push({
+    label: 'Payments',
+    data: paymentData,
+    type: 'bar',
+    yAxisID: 'y2',
+    backgroundColor: 'rgba(239, 68, 68, 0.7)',
+    borderColor: '#ef4444',
+    borderWidth: 1,
+    borderRadius: 2,
+    order: 2,
+    barPercentage: 0.6,
+    categoryPercentage: 0.8,
+    datalabels: { display: false }
   });
   
   // Labels
@@ -14008,12 +14085,26 @@ function renderCashChart() {
         },
         y: {
           stacked: stackBars,
+          position: 'left',
           min: 10000000,
           max: yMax,
           grid: { color: themeColors.gridColor },
           ticks: {
             color: themeColors.textColor,
             font: { size: isMobile ? 10 : 12 },
+            callback: v => {
+              if (Math.abs(v) >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
+              if (Math.abs(v) >= 1000) return '$' + (v/1000).toFixed(0) + 'K';
+              return '$' + v;
+            }
+          }
+        },
+        y2: {
+          position: 'right',
+          grid: { display: false },
+          ticks: {
+            color: themeColors.textColor,
+            font: { size: isMobile ? 9 : 11 },
             callback: v => {
               if (Math.abs(v) >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
               if (Math.abs(v) >= 1000) return '$' + (v/1000).toFixed(0) + 'K';
