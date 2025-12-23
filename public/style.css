@@ -15936,18 +15936,69 @@ body.dark-mode .ar-invoice-row td {
   justify-content: stretch;
 }
 
-/* Make radar section take ~60% and metrics ~40% to fill height */
+/* Make radar section and metrics fill the left column height */
 .pmr-left-column .pm-radar-section {
-  flex: 3;
+  flex: 1;
   display: flex;
   flex-direction: column;
+  padding: 12px;
+  margin-top: 0;
+}
+
+.pmr-left-column .pm-radar-section .radar-description {
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.pmr-left-column .pm-radar-section .radar-chart-container {
+  flex: 1;
+  height: auto;
+  min-height: 320px;
+  max-width: none;
+  margin: 0;
+}
+
+.pmr-left-column .pm-radar-section .radar-legend-box {
+  margin-top: 8px;
 }
 
 .pmr-left-column .pmr-metrics-wrapper {
-  flex: 2;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  padding: 12px 16px;
+  margin-bottom: 0;
+}
+
+/* Desktop: Bigger metric tiles with larger text */
+@media (min-width: 1025px) {
+  .pmr-left-column .pmr-metric-tile {
+    padding: 12px 10px;
+  }
+  
+  .pmr-left-column .pmr-metric-label {
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+  
+  .pmr-left-column .pmr-metric-value {
+    font-size: 18px;
+  }
+  
+  .pmr-left-column .pmr-metric-subtext {
+    font-size: 11px;
+    margin-top: 3px;
+  }
+  
+  .pmr-left-column .pmr-metric-trend {
+    font-size: 11px;
+    margin-top: 3px;
+  }
+  
+  .pmr-left-column .pmr-metrics-row {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
 }
 
 .pmr-right-column {
