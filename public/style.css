@@ -15933,6 +15933,21 @@ body.dark-mode .ar-invoice-row td {
   max-width: 50%;
   display: flex;
   flex-direction: column;
+  justify-content: stretch;
+}
+
+/* Make radar section take ~60% and metrics ~40% to fill height */
+.pmr-left-column .pm-radar-section {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+}
+
+.pmr-left-column .pmr-metrics-wrapper {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .pmr-right-column {
