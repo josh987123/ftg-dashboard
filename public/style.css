@@ -18115,6 +18115,138 @@ body.dark-mode .dashboard-section > h2 {
   .stat-label {
     font-size: clamp(9px, 2vw, 12px) !important;
   }
+  
+  /* --- INCOME STATEMENT PAGE --- */
+  #incomeStatement .config-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  #incomeStatement .is-controls-row {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  #incomeStatement .table-wrapper {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+  }
+  
+  #incomeStatementTable {
+    font-size: 10px !important;
+  }
+  
+  #incomeStatementTable th,
+  #incomeStatementTable td {
+    padding: 6px 8px !important;
+    white-space: nowrap !important;
+  }
+  
+  .is-waterfall-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+  
+  /* --- BALANCE SHEET PAGE --- */
+  #balanceSheet .config-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  #balanceSheet .table-wrapper {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+  }
+  
+  #balanceSheetTable {
+    font-size: 10px !important;
+  }
+  
+  #balanceSheetTable th,
+  #balanceSheetTable td {
+    padding: 6px 8px !important;
+    white-space: nowrap !important;
+  }
+  
+  /* --- CASH FLOWS PAGE --- */
+  #cashFlows .config-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  #cashFlows .table-wrapper {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+  }
+  
+  #cashFlowTable {
+    font-size: 10px !important;
+  }
+  
+  #cashFlowTable th,
+  #cashFlowTable td {
+    padding: 6px 8px !important;
+    white-space: nowrap !important;
+  }
+  
+  /* --- PM REPORT DESKTOP LAYOUT --- */
+  .pmr-desktop-layout {
+    flex-direction: column !important;
+  }
+  
+  .pmr-left-column {
+    max-width: 100% !important;
+  }
+  
+  .pmr-right-column {
+    width: 100% !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .pmr-right-column .pmr-chart-container {
+    flex: 1 1 calc(50% - 6px) !important;
+    min-width: 180px !important;
+  }
+  
+  /* --- MISSING BUDGETS PAGE --- */
+  #missingBudgets .config-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  #missingBudgets .table-wrapper {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+  }
+  
+  .mb-tabs {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+  }
+  
+  .mb-tab {
+    flex-shrink: 0 !important;
+    font-size: 11px !important;
+    padding: 8px 12px !important;
+  }
+  
+  /* --- JOB ANALYTICS PAGE --- */
+  #jobAnalytics .config-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .analytics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  
+  .analytics-card {
+    padding: 10px !important;
+  }
 }
 
 /* Tablet landscape (more space available) */
