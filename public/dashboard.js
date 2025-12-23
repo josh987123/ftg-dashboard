@@ -970,12 +970,19 @@ function openPageChartFullscreen(chartId, title) {
   } else if (chartId === "customerDonutChart" && customerDonutChart) {
     sourceChart = customerDonutChart;
     statsHtml = "";
+  } else if (chartId === "oubOverbilledChart" && oubOverbilledChart) {
+    sourceChart = oubOverbilledChart;
+    statsHtml = "";
+  } else if (chartId === "oubUnderbilledChart" && oubUnderbilledChart) {
+    sourceChart = oubUnderbilledChart;
+    statsHtml = "";
   }
   
   if (!sourceChart) return;
   
-  // Determine if this is a doughnut chart
+  // Determine chart type
   const isDonutChart = chartId === "pmDonutChart" || chartId === "customerDonutChart";
+  const isHorizontalBarChart = chartId === "oubOverbilledChart" || chartId === "oubUnderbilledChart";
   
   const modal = document.getElementById("chartFullscreenModal");
   const titleEl = document.getElementById("chartFullscreenTitle");
@@ -1051,6 +1058,60 @@ function openPageChartFullscreen(chartId, title) {
                 return `${formatCurrencyCompact(value)} (${pct}%)`;
               }
             }
+          }
+        }
+      }
+    });
+  } else if (isHorizontalBarChart) {
+    // Horizontal bar chart for Over/Under billing
+    fullscreenChartInstance = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: [...sourceChart.data.labels],
+        datasets: sourceChart.data.datasets.map(ds => ({
+          ...ds,
+          data: [...ds.data]
+        }))
+      },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        layout: { padding: { right: 60 } },
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            display: true,
+            anchor: "end",
+            align: "right",
+            offset: 4,
+            font: { size: 12, weight: "600" },
+            color: "#fff",
+            formatter: (value) => {
+              if (value === 0 || value === null) return "";
+              if (Math.abs(value) >= 1000000) return "$" + (value / 1000000).toFixed(1) + "M";
+              if (Math.abs(value) >= 1000) return "$" + (value / 1000).toFixed(0) + "K";
+              return "$" + value.toFixed(0);
+            }
+          }
+        },
+        scales: {
+          x: { 
+            grid: { color: "rgba(255,255,255,0.1)" },
+            ticks: { 
+              color: "#fff", 
+              font: { size: 12 },
+              callback: v => {
+                if (Math.abs(v) >= 1000000) return "$" + (v / 1000000).toFixed(1) + "M";
+                if (Math.abs(v) >= 1000) return "$" + (v / 1000).toFixed(0) + "K";
+                return "$" + v;
+              }
+            }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: "#fff", font: { size: 12 } }
           }
         }
       }
