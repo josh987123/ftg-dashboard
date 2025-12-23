@@ -16304,6 +16304,79 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
   margin-bottom: 16px;
   display: block;
   text-align: left;
+  position: relative;
+}
+
+.ap-aging-chart-section .chart-header {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.ap-aging-chart-section .chart-header-title {
+  text-align: center;
+}
+
+.ap-aging-chart-section .chart-header-title h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #1e293b;
+}
+
+[data-theme="dark"] .ap-aging-chart-section .chart-header-title h3 {
+  color: #f1f5f9;
+}
+
+.ap-aging-chart-section .chart-header-subtitle {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+[data-theme="dark"] .ap-aging-chart-section .chart-header-subtitle {
+  color: #94a3b8;
+}
+
+.ap-aging-chart-section .chart-header-controls {
+  position: absolute;
+  top: 0;
+  right: 16px;
+}
+
+.ap-aging-chart-section .page-chart-expand-btn {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ap-aging-chart-section .page-chart-expand-btn:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+[data-theme="dark"] .ap-aging-chart-section .page-chart-expand-btn {
+  background: #334155;
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .ap-aging-chart-section .page-chart-expand-btn:hover {
+  background: #475569;
+  color: #f1f5f9;
 }
 
 .ap-aging-chart-wrapper {
@@ -16312,7 +16385,7 @@ body.dark-mode .page-filter-bar .filter-input::placeholder {
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 16px;
+  padding: 48px 16px 16px 16px;
   box-sizing: border-box;
 }
 
