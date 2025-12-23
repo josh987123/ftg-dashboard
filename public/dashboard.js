@@ -16436,6 +16436,7 @@ function renderProfitabilityHeatmap() {
   sizeRanges.forEach(range => {
     html += `<div class="heatmap-cell header">${range.label}</div>`;
   });
+  html += '<div class="heatmap-cell header">Avg</div>';
   html += '</div>';
   
   // Data rows - sort groups by overall margin (highest first)
@@ -16447,11 +16448,11 @@ function renderProfitabilityHeatmap() {
       totalCost += cell.totalCost;
     });
     const overallMargin = totalContract > 0 ? ((totalContract - totalCost) / totalContract) * 100 : 0;
-    return { group, overallMargin };
+    return { group, overallMargin, totalContract, totalCost };
   });
   groupStats.sort((a, b) => b.overallMargin - a.overallMargin);
   
-  groupStats.forEach(({ group }) => {
+  groupStats.forEach(({ group, overallMargin, totalContract }) => {
     html += '<div class="heatmap-row">';
     html += `<div class="heatmap-cell pm-label">${group}</div>`;
     
@@ -16471,8 +16472,71 @@ function renderProfitabilityHeatmap() {
       }
     });
     
+    // PM weighted average column
+    const avgBgColor = getHeatmapColor(overallMargin, minMargin, maxMargin);
+    const avgTooltip = `Weighted avg margin for ${group} | Total: ${formatCurrencyCompact(totalContract)}`;
+    html += `<div class="heatmap-cell data-cell heatmap-tooltip" style="background:${avgBgColor}">
+      ${overallMargin.toFixed(1)}%
+      <span class="tooltip-content">${avgTooltip}</span>
+    </div>`;
+    
     html += '</div>';
   });
+  
+  // Subtotal row - only show when all PMs are displayed (not filtered to single PM)
+  const selectedPm = getSelectedPmForPage('jo');
+  const isAllPms = !selectedPm || selectedPm === '__ALL__';
+  
+  if (isAllPms && groupStats.length > 1) {
+    // Calculate totals for each size range
+    const rangeTotals = {};
+    sizeRanges.forEach(range => {
+      rangeTotals[range.label] = { totalContract: 0, totalCost: 0, jobCount: 0 };
+    });
+    
+    let grandTotalContract = 0, grandTotalCost = 0;
+    
+    Object.keys(matrix).forEach(group => {
+      sizeRanges.forEach(range => {
+        const cell = matrix[group][range.label];
+        rangeTotals[range.label].totalContract += cell.totalContract;
+        rangeTotals[range.label].totalCost += cell.totalCost;
+        rangeTotals[range.label].jobCount += cell.jobCount;
+        grandTotalContract += cell.totalContract;
+        grandTotalCost += cell.totalCost;
+      });
+    });
+    
+    html += '<div class="heatmap-row subtotal-row">';
+    html += '<div class="heatmap-cell pm-label" style="font-weight:700;">AVERAGE</div>';
+    
+    sizeRanges.forEach(range => {
+      const rt = rangeTotals[range.label];
+      if (rt.jobCount === 0 || rt.totalContract === 0) {
+        html += '<div class="heatmap-cell no-data">-</div>';
+      } else {
+        const avgMargin = ((rt.totalContract - rt.totalCost) / rt.totalContract) * 100;
+        const bgColor = getHeatmapColor(avgMargin, minMargin, maxMargin);
+        const tooltip = `${rt.jobCount} job${rt.jobCount > 1 ? 's' : ''} | Avg: ${avgMargin.toFixed(1)}% margin | Total: ${formatCurrencyCompact(rt.totalContract)}`;
+        
+        html += `<div class="heatmap-cell data-cell heatmap-tooltip" style="background:${bgColor}">
+          ${avgMargin.toFixed(1)}%
+          <span class="tooltip-content">${tooltip}</span>
+        </div>`;
+      }
+    });
+    
+    // Grand total average
+    const grandAvgMargin = grandTotalContract > 0 ? ((grandTotalContract - grandTotalCost) / grandTotalContract) * 100 : 0;
+    const grandBgColor = getHeatmapColor(grandAvgMargin, minMargin, maxMargin);
+    const grandTooltip = `Overall weighted average | Total: ${formatCurrencyCompact(grandTotalContract)}`;
+    html += `<div class="heatmap-cell data-cell heatmap-tooltip" style="background:${grandBgColor}">
+      ${grandAvgMargin.toFixed(1)}%
+      <span class="tooltip-content">${grandTooltip}</span>
+    </div>`;
+    
+    html += '</div>';
+  }
   
   html += '</div>';
   container.innerHTML = html;

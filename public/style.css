@@ -20075,6 +20075,14 @@ body.dark-mode .dashboard-section > h2 {
   font-weight: 400;
 }
 
+.heatmap-row.subtotal-row {
+  border-top: 2px solid var(--border-color);
+}
+
+.heatmap-row.subtotal-row .heatmap-cell {
+  border-top: 2px solid var(--text-muted);
+}
+
 .heatmap-tooltip {
   position: relative;
 }
