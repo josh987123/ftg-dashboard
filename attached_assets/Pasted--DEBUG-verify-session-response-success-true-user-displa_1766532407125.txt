@@ -1,0 +1,25 @@
+[DEBUG] verify-session response: {"success":true,"user":{"displayName":"Josh","email":"joshl@ftgbuilders.com","id":3,"permissions":["overview","revenue","account","income_statement","balance_sheet","cash_flow","over_under","receivables","job_analytics","cash_balances","admin","job_budgets","missing_budgets","job_actuals","cost_detail","job_overview","payments","cost_codes","over_under_billing","ap_aging","ar_aging","pm_report","ai_insights"],"role":"admin"}}
+dashboard.js?v=20251223a:24677 [DEBUG] userRole: admin isAdmin: true
+dashboard.js?v=20251223a:24698 [DEBUG] adminNavItem element: <li class=​"nav-item admin-nav-item" data-section=​"admin" id=​"adminNavItem">​…​</li>​
+dashboard.js?v=20251223a:24699 [DEBUG] adminNavItem classList before: nav-item admin-nav-item
+dashboard.js?v=20251223a:24703 [DEBUG] Removed hidden class from adminNavItem
+dashboard.js?v=20251223a:24708 [DEBUG] adminNavItem classList after: nav-item admin-nav-item
+dashboard.js?v=20251223a:24716 [DEBUG] Removed hidden class from distReportsSection
+dashboard.js?v=20251223a:4798  Canvas not found: overviewCurrentRatioChart
+renderOverviewChart @ dashboard.js?v=20251223a:4798
+dashboard.js?v=20251223a:24660 [DEBUG] checkAdminAccess - token: exists
+2dashboard.js?v=20251223a:4798  Canvas not found: overviewCurrentRatioChart
+renderOverviewChart @ dashboard.js?v=20251223a:4798
+dashboard.js?v=20251223a:24670 [DEBUG] verify-session response: {"success":true,"user":{"displayName":"Josh","email":"joshl@ftgbuilders.com","id":3,"permissions":["overview","revenue","account","income_statement","balance_sheet","cash_flow","over_under","receivables","job_analytics","cash_balances","admin","job_budgets","missing_budgets","job_actuals","cost_detail","job_overview","payments","cost_codes","over_under_billing","ap_aging","ar_aging","pm_report","ai_insights"],"role":"admin"}}
+dashboard.js?v=20251223a:24677 [DEBUG] userRole: admin isAdmin: true
+dashboard.js?v=20251223a:24698 [DEBUG] adminNavItem element: <li class=​"nav-item admin-nav-item" data-section=​"admin" id=​"adminNavItem">​…​</li>​
+dashboard.js?v=20251223a:24699 [DEBUG] adminNavItem classList before: nav-item admin-nav-item
+dashboard.js?v=20251223a:24703 [DEBUG] Removed hidden class from adminNavItem
+dashboard.js?v=20251223a:24708 [DEBUG] adminNavItem classList after: nav-item admin-nav-item
+dashboard.js?v=20251223a:24716 [DEBUG] Removed hidden class from distReportsSection
+dashboard.js?v=20251223a:4798  Canvas not found: overviewCurrentRatioChart
+renderOverviewChart @ dashboard.js?v=20251223a:4798
+dashboard.js?v=20251223a:16213  Error loading job overview: TypeError: Cannot set properties of null (setting 'textContent')
+    at updateJobOverviewMetrics (dashboard.js?v=20251223a:16276:54)
+    at filterJobOverview (dashboard.js?v=20251223a:16245:3)
+    at loadJobOverviewData (dashboard.js?v=20251223a:16211:5)

@@ -13044,7 +13044,6 @@ let cashData = { accounts: [], transactions: [] };
 let cashChartInstance = null;
 let cashSelectedAccounts = [];
 let cashDailyBalances = {};
-let cashTableExpanded = false;
 let cashTransactionsNeedRefresh = true;
 
 // GL mode variables for TTM/5Y/All views
@@ -14361,18 +14360,9 @@ function renderCashDailyTable() {
   
   const todayStr = today.toISOString().split('T')[0];
   
-  const expandedClass = cashTableExpanded ? 'expanded' : '';
-  const toggleText = cashTableExpanded ? 'Hide Accounts' : 'Show Accounts';
-  const toggleIcon = cashTableExpanded ? '◀' : '▶';
-  
   let html = `
-    <div class="table-expand-toggle">
-      <button class="table-expand-btn" onclick="toggleCashTableExpand()">
-        <span class="expand-icon">${toggleIcon}</span> ${toggleText}
-      </button>
-    </div>
     <div class="daily-balance-table-wrapper">
-      <table class="daily-balance-table ${expandedClass}">
+      <table class="daily-balance-table expanded">
         <thead>
           <tr>
             <th class="date-col">Date</th>
@@ -14413,11 +14403,6 @@ function renderCashDailyTable() {
   container.innerHTML = html;
 }
 
-function toggleCashTableExpand() {
-  cashTableExpanded = !cashTableExpanded;
-  renderCashDailyTable();
-}
-
 // GL Mode Table Rendering (for TTM, 5Y, All)
 function renderCashDailyTableGL() {
   const container = document.getElementById("dailyBalanceTableContainer");
@@ -14431,18 +14416,9 @@ function renderCashDailyTableGL() {
   
   const accountNames = Object.keys(glData.accountData);
   
-  const expandedClass = cashTableExpanded ? 'expanded' : '';
-  const toggleText = cashTableExpanded ? 'Hide Accounts' : 'Show Accounts';
-  const toggleIcon = cashTableExpanded ? '◀' : '▶';
-  
   let html = `
-    <div class="table-expand-toggle">
-      <button class="table-expand-btn" onclick="toggleCashTableExpand()">
-        <span class="expand-icon">${toggleIcon}</span> ${toggleText}
-      </button>
-    </div>
     <div class="daily-balance-table-wrapper">
-      <table class="daily-balance-table ${expandedClass}">
+      <table class="daily-balance-table expanded">
         <thead>
           <tr>
             <th class="date-col">Month</th>
