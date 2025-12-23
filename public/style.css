@@ -16460,11 +16460,208 @@ body.dark-mode .ar-invoice-row td {
 }
 
 /* =====================================================
+   GENERIC PM TABS & FILTER BAR (Used across Job pages)
+===================================================== */
+
+/* PM Tabs Container */
+.pm-tabs-bar {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+
+.pm-tabs-bar-label {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.pm-tabs-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pm-tabs-loading {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  padding: 6px 0;
+}
+
+.pm-tab-btn {
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.pm-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}
+
+.pm-tab-btn.active {
+  background: #fff;
+  border-color: #fff;
+  color: #1e3a5f;
+  font-weight: 600;
+}
+
+/* All PM tab - slightly different styling */
+.pm-tab-btn.all-pm {
+  font-style: italic;
+}
+
+/* Status Filter Row */
+.status-filter-bar {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.status-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.status-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
+/* Options group (for data labels checkbox etc) */
+.options-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .pm-tabs-bar,
+body.dark-mode .pm-tabs-bar {
+  background: linear-gradient(135deg, #1a2e4a 0%, #234566 100%);
+}
+
+[data-theme="dark"] .pm-tab-btn,
+body.dark-mode .pm-tab-btn {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .pm-tab-btn:hover,
+body.dark-mode .pm-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .pm-tab-btn.active,
+body.dark-mode .pm-tab-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #fff;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .pm-tabs-bar {
+    padding: 12px 14px;
+  }
+  
+  .pm-tab-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .status-filter-bar {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  
+  .status-filter-group {
+    gap: 8px;
+  }
+  
+  .status-checkboxes {
+    gap: 8px;
+  }
+  
+  .status-checkbox-label {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pm-tabs-container {
+    gap: 6px;
+  }
+  
+  .pm-tab-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  
+  .status-filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .options-filter-group {
+    margin-left: 0;
+  }
+}
+
+/* =====================================================
    PM REPORT STYLES
 ===================================================== */
 
 /* Desktop: 50% width for key sections, aligned left */
-#pmReport > .pmr-filter-bar,
+#pmReport > .pm-tabs-bar,
+#pmReport > .status-filter-bar,
 #pmReport > #pmrAiAnalysisPanel {
   width: 50%;
   max-width: 50%;
