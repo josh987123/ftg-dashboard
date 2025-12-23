@@ -13582,8 +13582,6 @@ function updateCashDisplay() {
   }
 }
 
-let cashHeaderExpanded = false;
-
 function renderCashCurrentHeader() {
   const container = document.getElementById("cashCurrentHeader");
   if (!container) return;
@@ -13609,110 +13607,79 @@ function renderCashCurrentHeader() {
     return;
   }
   
-  // Build display accounts list - FTG combined + individual accounts
-  const ftgBuildersSelected = cashSelectedAccounts.includes(FTG_BUILDERS_LABEL);
+  // Build all available accounts list - FTG combined + individual accounts
   const ftgAccounts = getFTGBuildersAccounts(cashData.accounts);
-  const individualSelectedAccounts = cashData.accounts
-    .filter(a => cashSelectedAccounts.includes(a.name) && !isFTGBuildersAccount(a.name));
+  const otherAccounts = getNonFTGBuildersAccounts(cashData.accounts).sort((a, b) => b.balance - a.balance);
   
-  // Build display entries
-  const displayEntries = [];
+  // Build all display entries (for checkboxes)
+  const allEntries = [];
   
-  if (ftgBuildersSelected && ftgAccounts.length > 0) {
+  if (ftgAccounts.length > 0) {
     const ftgTotalBalance = ftgAccounts.reduce((sum, a) => sum + a.balance, 0);
-    displayEntries.push({
+    allEntries.push({
       name: FTG_BUILDERS_LABEL,
-      balance: ftgTotalBalance
+      balance: ftgTotalBalance,
+      isSelected: cashSelectedAccounts.includes(FTG_BUILDERS_LABEL)
     });
   }
   
-  individualSelectedAccounts.forEach(a => {
-    displayEntries.push({
+  otherAccounts.forEach(a => {
+    allEntries.push({
       name: a.name,
-      balance: a.balance
+      balance: a.balance,
+      isSelected: cashSelectedAccounts.includes(a.name)
     });
   });
   
-  if (displayEntries.length === 0) {
-    container.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">Select accounts to view balances</div>';
+  if (allEntries.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">No accounts available</div>';
     return;
   }
   
-  const total = displayEntries.reduce((sum, a) => sum + a.balance, 0);
+  // Calculate total of selected accounts only
+  const selectedEntries = allEntries.filter(a => a.isSelected);
+  const total = selectedEntries.reduce((sum, a) => sum + a.balance, 0);
   
-  let accountsHtml = '';
-  if (displayEntries.length > 1) {
-    const collapsedClass = cashHeaderExpanded ? '' : 'collapsed';
-    const toggleIcon = cashHeaderExpanded ? '▲' : '▼';
+  // Build accounts list with checkboxes
+  let accountsListHtml = '<div class="cash-header-accounts-grid with-checkboxes">';
+  allEntries.forEach(a => {
+    let shortName = a.name;
+    const acctMatch = a.name.match(/\((\d+)\)$/);
+    if (acctMatch) {
+      const acctNum = acctMatch[1];
+      const namePart = a.name.replace(/\s*\(\d+\)$/, '');
+      shortName = namePart.length > 20 ? namePart.substring(0, 20) + '..' : namePart;
+      shortName += ' (' + acctNum + ')';
+    }
     
-    accountsHtml = `
-      <div class="cash-header-toggle" id="cashHeaderToggle">
-        <span class="toggle-text">${cashHeaderExpanded ? 'Hide Details' : 'Show Details'}</span>
-        <span class="toggle-icon">${toggleIcon}</span>
-      </div>
-      <div class="cash-header-accounts ${collapsedClass}" id="cashHeaderAccounts">`;
+    let balanceDisplay = formatCurrency(a.balance);
+    if (Math.abs(a.balance) >= 1000000) {
+      balanceDisplay = '$' + (a.balance / 1000000).toFixed(2) + 'M';
+    } else if (Math.abs(a.balance) >= 1000) {
+      balanceDisplay = '$' + (a.balance / 1000).toFixed(1) + 'K';
+    }
     
-    displayEntries.forEach(a => {
-      let shortName = a.name;
-      const acctMatch = a.name.match(/\((\d+)\)$/);
-      if (acctMatch) {
-        const acctNum = acctMatch[1];
-        const namePart = a.name.replace(/\s*\(\d+\)$/, '');
-        shortName = namePart.length > 12 ? namePart.substring(0, 12) + '..' : namePart;
-        shortName += ' (' + acctNum + ')';
-      }
-      
-      let balanceDisplay = formatCurrency(a.balance);
-      if (Math.abs(a.balance) >= 1000000) {
-        balanceDisplay = '$' + (a.balance / 1000000).toFixed(2) + 'M';
-      } else if (Math.abs(a.balance) >= 1000) {
-        balanceDisplay = '$' + (a.balance / 1000).toFixed(1) + 'K';
-      }
-      
-      accountsHtml += `
-        <div class="cash-header-account">
-          <div class="cash-header-account-name" title="${a.name}">${shortName}</div>
-          <div class="cash-header-account-value">${balanceDisplay}</div>
-        </div>
-      `;
-    });
-    accountsHtml += `</div>`;
-  }
-  
-  // Build accounts list for right side (in columns, no toggle)
-  let accountsListHtml = '';
-  if (displayEntries.length > 1) {
-    accountsListHtml = '<div class="cash-header-accounts-grid">';
-    displayEntries.forEach(a => {
-      let shortName = a.name;
-      const acctMatch = a.name.match(/\((\d+)\)$/);
-      if (acctMatch) {
-        const acctNum = acctMatch[1];
-        const namePart = a.name.replace(/\s*\(\d+\)$/, '');
-        shortName = namePart.length > 20 ? namePart.substring(0, 20) + '..' : namePart;
-        shortName += ' (' + acctNum + ')';
-      }
-      
-      let balanceDisplay = formatCurrency(a.balance);
-      if (Math.abs(a.balance) >= 1000000) {
-        balanceDisplay = '$' + (a.balance / 1000000).toFixed(2) + 'M';
-      } else if (Math.abs(a.balance) >= 1000) {
-        balanceDisplay = '$' + (a.balance / 1000).toFixed(1) + 'K';
-      }
-      
-      accountsListHtml += `
-        <div class="cash-header-account-item">
+    const checkedAttr = a.isSelected ? 'checked' : '';
+    const dimClass = a.isSelected ? '' : 'dimmed';
+    
+    accountsListHtml += `
+      <div class="cash-header-account-item ${dimClass}">
+        <label class="cash-acct-checkbox-label">
+          <input type="checkbox" class="cash-acct-filter-checkbox" data-account="${a.name}" ${checkedAttr}>
           <span class="cash-acct-name" title="${a.name}">${shortName}</span>
-          <span class="cash-acct-value">${balanceDisplay}</span>
-        </div>
-      `;
-    });
-    accountsListHtml += '</div>';
-  }
+        </label>
+        <span class="cash-acct-value">${balanceDisplay}</span>
+      </div>
+    `;
+  });
+  accountsListHtml += '</div>';
+  
+  const selectedCount = selectedEntries.length;
+  const totalCount = allEntries.length;
   
   container.innerHTML = `
     <div class="cash-header-left">
-      <div class="cash-header-title">Current Total${displayEntries.length > 1 ? ' (' + displayEntries.length + ' accounts)' : ''}</div>
+      <div class="cash-header-title">Current Total (${selectedCount}/${totalCount} accounts)</div>
       <div class="cash-header-total">${formatCurrency(total)}</div>
     </div>
     <div class="cash-header-right">
@@ -13720,14 +13687,20 @@ function renderCashCurrentHeader() {
     </div>
   `;
   
-  // Add toggle event listener
-  const toggleBtn = document.getElementById("cashHeaderToggle");
-  if (toggleBtn) {
-    toggleBtn.addEventListener("click", () => {
-      cashHeaderExpanded = !cashHeaderExpanded;
-      renderCashCurrentHeader();
+  // Add checkbox event listeners
+  container.querySelectorAll('.cash-acct-filter-checkbox').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const accountName = e.target.dataset.account;
+      if (e.target.checked) {
+        if (!cashSelectedAccounts.includes(accountName)) {
+          cashSelectedAccounts.push(accountName);
+        }
+      } else {
+        cashSelectedAccounts = cashSelectedAccounts.filter(n => n !== accountName);
+      }
+      updateCashDisplay();
     });
-  }
+  });
 }
 
 function getOldestTransactionDate() {

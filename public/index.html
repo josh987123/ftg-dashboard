@@ -3309,70 +3309,6 @@
         <h2>Cash Balances</h2>
         <div class="data-as-of">Data as of: <span id="cashDataAsOf">-</span></div>
 
-        <!-- Configuration Panel -->
-        <div class="config-panel">
-          <div class="config-header collapsed" data-target="cashConfigBody">
-            <span class="config-toggle">▼</span>
-            <span class="config-title">Configuration Options</span>
-            <button class="config-expand-btn">Expand ▼</button>
-          </div>
-          <div class="config-body collapsed" id="cashConfigBody">
-            <div class="cash-controls">
-              <div class="overview-config-box">
-                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Accounts:</div>
-                <div class="account-select-buttons">
-                  <button type="button" id="cashSelectAll" class="btn-small">Select All</button>
-                  <button type="button" id="cashSelectNone" class="btn-small">Select None</button>
-                </div>
-                <div id="cashAccountCheckboxes" class="account-checkbox-list">
-                  <div class="loading-spinner-small">Loading...</div>
-                </div>
-              </div>
-
-              <div class="overview-config-box">
-                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Date Range:</div>
-                <div class="dropdown-stack">
-                  <div class="dropdown-row">
-                    <label>Range:</label>
-                    <select id="cashDaysRange">
-                      <option value="7">Last 7 Days</option>
-                      <option value="14">Last 14 Days</option>
-                      <option value="30">Last 30 Days</option>
-                      <option value="60">Last 60 Days</option>
-                      <option value="90" selected>Last 90 Days</option>
-                      <option value="custom">Custom Range</option>
-                    </select>
-                  </div>
-                  <div id="cashCustomDateRange" class="custom-date-range" style="display: none;">
-                    <div class="date-input-row">
-                      <label>From:</label>
-                      <input type="date" id="cashStartDate" class="date-input">
-                    </div>
-                    <div class="date-input-row">
-                      <label>To:</label>
-                      <input type="date" id="cashEndDate" class="date-input">
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="overview-config-box">
-                <div style="font-weight: 600; margin-bottom: 8px; color: #374151;">Options:</div>
-                <div class="checkbox-stack">
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="cashStackBars" checked>
-                    Stack Bars
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="cashDataLabels">
-                    Data Labels
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Current Balances Summary Header -->
         <div id="cashCurrentHeader" class="cash-current-header">
           <div class="loading-spinner">Loading...</div>
@@ -3382,7 +3318,13 @@
         <div class="chart-section cash-chart-section" style="width: 80%; max-width: 80%;">
           <div class="chart-header">
             <h3>Daily Cash Balances</h3>
-            <button class="chart-expand-btn" data-chart="cashChart" data-title="Daily Cash Balances" title="Expand chart"><svg viewBox="0 0 16 16" width="10" height="10"><path fill="currentColor" d="M2 2h5V0H0v7h2V2zm12 0h-5V0h7v7h-2V2zM2 14h5v2H0V9h2v5zm12 0h-5v2h7V9h-2v5z"/></svg></button>
+            <div class="chart-header-controls">
+              <label class="checkbox-label compact" title="Show data labels on chart">
+                <input type="checkbox" id="cashDataLabels">
+                Labels
+              </label>
+              <button class="chart-expand-btn" data-chart="cashChart" data-title="Daily Cash Balances" title="Expand chart"><svg viewBox="0 0 16 16" width="10" height="10"><path fill="currentColor" d="M2 2h5V0H0v7h2V2zm12 0h-5V0h7v7h-2V2zM2 14h5v2H0V9h2v5zm12 0h-5v2h7V9h-2v5z"/></svg></button>
+            </div>
           </div>
           <div class="chart-wrapper">
             <canvas id="cashChart"></canvas>
