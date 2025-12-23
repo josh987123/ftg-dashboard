@@ -204,7 +204,8 @@ const pmTabsState = {
   jb: '__ALL__',    // Job Budgets
   ja: '__ALL__',    // Job Actuals
   cc: '__ALL__',    // Cost Codes
-  oub: '__ALL__'    // Over/Under Billing
+  oub: '__ALL__',   // Over/Under Billing
+  ara: '__ALL__'    // AR Aging
 };
 
 /**
@@ -237,7 +238,9 @@ function buildPmTabs(containerId, pms, pageKey, onSelect) {
   });
   
   // Build tabs HTML - "All" button first, then PM first names
-  let html = '<button class="pm-tab-btn all-pm" data-pm="__ALL__">All</button>';
+  // Use "All Project Managers" for AR Aging page, "All" for other pages
+  const allLabel = (pageKey === 'ara') ? 'All Project Managers' : 'All';
+  let html = `<button class="pm-tab-btn all-pm" data-pm="__ALL__">${allLabel}</button>`;
   html += sortedPms.map(pm => {
     const firstName = pm.split(' ')[0];
     return `<button class="pm-tab-btn" data-pm="${pm}">${firstName}</button>`;
@@ -26297,7 +26300,6 @@ let arAgingInitialized = false;
 let arAgingSortColumn = 'days_90_plus';
 let arAgingSortDirection = 'desc';
 let arAgingSearchTerm = '';
-let arAgingPmFilter = '';
 let arAgingChart = null;
 
 function initArAging() {
@@ -26321,14 +26323,10 @@ function loadArAgingFilters() {
     .then(r => r.json())
     .then(data => {
       if (data.success) {
-        const pmSelect = document.getElementById('arAgingPmFilter');
-        
-        if (pmSelect) {
-          pmSelect.innerHTML = '<option value="">All PMs</option>';
-          (data.pms || []).forEach(pm => {
-            pmSelect.innerHTML += `<option value="${escapeHtml(pm)}">${escapeHtml(pm)}</option>`;
-          });
-        }
+        const pms = data.pms || [];
+        buildPmTabs('arAgingPmTabs', pms, 'ara', () => {
+          loadArAgingData();
+        });
       }
     })
     .catch(err => console.error('Error loading AR aging filters:', err));
@@ -26341,14 +26339,6 @@ function setupArAgingEventHandlers() {
       arAgingSearchTerm = searchInput.value.trim();
       loadArAgingData();
     }, 300));
-  }
-  
-  const pmFilter = document.getElementById('arAgingPmFilter');
-  if (pmFilter) {
-    pmFilter.addEventListener('change', () => {
-      arAgingPmFilter = pmFilter.value;
-      loadArAgingData();
-    });
   }
   
   const table = document.getElementById('arAgingTable');
@@ -26378,8 +26368,10 @@ function loadArAgingData() {
   if (arAgingSearchTerm) {
     params.set('search', arAgingSearchTerm);
   }
-  if (arAgingPmFilter) {
-    params.set('pm', arAgingPmFilter);
+  
+  const pmFilter = getSelectedPmForPage('ara');
+  if (pmFilter && pmFilter !== '__ALL__') {
+    params.set('pm', pmFilter);
   }
   
   fetch(`/api/ar-aging?${params.toString()}`)

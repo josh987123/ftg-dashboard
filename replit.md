@@ -110,12 +110,12 @@ All chart instances properly destroyed before recreation to prevent memory leaks
 - getAIPromptExclusion(): Returns AI prompt instructions for exclusion
 
 ### PM Selection UI (December 2024)
-PM selection uses first-name button tabs (not dropdowns) across 6 job-related pages:
-- **Pages**: PM Report, Job Overview, Job Budgets, Job Actuals, Cost Code Analysis, Over/Under Billing
-- **Tab Bar Layout**: "All" button first, then PM first names sorted by `PM_TAB_ORDER` preference, then alphabetically
+PM selection uses first-name button tabs (not dropdowns) across 7 pages:
+- **Pages**: PM Report, Job Overview, Job Budgets, Job Actuals, Cost Code Analysis, Over/Under Billing, AR Aging
+- **Tab Bar Layout**: "All" button first (or "All Project Managers" for AR Aging), then PM first names sorted by `PM_TAB_ORDER` preference, then alphabetically
 - **Filtering**: Only PMs with active jobs shown in tabs; "All" option shows all data including inactive PMs
-- **Status Filters**: Checkbox-based (Active, Inactive, Closed, Overhead) in a dedicated status-filter-bar below tabs
-- **State Management**: `pmTabsState` object tracks selected PM for each page (pmr, jo, jb, ja, cc, oub keys)
+- **Status Filters**: Checkbox-based (Active, Inactive, Closed, Overhead) in a dedicated status-filter-bar below tabs (job pages only)
+- **State Management**: `pmTabsState` object tracks selected PM for each page (pmr, jo, jb, ja, cc, oub, ara keys)
 - **CSS Classes**: `pm-tabs-bar`, `pm-tab-btn`, `pm-tab-btn.active` with dark mode support and mobile responsiveness
 - **Helper Functions**:
   - `buildPmTabs(containerId, pms, pageKey, onSelect)`: Generic tab builder used by all pages

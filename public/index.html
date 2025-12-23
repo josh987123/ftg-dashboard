@@ -3120,7 +3120,16 @@
         <h2>Accounts Receivable Aging Report</h2>
         <div class="data-as-of">Data as of: <span id="arAgingDataAsOf">-</span></div>
 
-        <!-- Summary Metrics -->
+        <!-- PM Selection Tabs -->
+        <div class="pm-tabs-bar">
+          <span class="pm-tabs-bar-label">Project Manager:</span>
+          <div class="pm-tabs-container" id="arAgingPmTabs">
+            <span class="pm-tabs-loading">Loading...</span>
+          </div>
+        </div>
+
+        <!-- Key Metrics Title and Summary -->
+        <h3 class="section-title" style="margin-top: 16px; margin-bottom: 12px; font-size: 16px; font-weight: 600; color: var(--text-primary);">Key Metrics</h3>
         <div class="ap-aging-summary">
           <div class="summary-card">
             <div class="summary-label">Total Due (excl. Retainage)</div>
@@ -3148,18 +3157,9 @@
           </div>
         </div>
 
-        <!-- PM Filter -->
-        <div class="ar-aging-filter-bar">
-          <div class="filter-group">
-            <label for="arAgingPmFilter">Project Manager:</label>
-            <select id="arAgingPmFilter" class="filter-select">
-              <option value="">All PMs</option>
-            </select>
-          </div>
-        </div>
-
         <!-- Aging Buckets Chart -->
         <div class="ap-aging-chart-section">
+          <h3 class="section-title" style="margin-bottom: 12px; font-size: 16px; font-weight: 600; color: var(--text-primary);">AR Aging</h3>
           <div class="ap-aging-chart-wrapper">
             <canvas id="arAgingChart"></canvas>
           </div>
