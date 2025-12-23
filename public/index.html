@@ -677,7 +677,7 @@
               <div class="overview-config-box overview-visuals-box">
                 <label class="section-label" style="font-weight: 600;">Visuals:</label>
                 <div class="visuals-checkboxes">
-                  <label class="checkbox-label">
+                  <label class="checkbox-label" id="overviewCompareLabel">
                     <input type="checkbox" id="overviewCompare">
                     Compare to Prior Year
                   </label>
@@ -706,20 +706,8 @@
                     Revenue
                   </label>
                   <label class="checkbox-label">
-                    <input type="checkbox" id="showGrossProfit" checked data-metric="grossProfit">
-                    Gross Profit
-                  </label>
-                  <label class="checkbox-label">
                     <input type="checkbox" id="showGrossMargin" checked data-metric="grossMargin">
                     Gross Profit %
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="showOpExpenses" checked data-metric="opExpenses">
-                    Operating Expenses
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="showOpProfit" checked data-metric="opProfit">
-                    Operating Profit
                   </label>
                   <label class="checkbox-label">
                     <input type="checkbox" id="showOpMargin" checked data-metric="opMargin">
@@ -730,16 +718,16 @@
                     Cash
                   </label>
                   <label class="checkbox-label">
-                    <input type="checkbox" id="showReceivables" checked data-metric="receivables">
-                    Receivables
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="showPayables" checked data-metric="payables">
-                    Payables
+                    <input type="checkbox" id="showArApRatio" checked data-metric="arApRatio">
+                    AR/AP Ratio
                   </label>
                   <label class="checkbox-label">
                     <input type="checkbox" id="showCurrentRatio" checked data-metric="currentRatio">
                     Current Ratio
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="showOverUnder" checked data-metric="overUnder">
+                    Over/Under Billing
                   </label>
                 </div>
               </div>

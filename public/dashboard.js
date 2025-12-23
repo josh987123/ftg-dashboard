@@ -2525,14 +2525,12 @@ let overviewChartInstances = {};
 ------------------------------------------------------------ */
 const metricTileMapping = {
   revenue: "overviewRevenueChart",
-  grossProfit: "overviewGrossProfitChart",
   grossMargin: "overviewGrossMarginChart",
-  opExpenses: "overviewOpexChart",
-  opProfit: "overviewOpProfitChart",
   opMargin: "overviewOpMarginChart",
   cash: "overviewCashChart",
-  receivables: "overviewReceivablesChart",
-  payables: "overviewPayablesChart"
+  arApRatio: "overviewArApRatioChart",
+  currentRatio: "overviewCurrentRatioChart",
+  overUnder: "overviewOverUnderChart"
 };
 
 function getCurrentUser() {
@@ -3295,13 +3293,21 @@ function syncTimePeriodButtons(viewType) {
   // Update year controls visibility
   const yearSelectWrapper = document.getElementById("overviewYearSelectWrapper");
   const yearSliderSection = document.getElementById("overviewYearSliderSection");
+  const compareLabel = document.getElementById("overviewCompareLabel");
+  const compareCheck = document.getElementById("overviewCompare");
+  
   if (yearSelectWrapper && yearSliderSection) {
     if (viewType === "annual") {
       yearSelectWrapper.style.display = "none";
       yearSliderSection.style.display = "flex";
+      // Hide and deselect Compare to Prior Year for annual view
+      if (compareLabel) compareLabel.style.display = "none";
+      if (compareCheck) compareCheck.checked = false;
     } else {
       yearSelectWrapper.style.display = "flex";
       yearSliderSection.style.display = "none";
+      // Show Compare to Prior Year for monthly/quarterly views
+      if (compareLabel) compareLabel.style.display = "";
     }
   }
 }
