@@ -27,9 +27,13 @@ The dashboard provides several key views for financial analysis:
 - **Statement of Cash Flows**: Indirect method with AI analysis.
 - **Cash Balances**: Tracks cash position from balance sheet and Google Sheets.
 - **AP/AR Aging**: Reports grouped by vendor/customer with aging buckets, bar charts, and detailed invoice modals.
-- **Jobs Module**: Contains Job Overview, Budgets, Job Actuals, Cost Codes, and PM Report views for detailed job costing and performance analysis. Includes:
-  - **Profitability Heat Map** (Job Overview): Visualizes profit margins by Project Manager or Client and job size range (contract value buckets), with color-coded cells (green = high margin, red = loss) and hover tooltips showing job counts and totals. Width matches AI Analysis section on desktop.
-  - **PM Performance Radar Chart** (PM Report): Located under AI Analysis section. Compares individual PM metrics to portfolio average across 5 normalized dimensions (profit margin, job count, contract value, avg job size, billing position). Excludes Josh Angelo.
+- **Jobs Module**: Contains Job and PM Overview (consolidated page combining former Job Overview and PM Report), Budgets, Job Actuals, Cost Codes, and Over/Under Billing views for detailed job costing and performance analysis. Includes:
+  - **Job and PM Overview** (formerly separate Job Overview and PM Report): Single consolidated page containing all job overview metrics, profitability heat map, and PM performance sections (radar chart, key metrics tiles, charts, and tables).
+  - **Profitability Heat Map**: Dual-view heatmap - shows PM/Client vs. Size Buckets in "All PMs" mode, and Job Status (Active/Closed/All) vs. Size Buckets when a single PM is selected. Uses estimated margin for active jobs, actual margin for closed jobs, and weighted average for all.
+  - **PM Performance Radar Chart**: Compares individual PM metrics to portfolio average across 5 normalized dimensions (profit margin, job count, contract value, avg job size, billing position). Only visible when a single PM is selected. Excludes Josh Angelo.
+  - **PM Key Metrics**: 10 metric tiles showing Active Jobs, Contract Value, Backlog, Gross Margin, Net Over/Under, Avg % Complete, Billed Last Month, AR Exposure, Actual Cost, and Earned Revenue.
+  - **PM Charts**: 4 charts - Margin Distribution, Budget vs Actual, Billing Trend, and AR Aging.
+  - **PM Tables**: Client Summary, Over/Under Billing, and Missing Budgets tables.
 - **Distribution Reports (Admin Only)**: A dedicated section visible only to admin users, containing placeholder pages for future specialized reports:
   - Dept Head Meeting
   - Daily Cash Report
