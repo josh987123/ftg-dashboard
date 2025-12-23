@@ -1644,56 +1644,42 @@
         <div class="section-subtitle">Foundation</div>
         <div class="data-as-of">Data as of: <span id="jobOverviewDataAsOf">-</span></div>
 
-        <!-- Configuration Panel -->
-        <div class="config-panel jo-config-panel">
-          <div class="config-header" data-target="jobOverviewConfigBody">
-            <span class="config-toggle">▼</span>
-            <span class="config-title">Configuration Options</span>
-            <button class="config-expand-btn">Expand ▼</button>
+        <!-- PM Tabs Bar -->
+        <div class="pm-tabs-bar" id="joPmTabsBar">
+          <span class="pm-tabs-bar-label">Project Manager</span>
+          <div class="pm-tabs-container" id="joPmTabs">
+            <span class="pm-tabs-loading">Loading...</span>
           </div>
-          <div class="config-body" id="jobOverviewConfigBody">
-            <div class="job-budgets-controls">
-              <div class="overview-config-box">
-                <div class="config-label">Job Status:</div>
-                <div class="checkbox-stack">
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="joStatusActive" checked>
-                    Active
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="joStatusInactive">
-                    Inactive
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="joStatusClosed">
-                    Closed
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="joStatusOverhead">
-                    Overhead
-                  </label>
-                </div>
-              </div>
+        </div>
 
-              <div class="overview-config-box job-filter-stack">
-                <select id="joPmFilter" class="filter-select">
-                  <option value="">All Project Managers</option>
-                </select>
-                <select id="joCustomerFilter" class="filter-select">
-                  <option value="">All Clients</option>
-                </select>
-              </div>
-
-              <div class="overview-config-box">
-                <div class="config-label">Options:</div>
-                <div class="checkbox-stack">
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="joDataLabels" checked>
-                    Data Labels
-                  </label>
-                </div>
-              </div>
+        <!-- Status Filter Row -->
+        <div class="status-filter-bar" id="joStatusBar">
+          <div class="status-filter-group">
+            <span class="status-filter-label">Status:</span>
+            <div class="status-checkboxes">
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="joStatusActive" value="A" checked>
+                Active
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="joStatusInactive" value="I">
+                Inactive
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="joStatusClosed" value="C">
+                Closed
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="joStatusOverhead" value="O">
+                Overhead
+              </label>
             </div>
+          </div>
+          <div class="options-filter-group">
+            <label class="status-checkbox-label">
+              <input type="checkbox" id="joDataLabels" checked>
+              Data Labels
+            </label>
           </div>
         </div>
 
@@ -1875,44 +1861,35 @@
         <h2>Job Budgets</h2>
         <div class="data-as-of">Data as of: <span id="jobBudgetsDataAsOf">-</span></div>
 
-        <!-- Configuration Panel -->
-        <div class="config-panel">
-          <div class="config-header" data-target="jobBudgetsConfigBody">
-            <span class="config-toggle">▼</span>
-            <span class="config-title">Configuration Options</span>
-            <button class="config-expand-btn">Expand ▼</button>
+        <!-- PM Tabs Bar -->
+        <div class="pm-tabs-bar" id="jbPmTabsBar">
+          <span class="pm-tabs-bar-label">Project Manager</span>
+          <div class="pm-tabs-container" id="jbPmTabs">
+            <span class="pm-tabs-loading">Loading...</span>
           </div>
-          <div class="config-body" id="jobBudgetsConfigBody">
-            <div class="job-budgets-controls">
-              <div class="overview-config-box">
-                <div class="config-label">Job Status:</div>
-                <div class="checkbox-stack">
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusActive" checked>
-                    Active
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusInactive">
-                    Inactive
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusClosed">
-                    Closed
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jobStatusOverhead">
-                    Overhead
-                  </label>
-                </div>
-              </div>
+        </div>
 
-              <div class="overview-config-box">
-                <div class="config-label">Project Manager:</div>
-                <select id="jbPmFilter" class="filter-select" style="min-width: 180px;">
-                  <option value="">All Project Managers</option>
-                </select>
-              </div>
-
+        <!-- Status Filter Row -->
+        <div class="status-filter-bar" id="jbStatusBar">
+          <div class="status-filter-group">
+            <span class="status-filter-label">Status:</span>
+            <div class="status-checkboxes">
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="jobStatusActive" value="A" checked>
+                Active
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="jobStatusInactive" value="I">
+                Inactive
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="jobStatusClosed" value="C">
+                Closed
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="jobStatusOverhead" value="O">
+                Overhead
+              </label>
             </div>
           </div>
         </div>
@@ -2194,44 +2171,35 @@
         <h2>Job Actuals</h2>
         <div class="data-as-of">Data as of: <span id="jobActualsDataAsOf">-</span></div>
 
-        <!-- Configuration Panel -->
-        <div class="config-panel">
-          <div class="config-header" data-target="jobActualsConfigBody">
-            <span class="config-toggle">▼</span>
-            <span class="config-title">Configuration Options</span>
-            <button class="config-expand-btn">Expand ▼</button>
+        <!-- PM Tabs Bar -->
+        <div class="pm-tabs-bar" id="jaPmTabsBar">
+          <span class="pm-tabs-bar-label">Project Manager</span>
+          <div class="pm-tabs-container" id="jaPmTabs">
+            <span class="pm-tabs-loading">Loading...</span>
           </div>
-          <div class="config-body" id="jobActualsConfigBody">
-            <div class="job-budgets-controls">
-              <div class="overview-config-box">
-                <div class="config-label">Job Status:</div>
-                <div class="checkbox-stack">
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jaStatusActive" checked>
-                    Active
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jaStatusInactive">
-                    Inactive
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jaStatusClosed">
-                    Closed
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="jaStatusOverhead">
-                    Overhead
-                  </label>
-                </div>
-              </div>
+        </div>
 
-              <div class="overview-config-box">
-                <div class="config-label">Project Manager:</div>
-                <select id="jaPmFilter" class="filter-select" style="min-width: 200px;">
-                  <option value="">All Project Managers</option>
-                </select>
-              </div>
-
+        <!-- Status Filter Row -->
+        <div class="status-filter-bar" id="jaStatusBar">
+          <div class="status-filter-group">
+            <span class="status-filter-label">Status:</span>
+            <div class="status-checkboxes">
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="jaStatusActive" value="A" checked>
+                Active
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="jaStatusInactive" value="I">
+                Inactive
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="jaStatusClosed" value="C">
+                Closed
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="jaStatusOverhead" value="O">
+                Overhead
+              </label>
             </div>
           </div>
         </div>
@@ -2641,44 +2609,35 @@
         <div class="section-subtitle">Job Cost Breakdown by Category</div>
         <div class="data-as-of">Data as of: <span id="costCodesDataAsOf">-</span></div>
 
-        <!-- Configuration Panel -->
-        <div class="config-panel">
-          <div class="config-header" data-target="costCodesConfigBody">
-            <span class="config-toggle">▼</span>
-            <span class="config-title">Configuration Options</span>
-            <button class="config-expand-btn">Expand ▼</button>
+        <!-- PM Tabs Bar -->
+        <div class="pm-tabs-bar" id="ccPmTabsBar">
+          <span class="pm-tabs-bar-label">Project Manager</span>
+          <div class="pm-tabs-container" id="ccPmTabs">
+            <span class="pm-tabs-loading">Loading...</span>
           </div>
-          <div class="config-body" id="costCodesConfigBody">
-            <div class="job-budgets-controls">
-              <div class="overview-config-box">
-                <div class="config-label">Job Status:</div>
-                <div class="checkbox-stack">
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="ccStatusActive" checked>
-                    Active
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="ccStatusInactive">
-                    Inactive
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="ccStatusClosed">
-                    Closed
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" id="ccStatusOverhead">
-                    Overhead
-                  </label>
-                </div>
-              </div>
+        </div>
 
-              <div class="overview-config-box">
-                <div class="config-label">Project Manager:</div>
-                <select id="ccPmFilter" class="filter-select" style="min-width: 180px;">
-                  <option value="">All Project Managers</option>
-                </select>
-              </div>
-
+        <!-- Status Filter Row -->
+        <div class="status-filter-bar" id="ccStatusBar">
+          <div class="status-filter-group">
+            <span class="status-filter-label">Status:</span>
+            <div class="status-checkboxes">
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="ccStatusActive" value="A" checked>
+                Active
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="ccStatusInactive" value="I">
+                Inactive
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="ccStatusClosed" value="C">
+                Closed
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="ccStatusOverhead" value="O">
+                Overhead
+              </label>
             </div>
           </div>
         </div>
@@ -3376,21 +3335,36 @@
         <div class="section-subtitle">Project Manager Performance Summary</div>
         <div class="data-as-of">Data as of: <span id="pmrDataAsOf">-</span></div>
 
-        <!-- PM Selector Filter Bar -->
-        <div class="pmr-filter-bar">
-          <div class="pmr-filter-row">
-            <label for="pmrPmSelect">Project Manager:</label>
-            <select id="pmrPmSelect" class="pmr-pm-select">
-              <option value="">-- Select a PM --</option>
-            </select>
-            <label for="pmrStatusSelect">Status:</label>
-            <select id="pmrStatusSelect" class="pmr-status-select">
-              <option value="A" selected>Active</option>
-              <option value="I">Inactive</option>
-              <option value="C">Closed</option>
-              <option value="O">Overhead</option>
-              <option value="">All Statuses</option>
-            </select>
+        <!-- PM Tabs Bar -->
+        <div class="pm-tabs-bar" id="pmrPmTabsBar">
+          <span class="pm-tabs-bar-label">Project Manager</span>
+          <div class="pm-tabs-container" id="pmrPmTabs">
+            <span class="pm-tabs-loading">Loading...</span>
+          </div>
+        </div>
+
+        <!-- Status Filter Row -->
+        <div class="status-filter-bar" id="pmrStatusBar">
+          <div class="status-filter-group">
+            <span class="status-filter-label">Status:</span>
+            <div class="status-checkboxes">
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="pmrStatusActive" value="A" checked>
+                Active
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="pmrStatusInactive" value="I">
+                Inactive
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="pmrStatusClosed" value="C">
+                Closed
+              </label>
+              <label class="status-checkbox-label">
+                <input type="checkbox" id="pmrStatusOverhead" value="O">
+                Overhead
+              </label>
+            </div>
           </div>
         </div>
 

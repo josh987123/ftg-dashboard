@@ -190,6 +190,112 @@ function getActivePmsFromData(dataArray) {
 }
 
 /* ------------------------------------------------------------
+   PM TABS BUILDER - Generic function to build PM tabs UI
+   Used across PM Report, Job Overview, Job Budgets, Job Actuals, Cost Codes
+------------------------------------------------------------ */
+
+// Preferred order for PM tabs (first names) - used for sorting
+const PM_TAB_ORDER = ['Rodney', 'Kathy', 'Doris', 'Pedro', 'Jen', 'Daniel', 'Jose'];
+
+// Track selected PM for each page
+const pmTabsState = {
+  pmr: '__ALL__',   // PM Report
+  jo: '__ALL__',    // Job Overview
+  jb: '__ALL__',    // Job Budgets
+  ja: '__ALL__',    // Job Actuals
+  cc: '__ALL__'     // Cost Codes
+};
+
+/**
+ * Build PM tabs UI for a page
+ * @param {string} containerId - ID of the tabs container element
+ * @param {Array} pms - Array of full PM names
+ * @param {string} pageKey - Key for pmTabsState (pmr, jo, jb, ja, cc)
+ * @param {Function} onSelect - Callback function when a PM is selected
+ */
+function buildPmTabs(containerId, pms, pageKey, onSelect) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  if (!pms || pms.length === 0) {
+    container.innerHTML = '<span class="pm-tabs-loading">No active Project Managers found</span>';
+    return;
+  }
+  
+  // Sort PMs: preferred order first by matching first name, then alphabetically
+  const sortedPms = [...pms].sort((a, b) => {
+    const aFirst = a.split(' ')[0];
+    const bFirst = b.split(' ')[0];
+    const aIndex = PM_TAB_ORDER.indexOf(aFirst);
+    const bIndex = PM_TAB_ORDER.indexOf(bFirst);
+    
+    if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+    if (aIndex !== -1) return -1;
+    if (bIndex !== -1) return 1;
+    return a.localeCompare(b);
+  });
+  
+  // Build tabs HTML - "All" button first, then PM first names
+  let html = '<button class="pm-tab-btn all-pm" data-pm="__ALL__">All</button>';
+  html += sortedPms.map(pm => {
+    const firstName = pm.split(' ')[0];
+    return `<button class="pm-tab-btn" data-pm="${pm}">${firstName}</button>`;
+  }).join('');
+  
+  container.innerHTML = html;
+  
+  // Add click handlers
+  container.querySelectorAll('.pm-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Update active state
+      container.querySelectorAll('.pm-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Update state
+      const selectedPm = btn.getAttribute('data-pm');
+      pmTabsState[pageKey] = selectedPm;
+      
+      // Apply My PM View if needed
+      if (typeof onSelect === 'function') {
+        onSelect(selectedPm);
+      }
+    });
+  });
+  
+  // Set initial selection
+  const currentSelection = pmTabsState[pageKey] || '__ALL__';
+  let initialBtn = container.querySelector(`[data-pm="${currentSelection}"]`);
+  
+  // If My PM View is enabled and user is a PM, select their tab
+  if (getMyPmViewEnabled && typeof getMyPmViewEnabled === 'function' && getMyPmViewEnabled() && 
+      isUserProjectManager && typeof isUserProjectManager === 'function' && isUserProjectManager()) {
+    const pmName = getCurrentUserPmName ? getCurrentUserPmName() : null;
+    if (pmName) {
+      const pmBtn = container.querySelector(`[data-pm="${pmName}"]`);
+      if (pmBtn) initialBtn = pmBtn;
+    }
+  }
+  
+  // Default to "All" if nothing else selected
+  if (!initialBtn) {
+    initialBtn = container.querySelector('[data-pm="__ALL__"]');
+  }
+  
+  if (initialBtn) {
+    initialBtn.classList.add('active');
+    pmTabsState[pageKey] = initialBtn.getAttribute('data-pm');
+  }
+}
+
+/**
+ * Get the selected PM for a page (returns empty string for "All")
+ */
+function getSelectedPmForPage(pageKey) {
+  const pm = pmTabsState[pageKey];
+  return pm === '__ALL__' ? '' : pm;
+}
+
+/* ------------------------------------------------------------
    DATA CACHE - Centralized caching for financial data
    Reduces redundant network requests across pages
 ------------------------------------------------------------ */
@@ -14885,21 +14991,8 @@ async function loadJobBudgetsData() {
     initJobBudgetsColumnFilters();
     updateJobBudgetsSortIndicators();
     
-    // Populate filter dropdowns
-    populateJbPmFilter();
-    populateJbClientFilter();
-    
-    // Apply My PM View to PM dropdown
-    if (getMyPmViewEnabled() && isUserProjectManager()) {
-      const pmName = getCurrentUserPmName();
-      if (pmName) {
-        const pmSelect = document.getElementById('jbPmFilter');
-        if (pmSelect) {
-          const option = Array.from(pmSelect.options).find(opt => opt.value === pmName);
-          if (option) pmSelect.value = option.value;
-        }
-      }
-    }
+    // Build PM tabs
+    populateJbPmTabs();
     
     // Set data as of date
     const dataAsOf = document.getElementById('jobBudgetsDataAsOf');
@@ -14951,8 +15044,9 @@ function filterJobBudgets() {
   const jobNoSearch = (document.getElementById('jbJobNoSearch')?.value || '').toLowerCase().trim();
   const descriptionSearch = (document.getElementById('jbDescriptionSearch')?.value || '').toLowerCase().trim();
   const clientSearch = (document.getElementById('jbClientSearch')?.value || '').toLowerCase().trim();
-  const pmFilter = document.getElementById('jbPmFilter')?.value || '';
-  const clientFilter = document.getElementById('jbClientFilter')?.value || '';
+  
+  // Get PM from tabs instead of dropdown
+  const pmFilter = getSelectedPmForPage('jb');
   
   const allowedStatuses = [];
   if (showActive) allowedStatuses.push('A');
@@ -14964,11 +15058,8 @@ function filterJobBudgets() {
     // Status filter from config panel
     if (allowedStatuses.length > 0 && !allowedStatuses.includes(job.job_status)) return false;
     
-    // PM filter from config panel
+    // PM filter from tabs
     if (pmFilter && job.project_manager_name !== pmFilter) return false;
-    
-    // Client filter from config panel (dropdown)
-    if (clientFilter && job.customer_name !== clientFilter) return false;
     
     // Individual search filters
     if (jobNoSearch && !(job.job_no || '').toLowerCase().includes(jobNoSearch)) return false;
@@ -15032,14 +15123,12 @@ function sortJobBudgets() {
   });
 }
 
-function populateJbPmFilter() {
+function populateJbPmTabs() {
   // Only show PMs with active jobs
   const activePms = getActivePmsFromData(jobBudgetsData);
-  const pmSelect = document.getElementById('jbPmFilter');
-  if (pmSelect) {
-    pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
-      activePms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
-  }
+  buildPmTabs('jbPmTabs', activePms, 'jb', () => {
+    filterJobBudgets();
+  });
 }
 
 function populateJbClientFilter() {
@@ -15886,27 +15975,11 @@ async function loadJobOverviewData() {
 }
 
 function populateJobOverviewFilters() {
-  const pmFilter = document.getElementById('joPmFilter');
-  if (pmFilter) {
-    // Only show PMs with active jobs
-    const activePms = getActivePmsFromData(joData);
-    pmFilter.innerHTML = '<option value="">All Project Managers</option>' + 
-      activePms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
-    
-    // Apply My PM View filter if enabled (sync, after options exist)
-    if (getMyPmViewEnabled() && isUserProjectManager()) {
-      const pmName = getCurrentUserPmName();
-      const option = Array.from(pmFilter.options).find(opt => opt.value === pmName);
-      if (option) pmFilter.value = option.value;
-    }
-  }
-  
-  const custFilter = document.getElementById('joCustomerFilter');
-  if (custFilter) {
-    const customers = [...new Set(joData.map(j => j.customer_name).filter(Boolean))].sort();
-    custFilter.innerHTML = '<option value="">All Clients</option>' + 
-      customers.map(c => `<option value="${c}">${c}</option>`).join('');
-  }
+  // Build PM tabs instead of dropdown
+  const activePms = getActivePmsFromData(joData);
+  buildPmTabs('joPmTabs', activePms, 'jo', () => {
+    filterJobOverview();
+  });
 }
 
 function filterJobOverview() {
@@ -15915,8 +15988,8 @@ function filterJobOverview() {
   const showClosed = document.getElementById('joStatusClosed')?.checked;
   const showOverhead = document.getElementById('joStatusOverhead')?.checked;
   
-  const pmFilter = document.getElementById('joPmFilter')?.value || '';
-  const custFilter = document.getElementById('joCustomerFilter')?.value || '';
+  // Get PM from tabs instead of dropdown
+  const pmFilter = getSelectedPmForPage('jo');
   
   const allowedStatuses = [];
   if (showActive) allowedStatuses.push('A');
@@ -15927,7 +16000,6 @@ function filterJobOverview() {
   joFiltered = joData.filter(job => {
     if (allowedStatuses.length > 0 && !allowedStatuses.includes(job.job_status)) return false;
     if (pmFilter && job.project_manager_name !== pmFilter) return false;
-    if (custFilter && job.customer_name !== custFilter) return false;
     return true;
   });
   
@@ -17848,20 +17920,8 @@ async function loadJobActualsData() {
     initJobActualsColumnFilters();
     updateJobActualsSortIndicators();
     
-    // Populate PM filter dropdown
-    populateJaPmFilter();
-    
-    // Apply My PM View to PM dropdown (sync, after dropdown is populated)
-    if (getMyPmViewEnabled() && isUserProjectManager()) {
-      const pmName = getCurrentUserPmName();
-      const pmSelect = document.getElementById('jaPmFilter');
-      if (pmName && pmSelect) {
-        const option = Array.from(pmSelect.options).find(opt => opt.value === pmName);
-        if (option) {
-          pmSelect.value = pmName;
-        }
-      }
-    }
+    // Build PM tabs
+    populateJaPmTabs();
     
     const dataAsOf = document.getElementById('jobActualsDataAsOf');
     if (dataAsOf && data.generated_at) {
@@ -18030,7 +18090,9 @@ function filterJobActuals() {
   const showInactive = document.getElementById('jaStatusInactive')?.checked;
   const showClosed = document.getElementById('jaStatusClosed')?.checked;
   const showOverhead = document.getElementById('jaStatusOverhead')?.checked;
-  const pmFilter = document.getElementById('jaPmFilter')?.value || '';
+  
+  // Get PM from tabs instead of dropdown
+  const pmFilter = getSelectedPmForPage('ja');
   
   const jobNoSearch = (document.getElementById('jaJobNoSearch')?.value || '').toLowerCase().trim();
   const descriptionSearch = (document.getElementById('jaDescriptionSearch')?.value || '').toLowerCase().trim();
@@ -18043,10 +18105,10 @@ function filterJobActuals() {
   if (showOverhead) allowedStatuses.push('O');
   
   jobActualsFiltered = jobActualsData.filter(job => {
-    // Status filter from config panel
+    // Status filter from tabs
     if (allowedStatuses.length > 0 && !allowedStatuses.includes(job.job_status)) return false;
     
-    // PM filter from config panel
+    // PM filter from tabs
     if (pmFilter && job.project_manager_name !== pmFilter) return false;
     
     // Individual search filters
@@ -18137,28 +18199,12 @@ function renderJobActualsBreakdowns() {
   // Donut charts removed per user request
 }
 
-function populateJaPmFilter() {
+function populateJaPmTabs() {
   // Only show PMs with active jobs
   const activePms = getActivePmsFromData(jobActualsData);
-  const pmSelect = document.getElementById('jaPmFilter');
-  if (!pmSelect) return;
-  
-  // Save current value
-  const currentValue = pmSelect.value;
-  
-  // Clear and repopulate
-  pmSelect.innerHTML = '<option value="">All Project Managers</option>';
-  activePms.forEach(pm => {
-    const option = document.createElement('option');
-    option.value = pm;
-    option.textContent = pm;
-    pmSelect.appendChild(option);
+  buildPmTabs('jaPmTabs', activePms, 'ja', () => {
+    filterJobActuals();
   });
-  
-  // Restore value if still valid
-  if (currentValue && activePms.includes(currentValue)) {
-    pmSelect.value = currentValue;
-  }
 }
 
 function renderJaPmDonutChart() {
@@ -18465,13 +18511,15 @@ function initJobCosts() {
 }
 
 function setupJobCostsEventListeners() {
-  document.getElementById('jcStatusActive')?.addEventListener('change', filterJobCosts);
-  document.getElementById('jcStatusInactive')?.addEventListener('change', filterJobCosts);
-  document.getElementById('jcStatusClosed')?.addEventListener('change', filterJobCosts);
-  document.getElementById('jcStatusOverhead')?.addEventListener('change', filterJobCosts);
-  document.getElementById('jcPmFilter')?.addEventListener('change', filterJobCosts);
-  document.getElementById('jcCustomerFilter')?.addEventListener('change', filterJobCosts);
-  document.getElementById('jcSearchInput')?.addEventListener('input', filterJobCosts);
+  // Status checkboxes
+  document.getElementById('ccStatusActive')?.addEventListener('change', filterCostCodes);
+  document.getElementById('ccStatusInactive')?.addEventListener('change', filterCostCodes);
+  document.getElementById('ccStatusClosed')?.addEventListener('change', filterCostCodes);
+  document.getElementById('ccStatusOverhead')?.addEventListener('change', filterCostCodes);
+  
+  // Search inputs
+  document.getElementById('ccJobSearchBar')?.addEventListener('input', filterCostCodes);
+  document.getElementById('ccClientSearchBar')?.addEventListener('input', filterCostCodes);
   
   document.querySelectorAll('.jc-sortable').forEach(th => {
     th.addEventListener('click', () => {
@@ -18547,14 +18595,14 @@ async function loadJobCostsData() {
       };
     });
     
-    populateJobCostsFilters();
+    populateCostCodesTabs();
     
-    const dataAsOf = document.getElementById('jobCostsDataAsOf');
+    const dataAsOf = document.getElementById('costCodesDataAsOf');
     if (dataAsOf && data.generated_at) {
       dataAsOf.textContent = new Date(data.generated_at).toLocaleDateString();
     }
     
-    filterJobCosts();
+    filterCostCodes();
   } catch (err) {
     console.error('Error loading job costs:', err);
     document.getElementById('jobCostsTableBody').innerHTML = 
@@ -18564,39 +18612,24 @@ async function loadJobCostsData() {
   }
 }
 
-function populateJobCostsFilters() {
-  const pmFilter = document.getElementById('jcPmFilter');
-  if (pmFilter) {
-    // Only show PMs with active jobs
-    const activePms = getActivePmsFromData(jobCostsData);
-    pmFilter.innerHTML = '<option value="">All Project Managers</option>' + 
-      activePms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
-    
-    // Apply My PM View filter if enabled (sync, after options exist)
-    if (getMyPmViewEnabled() && isUserProjectManager()) {
-      const pmName = getCurrentUserPmName();
-      const option = Array.from(pmFilter.options).find(opt => opt.value === pmName);
-      if (option) pmFilter.value = option.value;
-    }
-  }
-  
-  const custFilter = document.getElementById('jcCustomerFilter');
-  if (custFilter) {
-    const customers = [...new Set(jobCostsData.map(j => j.customer_name).filter(Boolean))].sort();
-    custFilter.innerHTML = '<option value="">All Clients</option>' + 
-      customers.map(c => `<option value="${c}">${c}</option>`).join('');
-  }
+function populateCostCodesTabs() {
+  // Build PM tabs instead of dropdown
+  const activePms = getActivePmsFromData(jobCostsData);
+  buildPmTabs('ccPmTabs', activePms, 'cc', () => {
+    filterCostCodes();
+  });
 }
 
-function filterJobCosts() {
-  const showActive = document.getElementById('jcStatusActive')?.checked;
-  const showInactive = document.getElementById('jcStatusInactive')?.checked;
-  const showClosed = document.getElementById('jcStatusClosed')?.checked;
-  const showOverhead = document.getElementById('jcStatusOverhead')?.checked;
+function filterCostCodes() {
+  const showActive = document.getElementById('ccStatusActive')?.checked;
+  const showInactive = document.getElementById('ccStatusInactive')?.checked;
+  const showClosed = document.getElementById('ccStatusClosed')?.checked;
+  const showOverhead = document.getElementById('ccStatusOverhead')?.checked;
   
-  const pmFilter = document.getElementById('jcPmFilter')?.value || '';
-  const custFilter = document.getElementById('jcCustomerFilter')?.value || '';
-  const searchTerm = (document.getElementById('jcSearchInput')?.value || '').toLowerCase().trim();
+  // Get PM from tabs instead of dropdown
+  const pmFilter = getSelectedPmForPage('cc');
+  const searchTerm = (document.getElementById('ccJobSearchBar')?.value || '').toLowerCase().trim();
+  const clientSearch = (document.getElementById('ccClientSearchBar')?.value || '').toLowerCase().trim();
   
   const allowedStatuses = [];
   if (showActive) allowedStatuses.push('A');
@@ -18607,7 +18640,11 @@ function filterJobCosts() {
   jobCostsFiltered = jobCostsData.filter(row => {
     if (allowedStatuses.length > 0 && !allowedStatuses.includes(row.job_status)) return false;
     if (pmFilter && row.project_manager_name !== pmFilter) return false;
-    if (custFilter && row.customer_name !== custFilter) return false;
+    
+    if (clientSearch) {
+      const customerName = (row.customer_name || '').toLowerCase();
+      if (!customerName.includes(clientSearch)) return false;
+    }
     
     if (searchTerm) {
       const searchStr = `${row.job_no} ${row.job_description} ${row.cost_code_no} ${row.cost_code_description}`.toLowerCase();
@@ -18620,6 +18657,7 @@ function filterJobCosts() {
   jcCurrentPage = 1;
   sortJobCosts();
   renderJobCostsTable();
+  renderCostCodesChart();
 }
 
 function sortJobCosts() {
@@ -18980,8 +19018,8 @@ let pmrCompanyAvg = {}; // Cached company-wide averages
 const PMR_CACHE_KEY = 'ftg_pm_list_cache';
 let pmrDataLoaded = false;
 
-// Fast PM list loader with caching
-async function loadPmListFast(pmSelect) {
+// Fast PM list loader with caching - now builds tabs instead of dropdown
+async function loadPmrTabsFast() {
   try {
     // Try cache first for instant load
     const cached = localStorage.getItem(PMR_CACHE_KEY);
@@ -18990,7 +19028,7 @@ async function loadPmListFast(pmSelect) {
         const cacheData = JSON.parse(cached);
         // Use cache if less than 1 hour old
         if (cacheData.timestamp && Date.now() - cacheData.timestamp < 3600000) {
-          populatePmSelectFromList(pmSelect, cacheData.pms);
+          buildPmrTabs(cacheData.pms);
           if (cacheData.generated_at) {
             jobsDataAsOf = cacheData.generated_at;
             const dataAsOf = document.getElementById('pmrDataAsOf');
@@ -19010,7 +19048,7 @@ async function loadPmListFast(pmSelect) {
     if (resp.ok) {
       const data = await resp.json();
       if (data.success && data.pms) {
-        populatePmSelectFromList(pmSelect, data.pms);
+        buildPmrTabs(data.pms);
         // Cache the result
         localStorage.setItem(PMR_CACHE_KEY, JSON.stringify({
           pms: data.pms,
@@ -19027,33 +19065,29 @@ async function loadPmListFast(pmSelect) {
     }
     
     // Fallback to loading from full data
-    await loadPmListFromFullData(pmSelect);
+    await loadPmrTabsFromFullData();
     
   } catch (e) {
     console.error('Failed to load PM list:', e);
     // Fallback to full data load
-    await loadPmListFromFullData(pmSelect);
+    await loadPmrTabsFromFullData();
   }
 }
 
-function populatePmSelectFromList(pmSelect, pms) {
-  if (!pmSelect) return;
+function buildPmrTabs(pms) {
+  // Build PM tabs using the generic function
+  buildPmTabs('pmrPmTabs', pms, 'pmr', async (selectedPm) => {
+    pmrSelectedPm = selectedPm === '__ALL__' ? '__ALL__' : selectedPm;
+    pmrCompanyAvg = {}; // Reset comparison cache when PM changes
+    if (pmrSelectedPm) {
+      showPmrLoadingState();
+      await ensurePmrDataLoaded();
+    }
+    updatePmReport();
+  });
   
-  // Filter to only PMs with active jobs (pms list from API should already be filtered,
-  // but apply filter here as fallback for cached data)
-  // Note: "All PMs" option still shows ALL data when selected
-  pmSelect.innerHTML = '<option value="">-- Select PM --</option>' + 
-    '<option value="__ALL__">All PMs</option>' +
-    pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
-  pmSelect.disabled = false;
-  
-  // Restore previously selected PM or default to All PMs
-  if (pmrSelectedPm && (pmrSelectedPm === '__ALL__' || pms.includes(pmrSelectedPm))) {
-    pmSelect.value = pmrSelectedPm;
-  } else {
-    pmrSelectedPm = '__ALL__';
-    pmSelect.value = '__ALL__';
-  }
+  // Sync internal state with what buildPmTabs selected
+  pmrSelectedPm = pmTabsState.pmr;
 }
 
 async function refreshPmListInBackground() {
@@ -19074,7 +19108,7 @@ async function refreshPmListInBackground() {
   }
 }
 
-async function loadPmListFromFullData(pmSelect) {
+async function loadPmrTabsFromFullData() {
   // Fallback: load from full jobs data
   if (!jobBudgetsData || jobBudgetsData.length === 0) {
     try {
@@ -19094,9 +19128,9 @@ async function loadPmListFromFullData(pmSelect) {
     }
   }
   
-  // Extract PMs from data
-  const pms = [...new Set(jobBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
-  populatePmSelectFromList(pmSelect, pms);
+  // Extract PMs from data and build tabs
+  const pms = getActivePmsFromData(jobBudgetsData);
+  buildPmrTabs(pms);
 }
 
 // Show loading state in the PM Report
@@ -19169,16 +19203,8 @@ async function ensurePmrDataLoaded() {
 }
 
 async function initPmReport() {
-  const pmSelect = document.getElementById('pmrPmSelect');
-  
-  // Show loading state immediately
-  if (pmSelect) {
-    pmSelect.innerHTML = '<option value="">Loading PMs...</option>';
-    pmSelect.disabled = true;
-  }
-  
-  // FAST PATH: Try to load PM list from cache or lightweight API first
-  await loadPmListFast(pmSelect);
+  // FAST PATH: Build PM tabs from cache or lightweight API
+  await loadPmrTabsFast();
   
   // Set up event listeners (only once)
   if (!pmrInitialized) {
@@ -19193,8 +19219,7 @@ async function initPmReport() {
   }
   
   // If PM already selected (including default "All PMs"), load data and refresh
-  if (pmSelect && pmSelect.value) {
-    pmrSelectedPm = pmSelect.value;
+  if (pmrSelectedPm) {
     // Show loading indicator and load data before updating
     showPmrLoadingState();
     await ensurePmrDataLoaded();
@@ -19236,24 +19261,14 @@ function populatePmrPmSelect() {
 }
 
 function setupPmrEventListeners() {
-  const pmSelect = document.getElementById('pmrPmSelect');
-  pmSelect?.addEventListener('change', async (e) => {
-    pmrSelectedPm = e.target.value;
-    pmrCompanyAvg = {}; // Reset comparison cache when PM changes
-    if (pmrSelectedPm) {
-      // Show loading indicator
-      showPmrLoadingState();
-      // Lazy load full data when PM is selected
-      await ensurePmrDataLoaded();
-    }
-    updatePmReport();
-  });
-  
-  const statusSelect = document.getElementById('pmrStatusSelect');
-  statusSelect?.addEventListener('change', (e) => {
-    pmrSelectedStatus = e.target.value;
-    pmrCompanyAvg = {}; // Reset comparison cache when status changes
-    updatePmReport();
+  // Status checkboxes event listeners
+  const statusCheckboxIds = ['pmrStatusActive', 'pmrStatusInactive', 'pmrStatusClosed', 'pmrStatusOverhead'];
+  statusCheckboxIds.forEach(id => {
+    const checkbox = document.getElementById(id);
+    checkbox?.addEventListener('change', () => {
+      pmrCompanyAvg = {}; // Reset comparison cache when status changes
+      updatePmReport();
+    });
   });
   
   // AI Analysis toggle
@@ -19322,9 +19337,20 @@ function updatePmReport() {
     };
   });
   
-  // Apply status filter
-  if (pmrSelectedStatus) {
-    pmrData.jobs = allJobs.filter(job => job.job_status === pmrSelectedStatus);
+  // Apply status filter from checkboxes
+  const pmrShowActive = document.getElementById('pmrStatusActive')?.checked;
+  const pmrShowInactive = document.getElementById('pmrStatusInactive')?.checked;
+  const pmrShowClosed = document.getElementById('pmrStatusClosed')?.checked;
+  const pmrShowOverhead = document.getElementById('pmrStatusOverhead')?.checked;
+  
+  const pmrAllowedStatuses = [];
+  if (pmrShowActive) pmrAllowedStatuses.push('A');
+  if (pmrShowInactive) pmrAllowedStatuses.push('I');
+  if (pmrShowClosed) pmrAllowedStatuses.push('C');
+  if (pmrShowOverhead) pmrAllowedStatuses.push('O');
+  
+  if (pmrAllowedStatuses.length > 0) {
+    pmrData.jobs = allJobs.filter(job => pmrAllowedStatuses.includes(job.job_status));
   } else {
     pmrData.jobs = allJobs;
   }
