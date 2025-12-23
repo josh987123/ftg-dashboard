@@ -829,7 +829,11 @@ function openChartFullscreen(chartId, title) {
         labels: { color: "#fff", font: { size: 10 }, boxWidth: 12, padding: 8 }
       },
       datalabels: {
-        display: true,
+        display: (context) => {
+          // Hide data labels for trendlines
+          if (context.dataset.type === 'line') return false;
+          return true;
+        },
         anchor: "end",
         align: "top",
         offset: 4,
@@ -4692,6 +4696,9 @@ function renderOverUnderBillingChart(labels, metricData, compare, currentMonthIn
       }
     }
   });
+  
+  // Register to overviewChartInstances for fullscreen functionality
+  overviewChartInstances['overviewOverUnderChart'] = overUnderChartInstance;
 }
 
 function createBarGradient(ctx, chartArea, colorStart, colorEnd) {
