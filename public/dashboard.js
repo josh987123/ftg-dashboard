@@ -4083,19 +4083,23 @@ function updateOverviewCharts() {
   let periods = [];
   let priorPeriods = [];
   
+  let viewSubtitle = "";
+  
   if (viewType === "monthly") {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    viewSubtitle = `Monthly, ${year}`;
     for (let m = 1; m <= 12; m++) {
       const key = `${year}-${String(m).padStart(2, "0")}`;
       // Skip current month if exclude is checked
       if (excludeCurrent && key === currentMonthKey) continue;
-      labels.push(monthNames[m - 1]);
+      labels.push(`${monthNames[m - 1]} ${year}`);
       periods.push([key]);
       if (compare || needPriorForYoY) {
         priorPeriods.push([`${year - 1}-${String(m).padStart(2, "0")}`]);
       }
     }
   } else if (viewType === "quarterly") {
+    viewSubtitle = `Quarterly, ${year}`;
     for (let q = 1; q <= 4; q++) {
       const qMonths = [];
       const priorQMonths = [];
@@ -4105,11 +4109,12 @@ function updateOverviewCharts() {
       }
       // Skip current quarter if exclude is checked and it contains current month
       if (excludeCurrent && qMonths.includes(currentMonthKey)) continue;
-      labels.push(`Q${q}`);
+      labels.push(`Q${q} ${year}`);
       periods.push(qMonths);
       if (compare || needPriorForYoY) priorPeriods.push(priorQMonths);
     }
   } else {
+    viewSubtitle = `Annual, ${rangeStart} - ${rangeEnd}`;
     for (let y = rangeStart; y <= rangeEnd; y++) {
       // Skip current year if exclude is checked
       if (excludeCurrent && y === currentYear) continue;
@@ -4124,6 +4129,17 @@ function updateOverviewCharts() {
       if (compare) priorPeriods.push(priorYearMonths);
     }
   }
+  
+  // Update all chart subtitles
+  const subtitleIds = [
+    'overviewRevenueSubtitle', 'overviewGrossMarginSubtitle', 'overviewOpMarginSubtitle',
+    'overviewCashSubtitle', 'overviewArApRatioSubtitle', 'overviewCurrentRatioSubtitle', 
+    'overviewOverUnderSubtitle'
+  ];
+  subtitleIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = viewSubtitle;
+  });
   
   const groups = isAccountGroups.income_statement.groups;
   

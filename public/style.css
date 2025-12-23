@@ -2190,6 +2190,13 @@ body.dark-mode .nav-item.nav-parent.expanded {
   margin-bottom: 0;
 }
 
+.metric-tile-subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 6px;
+}
+
 .metric-tile-header {
   display: flex;
   align-items: center;
