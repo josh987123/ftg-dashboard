@@ -108,3 +108,16 @@ All chart instances properly destroyed before recreation to prevent memory leaks
 - isExcluded(pmName): Check if a PM should be excluded from analysis
 - getExclusionNote(): Returns UI-friendly exclusion note
 - getAIPromptExclusion(): Returns AI prompt instructions for exclusion
+
+### PM Selection UI (December 2024)
+PM selection uses first-name button tabs (not dropdowns) across 5 job-related pages:
+- **Pages**: PM Report, Job Overview, Job Budgets, Job Actuals, Cost Code Analysis
+- **Tab Bar Layout**: "All" button first, then PM first names sorted by `PM_TAB_ORDER` preference, then alphabetically
+- **Filtering**: Only PMs with active jobs shown in tabs; "All" option shows all data including inactive PMs
+- **Status Filters**: Checkbox-based (Active, Inactive, Closed, Overhead) in a dedicated status-filter-bar below tabs
+- **State Management**: `pmTabsState` object tracks selected PM for each page (pmr, jo, jb, ja, cc keys)
+- **CSS Classes**: `pm-tabs-bar`, `pm-tab-btn`, `pm-tab-btn.active` with dark mode support and mobile responsiveness
+- **Helper Functions**:
+  - `buildPmTabs(containerId, pms, pageKey, onSelect)`: Generic tab builder used by all pages
+  - `getActivePmsFromData(data)`: Extracts PMs with active jobs for tab display
+  - `getSelectedPmForPage(pageKey)`: Retrieves selected PM from pmTabsState
