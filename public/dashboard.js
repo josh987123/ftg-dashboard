@@ -217,10 +217,15 @@ const pmTabsState = {
  */
 function buildPmTabs(containerId, pms, pageKey, onSelect) {
   const container = document.getElementById(containerId);
-  if (!container) return;
+  if (!container) {
+    console.error(`[PM Tabs] Container not found: ${containerId}`);
+    return;
+  }
   
   if (!pms || pms.length === 0) {
-    container.innerHTML = '<span class="pm-tabs-loading">No active Project Managers found</span>';
+    console.warn(`[PM Tabs] No PMs found for ${pageKey}, showing "All Project Managers" only`);
+    container.innerHTML = '<button class="pm-tab-btn all-pm active" data-pm="__ALL__">All Project Managers</button>';
+    pmTabsState[pageKey] = '__ALL__';
     return;
   }
   
@@ -237,10 +242,9 @@ function buildPmTabs(containerId, pms, pageKey, onSelect) {
     return a.localeCompare(b);
   });
   
-  // Build tabs HTML - "All" button first, then PM first names
-  // Use "All Project Managers" for AR Aging page, "All" for other pages
-  const allLabel = (pageKey === 'ara') ? 'All Project Managers' : 'All';
-  let html = `<button class="pm-tab-btn all-pm" data-pm="__ALL__">${allLabel}</button>`;
+  // Build tabs HTML - "All Project Managers" button first, then PM first names
+  let html = '<button class="pm-tab-btn all-pm" data-pm="__ALL__">All Project Managers</button>';
+  console.log(`[PM Tabs] Building tabs for ${pageKey} with ${sortedPms.length} PMs`);
   html += sortedPms.map(pm => {
     const firstName = pm.split(' ')[0];
     return `<button class="pm-tab-btn" data-pm="${pm}">${firstName}</button>`;
@@ -15980,7 +15984,9 @@ async function loadJobOverviewData() {
 
 function populateJobOverviewFilters() {
   // Build PM tabs instead of dropdown
+  console.log('[Job Overview] Populating filters, joData length:', joData.length);
   const activePms = getActivePmsFromData(joData);
+  console.log('[Job Overview] Active PMs:', activePms);
   buildPmTabs('joPmTabs', activePms, 'jo', () => {
     filterJobOverview();
   });
