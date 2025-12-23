@@ -19227,38 +19227,7 @@ async function initPmReport() {
   }
 }
 
-function populatePmrPmSelect() {
-  const pmSelect = document.getElementById('pmrPmSelect');
-  if (!pmSelect) return;
-  
-  // Get unique PMs from job actuals and budgets
-  const pmSet = new Set();
-  
-  jobActualsData.forEach(job => {
-    if (job.project_manager_name) pmSet.add(job.project_manager_name);
-  });
-  
-  jobBudgetsData.forEach(job => {
-    if (job.project_manager_name) pmSet.add(job.project_manager_name);
-  });
-  
-  const pms = [...pmSet].sort();
-  
-  pmSelect.innerHTML = '<option value="">-- Select a PM --</option>' +
-    pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
-  
-  // Auto-select if user is a PM
-  if (getMyPmViewEnabled() && isUserProjectManager()) {
-    const pmName = getCurrentUserPmName();
-    if (pmName && pms.includes(pmName)) {
-      pmSelect.value = pmName;
-      pmrSelectedPm = pmName;
-    }
-  }
-  
-  // Initialize PM Radar chart dropdown
-  initPmRadarSelect();
-}
+// Note: Old populatePmrPmSelect function removed - now using PM tabs via buildPmrTabs()
 
 function setupPmrEventListeners() {
   // Status checkboxes event listeners
