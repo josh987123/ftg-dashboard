@@ -18489,6 +18489,56 @@ body.dark-mode .dashboard-section > h2 {
     gap: 8px !important;
   }
   
+  /* --- PM TABS BAR - Landscape --- */
+  .pm-tabs-bar {
+    padding: 10px 12px !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  
+  .pm-tabs-container {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  
+  .pm-tab-btn {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+  }
+  
+  .pm-tabs-bar-label {
+    font-size: 11px !important;
+    margin-right: 8px !important;
+  }
+  
+  /* --- STATUS FILTER BAR - Landscape --- */
+  .status-filter-bar {
+    padding: 8px 12px !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+  
+  .status-checkboxes {
+    flex-wrap: wrap !important;
+    gap: 6px 12px !important;
+  }
+  
+  .status-checkbox-label {
+    font-size: 11px !important;
+  }
+  
+  /* --- AR/AP AGING FILTER BARS - Landscape --- */
+  .ar-aging-filter-bar,
+  .ap-aging-filter-bar {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+  
+  .ar-aging-filter-bar .filter-group,
+  .ap-aging-filter-bar .filter-group {
+    flex: 0 0 auto !important;
+  }
+  
   /* --- CONFIG PANELS - Compact --- */
   .config-panel,
   .overview-config-box {
