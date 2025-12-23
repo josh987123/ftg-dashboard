@@ -942,6 +942,28 @@ function openPageChartFullscreen(chartId, title) {
       <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value">${document.getElementById("cashMinValue")?.textContent || "-"}</div></div>
       <div class="stat-box"><div class="stat-label">Growth</div><div class="stat-value" style="color: ${growthColor}">${growthValue}</div></div>
     `;
+  } else if (chartId === "apAgingChart" && apAgingChart) {
+    sourceChart = apAgingChart;
+    const dateStr = document.getElementById("apAgingChartDate")?.textContent || "-";
+    statsHtml = `
+      <div class="stat-box"><div class="stat-label">0-30 Days</div><div class="stat-value">${document.getElementById("apAgingCurrent")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">31-60 Days</div><div class="stat-value">${document.getElementById("apAging31to60")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">61-90 Days</div><div class="stat-value">${document.getElementById("apAging61to90")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">90+ Days</div><div class="stat-value" style="color: #ef4444">${document.getElementById("apAging90plus")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">Total Due</div><div class="stat-value">${document.getElementById("apAgingTotalDue")?.textContent || "-"}</div></div>
+    `;
+    title = `AP Aging - as of: ${dateStr}`;
+  } else if (chartId === "arAgingChart" && arAgingChart) {
+    sourceChart = arAgingChart;
+    const dateStr = document.getElementById("arAgingChartDate")?.textContent || "-";
+    statsHtml = `
+      <div class="stat-box"><div class="stat-label">0-30 Days</div><div class="stat-value">${document.getElementById("arAgingCurrent")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">31-60 Days</div><div class="stat-value">${document.getElementById("arAging31to60")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">61-90 Days</div><div class="stat-value">${document.getElementById("arAging61to90")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">90+ Days</div><div class="stat-value" style="color: #ef4444">${document.getElementById("arAging90plus")?.textContent || "-"}</div></div>
+      <div class="stat-box"><div class="stat-label">Total Due</div><div class="stat-value">${document.getElementById("arAgingTotalDue")?.textContent || "-"}</div></div>
+    `;
+    title = `AR Aging - as of: ${dateStr}`;
   }
   
   if (!sourceChart) return;
@@ -25927,11 +25949,14 @@ async function initApAging() {
   
   loadApAgingData();
   
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  
   const dataAsOf = document.getElementById('apAgingDataAsOf');
-  if (dataAsOf) {
-    const now = new Date();
-    dataAsOf.textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }
+  if (dataAsOf) dataAsOf.textContent = dateStr;
+  
+  const chartDate = document.getElementById('apAgingChartDate');
+  if (chartDate) chartDate.textContent = dateStr;
 }
 
 function setupApAgingEventHandlers() {
@@ -26327,11 +26352,14 @@ function initArAging() {
   
   loadArAgingData();
   
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  
   const dataAsOf = document.getElementById('arAgingDataAsOf');
-  if (dataAsOf) {
-    const now = new Date();
-    dataAsOf.textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }
+  if (dataAsOf) dataAsOf.textContent = dateStr;
+  
+  const chartDate = document.getElementById('arAgingChartDate');
+  if (chartDate) chartDate.textContent = dateStr;
 }
 
 function loadArAgingFilters() {
