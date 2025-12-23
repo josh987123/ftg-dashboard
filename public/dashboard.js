@@ -16689,23 +16689,19 @@ function renderJoPmSections() {
 }
 
 function renderJoPmrMetrics(jobs) {
-  const activeJobs = jobs.filter(j => j.job_status === 'A');
-  const totalJobs = activeJobs.length;
+  // Count all filtered jobs (not just active)
+  const totalJobs = jobs.length;
   const totalContract = jobs.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
-  const totalCost = jobs.reduce((sum, j) => sum + (j.revised_cost || 0), 0);
-  const totalActualCost = jobs.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
   const totalEarnedRevenue = jobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
   const totalBilledRevenue = jobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
   const backlog = totalContract - totalBilledRevenue;
-  const backlogPct = totalContract > 0 ? (backlog / totalContract * 100) : 0;
-  const grossProfit = totalContract - totalCost;
-  const grossMargin = totalContract > 0 ? (grossProfit / totalContract * 100) : 0;
   const netOverUnder = totalBilledRevenue - totalEarnedRevenue;
   
-  const jobsWithProgress = jobs.filter(j => j.revised_contract > 0);
-  const avgPctComplete = jobsWithProgress.length > 0 
-    ? jobsWithProgress.reduce((sum, j) => sum + ((j.earned_revenue || 0) / j.revised_contract * 100), 0) / jobsWithProgress.length 
-    : 0;
+  // Calculate billed last month from job data
+  const billedLastMonth = jobs.reduce((sum, j) => sum + (j.billed_last_month || 0), 0);
+  
+  // AR Exposure = outstanding AR balance
+  const arExposure = jobs.reduce((sum, j) => sum + (j.ar_balance || 0), 0);
   
   // Update metric tiles
   const setMetric = (id, value) => {
@@ -16713,22 +16709,17 @@ function renderJoPmrMetrics(jobs) {
     if (el) el.textContent = value;
   };
   
+  // Row 1: # of Jobs, Contract Value, Billed Revenue, Earned Revenue
   setMetric('joPmrTotalJobs', totalJobs.toLocaleString());
   setMetric('joPmrTotalContract', formatCurrencyCompact(totalContract));
-  setMetric('joPmrBacklog', formatCurrencyCompact(backlog));
-  setMetric('joPmrBacklogPct', backlogPct.toFixed(1) + '% remaining');
-  setMetric('joPmrGrossMargin', grossMargin.toFixed(1) + '%');
-  setMetric('joPmrGrossMarginAmt', formatCurrencyCompact(grossProfit));
-  setMetric('joPmrNetOverUnder', formatCurrencyCompact(netOverUnder));
-  setMetric('joPmrAvgPctComplete', avgPctComplete.toFixed(1) + '%');
-  setMetric('joPmrBilledLastMonth', formatCurrencyCompact(totalBilledRevenue));
-  setMetric('joPmrArExposure', formatCurrencyCompact(totalBilledRevenue - totalEarnedRevenue));
-  setMetric('joPmrTotalActualCost', formatCurrencyCompact(totalActualCost));
+  setMetric('joPmrBilledRevenue', formatCurrencyCompact(totalBilledRevenue));
   setMetric('joPmrTotalEarnedRevenue', formatCurrencyCompact(totalEarnedRevenue));
   
-  // Update progress bar
-  const progressFill = document.getElementById('joPmrProgressFill');
-  if (progressFill) progressFill.style.width = Math.min(100, avgPctComplete) + '%';
+  // Row 2: Billed Last Month, AR Exposure, Backlog, Net Over/(Under)
+  setMetric('joPmrBilledLastMonth', formatCurrencyCompact(billedLastMonth));
+  setMetric('joPmrArExposure', formatCurrencyCompact(arExposure));
+  setMetric('joPmrBacklog', formatCurrencyCompact(backlog));
+  setMetric('joPmrNetOverUnder', formatCurrencyCompact(netOverUnder));
   
   // Color for over/under
   const ouEl = document.getElementById('joPmrNetOverUnder');
