@@ -1496,10 +1496,10 @@ let dataTimestamps = {
 async function loadDataTimestamps() {
   try {
     const [glResp, jobsResp, arResp, apResp] = await Promise.all([
-      fetch('data/financials_gl.json').then(r => r.json()).catch(() => null),
-      fetch('data/financials_jobs.json').then(r => r.json()).catch(() => null),
-      fetch('data/ar_invoices.json').then(r => r.json()).catch(() => null),
-      fetch('data/ap_invoices.json').then(r => r.json()).catch(() => null)
+      DataCache.getGLData().catch(() => null),
+      DataCache.getJobsData().catch(() => null),
+      DataCache.getARData().catch(() => null),
+      DataCache.getAPData().catch(() => null)
     ]);
     
     dataTimestamps.gl = glResp?.generated_at || null;
@@ -18636,42 +18636,36 @@ function initMissingBudgets() {
   loadMissingBudgetsData();
 }
 
-function loadMissingBudgetsData() {
+async function loadMissingBudgetsData() {
   const tbody = document.getElementById('missingBudgetsTableBody');
   if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">Loading job data...</td></tr>';
   
-  fetch('data/financials_jobs.json')
-    .then(resp => resp.text())
-    .then(text => {
-      const data = JSON.parse(text.replace(/^\uFEFF/, ''));
-      
-      jobBudgetsData = (data.job_budgets || []).map(job => ({
-        ...job,
-        original_contract: parseFloat(job.original_contract) || 0,
-        tot_income_adj: parseFloat(job.tot_income_adj) || 0,
-        revised_contract: parseFloat(job.revised_contract) || 0,
-        original_cost: parseFloat(job.original_cost) || 0,
-        tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
-        revised_cost: parseFloat(job.revised_cost) || 0,
-        estimated_profit: (parseFloat(job.revised_contract) || 0) - (parseFloat(job.revised_cost) || 0)
-      }));
-      
-      // Populate filters
-      populateMbFilters();
-      
-      // Set data date
-      const dateEl = document.getElementById('missingBudgetsDataAsOf');
-      if (dateEl && data.generated_at) {
-        dateEl.textContent = new Date(data.generated_at).toLocaleDateString();
-      }
-      
-      // Filter and render
-      filterMissingBudgets();
-    })
-    .catch(err => {
-      console.error('Error loading missing budgets:', err);
-      if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">Error loading data</td></tr>';
-    });
+  try {
+    const data = await DataCache.getJobsData();
+    
+    jobBudgetsData = (data.job_budgets || []).map(job => ({
+      ...job,
+      original_contract: parseFloat(job.original_contract) || 0,
+      tot_income_adj: parseFloat(job.tot_income_adj) || 0,
+      revised_contract: parseFloat(job.revised_contract) || 0,
+      original_cost: parseFloat(job.original_cost) || 0,
+      tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
+      revised_cost: parseFloat(job.revised_cost) || 0,
+      estimated_profit: (parseFloat(job.revised_contract) || 0) - (parseFloat(job.revised_cost) || 0)
+    }));
+    
+    populateMbFilters();
+    
+    const dateEl = document.getElementById('missingBudgetsDataAsOf');
+    if (dateEl && data.generated_at) {
+      dateEl.textContent = new Date(data.generated_at).toLocaleDateString();
+    }
+    
+    filterMissingBudgets();
+  } catch (err) {
+    console.error('Error loading missing budgets:', err);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">Error loading data</td></tr>';
+  }
 }
 
 function populateMbFilters() {
@@ -19017,9 +19011,7 @@ async function loadPmListFromFullData(pmSelect) {
   // Fallback: load from full jobs data
   if (!jobBudgetsData || jobBudgetsData.length === 0) {
     try {
-      const resp = await fetch('data/financials_jobs.json');
-      const text = await resp.text();
-      const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+      const data = await DataCache.getJobsData();
       jobBudgetsData = (data.job_budgets || []).map(job => ({
         ...job,
         original_contract: parseFloat(job.original_contract) || 0,
@@ -19081,15 +19073,13 @@ async function ensurePmrDataLoaded() {
   // Load job budgets if not already loaded
   if (!jobBudgetsData || jobBudgetsData.length === 0) {
     try {
-      const resp = await fetch('data/financials_jobs.json');
-      const text = await resp.text();
-      const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+      const data = await DataCache.getJobsData();
       jobBudgetsData = (data.job_budgets || []).map(job => ({
         ...job,
         original_contract: parseFloat(job.original_contract) || 0,
         tot_income_adj: parseFloat(job.tot_income_adj) || 0,
         revised_contract: parseFloat(job.revised_contract) || 0,
-        original_cost: parseFloat(job.original_cost) || 0,
+        original_cost: parseFloat(job.original_contract) || 0,
         tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
         revised_cost: parseFloat(job.revised_cost) || 0
       }));
@@ -19101,9 +19091,7 @@ async function ensurePmrDataLoaded() {
   // Load AR invoices
   if (pmrArInvoices.length === 0) {
     try {
-      const resp = await fetch('data/ar_invoices.json');
-      const text = await resp.text();
-      const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+      const data = await DataCache.getARData();
       pmrArInvoices = data.invoices || [];
     } catch (e) {
       console.error('Failed to load AR invoices for PM Report:', e);
@@ -20618,9 +20606,11 @@ async function extractAiInsightsData() {
   
   try {
     // Load jobs data for portfolio analysis
-    const jobsData = await fetch('data/financials_jobs.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null);
-    const arData = await fetch('data/ar_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null);
-    const apData = await fetch('data/ap_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(() => null);
+    const [jobsData, arData, apData] = await Promise.all([
+      DataCache.getJobsData().catch(() => null),
+      DataCache.getARData().catch(() => null),
+      DataCache.getAPData().catch(() => null)
+    ]);
     
     // Jobs Summary
     if (jobsData) {
@@ -20724,12 +20714,12 @@ async function aggregateAllBusinessData() {
     loadErrors: []
   };
   
-  // Load all data sources in parallel
+  // Load all data sources in parallel using cache
   const [glData, jobsData, arData, apData] = await Promise.all([
-    fetch('data/financials_gl.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(e => { data.loadErrors.push('GL Data'); return null; }),
-    fetch('data/financials_jobs.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(e => { data.loadErrors.push('Jobs Data'); return null; }),
-    fetch('data/ar_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(e => { data.loadErrors.push('AR Data'); return null; }),
-    fetch('data/ap_invoices.json').then(r => r.text()).then(t => JSON.parse(t.replace(/^\uFEFF/, ''))).catch(e => { data.loadErrors.push('AP Data'); return null; })
+    DataCache.getGLData().catch(e => { data.loadErrors.push('GL Data'); return null; }),
+    DataCache.getJobsData().catch(e => { data.loadErrors.push('Jobs Data'); return null; }),
+    DataCache.getARData().catch(e => { data.loadErrors.push('AR Data'); return null; }),
+    DataCache.getAPData().catch(e => { data.loadErrors.push('AP Data'); return null; })
   ]);
   
   // Aggregate Financial Data
@@ -21055,9 +21045,7 @@ async function initOverUnderBilling() {
   }
   
   try {
-    const resp = await fetch('data/financials_jobs.json');
-    const text = await resp.text();
-    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+    const data = await DataCache.getJobsData();
     
     if (data.job_budgets && (!jobBudgetsData || jobBudgetsData.length === 0)) {
       jobBudgetsData = (data.job_budgets || []).map(job => ({
@@ -21633,8 +21621,7 @@ async function initCostCodes() {
     ccBudgetLookupCache = null;
     
     // Always load fresh job data to avoid stale/incomplete data issues
-    const resp = await fetch('data/financials_jobs.json');
-    const data = await resp.json();
+    const data = await DataCache.getJobsData();
     console.log('[CostCodes] Data loaded:', data.job_budgets?.length || 0, 'budgets,', data.job_actuals?.length || 0, 'actuals');
     
     if (data.job_budgets) {
