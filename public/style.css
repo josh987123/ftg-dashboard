@@ -5627,16 +5627,23 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 
-/* Overview config: Time Period, Visuals, Show Metrics all in one row */
-#overview .config-body .rev-controls {
+/* Overview config: Time Period and Visuals side by side on desktop */
+#overview .overview-time-visuals-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 20px;
   align-items: flex-start;
 }
 
-#overview .config-body .overview-config-box {
+#overview .overview-time-period-box,
+#overview .overview-visuals-box,
+#overview .overview-metrics-box {
+  width: fit-content;
   flex: 0 0 auto;
+}
+
+#overview .overview-config-row {
+  margin-top: 12px;
 }
 
 /* Time period and year slider inline on desktop */
@@ -5686,8 +5693,14 @@ body.dark-mode .nav-item.nav-parent.expanded {
   }
   
   /* Stack overview config boxes on mobile */
-  #overview .config-body .overview-config-box {
-    flex: 0 0 100%;
+  #overview .overview-time-visuals-row {
+    flex-direction: column;
+  }
+  
+  #overview .overview-time-period-box,
+  #overview .overview-visuals-box,
+  #overview .overview-metrics-box {
+    width: 100%;
   }
   
   /* AI Analysis panel mobile improvements */
