@@ -26285,7 +26285,6 @@ let arAgingInitialized = false;
 let arAgingSortColumn = 'days_90_plus';
 let arAgingSortDirection = 'desc';
 let arAgingSearchTerm = '';
-let arAgingCustomerFilter = '';
 let arAgingPmFilter = '';
 let arAgingChart = null;
 
@@ -26310,15 +26309,7 @@ function loadArAgingFilters() {
     .then(r => r.json())
     .then(data => {
       if (data.success) {
-        const customerSelect = document.getElementById('arAgingCustomerFilter');
         const pmSelect = document.getElementById('arAgingPmFilter');
-        
-        if (customerSelect) {
-          customerSelect.innerHTML = '<option value="">All Customers</option>';
-          (data.customers || []).forEach(c => {
-            customerSelect.innerHTML += `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`;
-          });
-        }
         
         if (pmSelect) {
           pmSelect.innerHTML = '<option value="">All PMs</option>';
@@ -26338,14 +26329,6 @@ function setupArAgingEventHandlers() {
       arAgingSearchTerm = searchInput.value.trim();
       loadArAgingData();
     }, 300));
-  }
-  
-  const customerFilter = document.getElementById('arAgingCustomerFilter');
-  if (customerFilter) {
-    customerFilter.addEventListener('change', () => {
-      arAgingCustomerFilter = customerFilter.value;
-      loadArAgingData();
-    });
   }
   
   const pmFilter = document.getElementById('arAgingPmFilter');
@@ -26382,9 +26365,6 @@ function loadArAgingData() {
   
   if (arAgingSearchTerm) {
     params.set('search', arAgingSearchTerm);
-  }
-  if (arAgingCustomerFilter) {
-    params.set('customer', arAgingCustomerFilter);
   }
   if (arAgingPmFilter) {
     params.set('pm', arAgingPmFilter);
