@@ -8122,6 +8122,20 @@ body.dark-mode #accounts .summary-tile .tile-label {
    DISTRIBUTION REPORTS PLACEHOLDER STYLES
    ======================================== */
 
+/* Ensure Distribution Reports nav section gets same background as other sections */
+#navDistReportsChildren {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] #navDistReportsChildren {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+#navDistReportsChildren.expanded {
+  max-height: 700px;
+  opacity: 1;
+}
+
 .section-description {
   color: var(--text-secondary);
   margin-bottom: 20px;
