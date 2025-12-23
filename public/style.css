@@ -16029,22 +16029,23 @@ body.dark-mode .ar-invoice-row td {
 }
 
 @media (max-width: 768px) {
-  /* PM Report - 3 tiles per row on mobile, 100% width */
-  #pmReport .pmr-metrics-wrapper,
-  #pmReport .pmr-metrics-4col {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  
-  .pmr-metrics-4col {
+  /* PM Report - 3 tiles per row on mobile (3-3-3-1 layout for 10 tiles) */
+  #pmReport .pmr-metrics-wrapper {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 6px !important;
     width: 100% !important;
+    max-width: 100% !important;
   }
   
-  .pmr-metrics-4col.pmr-metrics-partial {
-    grid-template-columns: repeat(3, 1fr) !important;
+  /* Collapse row divs so tiles flow in wrapper grid */
+  #pmReport .pmr-metrics-wrapper .pmr-metrics-4col {
+    display: contents !important;
+  }
+  
+  /* Keep the section title spanning full width */
+  #pmReport .pmr-metrics-wrapper > .pmr-section-title {
+    grid-column: 1 / -1 !important;
   }
   
   .pmr-metric-tile {
