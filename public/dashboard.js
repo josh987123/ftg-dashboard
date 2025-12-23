@@ -17661,25 +17661,52 @@ function renderIsWaterfallChart(retryCount = 0) {
   waterfallData.push(operatingIncome >= 0 ? [0, operatingIncome] : [operatingIncome, 0]);
   labels.push('Op Income');
   
+  // Create gradient colors for green and red bars
+  const chartHeight = canvas.height || 300;
+  
+  // Green gradient (dark to light, top to bottom)
+  const greenGradient = ctx.createLinearGradient(0, 0, 0, chartHeight);
+  greenGradient.addColorStop(0, 'rgba(5, 150, 105, 0.9)');  // Darker green at top
+  greenGradient.addColorStop(1, 'rgba(52, 211, 153, 0.75)'); // Lighter green at bottom
+  
+  // Red gradient (dark to light, top to bottom)
+  const redGradient = ctx.createLinearGradient(0, 0, 0, chartHeight);
+  redGradient.addColorStop(0, 'rgba(185, 28, 28, 0.9)');  // Darker red at top
+  redGradient.addColorStop(1, 'rgba(248, 113, 113, 0.75)'); // Lighter red at bottom
+  
   // Assign colors: green for revenue/profit, red for deductions/expenses
   const getColor = (label, data) => {
     const val = Array.isArray(data) ? data[1] - data[0] : data;
-    // Revenue (green - same as profit)
-    if (label === 'Revenue') return 'rgba(16, 185, 129, 0.8)';
-    // All expense/deduction categories (red)
+    // Revenue (green gradient)
+    if (label === 'Revenue') return greenGradient;
+    // All expense/deduction categories (red gradient)
     if (['Direct Labor', 'Materials', 'Subcontracts', 'Other Direct',
          'Indirect Labor', 'Other Indirect', 'Operating Exp'].includes(label)) {
-      return 'rgba(239, 68, 68, 0.8)';
+      return redGradient;
     }
     // Profit subtotals (green if positive, red if negative)
     if (['Gross Profit', 'Op Income'].includes(label)) {
-      return val >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+      return val >= 0 ? greenGradient : redGradient;
     }
-    return 'rgba(16, 185, 129, 0.8)';
+    return greenGradient;
+  };
+  
+  // Border colors (solid)
+  const getBorderColor = (label, data) => {
+    const val = Array.isArray(data) ? data[1] - data[0] : data;
+    if (label === 'Revenue') return 'rgba(5, 150, 105, 1)';
+    if (['Direct Labor', 'Materials', 'Subcontracts', 'Other Direct',
+         'Indirect Labor', 'Other Indirect', 'Operating Exp'].includes(label)) {
+      return 'rgba(185, 28, 28, 1)';
+    }
+    if (['Gross Profit', 'Op Income'].includes(label)) {
+      return val >= 0 ? 'rgba(5, 150, 105, 1)' : 'rgba(185, 28, 28, 1)';
+    }
+    return 'rgba(5, 150, 105, 1)';
   };
   
   const backgroundColors = labels.map((label, i) => getColor(label, waterfallData[i]));
-  const borderColors = backgroundColors.map(c => c.replace('0.8', '1'));
+  const borderColors = labels.map((label, i) => getBorderColor(label, waterfallData[i]));
   
   const showDataLabels = document.getElementById('isWaterfallDataLabels')?.checked || false;
   
