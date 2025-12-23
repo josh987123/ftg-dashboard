@@ -2195,8 +2195,9 @@ body.dark-mode .nav-item.nav-parent.expanded {
 .metric-tile-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   margin-bottom: 2px;
+  position: relative;
 }
 
 .metric-info-btn {
@@ -4937,14 +4938,19 @@ body.dark-mode .nav-item.nav-parent.expanded {
 ============================================================ */
 .metric-tile-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 2px;
+  position: relative;
 }
 
 .metric-tile-buttons {
   display: flex;
   gap: 4px;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .chart-expand-btn,
