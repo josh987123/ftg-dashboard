@@ -16856,10 +16856,10 @@ body.dark-mode .ar-invoice-row td {
   font-style: italic;
 }
 
-/* Status Filter Row */
+/* Status Filter Row - Match PM tabs bar styling */
 .status-filter-bar {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+  border: none;
   border-radius: 8px;
   padding: 12px 16px;
   margin-bottom: 16px;
@@ -16876,9 +16876,9 @@ body.dark-mode .ar-invoice-row td {
 }
 
 .status-filter-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.85);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -16894,14 +16894,14 @@ body.dark-mode .ar-invoice-row td {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: var(--text-primary);
+  color: rgba(255, 255, 255, 0.95);
   cursor: pointer;
 }
 
 .status-checkbox-label input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: var(--accent-primary);
+  accent-color: #60a5fa;
   cursor: pointer;
 }
 
@@ -16915,7 +16915,9 @@ body.dark-mode .ar-invoice-row td {
 
 /* Dark mode adjustments */
 [data-theme="dark"] .pm-tabs-bar,
-body.dark-mode .pm-tabs-bar {
+body.dark-mode .pm-tabs-bar,
+[data-theme="dark"] .status-filter-bar,
+body.dark-mode .status-filter-bar {
   background: linear-gradient(135deg, #1a2e4a 0%, #234566 100%);
 }
 
@@ -16985,6 +16987,42 @@ body.dark-mode .pm-tab-btn.active {
   .options-filter-group {
     margin-left: 0;
   }
+}
+
+/* =====================================================
+   JOB MODULE PAGE FILTER BARS - Consistent Widths
+===================================================== */
+
+/* Job Overview - match AI analysis panel width (full width) */
+#jobOverview > .pm-tabs-bar,
+#jobOverview > .status-filter-bar {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Job Budgets - match content width */
+#jobBudgets > .pm-tabs-bar,
+#jobBudgets > .status-filter-bar {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Job Actuals - match content width */
+#jobActuals > .pm-tabs-bar,
+#jobActuals > .status-filter-bar {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Cost Codes - match content width */
+#costCodes > .pm-tabs-bar,
+#costCodes > .status-filter-bar {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* =====================================================
