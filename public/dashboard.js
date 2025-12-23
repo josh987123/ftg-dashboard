@@ -231,7 +231,8 @@ const pmTabsState = {
   ja: '__ALL__',    // Job Actuals
   cc: '__ALL__',    // Cost Codes
   oub: '__ALL__',   // Over/Under Billing
-  ara: '__ALL__'    // AR Aging
+  ara: '__ALL__',   // AR Aging
+  apa: '__ALL__'    // AP Aging
 };
 
 /**
@@ -25914,11 +25915,16 @@ let apAgingSearchTerm = '';
 let apAgingJobSearchTerm = '';
 let apAgingChart = null;
 
-function initApAging() {
+async function initApAging() {
   if (!apAgingInitialized) {
     setupApAgingEventHandlers();
     apAgingInitialized = true;
   }
+  
+  // Load PM tabs for AP Aging page
+  await loadAndBuildPmTabs('apAgingPmTabs', 'apa', () => {
+    loadApAgingData();
+  });
   
   loadApAgingData();
   
@@ -25975,6 +25981,12 @@ function loadApAgingData() {
   }
   if (apAgingJobSearchTerm) {
     params.set('job', apAgingJobSearchTerm);
+  }
+  
+  // Add PM filter from tabs
+  const pmFilter = getSelectedPmForPage('apa');
+  if (pmFilter) {
+    params.set('pm', pmFilter);
   }
   
   fetch(`/api/ap-aging?${params.toString()}`)

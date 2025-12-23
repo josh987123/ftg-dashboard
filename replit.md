@@ -110,12 +110,12 @@ All chart instances properly destroyed before recreation to prevent memory leaks
 - getAIPromptExclusion(): Returns AI prompt instructions for exclusion
 
 ### PM Selection UI (December 2024)
-PM selection uses first-name button tabs (not dropdowns) across 7 pages:
-- **Pages**: PM Report, Job Overview, Job Budgets, Job Actuals, Cost Code Analysis, Over/Under Billing, AR Aging
+PM selection uses first-name button tabs (not dropdowns) across 8 pages:
+- **Pages**: PM Report, Job Overview, Job Budgets, Job Actuals, Cost Code Analysis, Over/Under Billing, AR Aging, AP Aging
 - **Tab Bar Layout**: "All Project Managers" button first, then PM first names sorted by `PM_TAB_ORDER` preference, then alphabetically
 - **Filtering**: Only PMs with active jobs (job_status = 'A') shown in tabs; "All Project Managers" option shows all data
 - **Status Filters**: Checkbox-based (Active, Inactive, Closed, Overhead) in a dedicated status-filter-bar below tabs (job pages only)
-- **State Management**: `pmTabsState` object tracks selected PM for each page (pmr, jo, jb, ja, cc, oub, ara keys)
+- **State Management**: `pmTabsState` object tracks selected PM for each page (pmr, jo, jb, ja, cc, oub, ara, apa keys)
 - **CSS Classes**: `pm-tabs-bar`, `pm-tab-btn`, `pm-tab-btn.active` with dark mode support and mobile responsiveness
 - **Data Loading**: Uses async `loadAndBuildPmTabs()` which fetches PM list from `/api/pm-list` endpoint (with fallback to jobs data)
 - **Helper Functions**:
