@@ -145,6 +145,51 @@ const PM_EXCLUSION_CONFIG = {
 };
 
 /* ------------------------------------------------------------
+   ACTIVE PM LIST HELPER
+   Returns only PMs who have active jobs (job_status = 'A')
+   Used by PM filter dropdowns across multiple pages
+------------------------------------------------------------ */
+let _cachedActivePms = null;
+let _activePmsCacheTime = 0;
+const ACTIVE_PMS_CACHE_TTL = 60000; // 1 minute cache
+
+async function getActivePmsList() {
+  // Return cached list if fresh
+  if (_cachedActivePms && (Date.now() - _activePmsCacheTime) < ACTIVE_PMS_CACHE_TTL) {
+    return _cachedActivePms;
+  }
+  
+  try {
+    // Try to get from jobs data
+    const data = await DataCache.getJobsData();
+    const budgets = data.job_budgets || [];
+    
+    // Get unique PMs with active jobs only
+    const activePms = [...new Set(
+      budgets
+        .filter(j => j.job_status === 'A' && j.project_manager_name)
+        .map(j => j.project_manager_name)
+    )].sort();
+    
+    _cachedActivePms = activePms;
+    _activePmsCacheTime = Date.now();
+    return activePms;
+  } catch (e) {
+    console.warn('Failed to load active PMs list:', e);
+    return [];
+  }
+}
+
+function getActivePmsFromData(dataArray) {
+  // Synchronous helper when data is already loaded
+  return [...new Set(
+    dataArray
+      .filter(j => j.job_status === 'A' && j.project_manager_name)
+      .map(j => j.project_manager_name)
+  )].sort();
+}
+
+/* ------------------------------------------------------------
    DATA CACHE - Centralized caching for financial data
    Reduces redundant network requests across pages
 ------------------------------------------------------------ */
@@ -14988,11 +15033,12 @@ function sortJobBudgets() {
 }
 
 function populateJbPmFilter() {
-  const pms = [...new Set(jobBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+  // Only show PMs with active jobs
+  const activePms = getActivePmsFromData(jobBudgetsData);
   const pmSelect = document.getElementById('jbPmFilter');
   if (pmSelect) {
     pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
-      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+      activePms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
   }
 }
 
@@ -15842,9 +15888,10 @@ async function loadJobOverviewData() {
 function populateJobOverviewFilters() {
   const pmFilter = document.getElementById('joPmFilter');
   if (pmFilter) {
-    const pms = [...new Set(joData.map(j => j.project_manager_name).filter(Boolean))].sort();
+    // Only show PMs with active jobs
+    const activePms = getActivePmsFromData(joData);
     pmFilter.innerHTML = '<option value="">All Project Managers</option>' + 
-      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+      activePms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
     
     // Apply My PM View filter if enabled (sync, after options exist)
     if (getMyPmViewEnabled() && isUserProjectManager()) {
@@ -18091,7 +18138,8 @@ function renderJobActualsBreakdowns() {
 }
 
 function populateJaPmFilter() {
-  const pms = [...new Set(jobActualsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+  // Only show PMs with active jobs
+  const activePms = getActivePmsFromData(jobActualsData);
   const pmSelect = document.getElementById('jaPmFilter');
   if (!pmSelect) return;
   
@@ -18100,7 +18148,7 @@ function populateJaPmFilter() {
   
   // Clear and repopulate
   pmSelect.innerHTML = '<option value="">All Project Managers</option>';
-  pms.forEach(pm => {
+  activePms.forEach(pm => {
     const option = document.createElement('option');
     option.value = pm;
     option.textContent = pm;
@@ -18108,7 +18156,7 @@ function populateJaPmFilter() {
   });
   
   // Restore value if still valid
-  if (currentValue && pms.includes(currentValue)) {
+  if (currentValue && activePms.includes(currentValue)) {
     pmSelect.value = currentValue;
   }
 }
@@ -18519,9 +18567,10 @@ async function loadJobCostsData() {
 function populateJobCostsFilters() {
   const pmFilter = document.getElementById('jcPmFilter');
   if (pmFilter) {
-    const pms = [...new Set(jobCostsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+    // Only show PMs with active jobs
+    const activePms = getActivePmsFromData(jobCostsData);
     pmFilter.innerHTML = '<option value="">All Project Managers</option>' + 
-      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+      activePms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
     
     // Apply My PM View filter if enabled (sync, after options exist)
     if (getMyPmViewEnabled() && isUserProjectManager()) {
@@ -18683,13 +18732,14 @@ async function loadMissingBudgetsData() {
 }
 
 function populateMbFilters() {
-  const pms = [...new Set(jobBudgetsData.map(j => j.project_manager_name).filter(Boolean))].sort();
+  // Only show PMs with active jobs
+  const activePms = getActivePmsFromData(jobBudgetsData);
   const customers = [...new Set(jobBudgetsData.map(j => j.customer_name).filter(Boolean))].sort();
   
   const pmSelect = document.getElementById('mbPmFilter');
   if (pmSelect && pmSelect.options.length <= 1) {
     pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
-      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+      activePms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
     
     // Apply My PM View filter if enabled (sync, after options exist)
     if (getMyPmViewEnabled() && isUserProjectManager()) {
@@ -18989,6 +19039,9 @@ async function loadPmListFast(pmSelect) {
 function populatePmSelectFromList(pmSelect, pms) {
   if (!pmSelect) return;
   
+  // Filter to only PMs with active jobs (pms list from API should already be filtered,
+  // but apply filter here as fallback for cached data)
+  // Note: "All PMs" option still shows ALL data when selected
   pmSelect.innerHTML = '<option value="">-- Select PM --</option>' + 
     '<option value="__ALL__">All PMs</option>' +
     pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
@@ -22192,12 +22245,13 @@ function buildOubData() {
 }
 
 function populateOubFilters() {
-  const pms = [...new Set(oubData.map(j => j.project_manager_name).filter(Boolean))].sort();
+  // Only show PMs with active jobs
+  const activePms = getActivePmsFromData(oubData);
   
   const pmSelect = document.getElementById('oubPmFilter');
   if (pmSelect) {
     pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
-      pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
+      activePms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
     
     // Apply My PM View filter if enabled
     if (getMyPmViewEnabled() && isUserProjectManager()) {

@@ -866,12 +866,13 @@ def api_pm_list():
         jobs = data.get('job_budgets', [])
         generated_at = data.get('generated_at', '')
         
-        # Extract unique PM names from active jobs only for faster filtering
+        # Extract unique PM names from active jobs only (job_status = 'A')
         pms = set()
         for job in jobs:
-            pm = job.get('project_manager_name', '')
-            if pm and pm.strip():
-                pms.add(pm.strip())
+            if job.get('job_status', '') == 'A':
+                pm = job.get('project_manager_name', '')
+                if pm and pm.strip():
+                    pms.add(pm.strip())
         
         sorted_pms = sorted(list(pms))
         
@@ -3736,22 +3737,25 @@ def api_get_payments_metrics():
 
 @app.route('/api/payments/pms', methods=['GET', 'OPTIONS'])
 def api_get_payments_pms():
-    """Get unique project manager values for filter dropdown"""
+    """Get unique project manager values for filter dropdown - only PMs with active jobs"""
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'})
     
     try:
-        data = get_payments_data()
-        payments = data['payments']
+        # Get PMs with active jobs from job budgets data
+        jobs_path = os.path.join(os.path.dirname(__file__), 'data', 'financials_jobs.json')
+        active_pms = set()
         
-        # Get unique PM values
-        pms = set()
-        for p in payments:
-            pm = p.get('project_manager', '')
-            if pm:
-                pms.add(pm)
+        if os.path.exists(jobs_path):
+            with open(jobs_path, 'r', encoding='utf-8-sig') as f:
+                jobs_data = json.load(f)
+            for job in jobs_data.get('job_budgets', []):
+                if job.get('job_status', '') == 'A':
+                    pm = job.get('project_manager_name', '')
+                    if pm and pm.strip():
+                        active_pms.add(pm.strip())
         
-        return jsonify(sorted(list(pms)))
+        return jsonify(sorted(list(active_pms)))
     except Exception as e:
         print(f"[PAYMENTS] PMs error: {e}")
         return jsonify([]), 500
@@ -4396,11 +4400,25 @@ def api_get_ar_aging():
 
 @app.route('/api/ar-aging/filters', methods=['GET', 'OPTIONS'])
 def api_get_ar_aging_filters():
-    """Get distinct customers and PMs for filter dropdowns"""
+    """Get distinct customers and PMs for filter dropdowns - only PMs with active jobs"""
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'})
     
     try:
+        # Get PMs with active jobs from job budgets data
+        jobs_path = os.path.join(os.path.dirname(__file__), 'data', 'financials_jobs.json')
+        active_pms = set()
+        
+        if os.path.exists(jobs_path):
+            with open(jobs_path, 'r', encoding='utf-8-sig') as f:
+                jobs_data = json.load(f)
+            for job in jobs_data.get('job_budgets', []):
+                if job.get('job_status', '') == 'A':
+                    pm = job.get('project_manager_name', '')
+                    if pm and pm.strip():
+                        active_pms.add(pm.strip())
+        
+        # Get unique customers from AR invoices with amount due
         invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ar_invoices.json')
         with open(invoices_path, 'r', encoding='utf-8-sig') as f:
             invoices_json = json.load(f)
@@ -4408,7 +4426,6 @@ def api_get_ar_aging_filters():
         invoices = invoices_json.get('invoices', [])
         
         customers = set()
-        pms = set()
         
         for inv in invoices:
             calc_due = float(inv.get('calculated_amount_due', 0) or 0)
@@ -4418,15 +4435,11 @@ def api_get_ar_aging_filters():
             customer = (inv.get('customer_name', '') or '').strip()
             if customer:
                 customers.add(customer)
-            
-            pm = (inv.get('project_manager_name', '') or '').strip()
-            if pm:
-                pms.add(pm)
         
         return jsonify({
             'success': True,
             'customers': sorted(list(customers)),
-            'pms': sorted(list(pms))
+            'pms': sorted(list(active_pms))
         })
         
     except Exception as e:
