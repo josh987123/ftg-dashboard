@@ -16898,24 +16898,8 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
   
   const legendBox = document.getElementById('joRadarLegendBox');
   
-  if (isAllPms || !selectedPm) {
-    if (legendBox) legendBox.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">Select a PM to see radar chart</div>';
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    return;
-  }
-  
-  // Calculate portfolio averages and PM metrics using full joData (not status-filtered)
+  // Calculate portfolio averages using full joData (not status-filtered)
   const allActiveJobs = joData.filter(j => j.job_status === 'A' && !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name));
-  // Get PM's active jobs from full dataset (not filtered by status checkboxes)
-  const pmJobs = joData.filter(j => j.job_status === 'A' && j.project_manager_name === selectedPm);
-  
-  if (pmJobs.length === 0) {
-    if (legendBox) legendBox.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">No active jobs for selected PM</div>';
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    return;
-  }
   
   // Aggregate by PM for portfolio
   const pmStats = {};
@@ -16931,7 +16915,12 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
   });
   
   const pmCount = Object.keys(pmStats).length;
-  if (pmCount === 0) return;
+  if (pmCount === 0) {
+    if (legendBox) legendBox.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">No data available</div>';
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
   
   // Calculate averages
   const avgJobs = Object.values(pmStats).reduce((s, p) => s + p.jobs, 0) / pmCount;
@@ -16940,62 +16929,106 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
   const totalPortfolioCost = Object.values(pmStats).reduce((s, p) => s + p.cost, 0);
   const avgMargin = totalPortfolioContract > 0 ? ((totalPortfolioContract - totalPortfolioCost) / totalPortfolioContract * 100) : 0;
   const avgBilled = Object.values(pmStats).reduce((s, p) => s + p.billed, 0) / pmCount;
-  
-  // Calculate PM metrics
-  const pmContract = pmJobs.reduce((s, j) => s + (j.revised_contract || 0), 0);
-  const pmCost = pmJobs.reduce((s, j) => s + (j.revised_cost || 0), 0);
-  const pmMargin = pmContract > 0 ? ((pmContract - pmCost) / pmContract * 100) : 0;
-  const pmBilled = pmJobs.reduce((s, j) => s + (j.billed_revenue || 0), 0);
-  const pmEarned = pmJobs.reduce((s, j) => s + (j.earned_revenue || 0), 0);
-  const pmBillingPosition = pmEarned > 0 ? (pmBilled / pmEarned * 100) : 100;
+  const avgEarned = Object.values(pmStats).reduce((s, p) => s + p.earned, 0) / pmCount;
+  const avgBillingPosition = avgEarned > 0 ? (avgBilled / avgEarned * 100) : 100;
+  const avgJobSize = avgJobs > 0 ? (avgContract / avgJobs) : 0;
   
   // Normalize to 0-100 scale relative to max PM values
   const maxJobs = Math.max(...Object.values(pmStats).map(p => p.jobs));
   const maxContract = Math.max(...Object.values(pmStats).map(p => p.contract));
   const maxMargin = Math.max(...Object.values(pmStats).map(p => p.contract > 0 ? ((p.contract - p.cost) / p.contract * 100) : 0));
+  const maxJobSize = Math.max(...Object.values(pmStats).map(p => p.jobs > 0 ? (p.contract / p.jobs) : 0));
   
   const normalize = (val, max) => max > 0 ? Math.min(100, (val / max * 100)) : 0;
   
-  const pmData = [
-    normalize(pmJobs.length, maxJobs),
-    normalize(pmContract, maxContract),
-    normalize(pmMargin, Math.max(maxMargin, 30)),
-    normalize(pmContract / pmJobs.length, maxContract / Math.max(1, avgJobs)),
-    Math.min(100, pmBillingPosition)
-  ];
-  
+  // Company average data (always shown)
   const avgData = [
     normalize(avgJobs, maxJobs),
     normalize(avgContract, maxContract),
     normalize(avgMargin, Math.max(maxMargin, 30)),
-    50,
-    100
+    normalize(avgJobSize, maxJobSize),
+    Math.min(100, avgBillingPosition)
   ];
+  
+  const datasets = [];
+  let legendHtml = '';
+  
+  // Check if a specific PM is selected
+  const showPmOverlay = !isAllPms && selectedPm;
+  
+  if (showPmOverlay) {
+    // Get PM's active jobs from full dataset (not filtered by status checkboxes)
+    const pmJobs = joData.filter(j => j.job_status === 'A' && j.project_manager_name === selectedPm);
+    
+    if (pmJobs.length > 0) {
+      // Calculate PM metrics
+      const pmContract = pmJobs.reduce((s, j) => s + (j.revised_contract || 0), 0);
+      const pmCost = pmJobs.reduce((s, j) => s + (j.revised_cost || 0), 0);
+      const pmMargin = pmContract > 0 ? ((pmContract - pmCost) / pmContract * 100) : 0;
+      const pmBilled = pmJobs.reduce((s, j) => s + (j.billed_revenue || 0), 0);
+      const pmEarned = pmJobs.reduce((s, j) => s + (j.earned_revenue || 0), 0);
+      const pmBillingPosition = pmEarned > 0 ? (pmBilled / pmEarned * 100) : 100;
+      const pmJobSize = pmJobs.length > 0 ? (pmContract / pmJobs.length) : 0;
+      
+      const pmData = [
+        normalize(pmJobs.length, maxJobs),
+        normalize(pmContract, maxContract),
+        normalize(pmMargin, Math.max(maxMargin, 30)),
+        normalize(pmJobSize, maxJobSize),
+        Math.min(100, pmBillingPosition)
+      ];
+      
+      // Add PM dataset first (on top)
+      datasets.push({
+        label: selectedPm,
+        data: pmData,
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        borderColor: '#3b82f6',
+        borderWidth: 2,
+        pointBackgroundColor: '#3b82f6'
+      });
+      
+      legendHtml = `
+        <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;">
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:3px;background:#3b82f6;border-radius:2px;"></span><span style="font-size:11px;color:var(--text-secondary);">${selectedPm}</span></span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:3px;background:#9ca3af;border-radius:2px;border:1px dashed #9ca3af;"></span><span style="font-size:11px;color:var(--text-secondary);">Company Avg</span></span>
+        </div>
+      `;
+    } else {
+      legendHtml = `
+        <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;">
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:3px;background:#9ca3af;border-radius:2px;"></span><span style="font-size:11px;color:var(--text-secondary);">Company Average</span></span>
+        </div>
+        <div style="text-align:center;color:var(--text-muted);font-size:10px;margin-top:4px;">No active jobs for ${selectedPm}</div>
+      `;
+    }
+  } else {
+    // All PMs selected - show company average only
+    legendHtml = `
+      <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:3px;background:#9ca3af;border-radius:2px;"></span><span style="font-size:11px;color:var(--text-secondary);">Company Average</span></span>
+      </div>
+      <div style="text-align:center;color:var(--text-muted);font-size:10px;margin-top:4px;">Select a PM to compare</div>
+    `;
+  }
+  
+  // Add company average dataset (shown for all cases)
+  datasets.push({
+    label: 'Company Avg',
+    data: avgData,
+    backgroundColor: 'rgba(156, 163, 175, 0.15)',
+    borderColor: '#9ca3af',
+    borderWidth: showPmOverlay ? 1 : 2,
+    borderDash: showPmOverlay ? [5, 5] : [],
+    pointBackgroundColor: '#9ca3af'
+  });
   
   const ctx = canvas.getContext('2d');
   joPmRadarChart = new Chart(ctx, {
     type: 'radar',
     data: {
       labels: ['Job Count', 'Contract Value', 'Profit Margin', 'Avg Job Size', 'Billing Position'],
-      datasets: [
-        {
-          label: selectedPm,
-          data: pmData,
-          backgroundColor: 'rgba(59, 130, 246, 0.2)',
-          borderColor: '#3b82f6',
-          borderWidth: 2,
-          pointBackgroundColor: '#3b82f6'
-        },
-        {
-          label: 'Portfolio Avg',
-          data: avgData,
-          backgroundColor: 'rgba(156, 163, 175, 0.1)',
-          borderColor: '#9ca3af',
-          borderWidth: 1,
-          borderDash: [5, 5],
-          pointBackgroundColor: '#9ca3af'
-        }
-      ]
+      datasets: datasets
     },
     options: {
       responsive: true,
@@ -17016,12 +17049,7 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
   });
   
   if (legendBox) {
-    legendBox.innerHTML = `
-      <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;">
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:3px;background:#3b82f6;border-radius:2px;"></span><span style="font-size:11px;color:var(--text-secondary);">${selectedPm}</span></span>
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:3px;background:#9ca3af;border-radius:2px;border:1px dashed #9ca3af;"></span><span style="font-size:11px;color:var(--text-secondary);">Portfolio Avg</span></span>
-      </div>
-    `;
+    legendBox.innerHTML = legendHtml;
   }
 }
 
