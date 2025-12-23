@@ -4454,7 +4454,23 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
   });
   
   // Update Over/Under Billing stats separately (uses current instead of CAGR)
-  const overUnderValues = metrics.overUnder?.values || [];
+  let overUnderValues = metrics.overUnder?.values || [];
+  let overUnderLabels = [...labels];
+  
+  // Filter out current month if exclude is checked
+  if (excludeCurrent && currentMonthIndices.length > 0) {
+    const filteredValues = [];
+    const filteredLabels = [];
+    overUnderValues.forEach((v, idx) => {
+      if (!currentMonthIndices.includes(idx)) {
+        filteredValues.push(v);
+        filteredLabels.push(labels[idx]);
+      }
+    });
+    overUnderValues = filteredValues;
+    overUnderLabels = filteredLabels;
+  }
+  
   if (overUnderValues.length > 0) {
     const nonZeroValues = overUnderValues.filter(v => v !== 0);
     const avg = nonZeroValues.length > 0 ? nonZeroValues.reduce((a, b) => a + b, 0) / nonZeroValues.length : 0;
@@ -4464,8 +4480,8 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
     
     const highIdx = overUnderValues.indexOf(high);
     const lowIdx = nonZeroValues.length > 0 ? overUnderValues.indexOf(low) : -1;
-    const highPeriod = highIdx >= 0 && labels[highIdx] ? labels[highIdx] : '';
-    const lowPeriod = lowIdx >= 0 && labels[lowIdx] ? labels[lowIdx] : '';
+    const highPeriod = highIdx >= 0 && overUnderLabels[highIdx] ? overUnderLabels[highIdx] : '';
+    const lowPeriod = lowIdx >= 0 && overUnderLabels[lowIdx] ? overUnderLabels[lowIdx] : '';
     
     const avgEl = document.getElementById('overUnderAvg');
     const highEl = document.getElementById('overUnderHigh');
