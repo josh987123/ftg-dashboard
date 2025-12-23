@@ -4239,6 +4239,22 @@ function updateOverviewCharts() {
   
   updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndices);
   
+  // Render data tables for each chart
+  const tableConfigs = [
+    { tableId: 'overviewRevenueTable', data: metrics.revenue, isPercent: false, isRatio: false },
+    { tableId: 'overviewGrossMarginTable', data: metrics.grossMargin, isPercent: true, isRatio: false },
+    { tableId: 'overviewOpMarginTable', data: metrics.opMargin, isPercent: true, isRatio: false },
+    { tableId: 'overviewCashTable', data: metrics.cash, isPercent: false, isRatio: false },
+    { tableId: 'overviewArApRatioTable', data: metrics.arApRatio, isPercent: false, isRatio: true },
+    { tableId: 'overviewCurrentRatioTable', data: metrics.currentRatio, isPercent: false, isRatio: true }
+  ];
+  
+  tableConfigs.forEach(cfg => {
+    renderOverviewDataTable(cfg.tableId, labels, cfg.data.values, compare ? cfg.data.priorValues : [], cfg.isPercent, cfg.isRatio, !cfg.isPercent && !cfg.isRatio);
+  });
+  
+  initOverviewDataToggle();
+  
   // Render AR Aging and AP Aging charts (fetch live data)
   renderArApSummaryCharts();
   } catch (err) {
@@ -4626,6 +4642,10 @@ async function renderArApSummaryCharts() {
       });
     }
     
+    // Render data tables for AR/AP aging
+    renderAgingDataTable('overviewArAgingTable', data.ar, 'AR');
+    renderAgingDataTable('overviewApAgingTable', data.ap, 'AP');
+    
   } catch (err) {
     console.error('Error rendering AR/AP summary charts:', err);
   }
@@ -4644,6 +4664,128 @@ const gradientColors = {
   red: { start: "#dc2626", end: "#f87171" },
   orange: { start: "#d97706", end: "#fbbf24" }
 };
+
+let overviewDataTableCache = {};
+
+function initOverviewDataToggle() {
+  document.querySelectorAll('.chart-data-toggle').forEach(btn => {
+    btn.removeEventListener('click', handleDataToggleClick);
+    btn.addEventListener('click', handleDataToggleClick);
+  });
+}
+
+function handleDataToggleClick(e) {
+  const btn = e.currentTarget;
+  const targetId = btn.getAttribute('data-target');
+  const wrapper = document.getElementById(targetId);
+  if (!wrapper) return;
+  
+  const isCollapsed = wrapper.classList.contains('collapsed');
+  if (isCollapsed) {
+    wrapper.classList.remove('collapsed');
+    wrapper.classList.add('expanded');
+    btn.textContent = 'Collapse';
+  } else {
+    wrapper.classList.remove('expanded');
+    wrapper.classList.add('collapsed');
+    btn.textContent = 'Expand';
+  }
+}
+
+function renderOverviewDataTable(tableId, labels, values, priorValues, isPercent, isRatio, isCurrency) {
+  const wrapper = document.getElementById(tableId);
+  if (!wrapper) return;
+  
+  const table = wrapper.querySelector('table');
+  if (!table) return;
+  
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  
+  let headerHtml = '<tr><th>Period</th><th>Value</th>';
+  if (priorValues && priorValues.length > 0) {
+    headerHtml += '<th>Prior</th><th>Change</th>';
+  }
+  headerHtml += '</tr>';
+  thead.innerHTML = headerHtml;
+  
+  let bodyHtml = '';
+  labels.forEach((label, idx) => {
+    const value = values[idx] || 0;
+    const formattedValue = formatOverviewTableValue(value, isPercent, isRatio, isCurrency);
+    
+    bodyHtml += '<tr>';
+    bodyHtml += '<td>' + label + '</td>';
+    bodyHtml += '<td>' + formattedValue + '</td>';
+    
+    if (priorValues && priorValues.length > 0) {
+      const prior = priorValues[idx] || 0;
+      const formattedPrior = formatOverviewTableValue(prior, isPercent, isRatio, isCurrency);
+      const change = prior !== 0 ? ((value - prior) / Math.abs(prior)) * 100 : 0;
+      const changeClass = change < 0 ? 'style="color:#ef4444"' : (change > 0 ? 'style="color:#22c55e"' : '');
+      const changeSign = change > 0 ? '+' : '';
+      bodyHtml += '<td>' + formattedPrior + '</td>';
+      bodyHtml += '<td ' + changeClass + '>' + changeSign + change.toFixed(1) + '%</td>';
+    }
+    
+    bodyHtml += '</tr>';
+  });
+  
+  tbody.innerHTML = bodyHtml;
+  overviewDataTableCache[tableId] = { labels, values, priorValues, isPercent, isRatio, isCurrency };
+}
+
+function formatOverviewTableValue(value, isPercent, isRatio, isCurrency) {
+  if (isRatio) {
+    return value.toFixed(2) + 'x';
+  }
+  if (isPercent) {
+    return value.toFixed(1) + '%';
+  }
+  if (isCurrency !== false) {
+    return formatCurrency(value);
+  }
+  return value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+function renderAgingDataTable(tableId, agingData, type) {
+  const wrapper = document.getElementById(tableId);
+  if (!wrapper) return;
+  
+  const table = wrapper.querySelector('table');
+  if (!table) return;
+  
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  
+  thead.innerHTML = '<tr><th>Aging Bucket</th><th>Amount</th><th>% of Total</th></tr>';
+  
+  const total = agingData.current + agingData.days_31_60 + agingData.days_61_90 + agingData.days_90_plus;
+  const buckets = [
+    { label: '0-30 Days', value: agingData.current },
+    { label: '31-60 Days', value: agingData.days_31_60 },
+    { label: '61-90 Days', value: agingData.days_61_90 },
+    { label: '90+ Days', value: agingData.days_90_plus }
+  ];
+  
+  let bodyHtml = '';
+  buckets.forEach(bucket => {
+    const pct = total > 0 ? (bucket.value / total) * 100 : 0;
+    bodyHtml += '<tr>';
+    bodyHtml += '<td>' + bucket.label + '</td>';
+    bodyHtml += '<td>' + formatCurrency(bucket.value) + '</td>';
+    bodyHtml += '<td>' + pct.toFixed(1) + '%</td>';
+    bodyHtml += '</tr>';
+  });
+  
+  bodyHtml += '<tr style="font-weight:600;border-top:2px solid var(--border-primary)">';
+  bodyHtml += '<td>Total</td>';
+  bodyHtml += '<td>' + formatCurrency(total) + '</td>';
+  bodyHtml += '<td>100%</td>';
+  bodyHtml += '</tr>';
+  
+  tbody.innerHTML = bodyHtml;
+}
 
 function renderOverviewChart(canvasId, labels, metricData, showPrior, showTrend, currentMonthIndices) {
   try {
