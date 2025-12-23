@@ -667,16 +667,13 @@
                   </div>
                   <input type="hidden" id="overviewViewType" value="quarterly">
                 </div>
-                <div class="year-slider-section" id="overviewYearSliderSection">
-                  <label class="year-range-label">Year Range:</label>
-                  <div class="range-container">
-                    <input type="range" id="overviewRangeStart" min="2015" max="2025" value="2018" step="1">
-                    <input type="range" id="overviewRangeEnd" min="2015" max="2025" value="2025" step="1">
-                  </div>
-                  <div class="range-labels">
-                    <span id="overviewRangeStartLabel">2018</span>
-                    <span id="overviewRangeEndLabel">2025</span>
-                  </div>
+                <div class="year-slider-section year-range-inline" id="overviewYearSliderSection">
+                  <label>Year Range:</label>
+                  <span id="overviewRangeStartLabel" class="year-label">2018</span>
+                  <input type="range" id="overviewRangeStart" min="2015" max="2025" value="2018" step="1" class="year-slider">
+                  <span class="range-separator">to</span>
+                  <input type="range" id="overviewRangeEnd" min="2015" max="2025" value="2025" step="1" class="year-slider">
+                  <span id="overviewRangeEndLabel" class="year-label">2025</span>
                 </div>
                 <select id="overviewYear" style="display: none;"></select>
               </div>
@@ -962,16 +959,13 @@
                 </div>
               </div>
 
-              <div id="acctRangeWrapper" class="range-wrapper hidden">
-                <label>Select Range:</label>
-                <div class="range-container">
-                  <input type="range" id="acctRangeStart" min="2015" max="2025" value="2015" step="1">
-                  <input type="range" id="acctRangeEnd" min="2015" max="2025" value="2025" step="1">
-                </div>
-                <div class="range-labels">
-                  <span id="acctRangeStartLabel">2015</span>
-                  <span id="acctRangeEndLabel">2025</span>
-                </div>
+              <div id="acctRangeWrapper" class="range-wrapper year-range-inline hidden">
+                <label>Year Range:</label>
+                <span id="acctRangeStartLabel" class="year-label">2015</span>
+                <input type="range" id="acctRangeStart" min="2015" max="2025" value="2015" step="1" class="year-slider">
+                <span class="range-separator">to</span>
+                <input type="range" id="acctRangeEnd" min="2015" max="2025" value="2025" step="1" class="year-slider">
+                <span id="acctRangeEndLabel" class="year-label">2025</span>
               </div>
 
               <div class="overview-config-box">
@@ -1142,16 +1136,13 @@
               </div>
 
               <div id="isMatrixControls" class="hidden">
-                <div id="isMatrixYearControls" class="range-wrapper hidden">
-                  <label>Select Range:</label>
-                  <div class="range-container">
-                    <input type="range" id="isMatrixYearStart" min="2015" max="2025" value="2020" step="1">
-                    <input type="range" id="isMatrixYearEnd" min="2015" max="2025" value="2025" step="1">
-                  </div>
-                  <div class="range-labels">
-                    <span id="isMatrixYearStartLabel">2020</span>
-                    <span id="isMatrixYearEndLabel">2025</span>
-                  </div>
+                <div id="isMatrixYearControls" class="range-wrapper year-range-inline hidden">
+                  <label>Year Range:</label>
+                  <span id="isMatrixYearStartLabel" class="year-label">2020</span>
+                  <input type="range" id="isMatrixYearStart" min="2015" max="2025" value="2020" step="1" class="year-slider">
+                  <span class="range-separator">to</span>
+                  <input type="range" id="isMatrixYearEnd" min="2015" max="2025" value="2025" step="1" class="year-slider">
+                  <span id="isMatrixYearEndLabel" class="year-label">2025</span>
                 </div>
               </div>
 
@@ -1268,16 +1259,13 @@
                 </div>
               </div>
 
-              <div id="bsMatrixRangeControls" class="range-wrapper" style="display: none;">
-                <label>Select Range:</label>
-                <div class="range-container">
-                  <input type="range" id="bsMatrixYearStart" min="2015" max="2025" value="2020" step="1">
-                  <input type="range" id="bsMatrixYearEnd" min="2015" max="2025" value="2025" step="1">
-                </div>
-                <div class="range-labels">
-                  <span id="bsMatrixYearStartLabel">2020</span>
-                  <span id="bsMatrixYearEndLabel">2025</span>
-                </div>
+              <div id="bsMatrixRangeControls" class="range-wrapper year-range-inline" style="display: none;">
+                <label>Year Range:</label>
+                <span id="bsMatrixYearStartLabel" class="year-label">2020</span>
+                <input type="range" id="bsMatrixYearStart" min="2015" max="2025" value="2020" step="1" class="year-slider">
+                <span class="range-separator">to</span>
+                <input type="range" id="bsMatrixYearEnd" min="2015" max="2025" value="2025" step="1" class="year-slider">
+                <span id="bsMatrixYearEndLabel" class="year-label">2025</span>
               </div>
 
               <div class="is-compare-detail-wrapper">
@@ -1412,16 +1400,13 @@
               </div>
 
               <div id="cfMatrixControls" class="hidden">
-                <div id="cfMatrixYearControls" class="range-wrapper hidden">
-                  <label>Select Range:</label>
-                  <div class="range-container">
-                    <input type="range" id="cfMatrixYearStart" min="2015" max="2025" value="2020" step="1">
-                    <input type="range" id="cfMatrixYearEnd" min="2015" max="2025" value="2025" step="1">
-                  </div>
-                  <div class="range-labels">
-                    <span id="cfMatrixYearStartLabel">2020</span>
-                    <span id="cfMatrixYearEndLabel">2025</span>
-                  </div>
+                <div id="cfMatrixYearControls" class="range-wrapper year-range-inline hidden">
+                  <label>Year Range:</label>
+                  <span id="cfMatrixYearStartLabel" class="year-label">2020</span>
+                  <input type="range" id="cfMatrixYearStart" min="2015" max="2025" value="2020" step="1" class="year-slider">
+                  <span class="range-separator">to</span>
+                  <input type="range" id="cfMatrixYearEnd" min="2015" max="2025" value="2025" step="1" class="year-slider">
+                  <span id="cfMatrixYearEndLabel" class="year-label">2025</span>
                 </div>
               </div>
 

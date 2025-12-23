@@ -758,6 +758,115 @@ body.dark-mode .year-slider-section .range-labels {
   }
 }
 
+/* INLINE YEAR RANGE SLIDERS (shared style) */
+.year-range-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.year-range-inline > label {
+  font-weight: 500;
+  font-size: 12px;
+  color: #374151;
+}
+
+body.dark-mode .year-range-inline > label {
+  color: #e2e8f0;
+}
+
+.year-range-inline .year-slider {
+  width: 80px;
+  height: 4px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e2e8f0;
+  border-radius: 2px;
+}
+
+body.dark-mode .year-range-inline .year-slider {
+  background: #475569;
+}
+
+.year-range-inline .year-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #2563eb;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.year-range-inline .year-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #2563eb;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .year-range-inline .year-slider::-webkit-slider-thumb {
+  background: #3b82f6;
+  border-color: #1e293b;
+}
+
+body.dark-mode .year-range-inline .year-slider::-moz-range-thumb {
+  background: #3b82f6;
+  border-color: #1e293b;
+}
+
+.year-range-inline .year-label {
+  font-weight: 600;
+  font-size: 12px;
+  color: #3b82f6;
+  min-width: 32px;
+  text-align: center;
+}
+
+.year-range-inline .range-separator {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+body.dark-mode .year-range-inline .range-separator {
+  color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .year-range-inline {
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  
+  .year-range-inline > label {
+    font-size: 11px;
+  }
+  
+  .year-range-inline .year-slider {
+    width: 70px;
+    height: 4px;
+  }
+  
+  .year-range-inline .year-label {
+    font-size: 11px;
+    min-width: 30px;
+  }
+  
+  .year-range-inline .range-separator {
+    font-size: 11px;
+  }
+}
+
 /* SAVED VIEWS ROW */
 .saved-views-row {
   display: flex;
