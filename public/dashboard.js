@@ -1660,14 +1660,12 @@ function initNavigation() {
     });
   }
 
-  // Handle expandable nav sections (Financials, Jobs)
+  // Handle expandable nav sections (Financials, Jobs, Distribution Reports)
   const sectionHeaders = document.querySelectorAll(".nav-section-header");
   sectionHeaders.forEach(header => {
     const childrenContainer = header.nextElementSibling;
     if (childrenContainer && childrenContainer.classList.contains("nav-section-items")) {
-      // Initialize as expanded
-      header.classList.add("expanded");
-      childrenContainer.classList.add("expanded");
+      // Start collapsed by default (do not add expanded class)
       
       header.addEventListener("click", () => {
         header.classList.toggle("expanded");
