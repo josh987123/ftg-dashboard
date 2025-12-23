@@ -7012,7 +7012,9 @@ body.dark-mode .overview-year-select-wrapper label {
     font-size: 14px;
   }
   
-  .cash-summary-tiles .summary-tile .tile-value {
+  .cash-summary-tiles .summary-tile .tile-value,
+  .cash-summary-tiles .summary-tile .tile-value.positive,
+  .cash-summary-tiles .summary-tile .tile-value.negative {
     font-size: 24px;
   }
   
