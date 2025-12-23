@@ -16113,17 +16113,13 @@ function renderProfitabilityHeatmap() {
     return;
   }
   
-  // Get the "View by" filter (PM or Client)
-  const groupByFilter = document.getElementById('heatmapGroupByFilter')?.value || 'pm';
+  // Always use PM view when "All Project Managers" is selected
+  const groupByFilter = 'pm';
   
-  // Update description text based on groupBy selection
+  // Update description text
   const descEl = document.getElementById('heatmapDescription');
   if (descEl) {
-    if (groupByFilter === 'pm') {
-      descEl.textContent = 'Profit margin by Project Manager and job size. Darker green = higher margin, red = negative margin.';
-    } else {
-      descEl.textContent = 'Profit margin by Client and job size. Darker green = higher margin, red = negative margin.';
-    }
+    descEl.textContent = 'Profit margin by Project Manager and job size. Darker green = higher margin, red = negative margin.';
   }
   
   // Use joFiltered which is already filtered by page-level PM tabs and status checkboxes
