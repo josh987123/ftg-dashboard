@@ -4193,10 +4193,10 @@ function updateOverviewCharts() {
       const apBal = getCumulativeBalance(apAccountsNoRetention, endOfPeriod, false);
       metrics.arApRatio.values.push(apBal !== 0 ? arBal / Math.abs(apBal) : 0);
       
-      // Net Over/(Under) Billing = Underbillings - Overbillings
+      // Net Over/(Under) Billing = Overbillings - Underbillings
       const underbillings = getCumulativeBalance([underbillingAccount], endOfPeriod, true);
       const overbillings = getCumulativeBalance([overbillingAccount], endOfPeriod, false);
-      metrics.overUnder.values.push(underbillings - overbillings);
+      metrics.overUnder.values.push(Math.abs(overbillings) - underbillings);
     } else {
       metrics.cash.values.push(0);
       metrics.currentRatio.values.push(0);
@@ -4235,7 +4235,7 @@ function updateOverviewCharts() {
         // Prior Net Over/(Under) Billing
         const pUnderbillings = getCumulativeBalance([underbillingAccount], priorEndOfPeriod, true);
         const pOverbillings = getCumulativeBalance([overbillingAccount], priorEndOfPeriod, false);
-        metrics.overUnder.priorValues.push(pUnderbillings - pOverbillings);
+        metrics.overUnder.priorValues.push(Math.abs(pOverbillings) - pUnderbillings);
       } else {
         metrics.cash.priorValues.push(0);
         metrics.currentRatio.priorValues.push(0);
