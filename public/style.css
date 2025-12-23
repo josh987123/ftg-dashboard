@@ -14890,8 +14890,32 @@ body.dark-mode .oub-chart-title {
 }
 
 @media (max-width: 768px) {
+  /* Over/Under Billing - 100% width on mobile */
+  .oub-key-metrics-section {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  #overUnderBilling .job-metrics-container {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+  }
+  
+  #overUnderBilling .job-metric-card.compact {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  
   .oub-charts-row {
     flex-direction: column;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .oub-chart-container {
+    width: 100% !important;
   }
   
   .oub-chart-wrapper {
