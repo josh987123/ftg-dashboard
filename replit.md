@@ -90,3 +90,16 @@ Flask server applies optimized cache headers by file type:
 
 ### Chart.js Management
 All chart instances properly destroyed before recreation to prevent memory leaks.
+
+### Data Caching
+`DataCache` utility provides 5-minute TTL caching for financial data:
+- Methods: getGLData(), getJobsData(), getARData(), getAPData(), getAccountGroups()
+- Deduplicates concurrent requests to same endpoint
+- Used by Job Budgets, Job Actuals, Job Costs, and Job Overview loaders
+- Can be invalidated via invalidate() method if needed
+
+### PM Exclusion Configuration
+`PM_EXCLUSION_CONFIG` centralizes PM exclusions (e.g., Josh Angelo):
+- isExcluded(pmName): Check if a PM should be excluded from analysis
+- getExclusionNote(): Returns UI-friendly exclusion note
+- getAIPromptExclusion(): Returns AI prompt instructions for exclusion
