@@ -22869,7 +22869,7 @@ function renderCCRevenueChart() {
     data: {
       labels: labels,
       datasets: [{
-        label: '% of Earned Revenue',
+        label: '% of Revenue',
         data: values,
         backgroundColor: gradient,
         borderRadius: 4,
@@ -22894,7 +22894,7 @@ function renderCCRevenueChart() {
       scales: {
         x: {
           beginAtZero: true,
-          title: { display: true, text: '% of Earned Revenue', color: textColor },
+          title: { display: true, text: '% of Revenue', color: textColor },
           ticks: { callback: value => value + '%', color: textColor },
           grid: { color: gridColor }
         },
