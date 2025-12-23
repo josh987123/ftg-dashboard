@@ -16040,6 +16040,9 @@ function filterJobOverview() {
   
   // Render waterfall chart
   renderWaterfallChart();
+  
+  // Render migrated PM Report sections
+  renderJoPmSections();
 }
 
 function updateJobOverviewMetrics() {
@@ -16446,6 +16449,510 @@ function renderSinglePmHeatmap(container, pmName) {
   
   html += '</div>';
   container.innerHTML = html;
+}
+
+// ========================================
+// JOB OVERVIEW - MIGRATED PM SECTIONS
+// ========================================
+
+let joPmRadarChart = null;
+let joPmrMarginChart = null;
+let joPmrBudgetActualChart = null;
+let joPmrBillingChart = null;
+let joPmrArAgingChart = null;
+
+function renderJoPmSections() {
+  const jobs = joFiltered || [];
+  const selectedPm = getSelectedPmForPage('jo');
+  const isAllPms = !selectedPm || selectedPm === '__ALL__';
+  
+  // Render PM Key Metrics
+  renderJoPmrMetrics(jobs);
+  
+  // Render PM Charts (Margin Distribution, Budget vs Actual, Billing Trend, AR Aging)
+  renderJoPmrCharts(jobs);
+  
+  // Render PM Performance Radar
+  renderJoPmRadarChart(jobs, selectedPm, isAllPms);
+  
+  // Render tables
+  renderJoClientSummaryTable(jobs);
+  renderJoOverUnderTable(jobs);
+  renderJoMissingBudgetsTable(jobs);
+}
+
+function renderJoPmrMetrics(jobs) {
+  const activeJobs = jobs.filter(j => j.job_status === 'A');
+  const totalJobs = activeJobs.length;
+  const totalContract = jobs.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
+  const totalCost = jobs.reduce((sum, j) => sum + (j.revised_cost || 0), 0);
+  const totalActualCost = jobs.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
+  const totalEarnedRevenue = jobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  const totalBilledRevenue = jobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const backlog = totalContract - totalBilledRevenue;
+  const backlogPct = totalContract > 0 ? (backlog / totalContract * 100) : 0;
+  const grossProfit = totalContract - totalCost;
+  const grossMargin = totalContract > 0 ? (grossProfit / totalContract * 100) : 0;
+  const netOverUnder = totalBilledRevenue - totalEarnedRevenue;
+  
+  const jobsWithProgress = jobs.filter(j => j.revised_contract > 0);
+  const avgPctComplete = jobsWithProgress.length > 0 
+    ? jobsWithProgress.reduce((sum, j) => sum + ((j.earned_revenue || 0) / j.revised_contract * 100), 0) / jobsWithProgress.length 
+    : 0;
+  
+  // Update metric tiles
+  const setMetric = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+  
+  setMetric('joPmrTotalJobs', totalJobs.toLocaleString());
+  setMetric('joPmrTotalContract', formatCurrencyCompact(totalContract));
+  setMetric('joPmrBacklog', formatCurrencyCompact(backlog));
+  setMetric('joPmrBacklogPct', backlogPct.toFixed(1) + '% remaining');
+  setMetric('joPmrGrossMargin', grossMargin.toFixed(1) + '%');
+  setMetric('joPmrGrossMarginAmt', formatCurrencyCompact(grossProfit));
+  setMetric('joPmrNetOverUnder', formatCurrencyCompact(netOverUnder));
+  setMetric('joPmrAvgPctComplete', avgPctComplete.toFixed(1) + '%');
+  setMetric('joPmrBilledLastMonth', formatCurrencyCompact(totalBilledRevenue));
+  setMetric('joPmrArExposure', formatCurrencyCompact(totalBilledRevenue - totalEarnedRevenue));
+  setMetric('joPmrTotalActualCost', formatCurrencyCompact(totalActualCost));
+  setMetric('joPmrTotalEarnedRevenue', formatCurrencyCompact(totalEarnedRevenue));
+  
+  // Update progress bar
+  const progressFill = document.getElementById('joPmrProgressFill');
+  if (progressFill) progressFill.style.width = Math.min(100, avgPctComplete) + '%';
+  
+  // Color for over/under
+  const ouEl = document.getElementById('joPmrNetOverUnder');
+  if (ouEl) ouEl.style.color = netOverUnder >= 0 ? '#10b981' : '#ef4444';
+}
+
+function renderJoPmrCharts(jobs) {
+  renderJoPmrMarginChart(jobs);
+  renderJoPmrBudgetActualChart(jobs);
+  renderJoPmrBillingChart(jobs);
+  renderJoPmrArAgingChart(jobs);
+}
+
+function renderJoPmrMarginChart(jobs) {
+  const canvas = document.getElementById('joPmrMarginChart');
+  if (!canvas) return;
+  
+  if (joPmrMarginChart) {
+    joPmrMarginChart.destroy();
+    joPmrMarginChart = null;
+  }
+  
+  const validJobs = jobs.filter(j => j.revised_contract > 0 && j.revised_cost > 0);
+  const margins = validJobs.map(j => ((j.revised_contract - j.revised_cost) / j.revised_contract * 100));
+  
+  const buckets = [
+    { label: '<0%', min: -Infinity, max: 0, count: 0 },
+    { label: '0-10%', min: 0, max: 10, count: 0 },
+    { label: '10-20%', min: 10, max: 20, count: 0 },
+    { label: '20-30%', min: 20, max: 30, count: 0 },
+    { label: '30%+', min: 30, max: Infinity, count: 0 }
+  ];
+  
+  margins.forEach(m => {
+    const bucket = buckets.find(b => m >= b.min && m < b.max);
+    if (bucket) bucket.count++;
+  });
+  
+  const ctx = canvas.getContext('2d');
+  joPmrMarginChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: buckets.map(b => b.label),
+      datasets: [{
+        data: buckets.map(b => b.count),
+        backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#84cc16', '#10b981'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1, color: 'var(--text-secondary)' }, grid: { color: 'var(--border-color)' } },
+        x: { ticks: { color: 'var(--text-secondary)' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderJoPmrBudgetActualChart(jobs) {
+  const canvas = document.getElementById('joPmrBudgetActualChart');
+  if (!canvas) return;
+  
+  if (joPmrBudgetActualChart) {
+    joPmrBudgetActualChart.destroy();
+    joPmrBudgetActualChart = null;
+  }
+  
+  const totalBudget = jobs.reduce((sum, j) => sum + (j.revised_cost || 0), 0);
+  const totalActual = jobs.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
+  
+  const ctx = canvas.getContext('2d');
+  joPmrBudgetActualChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Budgeted Cost', 'Actual Cost'],
+      datasets: [{
+        data: [totalBudget, totalActual],
+        backgroundColor: totalActual <= totalBudget ? ['#3b82f6', '#10b981'] : ['#3b82f6', '#ef4444'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, ticks: { callback: v => formatCurrencyCompact(v), color: 'var(--text-secondary)' }, grid: { color: 'var(--border-color)' } },
+        y: { ticks: { color: 'var(--text-secondary)' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderJoPmrBillingChart(jobs) {
+  const canvas = document.getElementById('joPmrBillingChart');
+  if (!canvas) return;
+  
+  if (joPmrBillingChart) {
+    joPmrBillingChart.destroy();
+    joPmrBillingChart = null;
+  }
+  
+  const totalBilled = jobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const totalEarned = jobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  const totalContract = jobs.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
+  
+  const ctx = canvas.getContext('2d');
+  joPmrBillingChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Contract', 'Earned', 'Billed'],
+      datasets: [{
+        data: [totalContract, totalEarned, totalBilled],
+        backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => formatCurrencyCompact(v), color: 'var(--text-secondary)' }, grid: { color: 'var(--border-color)' } },
+        x: { ticks: { color: 'var(--text-secondary)' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderJoPmrArAgingChart(jobs) {
+  const canvas = document.getElementById('joPmrArAgingChart');
+  if (!canvas) return;
+  
+  if (joPmrArAgingChart) {
+    joPmrArAgingChart.destroy();
+    joPmrArAgingChart = null;
+  }
+  
+  const totalBilled = jobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const totalEarned = jobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  const arBalance = totalBilled - totalEarned;
+  
+  const ctx = canvas.getContext('2d');
+  joPmrArAgingChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Collected', 'Outstanding'],
+      datasets: [{
+        data: [Math.max(0, totalEarned), Math.max(0, arBalance)],
+        backgroundColor: ['#10b981', '#f59e0b'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: 'var(--text-primary)', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
+  const canvas = document.getElementById('joPmRadarChart');
+  if (!canvas) return;
+  
+  if (joPmRadarChart) {
+    joPmRadarChart.destroy();
+    joPmRadarChart = null;
+  }
+  
+  const legendBox = document.getElementById('joRadarLegendBox');
+  
+  if (isAllPms || !selectedPm) {
+    if (legendBox) legendBox.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">Select a PM to see radar chart</div>';
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+  
+  // Calculate portfolio averages and PM metrics
+  const allActiveJobs = joData.filter(j => j.job_status === 'A' && !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name));
+  const pmJobs = jobs.filter(j => j.job_status === 'A');
+  
+  if (pmJobs.length === 0) {
+    if (legendBox) legendBox.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">No active jobs for selected PM</div>';
+    return;
+  }
+  
+  // Aggregate by PM for portfolio
+  const pmStats = {};
+  allActiveJobs.forEach(job => {
+    const pm = job.project_manager_name;
+    if (!pm || PM_EXCLUSION_CONFIG.isExcluded(pm)) return;
+    if (!pmStats[pm]) pmStats[pm] = { jobs: 0, contract: 0, cost: 0, billed: 0, earned: 0 };
+    pmStats[pm].jobs++;
+    pmStats[pm].contract += job.revised_contract || 0;
+    pmStats[pm].cost += job.revised_cost || 0;
+    pmStats[pm].billed += job.billed_revenue || 0;
+    pmStats[pm].earned += job.earned_revenue || 0;
+  });
+  
+  const pmCount = Object.keys(pmStats).length;
+  if (pmCount === 0) return;
+  
+  // Calculate averages
+  const avgJobs = Object.values(pmStats).reduce((s, p) => s + p.jobs, 0) / pmCount;
+  const avgContract = Object.values(pmStats).reduce((s, p) => s + p.contract, 0) / pmCount;
+  const totalPortfolioContract = Object.values(pmStats).reduce((s, p) => s + p.contract, 0);
+  const totalPortfolioCost = Object.values(pmStats).reduce((s, p) => s + p.cost, 0);
+  const avgMargin = totalPortfolioContract > 0 ? ((totalPortfolioContract - totalPortfolioCost) / totalPortfolioContract * 100) : 0;
+  const avgBilled = Object.values(pmStats).reduce((s, p) => s + p.billed, 0) / pmCount;
+  
+  // Calculate PM metrics
+  const pmContract = pmJobs.reduce((s, j) => s + (j.revised_contract || 0), 0);
+  const pmCost = pmJobs.reduce((s, j) => s + (j.revised_cost || 0), 0);
+  const pmMargin = pmContract > 0 ? ((pmContract - pmCost) / pmContract * 100) : 0;
+  const pmBilled = pmJobs.reduce((s, j) => s + (j.billed_revenue || 0), 0);
+  const pmEarned = pmJobs.reduce((s, j) => s + (j.earned_revenue || 0), 0);
+  const pmBillingPosition = pmEarned > 0 ? (pmBilled / pmEarned * 100) : 100;
+  
+  // Normalize to 0-100 scale relative to max PM values
+  const maxJobs = Math.max(...Object.values(pmStats).map(p => p.jobs));
+  const maxContract = Math.max(...Object.values(pmStats).map(p => p.contract));
+  const maxMargin = Math.max(...Object.values(pmStats).map(p => p.contract > 0 ? ((p.contract - p.cost) / p.contract * 100) : 0));
+  
+  const normalize = (val, max) => max > 0 ? Math.min(100, (val / max * 100)) : 0;
+  
+  const pmData = [
+    normalize(pmJobs.length, maxJobs),
+    normalize(pmContract, maxContract),
+    normalize(pmMargin, Math.max(maxMargin, 30)),
+    normalize(pmContract / pmJobs.length, maxContract / Math.max(1, avgJobs)),
+    Math.min(100, pmBillingPosition)
+  ];
+  
+  const avgData = [
+    normalize(avgJobs, maxJobs),
+    normalize(avgContract, maxContract),
+    normalize(avgMargin, Math.max(maxMargin, 30)),
+    50,
+    100
+  ];
+  
+  const ctx = canvas.getContext('2d');
+  joPmRadarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['Job Count', 'Contract Value', 'Profit Margin', 'Avg Job Size', 'Billing Position'],
+      datasets: [
+        {
+          label: selectedPm,
+          data: pmData,
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          borderColor: '#3b82f6',
+          borderWidth: 2,
+          pointBackgroundColor: '#3b82f6'
+        },
+        {
+          label: 'Portfolio Avg',
+          data: avgData,
+          backgroundColor: 'rgba(156, 163, 175, 0.1)',
+          borderColor: '#9ca3af',
+          borderWidth: 1,
+          borderDash: [5, 5],
+          pointBackgroundColor: '#9ca3af'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { display: false },
+          grid: { color: 'var(--border-color)' },
+          pointLabels: { color: 'var(--text-primary)', font: { size: 10 } }
+        }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+  
+  if (legendBox) {
+    legendBox.innerHTML = `
+      <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:3px;background:#3b82f6;border-radius:2px;"></span><span style="font-size:11px;color:var(--text-secondary);">${selectedPm}</span></span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:3px;background:#9ca3af;border-radius:2px;border:1px dashed #9ca3af;"></span><span style="font-size:11px;color:var(--text-secondary);">Portfolio Avg</span></span>
+      </div>
+    `;
+  }
+}
+
+function renderJoClientSummaryTable(jobs) {
+  const tbody = document.getElementById('joClientSummaryTableBody');
+  const countEl = document.getElementById('joClientSummaryCount');
+  if (!tbody) return;
+  
+  // Group by client
+  const clientMap = {};
+  jobs.forEach(job => {
+    const client = job.customer_name || 'Unknown';
+    if (!clientMap[client]) {
+      clientMap[client] = { contract: 0, cost: 0, profit: 0, billedLastMonth: 0, billedToDate: 0, costToDate: 0 };
+    }
+    clientMap[client].contract += job.revised_contract || 0;
+    clientMap[client].cost += job.revised_cost || 0;
+    clientMap[client].profit += (job.revised_contract || 0) - (job.revised_cost || 0);
+    clientMap[client].billedToDate += job.billed_revenue || 0;
+    clientMap[client].costToDate += job.actual_cost || 0;
+  });
+  
+  const clients = Object.entries(clientMap).map(([name, data]) => ({
+    name,
+    ...data,
+    margin: data.contract > 0 ? (data.profit / data.contract * 100) : 0
+  })).sort((a, b) => b.contract - a.contract);
+  
+  tbody.innerHTML = clients.slice(0, 10).map(c => `
+    <tr>
+      <td>${c.name}</td>
+      <td class="text-right">${formatCurrencyCompact(c.contract)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.cost)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.profit)}</td>
+      <td class="text-right" style="color:${c.margin >= 0 ? '#10b981' : '#ef4444'}">${c.margin.toFixed(1)}%</td>
+      <td class="text-right">-</td>
+      <td class="text-right">${formatCurrencyCompact(c.billedToDate)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.costToDate)}</td>
+    </tr>
+  `).join('');
+  
+  if (countEl) countEl.textContent = `${clients.length} clients`;
+}
+
+function renderJoOverUnderTable(jobs) {
+  const tbody = document.getElementById('joOverUnderTableBody');
+  const countEl = document.getElementById('joOverUnderCount');
+  if (!tbody) return;
+  
+  const jobsWithOverUnder = jobs.filter(j => j.revised_contract > 0).map(j => ({
+    ...j,
+    overUnder: (j.billed_revenue || 0) - (j.earned_revenue || 0),
+    pctComplete: j.revised_contract > 0 ? ((j.earned_revenue || 0) / j.revised_contract * 100) : 0
+  })).sort((a, b) => Math.abs(b.overUnder) - Math.abs(a.overUnder));
+  
+  tbody.innerHTML = jobsWithOverUnder.slice(0, 15).map(j => `
+    <tr>
+      <td>${j.job_no}</td>
+      <td>${j.job_description || '-'}</td>
+      <td>${j.customer_name || '-'}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(j.revised_contract)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(j.actual_cost)}</td>
+      <td class="text-right pmr-expandable-col">${j.pctComplete.toFixed(1)}%</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(j.earned_revenue)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(j.billed_revenue)}</td>
+      <td class="text-right" style="color:${j.overUnder >= 0 ? '#10b981' : '#ef4444'};font-weight:600;">${formatCurrencyCompact(j.overUnder)}</td>
+    </tr>
+  `).join('');
+  
+  if (countEl) countEl.textContent = `${jobsWithOverUnder.length} jobs`;
+}
+
+function renderJoMissingBudgetsTable(jobs) {
+  const tbody = document.getElementById('joMissingBudgetsTableBody');
+  const countEl = document.getElementById('joMissingBudgetsCount');
+  if (!tbody) return;
+  
+  // Jobs with >$2500 actual cost but missing budget
+  const missingBudgets = jobs.filter(j => {
+    const actualCost = j.actual_cost || 0;
+    const budgetedRev = j.revised_contract || 0;
+    const budgetedCost = j.revised_cost || 0;
+    return actualCost > 2500 && (budgetedRev === 0 || budgetedCost === 0);
+  }).sort((a, b) => (b.actual_cost || 0) - (a.actual_cost || 0));
+  
+  tbody.innerHTML = missingBudgets.slice(0, 15).map(j => {
+    const issue = [];
+    if (!j.revised_contract) issue.push('No Revenue');
+    if (!j.revised_cost) issue.push('No Cost');
+    return `
+      <tr>
+        <td>${j.job_no}</td>
+        <td>${j.job_description || '-'}</td>
+        <td class="pmr-mb-expandable-col">${j.customer_name || '-'}</td>
+        <td class="pmr-mb-expandable-col">${j.job_status || '-'}</td>
+        <td class="text-right">${formatCurrencyCompact(j.actual_cost)}</td>
+        <td class="text-right">${formatCurrencyCompact(j.revised_contract)}</td>
+        <td class="text-right">${formatCurrencyCompact(j.revised_cost)}</td>
+        <td style="color:#f59e0b;">${issue.join(', ')}</td>
+      </tr>
+    `;
+  }).join('');
+  
+  if (countEl) countEl.textContent = `${missingBudgets.length} jobs`;
+}
+
+// Toggle functions for the migrated tables
+function toggleJoClientSummaryDetail() {
+  const table = document.getElementById('joClientSummaryTable');
+  const btn = document.getElementById('joClientSummaryToggle');
+  if (table && btn) {
+    table.classList.toggle('expanded');
+    btn.textContent = table.classList.contains('expanded') ? 'Collapse' : 'Expand';
+  }
+}
+
+function toggleJoOverUnderDetail() {
+  const table = document.getElementById('joOverUnderTable');
+  const btn = document.getElementById('joOverUnderToggle');
+  if (table && btn) {
+    table.classList.toggle('expanded');
+    btn.textContent = table.classList.contains('expanded') ? 'Collapse' : 'Expand';
+  }
+}
+
+function toggleJoMissingBudgetsDetail() {
+  const table = document.getElementById('joMissingBudgetsTable');
+  const btn = document.getElementById('joMissingBudgetsToggle');
+  if (table && btn) {
+    table.classList.toggle('expanded');
+    btn.textContent = table.classList.contains('expanded') ? 'Collapse' : 'Expand';
+  }
 }
 
 // ========================================
