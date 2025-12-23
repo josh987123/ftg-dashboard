@@ -8168,6 +8168,198 @@ body.dark-mode #accounts .summary-tile .tile-label {
 }
 
 /* ========================================
+   WEEKLY PM REPORT STYLES
+   ======================================== */
+
+.wpr-pm-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border-primary);
+}
+
+.wpr-pm-tabs-loading {
+  color: var(--text-secondary);
+  font-size: 14px;
+  padding: 10px 0;
+}
+
+.wpr-pm-tab {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.wpr-pm-tab:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.wpr-pm-tab.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+.wpr-content {
+  margin-top: 16px;
+}
+
+.wpr-table-container {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.wpr-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+}
+
+.wpr-table-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.wpr-client-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.wpr-table-wrapper {
+  overflow-x: auto;
+}
+
+.wpr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.wpr-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.wpr-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.wpr-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.wpr-table .text-right {
+  text-align: right;
+}
+
+.wpr-empty-state {
+  text-align: center;
+  padding: 40px 20px !important;
+  color: var(--text-secondary);
+}
+
+/* Client row styling */
+.wpr-client-row {
+  background: var(--bg-secondary);
+  font-weight: 600;
+}
+
+.wpr-client-row td {
+  border-bottom: none !important;
+  padding-bottom: 4px;
+}
+
+/* Job row styling - indented under client */
+.wpr-job-row {
+  background: var(--bg-primary);
+}
+
+.wpr-job-row td {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.wpr-job-row:last-of-type td,
+.wpr-job-row + .wpr-client-row td {
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.wpr-job-row td:first-child {
+  padding-left: 28px;
+}
+
+.wpr-job-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wpr-job-number {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.wpr-job-desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+}
+
+/* Subtotal row */
+.wpr-subtotal-row {
+  background: var(--bg-tertiary);
+  font-weight: 600;
+}
+
+.wpr-subtotal-row td {
+  border-top: 2px solid var(--border-color);
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+/* Margin color classes */
+.wpr-table .margin-good { color: #10b981; }
+.wpr-table .margin-bad { color: #ef4444; }
+.wpr-table .margin-neutral { color: var(--text-secondary); }
+
+[data-theme="dark"] .wpr-table .margin-good { color: #34d399; }
+[data-theme="dark"] .wpr-table .margin-bad { color: #f87171; }
+
+/* ========================================
    ADMIN SECTION STYLES
    ======================================== */
 

@@ -3793,10 +3793,40 @@
 
       <section id="weeklyPmReport" class="dashboard-section">
         <h2>Weekly PM Report</h2>
-        <p class="section-description">Weekly project manager report content will appear here.</p>
-        <div class="placeholder-content">
-          <div class="placeholder-icon">📊</div>
-          <p>This report is under development.</p>
+        <p class="section-description">Weekly performance report by Project Manager with billing activity.</p>
+        
+        <!-- PM Tabs -->
+        <div class="wpr-pm-tabs" id="wprPmTabs">
+          <div class="wpr-pm-tabs-loading">Loading Project Managers...</div>
+        </div>
+        
+        <!-- Client Summary Table -->
+        <div class="wpr-content" id="wprContent">
+          <div class="wpr-table-container">
+            <div class="wpr-table-header">
+              <h3>Client Summary</h3>
+              <span class="wpr-client-count" id="wprClientCount">0 clients</span>
+            </div>
+            <div class="wpr-table-wrapper">
+              <table class="wpr-table" id="wprClientSummaryTable">
+                <thead>
+                  <tr>
+                    <th>Client / Job</th>
+                    <th class="text-right">Est. Contract</th>
+                    <th class="text-right">Est. Cost</th>
+                    <th class="text-right">Est. Profit</th>
+                    <th class="text-right">Margin %</th>
+                    <th class="text-right">Billed (Last Week)</th>
+                    <th class="text-right">Billed To Date</th>
+                    <th class="text-right">Cost To Date</th>
+                  </tr>
+                </thead>
+                <tbody id="wprClientSummaryTableBody">
+                  <tr><td colspan="8" class="wpr-empty-state">Select a Project Manager to view their report</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
 

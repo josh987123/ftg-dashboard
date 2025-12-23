@@ -413,6 +413,9 @@ function refreshCurrentSection() {
     case 'pmReport':
       if (typeof initPmReport === 'function') initPmReport();
       break;
+    case 'weeklyPmReport':
+      if (typeof initWeeklyPmReport === 'function') initWeeklyPmReport();
+      break;
     case 'aiInsights':
       if (typeof initAiInsights === 'function') initAiInsights();
       break;
@@ -1762,6 +1765,7 @@ function initNavigation() {
       if (id === "costCodes") initCostCodes();
       if (id === "missingBudgets") initMissingBudgets();
       if (id === "pmReport") initPmReport();
+      if (id === "weeklyPmReport") initWeeklyPmReport();
       if (id === "aiInsights") initAiInsights();
       if (id === "payments") initPayments();
       if (id === "apAging") initApAging();
@@ -20518,6 +20522,296 @@ function extractPmReportData() {
   }
   
   return text || "No PM report data available";
+}
+
+// ========================================
+// WEEKLY PM REPORT MODULE
+// ========================================
+
+let wprInitialized = false;
+let wprSelectedPm = null;
+let wprJobsData = [];
+let wprArInvoices = [];
+
+// Preferred order for PM tabs
+const WPR_PM_ORDER = ['Rodney Turley', 'Kathy Knopf', 'Doris Villegas', 'Pedro Esquer', 'Jen Guzman', 'Daniel Rueda', 'Jose Martinez'];
+
+async function initWeeklyPmReport() {
+  const tabsContainer = document.getElementById('wprPmTabs');
+  
+  // Show loading state
+  if (tabsContainer) {
+    tabsContainer.innerHTML = '<div class="wpr-pm-tabs-loading">Loading Project Managers...</div>';
+  }
+  
+  // Load data if not already loaded
+  await ensureWprDataLoaded();
+  
+  // Build PM tabs
+  buildWprPmTabs();
+  
+  // Set up event listeners (only once)
+  if (!wprInitialized) {
+    wprInitialized = true;
+  }
+}
+
+async function ensureWprDataLoaded() {
+  // Load jobs data
+  if (wprJobsData.length === 0) {
+    try {
+      const data = await DataCache.getJobsData();
+      const budgets = data.job_budgets || [];
+      const actuals = data.job_actuals || [];
+      
+      // Merge budget and actual data by job number
+      const budgetMap = new Map();
+      budgets.forEach(b => budgetMap.set(String(b.job_no), b));
+      
+      wprJobsData = actuals.map(job => {
+        const budget = budgetMap.get(String(job.job_no)) || {};
+        return {
+          job_no: job.job_no,
+          job_description: budget.job_description || job.job_description || '',
+          customer_name: budget.customer_name || job.customer_name || 'Unknown',
+          project_manager_name: budget.project_manager_name || job.project_manager_name || '',
+          job_status: budget.job_status || job.job_status || '',
+          revised_contract: parseFloat(budget.revised_contract) || 0,
+          revised_cost: parseFloat(budget.revised_cost) || 0,
+          actual_cost: parseFloat(job.actual_cost) || 0,
+          billed_revenue: parseFloat(job.billed_revenue) || 0,
+          earned_revenue: parseFloat(job.earned_revenue) || 0
+        };
+      });
+    } catch (e) {
+      console.error('Failed to load jobs data for Weekly PM Report:', e);
+    }
+  }
+  
+  // Load AR invoices for billing data
+  if (wprArInvoices.length === 0) {
+    try {
+      const data = await DataCache.getARData();
+      wprArInvoices = data.invoices || [];
+    } catch (e) {
+      console.error('Failed to load AR invoices for Weekly PM Report:', e);
+    }
+  }
+}
+
+function buildWprPmTabs() {
+  const tabsContainer = document.getElementById('wprPmTabs');
+  if (!tabsContainer) return;
+  
+  // Get unique PMs with active jobs
+  const pmSet = new Set();
+  wprJobsData.forEach(job => {
+    if (job.project_manager_name && job.job_status === 'A') {
+      pmSet.add(job.project_manager_name);
+    }
+  });
+  
+  // Sort: preferred order first, then alphabetically
+  const allPms = [...pmSet].sort((a, b) => {
+    const aIndex = WPR_PM_ORDER.findIndex(pm => a.toLowerCase().includes(pm.split(' ')[0].toLowerCase()));
+    const bIndex = WPR_PM_ORDER.findIndex(pm => b.toLowerCase().includes(pm.split(' ')[0].toLowerCase()));
+    
+    if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+    if (aIndex !== -1) return -1;
+    if (bIndex !== -1) return 1;
+    return a.localeCompare(b);
+  });
+  
+  if (allPms.length === 0) {
+    tabsContainer.innerHTML = '<div class="wpr-pm-tabs-loading">No active Project Managers found</div>';
+    return;
+  }
+  
+  // Create tab buttons with first names
+  tabsContainer.innerHTML = allPms.map(pm => {
+    const firstName = pm.split(' ')[0];
+    return `<button class="wpr-pm-tab" data-pm="${pm}">${firstName}</button>`;
+  }).join('');
+  
+  // Add click handlers
+  tabsContainer.querySelectorAll('.wpr-pm-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabsContainer.querySelectorAll('.wpr-pm-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      wprSelectedPm = tab.getAttribute('data-pm');
+      updateWprClientSummary();
+    });
+  });
+  
+  // Auto-select first PM
+  const firstTab = tabsContainer.querySelector('.wpr-pm-tab');
+  if (firstTab) {
+    firstTab.click();
+  }
+}
+
+function updateWprClientSummary() {
+  const tbody = document.getElementById('wprClientSummaryTableBody');
+  const countEl = document.getElementById('wprClientCount');
+  
+  if (!tbody || !wprSelectedPm) {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="wpr-empty-state">Select a Project Manager to view their report</td></tr>';
+    return;
+  }
+  
+  // Filter active jobs for selected PM
+  const pmJobs = wprJobsData.filter(job => 
+    job.project_manager_name === wprSelectedPm && job.job_status === 'A'
+  );
+  
+  if (pmJobs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="wpr-empty-state">No active jobs found for this PM</td></tr>';
+    if (countEl) countEl.textContent = '0 clients';
+    return;
+  }
+  
+  // Calculate "Billed Last Week" from AR invoices
+  const now = new Date();
+  const lastWeekStart = new Date(now);
+  lastWeekStart.setDate(now.getDate() - now.getDay() - 7); // Start of last week (Sunday)
+  lastWeekStart.setHours(0, 0, 0, 0);
+  const lastWeekEnd = new Date(lastWeekStart);
+  lastWeekEnd.setDate(lastWeekStart.getDate() + 6); // End of last week (Saturday)
+  lastWeekEnd.setHours(23, 59, 59, 999);
+  
+  // Get set of active job numbers for this PM
+  const activeJobNos = new Set(pmJobs.map(j => String(j.job_no)));
+  
+  // Calculate billing by job for last week
+  const excelEpoch = new Date(1899, 11, 30);
+  const lastWeekBillingByJob = new Map();
+  
+  wprArInvoices.forEach(inv => {
+    if (!activeJobNos.has(String(inv.job_no))) return;
+    
+    const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
+    const invoiceDate = new Date(excelEpoch.getTime() + invoiceDateSerial * 24 * 60 * 60 * 1000);
+    
+    if (invoiceDate >= lastWeekStart && invoiceDate <= lastWeekEnd) {
+      const jobNo = String(inv.job_no);
+      const amount = parseFloat(inv.invoice_amount) || 0;
+      lastWeekBillingByJob.set(jobNo, (lastWeekBillingByJob.get(jobNo) || 0) + amount);
+    }
+  });
+  
+  // Group jobs by client
+  const clientMap = new Map();
+  
+  pmJobs.forEach(job => {
+    const client = job.customer_name || 'Unknown';
+    if (!clientMap.has(client)) {
+      clientMap.set(client, {
+        customer_name: client,
+        jobs: [],
+        est_contract: 0,
+        est_cost: 0,
+        billed_last_week: 0,
+        billed_to_date: 0,
+        cost_to_date: 0
+      });
+    }
+    
+    const c = clientMap.get(client);
+    const jobBilledLastWeek = lastWeekBillingByJob.get(String(job.job_no)) || 0;
+    
+    c.jobs.push({
+      job_no: job.job_no,
+      job_description: job.job_description,
+      est_contract: job.revised_contract,
+      est_cost: job.revised_cost,
+      billed_last_week: jobBilledLastWeek,
+      billed_to_date: job.billed_revenue,
+      cost_to_date: job.actual_cost
+    });
+    
+    c.est_contract += job.revised_contract;
+    c.est_cost += job.revised_cost;
+    c.billed_last_week += jobBilledLastWeek;
+    c.billed_to_date += job.billed_revenue;
+    c.cost_to_date += job.actual_cost;
+  });
+  
+  // Sort clients by contract value
+  const clients = [...clientMap.values()]
+    .map(c => {
+      const estProfit = c.est_contract - c.est_cost;
+      const marginPct = c.est_contract > 0 ? (estProfit / c.est_contract * 100) : 0;
+      return { ...c, est_profit: estProfit, margin_pct: marginPct };
+    })
+    .sort((a, b) => b.est_contract - a.est_contract);
+  
+  // Calculate totals
+  const totals = clients.reduce((acc, c) => ({
+    est_contract: acc.est_contract + c.est_contract,
+    est_cost: acc.est_cost + c.est_cost,
+    est_profit: acc.est_profit + c.est_profit,
+    billed_last_week: acc.billed_last_week + c.billed_last_week,
+    billed_to_date: acc.billed_to_date + c.billed_to_date,
+    cost_to_date: acc.cost_to_date + c.cost_to_date
+  }), { est_contract: 0, est_cost: 0, est_profit: 0, billed_last_week: 0, billed_to_date: 0, cost_to_date: 0 });
+  
+  const totalMarginPct = totals.est_contract > 0 ? (totals.est_profit / totals.est_contract * 100) : 0;
+  const totalMarginClass = totalMarginPct >= 20 ? 'margin-good' : totalMarginPct < 10 ? 'margin-bad' : 'margin-neutral';
+  
+  // Build rows: subtotal first, then client/job pairs
+  let html = `<tr class="wpr-subtotal-row">
+    <td><strong>TOTAL (${clients.length} clients, ${pmJobs.length} jobs)</strong></td>
+    <td class="text-right">${formatCurrencyCompact(totals.est_contract)}</td>
+    <td class="text-right">${formatCurrencyCompact(totals.est_cost)}</td>
+    <td class="text-right">${formatCurrencyCompact(totals.est_profit)}</td>
+    <td class="text-right ${totalMarginClass}">${totalMarginPct.toFixed(1)}%</td>
+    <td class="text-right">${formatCurrencyCompact(totals.billed_last_week)}</td>
+    <td class="text-right">${formatCurrencyCompact(totals.billed_to_date)}</td>
+    <td class="text-right">${formatCurrencyCompact(totals.cost_to_date)}</td>
+  </tr>`;
+  
+  // Add client rows with job breakdowns
+  clients.forEach(c => {
+    const marginClass = c.margin_pct >= 20 ? 'margin-good' : c.margin_pct < 10 ? 'margin-bad' : 'margin-neutral';
+    
+    // Client row
+    html += `<tr class="wpr-client-row">
+      <td><strong>${c.customer_name}</strong></td>
+      <td class="text-right">${formatCurrencyCompact(c.est_contract)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.est_cost)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.est_profit)}</td>
+      <td class="text-right ${marginClass}">${c.margin_pct.toFixed(1)}%</td>
+      <td class="text-right">${formatCurrencyCompact(c.billed_last_week)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.billed_to_date)}</td>
+      <td class="text-right">${formatCurrencyCompact(c.cost_to_date)}</td>
+    </tr>`;
+    
+    // Job rows (always expanded)
+    c.jobs.sort((a, b) => b.est_contract - a.est_contract).forEach(job => {
+      const jobProfit = job.est_contract - job.est_cost;
+      const jobMargin = job.est_contract > 0 ? (jobProfit / job.est_contract * 100) : 0;
+      const jobMarginClass = jobMargin >= 20 ? 'margin-good' : jobMargin < 10 ? 'margin-bad' : 'margin-neutral';
+      
+      html += `<tr class="wpr-job-row">
+        <td>
+          <div class="wpr-job-label">
+            <span class="wpr-job-number">${job.job_no}</span>
+            <span class="wpr-job-desc">${job.job_description}</span>
+          </div>
+        </td>
+        <td class="text-right">${formatCurrencyCompact(job.est_contract)}</td>
+        <td class="text-right">${formatCurrencyCompact(job.est_cost)}</td>
+        <td class="text-right">${formatCurrencyCompact(jobProfit)}</td>
+        <td class="text-right ${jobMarginClass}">${jobMargin.toFixed(1)}%</td>
+        <td class="text-right">${formatCurrencyCompact(job.billed_last_week)}</td>
+        <td class="text-right">${formatCurrencyCompact(job.billed_to_date)}</td>
+        <td class="text-right">${formatCurrencyCompact(job.cost_to_date)}</td>
+      </tr>`;
+    });
+  });
+  
+  tbody.innerHTML = html;
+  if (countEl) countEl.textContent = `${clients.length} client${clients.length !== 1 ? 's' : ''}, ${pmJobs.length} job${pmJobs.length !== 1 ? 's' : ''}`;
 }
 
 // ========================================
