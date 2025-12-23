@@ -22488,7 +22488,16 @@ function renderOubCharts() {
         datasets: [{
           label: 'Overbilled Amount',
           data: overbilled.map(j => j.over_under),
-          backgroundColor: '#10b981',
+          backgroundColor: function(context) {
+            const chart = context.chart;
+            const { ctx: canvasCtx, chartArea } = chart;
+            if (!chartArea) return 'rgba(5, 150, 105, 0.9)';
+            // Green gradient (dark to light) matching waterfall chart
+            const gradient = canvasCtx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+            gradient.addColorStop(0, 'rgba(5, 150, 105, 0.9)');
+            gradient.addColorStop(1, 'rgba(52, 211, 153, 0.75)');
+            return gradient;
+          },
           borderRadius: 4,
           barPercentage: 0.8,
           jobData: overbilled
@@ -22557,7 +22566,16 @@ function renderOubCharts() {
         datasets: [{
           label: 'Underbilled Amount',
           data: underbilled.map(j => Math.abs(j.over_under)),
-          backgroundColor: '#dc2626',
+          backgroundColor: function(context) {
+            const chart = context.chart;
+            const { ctx: canvasCtx, chartArea } = chart;
+            if (!chartArea) return 'rgba(185, 28, 28, 0.9)';
+            // Red gradient (dark to light) matching waterfall chart
+            const gradient = canvasCtx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+            gradient.addColorStop(0, 'rgba(185, 28, 28, 0.9)');
+            gradient.addColorStop(1, 'rgba(248, 113, 113, 0.75)');
+            return gradient;
+          },
           borderRadius: 4,
           barPercentage: 0.8,
           jobData: underbilled
