@@ -16432,7 +16432,7 @@ function renderProfitabilityHeatmap() {
   
   // Header row
   html += '<div class="heatmap-row header-row">';
-  html += `<div class="heatmap-cell header">${groupLabel}</div>`;
+  html += `<div class="heatmap-cell header pm-header">${groupLabel}</div>`;
   sizeRanges.forEach(range => {
     html += `<div class="heatmap-cell header">${range.label}</div>`;
   });
@@ -16623,7 +16623,7 @@ function renderSinglePmHeatmap(container, pmName) {
   
   // Header row
   html += '<div class="heatmap-row header-row">';
-  html += '<div class="heatmap-cell header">Job Status</div>';
+  html += '<div class="heatmap-cell header pm-header">Job Status</div>';
   sizeRanges.forEach(range => {
     html += `<div class="heatmap-cell header">${range.label}</div>`;
   });

@@ -19860,8 +19860,8 @@ body.dark-mode .dashboard-section > h2 {
   display: flex;
   gap: 16px;
   margin-top: 30px;
-  width: 60%;
-  max-width: 60%;
+  width: auto;
+  max-width: 80%;
   box-sizing: border-box;
   align-items: stretch;
 }
@@ -19874,14 +19874,14 @@ body.dark-mode .dashboard-section > h2 {
 }
 
 .jo-key-metrics-column {
-  flex: 1 1 auto;
+  flex: 0 0 200px;
   display: flex;
   flex-direction: column;
   background: var(--bg-secondary);
   border-radius: 12px;
   border: 1px solid var(--border-color);
   padding: 20px;
-  min-width: 140px;
+  min-width: 200px;
 }
 
 .jo-key-metrics-column .jo-section-header {
@@ -20051,6 +20051,10 @@ body.dark-mode .dashboard-section > h2 {
   font-weight: 600;
   color: var(--text-primary);
   background: var(--bg-tertiary);
+}
+
+.heatmap-cell.header.pm-header {
+  text-align: left;
 }
 
 .heatmap-cell.data-cell {
