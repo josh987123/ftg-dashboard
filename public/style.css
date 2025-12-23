@@ -15977,21 +15977,81 @@ body.dark-mode .ar-invoice-row td {
 
 @media (max-width: 900px) {
   .pmr-metrics-4col {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
   }
   
   .pmr-metrics-4col.pmr-metrics-partial {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  /* PM Report - 3 tiles per row on mobile, 100% width */
+  #pmReport .pmr-metrics-wrapper,
+  #pmReport .pmr-metrics-4col {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .pmr-metrics-4col {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  
+  .pmr-metrics-4col.pmr-metrics-partial {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  
+  .pmr-metric-tile {
+    min-width: 0 !important;
+    max-width: none !important;
+    flex: none !important;
+    padding: 8px 6px !important;
+    text-align: center !important;
+  }
+  
+  .pmr-metric-label {
+    font-size: 8px !important;
+    margin-bottom: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  .pmr-metric-value {
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  .pmr-metric-subtext {
+    font-size: 7px !important;
   }
 }
 
 @media (max-width: 480px) {
   .pmr-metrics-4col {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, 1fr) !important;
   }
   
   .pmr-metrics-4col.pmr-metrics-partial {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  
+  .pmr-metric-tile {
+    padding: 6px 4px !important;
+  }
+  
+  .pmr-metric-label {
+    font-size: 7px !important;
+  }
+  
+  .pmr-metric-value {
+    font-size: 11px !important;
   }
 }
 
