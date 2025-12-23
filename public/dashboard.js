@@ -22737,6 +22737,11 @@ async function initCostCodes() {
       jobsDataAsOf = new Date(data.generated_at).toLocaleDateString();
     }
     
+    // Build PM tabs for Cost Codes page
+    await loadAndBuildPmTabs('ccPmTabs', 'cc', () => {
+      updateCostCodes();
+    });
+    
     populateCCFilters();
     setupCCEventListeners();
     updateCostCodes();
