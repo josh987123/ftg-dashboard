@@ -25600,21 +25600,20 @@ function initBudgetsColumnPicker() {
 }
 
 function applyBudgetsColumnVisibility() {
+  // All columns are now always visible - no column picker functionality
   const table = document.getElementById('jobBudgetsTable');
   if (!table) return;
   
-  const visibleCols = getBudgetsVisibleColumns();
-  
+  // Show all columns
   budgetsColumnConfig.forEach((col, idx) => {
-    const isVisible = visibleCols.has(col.id);
     const headerCells = table.querySelectorAll(`thead th:nth-child(${idx + 1})`);
     const bodyCells = table.querySelectorAll(`tbody td:nth-child(${idx + 1})`);
     
     headerCells.forEach(cell => {
-      cell.style.display = isVisible ? '' : 'none';
+      cell.style.display = '';
     });
     bodyCells.forEach(cell => {
-      cell.style.display = isVisible ? '' : 'none';
+      cell.style.display = '';
     });
   });
 }
@@ -25716,21 +25715,20 @@ function initActualsColumnPicker() {
 }
 
 function applyActualsColumnVisibility() {
+  // All columns are now always visible - no column picker functionality
   const table = document.getElementById('jobActualsTable');
   if (!table) return;
   
-  const visibleCols = getActualsVisibleColumns();
-  
+  // Show all columns
   actualsColumnConfig.forEach((col, idx) => {
-    const isVisible = visibleCols.has(col.id);
     const headerCells = table.querySelectorAll(`thead th:nth-child(${idx + 1})`);
     const bodyCells = table.querySelectorAll(`tbody td:nth-child(${idx + 1})`);
     
     headerCells.forEach(cell => {
-      cell.style.display = isVisible ? '' : 'none';
+      cell.style.display = '';
     });
     bodyCells.forEach(cell => {
-      cell.style.display = isVisible ? '' : 'none';
+      cell.style.display = '';
     });
   });
 }
