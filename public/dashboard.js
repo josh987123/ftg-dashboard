@@ -17102,8 +17102,8 @@ function renderJoClientSummaryTable(jobs) {
     </tr>
   `;
   
-  html += clients.slice(0, 10).map(c => `
-    <tr>
+  html += clients.map(c => `
+    <tr class="jo-detail-row">
       <td>${c.name}</td>
       <td class="text-right">${formatCurrencyCompact(c.contract)}</td>
       <td class="text-right">${formatCurrencyCompact(c.cost)}</td>
@@ -17145,25 +17145,25 @@ function renderJoOverUnderTable(jobs) {
   let html = `
     <tr class="pmr-subtotal-row">
       <td colspan="3">TOTAL (${jobsWithOverUnder.length} jobs)</td>
-      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.contract)}</td>
-      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.actualCost)}</td>
-      <td class="text-right pmr-expandable-col">${avgPctComplete.toFixed(1)}%</td>
-      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.earnedRevenue)}</td>
-      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(totals.billedRevenue)}</td>
+      <td class="text-right">${formatCurrencyCompact(totals.contract)}</td>
+      <td class="text-right">${formatCurrencyCompact(totals.actualCost)}</td>
+      <td class="text-right">${avgPctComplete.toFixed(1)}%</td>
+      <td class="text-right">${formatCurrencyCompact(totals.earnedRevenue)}</td>
+      <td class="text-right">${formatCurrencyCompact(totals.billedRevenue)}</td>
       <td class="text-right" style="color:${totals.overUnder >= 0 ? '#10b981' : '#ef4444'};font-weight:600;">${formatCurrencyCompact(totals.overUnder)}</td>
     </tr>
   `;
   
-  html += jobsWithOverUnder.slice(0, 15).map(j => `
-    <tr>
+  html += jobsWithOverUnder.map(j => `
+    <tr class="jo-detail-row">
       <td>${j.job_no}</td>
       <td>${j.job_description || '-'}</td>
       <td>${j.customer_name || '-'}</td>
-      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(j.revised_contract)}</td>
-      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(j.actual_cost)}</td>
-      <td class="text-right pmr-expandable-col">${j.pctComplete.toFixed(1)}%</td>
-      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(j.earned_revenue)}</td>
-      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(j.billed_revenue)}</td>
+      <td class="text-right">${formatCurrencyCompact(j.revised_contract)}</td>
+      <td class="text-right">${formatCurrencyCompact(j.actual_cost)}</td>
+      <td class="text-right">${j.pctComplete.toFixed(1)}%</td>
+      <td class="text-right">${formatCurrencyCompact(j.earned_revenue)}</td>
+      <td class="text-right">${formatCurrencyCompact(j.billed_revenue)}</td>
       <td class="text-right" style="color:${j.overUnder >= 0 ? '#10b981' : '#ef4444'};font-weight:600;">${formatCurrencyCompact(j.overUnder)}</td>
     </tr>
   `).join('');
@@ -17197,8 +17197,8 @@ function renderJoMissingBudgetsTable(jobs) {
   let html = `
     <tr class="pmr-subtotal-row">
       <td colspan="2">TOTAL (${missingBudgets.length} jobs)</td>
-      <td class="pmr-mb-expandable-col">-</td>
-      <td class="pmr-mb-expandable-col">-</td>
+      <td>-</td>
+      <td>-</td>
       <td class="text-right">${formatCurrencyCompact(totals.actualCost)}</td>
       <td class="text-right">${formatCurrencyCompact(totals.budgetedRev)}</td>
       <td class="text-right">${formatCurrencyCompact(totals.budgetedCost)}</td>
@@ -17206,16 +17206,16 @@ function renderJoMissingBudgetsTable(jobs) {
     </tr>
   `;
   
-  html += missingBudgets.slice(0, 15).map(j => {
+  html += missingBudgets.map(j => {
     const issue = [];
     if (!j.revised_contract) issue.push('No Revenue');
     if (!j.revised_cost) issue.push('No Cost');
     return `
-      <tr>
+      <tr class="jo-detail-row">
         <td>${j.job_no}</td>
         <td>${j.job_description || '-'}</td>
-        <td class="pmr-mb-expandable-col">${j.customer_name || '-'}</td>
-        <td class="pmr-mb-expandable-col">${j.job_status || '-'}</td>
+        <td>${j.customer_name || '-'}</td>
+        <td>${j.job_status || '-'}</td>
         <td class="text-right">${formatCurrencyCompact(j.actual_cost)}</td>
         <td class="text-right">${formatCurrencyCompact(j.revised_contract)}</td>
         <td class="text-right">${formatCurrencyCompact(j.revised_cost)}</td>

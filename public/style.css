@@ -17797,19 +17797,17 @@ body.dark-mode .pmr-legend-item {
   font-size: 14px;
 }
 
-/* Expandable columns for Job Overview tables */
-.pmr-over-under-table .pmr-expandable-col,
-.pmr-over-under-table th.pmr-expandable-col,
-.pmr-missing-budgets-table .pmr-mb-expandable-col,
-.pmr-missing-budgets-table th.pmr-mb-expandable-col {
+/* Detail rows hidden by default, shown when table has .expanded class */
+.pmr-over-under-table tr.jo-detail-row,
+.pmr-missing-budgets-table tr.jo-detail-row,
+.pmr-client-summary-table tr.jo-detail-row {
   display: none;
 }
 
-.pmr-over-under-table.expanded .pmr-expandable-col,
-.pmr-over-under-table.expanded th.pmr-expandable-col,
-.pmr-missing-budgets-table.expanded .pmr-mb-expandable-col,
-.pmr-missing-budgets-table.expanded th.pmr-mb-expandable-col {
-  display: table-cell;
+.pmr-over-under-table.expanded tr.jo-detail-row,
+.pmr-missing-budgets-table.expanded tr.jo-detail-row,
+.pmr-client-summary-table.expanded tr.jo-detail-row {
+  display: table-row;
 }
 
 /* Subtotal row styling */
