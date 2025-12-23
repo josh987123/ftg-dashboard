@@ -16484,10 +16484,9 @@ function renderProfitabilityHeatmap() {
   });
   
   // Subtotal row - only show when all PMs are displayed (not filtered to single PM)
-  const selectedPm = getSelectedPmForPage('jo');
-  const isAllPms = !selectedPm || selectedPm === '__ALL__';
+  const isAllPmsForSubtotal = !selectedPm || selectedPm === '__ALL__';
   
-  if (isAllPms && groupStats.length > 1) {
+  if (isAllPmsForSubtotal && groupStats.length > 1) {
     // Calculate totals for each size range
     const rangeTotals = {};
     sizeRanges.forEach(range => {
