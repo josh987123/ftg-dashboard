@@ -16100,6 +16100,16 @@ function renderProfitabilityHeatmap() {
   const container = document.getElementById('profitabilityHeatmap');
   if (!container) return;
   
+  // Check if a single PM is selected
+  const selectedPm = getSelectedPmForPage('jo');
+  const isSinglePmSelected = selectedPm && selectedPm !== '__ALL__';
+  
+  // If single PM selected, render Job Status view instead
+  if (isSinglePmSelected) {
+    renderSinglePmHeatmap(container, selectedPm);
+    return;
+  }
+  
   // Get the "View by" filter (PM or Client)
   const groupByFilter = document.getElementById('heatmapGroupByFilter')?.value || 'pm';
   
@@ -16290,6 +16300,152 @@ function getHeatmapColor(value, min, max) {
       return `rgb(${Math.round(16 - (normalized - 0.6) * 20)}, ${Math.round(185 - (normalized - 0.6) * 30)}, ${Math.round(129 - (normalized - 0.6) * 30)})`;
     }
   }
+}
+
+function renderSinglePmHeatmap(container, pmName) {
+  const descEl = document.getElementById('heatmapDescription');
+  if (descEl) {
+    descEl.textContent = `Profit margin by job status for ${pmName}. Active = estimated margin, Closed = actual margin.`;
+  }
+  
+  // Use joFiltered which is already filtered by page-level PM tabs and status checkboxes
+  let baseJobs = joFiltered || [];
+  
+  // Filter to only this PM's jobs with valid financial data
+  const jobs = baseJobs.filter(j => {
+    const isClosed = j.job_status === 'C';
+    if (isClosed) {
+      return (j.billed_revenue || 0) > 0 && (j.actual_cost || 0) > 0;
+    } else {
+      return (j.revised_contract || 0) > 0 && (j.revised_cost || 0) > 0;
+    }
+  });
+  
+  if (jobs.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">No job data available for heat map</div>';
+    return;
+  }
+  
+  // Define job size ranges (contract value buckets)
+  const sizeRanges = [
+    { label: '<$100K', min: 0, max: 100000 },
+    { label: '$100K-$500K', min: 100000, max: 500000 },
+    { label: '$500K-$1M', min: 500000, max: 1000000 },
+    { label: '$1M-$5M', min: 1000000, max: 5000000 },
+    { label: '$5M+', min: 5000000, max: Infinity }
+  ];
+  
+  // Define status rows
+  const statusRows = [
+    { label: 'Active Jobs', status: 'A', marginType: 'estimated' },
+    { label: 'Closed Jobs', status: 'C', marginType: 'actual' },
+    { label: 'All Jobs', status: 'ALL', marginType: 'weighted' }
+  ];
+  
+  // Build data matrix: Status x Size Range
+  const matrix = {};
+  statusRows.forEach(row => {
+    matrix[row.label] = {};
+    sizeRanges.forEach(range => {
+      matrix[row.label][range.label] = {
+        jobs: [],
+        totalContract: 0,
+        totalCost: 0,
+        avgMargin: null,
+        jobCount: 0
+      };
+    });
+  });
+  
+  // Populate matrix with job data
+  jobs.forEach(job => {
+    const isClosed = job.job_status === 'C';
+    const statusLabel = isClosed ? 'Closed Jobs' : 'Active Jobs';
+    
+    // For closed jobs, use actual billed revenue and actual cost
+    // For active jobs, use revised contract and revised cost (budget/estimated)
+    const contract = isClosed ? (job.billed_revenue || 0) : (job.revised_contract || 0);
+    const cost = isClosed ? (job.actual_cost || 0) : (job.revised_cost || 0);
+    
+    // Find size range based on contract/revenue value
+    const range = sizeRanges.find(r => contract >= r.min && contract < r.max);
+    if (!range) return;
+    
+    // Add to status-specific row
+    const cell = matrix[statusLabel][range.label];
+    cell.jobs.push(job);
+    cell.totalContract += contract;
+    cell.totalCost += cost;
+    cell.jobCount++;
+    
+    // Also add to "All Jobs" row
+    const allCell = matrix['All Jobs'][range.label];
+    allCell.jobs.push(job);
+    allCell.totalContract += contract;
+    allCell.totalCost += cost;
+    allCell.jobCount++;
+  });
+  
+  // Calculate average margin for each cell
+  Object.keys(matrix).forEach(status => {
+    sizeRanges.forEach(range => {
+      const cell = matrix[status][range.label];
+      if (cell.jobCount > 0 && cell.totalContract > 0) {
+        const profit = cell.totalContract - cell.totalCost;
+        cell.avgMargin = (profit / cell.totalContract) * 100;
+      }
+    });
+  });
+  
+  // Find min/max margins for color scaling
+  let minMargin = 0, maxMargin = 30;
+  Object.values(matrix).forEach(row => {
+    Object.values(row).forEach(cell => {
+      if (cell.avgMargin !== null) {
+        minMargin = Math.min(minMargin, cell.avgMargin);
+        maxMargin = Math.max(maxMargin, cell.avgMargin);
+      }
+    });
+  });
+  
+  // Build HTML table
+  let html = '<div class="heatmap-grid">';
+  
+  // Header row
+  html += '<div class="heatmap-row header-row">';
+  html += '<div class="heatmap-cell header">Job Status</div>';
+  sizeRanges.forEach(range => {
+    html += `<div class="heatmap-cell header">${range.label}</div>`;
+  });
+  html += '</div>';
+  
+  // Data rows - use statusRows order (Active, Closed, All)
+  statusRows.forEach(({ label }) => {
+    html += '<div class="heatmap-row">';
+    html += `<div class="heatmap-cell pm-label">${label}</div>`;
+    
+    sizeRanges.forEach(range => {
+      const cell = matrix[label][range.label];
+      
+      if (cell.avgMargin === null || cell.jobCount === 0) {
+        html += '<div class="heatmap-cell no-data">-</div>';
+      } else {
+        const bgColor = getHeatmapColor(cell.avgMargin, minMargin, maxMargin);
+        const marginTypeLabel = label === 'Active Jobs' ? 'Est.' : label === 'Closed Jobs' ? 'Actual' : 'Wtd. Avg.';
+        const tooltip = `${cell.jobCount} job${cell.jobCount > 1 ? 's' : ''} | ${marginTypeLabel}: ${cell.avgMargin.toFixed(1)}% margin | Total: ${formatCurrencyCompact(cell.totalContract)}`;
+        
+        html += `<div class="heatmap-cell data-cell heatmap-tooltip" style="background:${bgColor}">
+          ${cell.avgMargin.toFixed(1)}%
+          <span class="tooltip-content">${tooltip}</span>
+        </div>`;
+      }
+    });
+    
+    html += '</div>';
+  });
+  
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 // ========================================
