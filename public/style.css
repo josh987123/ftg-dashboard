@@ -19458,19 +19458,81 @@ body.dark-mode .dashboard-section > h2 {
 }
 
 /* ============================================================
-   PROFITABILITY HEAT MAP
+   PROFITABILITY HEAT MAP + KEY METRICS WRAPPER
    ============================================================ */
 
-.profitability-heatmap-section {
+.jo-heatmap-metrics-wrapper {
+  display: flex;
+  gap: 16px;
   margin-top: 30px;
+  width: 60%;
+  max-width: 60%;
+  box-sizing: border-box;
+  align-items: stretch;
+}
+
+.jo-heatmap-metrics-wrapper .profitability-heatmap-section {
+  flex: 0 0 auto;
+  width: auto;
+  max-width: none;
+  margin-top: 0;
+}
+
+.jo-key-metrics-column {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  min-width: 140px;
+}
+
+.jo-key-metrics-column .jo-section-header {
+  margin-bottom: 12px;
+}
+
+.jo-metrics-column-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.jo-metrics-column-tiles .job-metric-card.compact {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  min-height: 0;
+}
+
+.jo-metrics-column-tiles .job-metric-card.compact .metric-icon {
+  font-size: 16px;
+}
+
+.jo-metrics-column-tiles .job-metric-card.compact .metric-value {
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.jo-metrics-column-tiles .job-metric-card.compact .metric-label {
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+
+.profitability-heatmap-section {
   padding: 20px;
   background: var(--bg-secondary);
   border-radius: 12px;
   border: 1px solid var(--border-color);
 }
 
-/* Match AI analysis section width on desktop (60%) */
 #jobOverview > .profitability-heatmap-section {
+  margin-top: 30px;
   width: 60% !important;
   max-width: 60% !important;
   box-sizing: border-box;
@@ -19646,12 +19708,44 @@ body.dark-mode .dashboard-section > h2 {
   background: rgba(30, 41, 59, 0.6);
 }
 
+[data-theme="dark"] .jo-key-metrics-column {
+  background: rgba(30, 41, 59, 0.6);
+}
+
 [data-theme="dark"] .heatmap-cell.no-data {
   background: rgba(30, 41, 59, 0.4);
 }
 
 /* Mobile responsive - Portrait */
 @media (max-width: 768px) {
+  .jo-heatmap-metrics-wrapper {
+    flex-direction: column;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 12px;
+  }
+  
+  .jo-heatmap-metrics-wrapper .profitability-heatmap-section {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .jo-key-metrics-column {
+    width: 100%;
+    min-width: 0;
+  }
+  
+  .jo-metrics-column-tiles {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .jo-metrics-column-tiles .job-metric-card.compact {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+  
   #jobOverview > .profitability-heatmap-section {
     width: 100% !important;
     max-width: 100% !important;
