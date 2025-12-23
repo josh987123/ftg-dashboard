@@ -112,12 +112,15 @@ All chart instances properly destroyed before recreation to prevent memory leaks
 ### PM Selection UI (December 2024)
 PM selection uses first-name button tabs (not dropdowns) across 7 pages:
 - **Pages**: PM Report, Job Overview, Job Budgets, Job Actuals, Cost Code Analysis, Over/Under Billing, AR Aging
-- **Tab Bar Layout**: "All" button first (or "All Project Managers" for AR Aging), then PM first names sorted by `PM_TAB_ORDER` preference, then alphabetically
-- **Filtering**: Only PMs with active jobs shown in tabs; "All" option shows all data including inactive PMs
+- **Tab Bar Layout**: "All Project Managers" button first, then PM first names sorted by `PM_TAB_ORDER` preference, then alphabetically
+- **Filtering**: Only PMs with active jobs (job_status = 'A') shown in tabs; "All Project Managers" option shows all data
 - **Status Filters**: Checkbox-based (Active, Inactive, Closed, Overhead) in a dedicated status-filter-bar below tabs (job pages only)
 - **State Management**: `pmTabsState` object tracks selected PM for each page (pmr, jo, jb, ja, cc, oub, ara keys)
 - **CSS Classes**: `pm-tabs-bar`, `pm-tab-btn`, `pm-tab-btn.active` with dark mode support and mobile responsiveness
+- **Data Loading**: Uses async `loadAndBuildPmTabs()` which fetches PM list from `/api/pm-list` endpoint (with fallback to jobs data)
 - **Helper Functions**:
+  - `loadAndBuildPmTabs(containerId, pageKey, onSelect)`: Async tab loader that fetches PMs then builds UI
   - `buildPmTabs(containerId, pms, pageKey, onSelect)`: Generic tab builder used by all pages
-  - `getActivePmsFromData(data)`: Extracts PMs with active jobs for tab display
+  - `getActivePmsList()`: Fetches active PMs from API with caching (1 minute TTL)
+  - `getActivePmsFromData(data)`: Synchronous extractor for when data is already loaded
   - `getSelectedPmForPage(pageKey)`: Retrieves selected PM from pmTabsState

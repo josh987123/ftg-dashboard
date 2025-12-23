@@ -160,7 +160,18 @@ async function getActivePmsList() {
   }
   
   try {
-    // Try to get from jobs data
+    // Try lightweight PM list API first
+    const resp = await fetch('/api/pm-list');
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.success && data.pms) {
+        _cachedActivePms = data.pms;
+        _activePmsCacheTime = Date.now();
+        return _cachedActivePms;
+      }
+    }
+    
+    // Fallback to jobs data
     const data = await DataCache.getJobsData();
     const budgets = data.job_budgets || [];
     
@@ -180,8 +191,23 @@ async function getActivePmsList() {
   }
 }
 
+/**
+ * Load and build PM tabs for any page - fetches PM list if needed
+ * @param {string} containerId - ID of the tabs container element
+ * @param {string} pageKey - Key for pmTabsState (pmr, jo, jb, ja, cc, oub, ara)
+ * @param {Function} onSelect - Callback function when a PM is selected
+ */
+async function loadAndBuildPmTabs(containerId, pageKey, onSelect) {
+  const pms = await getActivePmsList();
+  buildPmTabs(containerId, pms, pageKey, onSelect);
+}
+
 function getActivePmsFromData(dataArray) {
   // Synchronous helper when data is already loaded
+  // Guard against undefined/null input
+  if (!Array.isArray(dataArray) || dataArray.length === 0) {
+    return [];
+  }
   return [...new Set(
     dataArray
       .filter(j => j.job_status === 'A' && j.project_manager_name)
@@ -223,7 +249,6 @@ function buildPmTabs(containerId, pms, pageKey, onSelect) {
   }
   
   if (!pms || pms.length === 0) {
-    console.warn(`[PM Tabs] No PMs found for ${pageKey}, showing "All Project Managers" only`);
     container.innerHTML = '<button class="pm-tab-btn all-pm active" data-pm="__ALL__">All Project Managers</button>';
     pmTabsState[pageKey] = '__ALL__';
     return;
@@ -244,7 +269,6 @@ function buildPmTabs(containerId, pms, pageKey, onSelect) {
   
   // Build tabs HTML - "All Project Managers" button first, then PM first names
   let html = '<button class="pm-tab-btn all-pm" data-pm="__ALL__">All Project Managers</button>';
-  console.log(`[PM Tabs] Building tabs for ${pageKey} with ${sortedPms.length} PMs`);
   html += sortedPms.map(pm => {
     const firstName = pm.split(' ')[0];
     return `<button class="pm-tab-btn" data-pm="${pm}">${firstName}</button>`;
@@ -15131,10 +15155,9 @@ function sortJobBudgets() {
   });
 }
 
-function populateJbPmTabs() {
-  // Only show PMs with active jobs
-  const activePms = getActivePmsFromData(jobBudgetsData);
-  buildPmTabs('jbPmTabs', activePms, 'jb', () => {
+async function populateJbPmTabs() {
+  // Build PM tabs using async loader to ensure PMs are available
+  await loadAndBuildPmTabs('jbPmTabs', 'jb', () => {
     filterJobBudgets();
   });
 }
@@ -15982,12 +16005,9 @@ async function loadJobOverviewData() {
   }
 }
 
-function populateJobOverviewFilters() {
-  // Build PM tabs instead of dropdown
-  console.log('[Job Overview] Populating filters, joData length:', joData.length);
-  const activePms = getActivePmsFromData(joData);
-  console.log('[Job Overview] Active PMs:', activePms);
-  buildPmTabs('joPmTabs', activePms, 'jo', () => {
+async function populateJobOverviewFilters() {
+  // Build PM tabs using async loader to ensure PMs are available
+  await loadAndBuildPmTabs('joPmTabs', 'jo', () => {
     filterJobOverview();
   });
 }
@@ -18209,10 +18229,9 @@ function renderJobActualsBreakdowns() {
   // Donut charts removed per user request
 }
 
-function populateJaPmTabs() {
-  // Only show PMs with active jobs
-  const activePms = getActivePmsFromData(jobActualsData);
-  buildPmTabs('jaPmTabs', activePms, 'ja', () => {
+async function populateJaPmTabs() {
+  // Build PM tabs using async loader to ensure PMs are available
+  await loadAndBuildPmTabs('jaPmTabs', 'ja', () => {
     filterJobActuals();
   });
 }
@@ -18622,10 +18641,9 @@ async function loadJobCostsData() {
   }
 }
 
-function populateCostCodesTabs() {
-  // Build PM tabs instead of dropdown
-  const activePms = getActivePmsFromData(jobCostsData);
-  buildPmTabs('ccPmTabs', activePms, 'cc', () => {
+async function populateCostCodesTabs() {
+  // Build PM tabs using async loader to ensure PMs are available
+  await loadAndBuildPmTabs('ccPmTabs', 'cc', () => {
     filterCostCodes();
   });
 }
@@ -22249,11 +22267,9 @@ function buildOubData() {
   }
 }
 
-function populateOubPmTabs() {
-  // Only show PMs with active jobs
-  const activePms = getActivePmsFromData(oubData);
-  
-  buildPmTabs('oubPmTabs', activePms, 'oub', () => {
+async function populateOubPmTabs() {
+  // Build PM tabs using async loader to ensure PMs are available
+  await loadAndBuildPmTabs('oubPmTabs', 'oub', () => {
     oubCurrentPage = 1;
     updateOverUnderBilling();
   });
