@@ -15953,9 +15953,15 @@ body.dark-mode .ar-invoice-row td {
 .pmr-left-column .pm-radar-section .radar-chart-container {
   flex: 1;
   height: auto;
-  min-height: 450px;
   max-width: none;
   margin: 0;
+}
+
+/* Desktop only: larger radar chart */
+@media (min-width: 1025px) {
+  .pmr-left-column .pm-radar-section .radar-chart-container {
+    min-height: 450px;
+  }
 }
 
 .pmr-left-column .pm-radar-section .radar-legend-box {
