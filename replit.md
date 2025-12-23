@@ -70,3 +70,23 @@ A centralized architecture allows for theme-adaptive Chart.js charts using CSS v
 ### Static Assets
 - **Logo**: `logo.png` is used for branding.
 - **Data Storage**: All core financial data is stored in static JSON files.
+
+## Performance Optimizations (December 2024)
+
+### Script Loading
+- **Deferred Loading**: Chart.js and dashboard.js use `defer` attribute for non-blocking load
+- **Lazy Loading**: Heavy export libraries (html2canvas, jsPDF, XLSX, ExcelJS, EmailJS) are loaded on-demand via `LazyLoader` utility when user triggers export/email functions
+- Initial page load reduced by ~500KB+ by deferring export libraries
+
+### Font Optimization
+- Google Fonts Inter uses preconnect and preload for faster font loading
+
+### Cache Control
+Flask server applies optimized cache headers by file type:
+- Images/fonts: 1 year cache (immutable assets)
+- CSS/JS: 1 day cache (versioned via query strings)
+- JSON data files: 5 minutes cache
+- HTML: no-cache for fresh content
+
+### Chart.js Management
+All chart instances properly destroyed before recreation to prevent memory leaks.
