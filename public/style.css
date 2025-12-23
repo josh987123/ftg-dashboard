@@ -563,22 +563,47 @@ button, a, select, input, .nav-item, .config-header, .ai-analysis-header {
   margin-bottom: 0;
 }
 
-/* Visuals and Metrics boxes - same width */
-.overview-visuals-box,
+/* Visuals and Metrics boxes layout */
+.overview-visuals-box {
+  display: flex;
+  flex-direction: column;
+}
+
 .overview-metrics-box {
   max-width: 100%;
 }
 
-/* Visuals checkboxes - 2x2 grid */
+/* Visuals checkboxes - single column stack */
 .visuals-checkboxes {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .visuals-checkboxes .checkbox-label {
   font-size: 12px;
   white-space: nowrap;
+}
+
+/* Show Metrics checkboxes - 2 columns (4 left, 3 right) */
+#overview .metric-checkboxes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(4, auto);
+  gap: 6px 20px;
+}
+
+#overview .metric-checkboxes .checkbox-label:nth-child(1),
+#overview .metric-checkboxes .checkbox-label:nth-child(2),
+#overview .metric-checkboxes .checkbox-label:nth-child(3),
+#overview .metric-checkboxes .checkbox-label:nth-child(4) {
+  grid-column: 1;
+}
+
+#overview .metric-checkboxes .checkbox-label:nth-child(5),
+#overview .metric-checkboxes .checkbox-label:nth-child(6),
+#overview .metric-checkboxes .checkbox-label:nth-child(7) {
+  grid-column: 2;
 }
 
 /* Time Period Buttons */
@@ -5813,12 +5838,12 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 
-/* Overview config: Time Period and Visuals side by side on desktop */
+/* Overview config: Time Period, Visuals, and Metrics side by side on desktop */
 #overview .overview-time-visuals-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
-  align-items: flex-start;
+  gap: 16px;
+  align-items: stretch;
 }
 
 #overview .overview-time-period-box,
@@ -5826,6 +5851,15 @@ body.dark-mode .nav-item.nav-parent.expanded {
 #overview .overview-metrics-box {
   width: fit-content;
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#overview .overview-visuals-box .visuals-checkboxes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 #overview .overview-config-row {
