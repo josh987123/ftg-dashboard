@@ -964,9 +964,18 @@ function openPageChartFullscreen(chartId, title) {
       <div class="stat-box"><div class="stat-label">Total Due</div><div class="stat-value">${document.getElementById("arAgingTotalDue")?.textContent || "-"}</div></div>
     `;
     title = `AR Aging - as of: ${dateStr}`;
+  } else if (chartId === "pmDonutChart" && pmDonutChart) {
+    sourceChart = pmDonutChart;
+    statsHtml = "";
+  } else if (chartId === "customerDonutChart" && customerDonutChart) {
+    sourceChart = customerDonutChart;
+    statsHtml = "";
   }
   
   if (!sourceChart) return;
+  
+  // Determine if this is a doughnut chart
+  const isDonutChart = chartId === "pmDonutChart" || chartId === "customerDonutChart";
   
   const modal = document.getElementById("chartFullscreenModal");
   const titleEl = document.getElementById("chartFullscreenTitle");
@@ -987,72 +996,133 @@ function openPageChartFullscreen(chartId, title) {
   // Determine if this is the cash chart - disable data labels for it
   const isCashChart = chartId === "cashChart";
   
-  // Get Y-axis min/max from source chart to maintain consistent scale
-  const sourceYScale = sourceChart.options?.scales?.y || {};
-  const yMin = sourceYScale.min;
-  const yMax = sourceYScale.max;
-  const isStacked = sourceChart.options?.scales?.x?.stacked || false;
-  
-  fullscreenChartInstance = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: [...sourceChart.data.labels],
-      datasets: sourceChart.data.datasets.map(ds => ({
-        ...ds,
-        backgroundColor: ds.type === "line" ? "transparent" : ds.backgroundColor,
-        borderColor: ds.borderColor,
-        data: [...ds.data]
-      }))
-    },
-    plugins: isCashChart ? [] : [ChartDataLabels],
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: { padding: { top: 30 } },
-      plugins: {
-        legend: { 
-          display: true, 
-          position: "bottom",
-          labels: { color: "#fff", font: { size: 10 }, boxWidth: 12, padding: 8 }
-        },
-        datalabels: isCashChart ? { display: false } : {
-          display: true,
-          anchor: "end",
-          align: "top",
-          offset: 4,
-          font: { size: 12, weight: "600" },
-          color: "#fff",
-          formatter: (value) => {
-            if (value === 0 || value === null) return "";
-            if (Math.abs(value) >= 1000000) return "$" + (value / 1000000).toFixed(1) + "M";
-            if (Math.abs(value) >= 1000) return "$" + (value / 1000).toFixed(0) + "K";
-            return "$" + value.toFixed(0);
-          }
-        }
+  // Handle doughnut charts differently
+  if (isDonutChart) {
+    fullscreenChartInstance = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: [...sourceChart.data.labels],
+        datasets: sourceChart.data.datasets.map(ds => ({
+          ...ds,
+          data: [...ds.data],
+          borderColor: '#1e293b',
+          borderWidth: 3
+        }))
       },
-      scales: {
-        x: { 
-          stacked: isStacked,
-          grid: { color: "rgba(255,255,255,0.1)" },
-          ticks: { color: "#fff", font: { size: 14 } }
-        },
-        y: {
-          stacked: isStacked,
-          min: yMin,
-          max: yMax,
-          grid: { color: "rgba(255,255,255,0.1)" },
-          ticks: { 
-            color: "#fff",
-            font: { size: 12 },
-            callback: v => {
-              if (Math.abs(v) >= 1000000) return "$" + (v / 1000000).toFixed(1) + "M";
-              return "$" + (v / 1000).toFixed(0) + "K";
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { 
+            display: true, 
+            position: "right",
+            labels: { 
+              color: "#fff", 
+              font: { size: 14 }, 
+              boxWidth: 16, 
+              padding: 12,
+              generateLabels: function(chart) {
+                const data = chart.data;
+                const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                return data.labels.map((label, i) => {
+                  const value = data.datasets[0].data[i];
+                  const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                  return {
+                    text: `${label}: ${pct}%`,
+                    fillStyle: data.datasets[0].backgroundColor[i],
+                    strokeStyle: '#1e293b',
+                    lineWidth: 2,
+                    hidden: false,
+                    index: i
+                  };
+                });
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: "rgba(31, 41, 55, 0.95)",
+            titleColor: "#fff",
+            bodyColor: "#fff",
+            callbacks: {
+              label: function(context) {
+                const value = context.raw;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const pct = ((value / total) * 100).toFixed(1);
+                return `${formatCurrencyCompact(value)} (${pct}%)`;
+              }
             }
           }
         }
       }
-    }
-  });
+    });
+  } else {
+    // Get Y-axis min/max from source chart to maintain consistent scale
+    const sourceYScale = sourceChart.options?.scales?.y || {};
+    const yMin = sourceYScale.min;
+    const yMax = sourceYScale.max;
+    const isStacked = sourceChart.options?.scales?.x?.stacked || false;
+    
+    fullscreenChartInstance = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: [...sourceChart.data.labels],
+        datasets: sourceChart.data.datasets.map(ds => ({
+          ...ds,
+          backgroundColor: ds.type === "line" ? "transparent" : ds.backgroundColor,
+          borderColor: ds.borderColor,
+          data: [...ds.data]
+        }))
+      },
+      plugins: isCashChart ? [] : [ChartDataLabels],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 30 } },
+        plugins: {
+          legend: { 
+            display: true, 
+            position: "bottom",
+            labels: { color: "#fff", font: { size: 10 }, boxWidth: 12, padding: 8 }
+          },
+          datalabels: isCashChart ? { display: false } : {
+            display: true,
+            anchor: "end",
+            align: "top",
+            offset: 4,
+            font: { size: 12, weight: "600" },
+            color: "#fff",
+            formatter: (value) => {
+              if (value === 0 || value === null) return "";
+              if (Math.abs(value) >= 1000000) return "$" + (value / 1000000).toFixed(1) + "M";
+              if (Math.abs(value) >= 1000) return "$" + (value / 1000).toFixed(0) + "K";
+              return "$" + value.toFixed(0);
+            }
+          }
+        },
+        scales: {
+          x: { 
+            stacked: isStacked,
+            grid: { color: "rgba(255,255,255,0.1)" },
+            ticks: { color: "#fff", font: { size: 14 } }
+          },
+          y: {
+            stacked: isStacked,
+            min: yMin,
+            max: yMax,
+            grid: { color: "rgba(255,255,255,0.1)" },
+            ticks: { 
+              color: "#fff",
+              font: { size: 12 },
+              callback: v => {
+                if (Math.abs(v) >= 1000000) return "$" + (v / 1000000).toFixed(1) + "M";
+                return "$" + (v / 1000).toFixed(0) + "K";
+              }
+            }
+          }
+        }
+      }
+    });
+  }
 }
 
 /* ------------------------------------------------------------
