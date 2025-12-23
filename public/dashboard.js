@@ -508,7 +508,6 @@ function applyMyPmViewFilters() {
   const dropdownFilters = [
     { id: 'joPmFilter', filterFn: filterJobOverview },
     { id: 'jbPmFilter', filterFn: filterJobBudgets },
-    { id: 'ccPmFilter', filterFn: updateCostCodes },
     { id: 'mbPmFilter', filterFn: filterMissingBudgets },
     { id: 'jcPmFilter', filterFn: filterJobCosts }
   ];
@@ -6446,7 +6445,8 @@ function getCostCodesSubtitle() {
   const statusActive = document.getElementById('ccStatusActive')?.checked;
   const statusInactive = document.getElementById('ccStatusInactive')?.checked;
   const statusClosed = document.getElementById('ccStatusClosed')?.checked;
-  const pm = document.getElementById('ccPmFilter')?.value || 'All';
+  // Use PM tabs selection
+  const pm = getSelectedPmForPage('cc') || 'All';
   
   let statuses = [];
   if (statusActive) statuses.push('Active');
@@ -23397,23 +23397,7 @@ function populateCCFilters() {
     return numB - numA;
   });
   
-  // Populate both PM dropdowns (config panel and filter bar)
-  const pmSelects = [document.getElementById('ccPmFilter'), document.getElementById('ccPmFilterBar')];
-  const pmOptionsHtml = '<option value="">All Project Managers</option>' + 
-    pms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
-  
-  pmSelects.forEach(pmSelect => {
-    if (pmSelect) {
-      pmSelect.innerHTML = pmOptionsHtml;
-      
-      // Apply My PM View filter if enabled (sync, after options exist)
-      if (getMyPmViewEnabled() && isUserProjectManager()) {
-        const pmName = getCurrentUserPmName();
-        const option = Array.from(pmSelect.options).find(opt => opt.value === pmName);
-        if (option) pmSelect.value = option.value;
-      }
-    }
-  });
+  // PM tabs are now used instead of dropdowns, no need to populate PM selects
   
   // Setup search-based filters for Customer and Job in config panel
   setupCCSearchFilter('ccCustomerSearch', 'ccCustomerFilter', 'ccCustomerSuggestions', ccCustomerOptions, 'client');
@@ -23503,27 +23487,11 @@ function setupCCEventListeners() {
     document.getElementById(id)?.addEventListener('change', updateCostCodes);
   });
   
-  // Config panel PM filter
-  document.getElementById('ccPmFilter')?.addEventListener('change', (e) => {
-    // Sync filter bar PM dropdown
-    const filterBarPm = document.getElementById('ccPmFilterBar');
-    if (filterBarPm) filterBarPm.value = e.target.value;
-    updateCostCodes();
-  });
+  // Filter bar Job # search (above table) - updates both chart and table
+  document.getElementById('ccJobSearchBar')?.addEventListener('input', debounce(updateCostCodes, 300));
   
-  // Filter bar PM dropdown (above table)
-  document.getElementById('ccPmFilterBar')?.addEventListener('change', (e) => {
-    // Sync config panel PM dropdown
-    const configPm = document.getElementById('ccPmFilter');
-    if (configPm) configPm.value = e.target.value;
-    updateCostCodes();
-  });
-  
-  // Filter bar Job # search (above table)
-  document.getElementById('ccJobSearchBar')?.addEventListener('input', debounce(filterAndRenderCC, 300));
-  
-  // Filter bar Client search (above table)
-  document.getElementById('ccClientSearchBar')?.addEventListener('input', debounce(filterAndRenderCC, 300));
+  // Filter bar Client search (above table) - updates both chart and table
+  document.getElementById('ccClientSearchBar')?.addEventListener('input', debounce(updateCostCodes, 300));
   
   document.querySelectorAll('.cc-sort-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -23613,9 +23581,10 @@ function updateCostCodesSync() {
     const statusInactive = document.getElementById('ccStatusInactive')?.checked;
     const statusClosed = document.getElementById('ccStatusClosed')?.checked;
     const statusOverhead = document.getElementById('ccStatusOverhead')?.checked;
-    const pmFilter = document.getElementById('ccPmFilter')?.value || '';
-    const customerFilter = document.getElementById('ccCustomerFilter')?.value || '';
-    const jobFilter = document.getElementById('ccJobFilter')?.value || '';
+    // Use PM tabs selection instead of dropdown
+    const pmFilter = getSelectedPmForPage('cc') || '';
+    const customerFilter = (document.getElementById('ccClientSearchBar')?.value || '').trim();
+    const jobFilter = (document.getElementById('ccJobSearchBar')?.value || '').trim();
     
     // Build budget lookup once and cache it
     if (!ccBudgetLookupCache && jobBudgetsData) {
@@ -23646,8 +23615,9 @@ function updateCostCodesSync() {
       const status = budget.job_status || a.job_status || '';
       if (!allowedStatuses.has(status)) continue;
       if (pmFilter && budget.project_manager_name !== pmFilter) continue;
-      if (customerFilter && budget.customer_name !== customerFilter) continue;
-      if (jobFilter && a.job_no !== jobFilter) continue;
+      // Customer and job filters use partial matching (case-insensitive search)
+      if (customerFilter && !(budget.customer_name || '').toLowerCase().includes(customerFilter.toLowerCase())) continue;
+      if (jobFilter && !a.job_no.toLowerCase().includes(jobFilter.toLowerCase())) continue;
       
       filteredActuals.push(a);
       
