@@ -16237,53 +16237,12 @@ function filterJobOverview() {
 }
 
 function updateJobOverviewMetrics() {
-  const totalJobs = joFiltered.length;
-  const totalContract = joFiltered.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
+  // This function updates the PM Key Metrics tiles using joPmr* IDs
+  // The actual metric updates are handled by renderJoPmrMetrics() in the PM section
+  // This function is kept for backward compatibility but delegates to the PM metrics renderer
   
-  // For Over/Under calculation, only include jobs with valid budget data (contract > 0 and cost > 0)
-  // This matches the Over/Under Billing page logic for consistency
-  const jobsWithValidBudget = joFiltered.filter(j => (j.revised_contract || 0) > 0 && (j.revised_cost || 0) > 0);
-  const totalBilled = jobsWithValidBudget.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
-  const totalEarned = jobsWithValidBudget.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
-  const totalOverUnder = totalBilled - totalEarned;
-  
-  const jobsWithValidMargin = joFiltered.filter(j => j.revised_contract > 0 && j.revised_cost > 0);
-  let avgProfitMargin = 0;
-  if (jobsWithValidMargin.length > 0) {
-    const totalContractForMargin = jobsWithValidMargin.reduce((sum, j) => sum + j.revised_contract, 0);
-    const totalCostForMargin = jobsWithValidMargin.reduce((sum, j) => sum + j.revised_cost, 0);
-    const totalProfitForMargin = totalContractForMargin - totalCostForMargin;
-    avgProfitMargin = totalContractForMargin > 0 ? (totalProfitForMargin / totalContractForMargin) * 100 : 0;
-  }
-  
-  document.getElementById('joTotalJobs').textContent = totalJobs.toLocaleString();
-  document.getElementById('joContractValue').textContent = formatCurrencyCompact(totalContract);
-  document.getElementById('joBilledRevenue').textContent = formatCurrencyCompact(totalBilled);
-  
-  const marginEl = document.getElementById('joEstProfitMargin');
-  if (marginEl) {
-    if (jobsWithValidMargin.length === 0) {
-      marginEl.textContent = '-';
-      marginEl.style.color = '#6b7280';
-    } else {
-      marginEl.textContent = avgProfitMargin.toFixed(1) + '%';
-      marginEl.style.color = avgProfitMargin >= 0 ? '#10b981' : '#ef4444';
-    }
-  }
-  
-  const overUnderEl = document.getElementById('joOverUnderValue');
-  const overUnderTile = document.getElementById('joOverUnderTile');
-  if (overUnderEl) {
-    overUnderEl.textContent = formatCurrencyCompact(totalOverUnder);
-    overUnderEl.classList.remove('positive', 'negative');
-    if (totalOverUnder >= 0) {
-      overUnderEl.classList.add('positive');
-      if (overUnderTile) overUnderTile.style.borderLeftColor = '#10b981';
-    } else {
-      overUnderEl.classList.add('negative');
-      if (overUnderTile) overUnderTile.style.borderLeftColor = '#ef4444';
-    }
-  }
+  // Just trigger the PM metrics update which handles all the metric tiles
+  renderJoPmrMetrics(joFiltered);
 }
 
 // ========================================
