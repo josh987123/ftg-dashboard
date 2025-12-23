@@ -1847,7 +1847,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
 /* Export area positioned top right of content area */
 .content-export-area {
   position: absolute;
-  top: 30px;
+  top: 40px;
   right: 30px;
   z-index: 100;
 }
