@@ -19170,7 +19170,11 @@ function updatePmrMetrics() {
   const totalActualCost = jobs.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
   const totalEarnedRevenue = jobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
   const totalBilledRevenue = jobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
-  const netOverUnder = jobs.reduce((sum, j) => sum + (j.over_under || 0), 0);
+  
+  // For Over/Under calculation, only include jobs with valid budget data (contract > 0 and cost > 0)
+  // This matches Job Overview and Job Actuals pages for consistency
+  const jobsWithValidBudget = jobs.filter(j => (j.revised_contract || 0) > 0 && (j.revised_cost || 0) > 0);
+  const netOverUnder = jobsWithValidBudget.reduce((sum, j) => sum + ((j.billed_revenue || 0) - (j.earned_revenue || 0)), 0);
   
   // Calculate backlog (remaining contract to earn = contract - earned revenue)
   const backlog = totalContract - totalEarnedRevenue;
