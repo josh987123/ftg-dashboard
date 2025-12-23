@@ -18281,36 +18281,39 @@ body.dark-mode .dashboard-section > h2 {
     margin-left: 50px !important;
   }
   
-  /* --- EXPORT TOOLBAR: ULTRA COMPACT --- */
-  .export-bar,
-  .page-export-bar {
-    gap: 4px !important;
+  /* --- EXPORT RIBBON: ULTRA COMPACT --- */
+  .export-ribbon {
+    gap: 3px !important;
     padding: 4px !important;
   }
   
-  .export-bar .export-btn,
-  .page-export-bar .export-btn,
+  .ribbon-btn {
+    padding: 3px 5px !important;
+    min-width: auto !important;
+    font-size: 10px !important;
+  }
+  
+  .ribbon-btn svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+  
+  .ribbon-btn .ribbon-label {
+    font-size: 7px !important;
+  }
+  
   .export-dropdown-btn {
     padding: 4px 6px !important;
-    font-size: 9px !important;
-    min-width: auto !important;
-  }
-  
-  .export-bar .export-btn svg,
-  .page-export-bar .export-btn svg,
-  .export-dropdown-btn svg {
-    width: 14px !important;
-    height: 14px !important;
-  }
-  
-  .export-bar .export-btn span,
-  .page-export-bar .export-btn span {
-    font-size: 8px !important;
+    font-size: 10px !important;
   }
   
   /* --- PM REPORT KEY METRICS: HORIZONTAL SCROLL --- */
-  .pmr-metrics-row,
-  .pmr-metrics-row-2 {
+  .pmr-metrics-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  .pmr-metrics-row {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -18320,26 +18323,67 @@ body.dark-mode .dashboard-section > h2 {
     -webkit-overflow-scrolling: touch !important;
   }
   
-  .pmr-metrics-row .pmr-metric-card,
-  .pmr-metrics-row-2 .pmr-metric-card {
+  .pmr-metrics-row .pmr-metric-tile {
     flex: 0 0 auto !important;
-    min-width: 100px !important;
-    max-width: 130px !important;
-    padding: 8px !important;
+    min-width: 90px !important;
+    max-width: 110px !important;
+    padding: 6px 8px !important;
   }
   
-  .pmr-metric-value {
-    font-size: 14px !important;
+  .pmr-metric-tile .pmr-metric-value {
+    font-size: 13px !important;
     line-height: 1.2 !important;
   }
   
-  .pmr-metric-label {
-    font-size: 8px !important;
+  .pmr-metric-tile .pmr-metric-label {
+    font-size: 7px !important;
     line-height: 1.1 !important;
   }
   
-  .pmr-metric-sub {
-    font-size: 8px !important;
+  .pmr-metric-tile .pmr-metric-subtext,
+  .pmr-metric-tile .pmr-metric-trend {
+    font-size: 7px !important;
+  }
+  
+  .pmr-section-title {
+    font-size: 12px !important;
+    margin-bottom: 6px !important;
+  }
+  
+  /* --- JOB OVERVIEW KEY METRICS: HORIZONTAL SCROLL --- */
+  .jo-metrics-row,
+  .jo-metrics-row-5 {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    gap: 6px !important;
+    padding-bottom: 4px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  .jo-metrics-row .job-metric-card,
+  .jo-metrics-row-5 .job-metric-card {
+    flex: 0 0 auto !important;
+    min-width: 90px !important;
+    max-width: 120px !important;
+    padding: 6px 8px !important;
+    flex-direction: column !important;
+  }
+  
+  .jo-metrics-row .job-metric-card .metric-icon,
+  .jo-metrics-row-5 .job-metric-card .metric-icon {
+    display: none !important;
+  }
+  
+  .jo-metrics-row .job-metric-card .metric-value,
+  .jo-metrics-row-5 .job-metric-card .metric-value {
+    font-size: 13px !important;
+  }
+  
+  .jo-metrics-row .job-metric-card .metric-label,
+  .jo-metrics-row-5 .job-metric-card .metric-label {
+    font-size: 7px !important;
   }
   
   /* --- REVENUE/ACCOUNT DETAIL SUMMARY TILES: COMPACT GRID --- */
@@ -18368,23 +18412,31 @@ body.dark-mode .dashboard-section > h2 {
     font-size: 7px !important;
   }
   
-  /* --- CHART CARD ON REVENUE/ACCOUNT DETAIL --- */
-  .chart-card {
+  /* --- CHART BOX ON REVENUE/ACCOUNT DETAIL --- */
+  .chart-box {
     padding: 8px !important;
   }
   
-  .chart-card .chart-title {
-    font-size: 12px !important;
-    margin-bottom: 4px !important;
+  .chart-box .chart-title,
+  .chart-box h3 {
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
   }
   
-  .chart-card .chart-subtitle {
+  .chart-box .chart-subtitle,
+  .chart-box .chart-period {
     font-size: 9px !important;
   }
   
-  .chart-card .chart-wrapper {
-    height: 140px !important;
-    min-height: 140px !important;
+  .chart-box .chart-wrapper,
+  .chart-box .chart-container {
+    height: 120px !important;
+    min-height: 120px !important;
+  }
+  
+  .chart-box .expand-btn {
+    padding: 2px 4px !important;
+    font-size: 10px !important;
   }
   
   /* --- PAGE HEADERS: COMPACT --- */
