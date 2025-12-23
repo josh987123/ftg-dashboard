@@ -13954,43 +13954,6 @@ function renderCashChart() {
     };
   });
   
-  // Get daily deposits and payments (excluding transfers), filtered by selected accounts
-  const dailyTxns = getDailyDepositsAndPayments(dates, chartAccountsConfig);
-  const depositData = dates.map(d => dailyTxns.deposits[d] || 0);
-  const paymentData = dates.map(d => -(dailyTxns.payments[d] || 0));
-  
-  // Add deposit bars (green, positive)
-  datasets.push({
-    label: 'Deposits',
-    data: depositData,
-    type: 'bar',
-    yAxisID: 'y2',
-    backgroundColor: 'rgba(34, 197, 94, 0.7)',
-    borderColor: '#22c55e',
-    borderWidth: 1,
-    borderRadius: 2,
-    order: 2,
-    barPercentage: 0.6,
-    categoryPercentage: 0.8,
-    datalabels: { display: false }
-  });
-  
-  // Add payment bars (red, negative)
-  datasets.push({
-    label: 'Payments',
-    data: paymentData,
-    type: 'bar',
-    yAxisID: 'y2',
-    backgroundColor: 'rgba(239, 68, 68, 0.7)',
-    borderColor: '#ef4444',
-    borderWidth: 1,
-    borderRadius: 2,
-    order: 2,
-    barPercentage: 0.6,
-    categoryPercentage: 0.8,
-    datalabels: { display: false }
-  });
-  
   // Labels
   const labels = dates.map(d => {
     const date = new Date(d + 'T12:00:00');
@@ -14108,19 +14071,6 @@ function renderCashChart() {
           ticks: {
             color: themeColors.textColor,
             font: { size: isMobile ? 10 : 12 },
-            callback: v => {
-              if (Math.abs(v) >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
-              if (Math.abs(v) >= 1000) return '$' + (v/1000).toFixed(0) + 'K';
-              return '$' + v;
-            }
-          }
-        },
-        y2: {
-          position: 'right',
-          grid: { display: false },
-          ticks: {
-            color: themeColors.textColor,
-            font: { size: isMobile ? 9 : 11 },
             callback: v => {
               if (Math.abs(v) >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
               if (Math.abs(v) >= 1000) return '$' + (v/1000).toFixed(0) + 'K';
