@@ -20,7 +20,6 @@ Financial data is stored in static JSON files (`financials.json`, `account_group
 ### Dashboard Views
 The dashboard provides several key views for financial analysis:
 - **Executive Overview**: Configurable metric tiles with comparison options.
-- **Revenue**: Monthly/quarterly/annual charts with KPIs.
 - **Account Detail**: GL account drilldown.
 - **Income Statement**: Hierarchical P&L with comparison modes.
 - **Balance Sheet**: Cumulative balances with detailed breakdowns.

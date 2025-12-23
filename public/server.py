@@ -276,7 +276,6 @@ def init_database():
         # Seed default permissions (one per dashboard page)
         default_permissions = [
             ('overview', 'Financial Overview', 'View executive summary and key metrics'),
-            ('revenue', 'Revenue', 'View revenue charts and analysis'),
             ('account', 'Account Detail', 'View GL account details'),
             ('income_statement', 'Income Statement', 'View income statement'),
             ('balance_sheet', 'Balance Sheet', 'View balance sheet'),

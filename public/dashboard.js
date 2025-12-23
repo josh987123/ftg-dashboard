@@ -1896,7 +1896,7 @@ function initNavigation() {
 
       // Auto-expand Financials if child is clicked
       if (item.classList.contains("nav-child") && finStatementsParent && finStatementsChildren) {
-        const fsChildren = ['overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'payments', 'apAging', 'arAging'];
+        const fsChildren = ['overview', 'incomeStatement', 'balanceSheet', 'cashFlows', 'cashReports', 'accounts', 'payments', 'apAging', 'arAging'];
         if (fsChildren.includes(id)) {
           finStatementsParent.classList.add("expanded");
           finStatementsChildren.classList.add("expanded");
@@ -1932,7 +1932,6 @@ function initNavigation() {
         loadFinancialCharts();
       }
       if (id === "financials") loadFinancialCharts();
-      if (id === "revenue") initRevenueModule();
       if (id === "accounts") initAccountModule();
       if (id === "incomeStatement") loadIncomeStatement();
       if (id === "balanceSheet") initBalanceSheet();
@@ -23922,7 +23921,7 @@ async function openRoleModal(roleId = null) {
 
 function renderGroupedPermissions(permissions, selectedPerms, roleId, prefix) {
   const permissionGroups = {
-    'Financials': ['overview', 'ai_insights', 'revenue', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'account', 'payments', 'ap_aging', 'ar_aging'],
+    'Financials': ['overview', 'ai_insights', 'income_statement', 'balance_sheet', 'cash_flow', 'cash_balances', 'account', 'payments', 'ap_aging', 'ar_aging'],
     'Job Reports': ['job_overview', 'job_budgets', 'job_actuals', 'over_under_billing', 'cost_codes', 'pm_report'],
     'Admin': ['admin']
   };
@@ -24183,7 +24182,6 @@ async function loadAuditLog() {
 // Map data-section attributes to permission page_keys
 const sectionToPermission = {
   'overview': 'overview',
-  'revenue': 'revenue',
   'accounts': 'account',
   'incomeStatement': 'income_statement',
   'balanceSheet': 'balance_sheet',
@@ -24209,7 +24207,7 @@ const sectionToPermission = {
 
 // Order of sections for default page selection
 const sectionOrder = [
-  'overview', 'revenue', 'incomeStatement', 'balanceSheet', 'cashFlows', 
+  'overview', 'incomeStatement', 'balanceSheet', 'cashFlows', 
   'cashReports', 'accounts', 'apAging', 'arAging', 'payments',
   'jobOverview', 'jobBudgets', 'jobActuals', 'overUnderBilling', 'costCodes', 'missingBudgets', 'pmReport', 'jobAnalytics', 'aiInsights'
 ];
