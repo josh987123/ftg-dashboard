@@ -13737,7 +13737,7 @@ function getOldestTransactionDate() {
   return oldestDate.toISOString().split('T')[0];
 }
 
-function getDailyDepositsAndPayments(dates, selectedAccounts) {
+function getDailyDepositsAndPayments(dates, chartAccountsConfig) {
   const result = { deposits: {}, payments: {} };
   dates.forEach(d => {
     result.deposits[d] = 0;
@@ -13746,10 +13746,23 @@ function getDailyDepositsAndPayments(dates, selectedAccounts) {
   
   if (!cashData.transactions || cashData.transactions.length === 0) return result;
   
+  // Build set of selected account names from chartAccountsConfig
+  const selectedAccountNames = new Set();
+  chartAccountsConfig.forEach(cfg => {
+    cfg.accounts.forEach(acct => {
+      selectedAccountNames.add(acct.name);
+    });
+  });
+  
+  if (selectedAccountNames.size === 0) return result;
+  
   const excludePatterns = ['transfer', 'deposit system'];
   
   cashData.transactions.forEach(txn => {
     if (!txn.date || !txn.account) return;
+    
+    // Check if this transaction's account is in the selected set
+    if (!selectedAccountNames.has(txn.account)) return;
     
     const txnDate = new Date(txn.date);
     if (isNaN(txnDate.getTime())) return;
@@ -13938,8 +13951,8 @@ function renderCashChart() {
     };
   });
   
-  // Get daily deposits and payments (excluding transfers)
-  const dailyTxns = getDailyDepositsAndPayments(dates, cashSelectedAccounts);
+  // Get daily deposits and payments (excluding transfers), filtered by selected accounts
+  const dailyTxns = getDailyDepositsAndPayments(dates, chartAccountsConfig);
   const depositData = dates.map(d => dailyTxns.deposits[d] || 0);
   const paymentData = dates.map(d => -(dailyTxns.payments[d] || 0));
   
@@ -13983,17 +13996,17 @@ function renderCashChart() {
   
   if (cashChartInstance) cashChartInstance.destroy();
   
-  // Calculate min/max for Y-axis (start near minimum, not zero)
-  let allValues = [];
+  // Calculate min/max for Y-axis (balance lines only, not bar datasets)
+  let allBalanceValues = [];
   datasets.forEach(ds => {
-    if (ds.type !== 'line') {
-      allValues = allValues.concat(ds.data.filter(v => v !== null && v !== undefined));
+    if (ds.yAxisID === 'y') {
+      allBalanceValues = allBalanceValues.concat(ds.data.filter(v => v !== null && v !== undefined));
     }
   });
   
-  // For stacked bars, calculate totals per date
+  // For stacked lines, use the totals per date
   if (stackBars && chartAccountsConfig.length > 1) {
-    allValues = dates.map(dateKey => {
+    allBalanceValues = dates.map(dateKey => {
       const balances = getBalanceForDate(dateKey);
       return chartAccountsConfig.reduce((sum, cfg) => {
         return sum + cfg.accounts.reduce((s, a) => s + (balances[a.name] || 0), 0);
@@ -14001,8 +14014,8 @@ function renderCashChart() {
     });
   }
   
-  const dataMin = Math.min(...allValues);
-  const dataMax = Math.max(...allValues);
+  const dataMin = allBalanceValues.length > 0 ? Math.min(...allBalanceValues) : 0;
+  const dataMax = allBalanceValues.length > 0 ? Math.max(...allBalanceValues) : 10000000;
   
   // Round down to nearest million for min, round up for max
   const yMin = Math.floor(dataMin / 1000000) * 1000000;
@@ -14038,7 +14051,7 @@ function renderCashChart() {
       },
       plugins: {
         legend: { 
-          display: chartAccountsConfig.length > 1, 
+          display: true, 
           position: 'bottom',
           labels: {
             color: themeColors.legendColor,
@@ -14086,7 +14099,7 @@ function renderCashChart() {
         y: {
           stacked: stackBars,
           position: 'left',
-          min: 10000000,
+          min: yMin,
           max: yMax,
           grid: { color: themeColors.gridColor },
           ticks: {
