@@ -20639,6 +20639,8 @@ function buildWprPmTabs() {
       tabsContainer.querySelectorAll('.wpr-pm-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       wprSelectedPm = tab.getAttribute('data-pm');
+      updateWprMetrics();
+      updateWprHeatmap();
       updateWprClientSummary();
       updateWprOverUnderTable();
       updateWprMissingBudgetsTable();
@@ -20655,6 +20657,169 @@ function buildWprPmTabs() {
   const firstTab = tabsContainer.querySelector('.wpr-pm-tab');
   if (firstTab) {
     firstTab.click();
+  }
+}
+
+// Job size buckets for heat map (same as Job Overview)
+const WPR_SIZE_RANGES = [
+  { label: '<$100K', min: 0, max: 100000 },
+  { label: '$100K-$500K', min: 100000, max: 500000 },
+  { label: '$500K-$1M', min: 500000, max: 1000000 },
+  { label: '$1M-$5M', min: 1000000, max: 5000000 },
+  { label: '$5M+', min: 5000000, max: Infinity }
+];
+
+function updateWprMetrics() {
+  if (!wprSelectedPm) return;
+  
+  // Filter active jobs for selected PM
+  const pmJobs = wprJobsData.filter(job => 
+    job.project_manager_name === wprSelectedPm && job.job_status === 'A'
+  );
+  
+  // Calculate metrics
+  const totalJobs = pmJobs.length;
+  const contractValue = pmJobs.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
+  const billedRevenue = pmJobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
+  const earnedRevenue = pmJobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  const overUnder = billedRevenue - earnedRevenue;
+  
+  const totalCost = pmJobs.reduce((sum, j) => sum + (j.revised_cost || 0), 0);
+  const estProfit = contractValue - totalCost;
+  const estMargin = contractValue > 0 ? (estProfit / contractValue * 100) : 0;
+  
+  // Update DOM
+  document.getElementById('wprTotalJobs').textContent = totalJobs;
+  document.getElementById('wprContractValue').textContent = formatCurrencyCompact(contractValue);
+  document.getElementById('wprBilledRevenue').textContent = formatCurrencyCompact(billedRevenue);
+  document.getElementById('wprOverUnderValue').textContent = formatCurrencyCompact(overUnder);
+  document.getElementById('wprEstProfitMargin').textContent = estMargin.toFixed(1) + '%';
+  
+  // Color Over/Under tile based on value
+  const overUnderTile = document.getElementById('wprOverUnderTile');
+  if (overUnderTile) {
+    overUnderTile.classList.remove('positive', 'negative');
+    if (overUnder > 0) overUnderTile.classList.add('positive');
+    else if (overUnder < 0) overUnderTile.classList.add('negative');
+  }
+}
+
+function updateWprHeatmap() {
+  const container = document.getElementById('wprHeatmapContainer');
+  if (!container || !wprSelectedPm) {
+    if (container) container.innerHTML = '<div class="wpr-heatmap-placeholder">Select a PM to view heat map</div>';
+    return;
+  }
+  
+  // Filter jobs for selected PM
+  const pmJobs = wprJobsData.filter(job => job.project_manager_name === wprSelectedPm);
+  
+  // Separate active and closed jobs
+  const activeJobs = pmJobs.filter(j => j.job_status === 'A' && (j.revised_contract || 0) > 0);
+  const closedJobs = pmJobs.filter(j => j.job_status === 'C' && (j.billed_revenue || 0) > 0);
+  
+  // Build data for each row
+  const rows = [
+    { label: 'Closed', jobs: closedJobs, useClosed: true },
+    { label: 'Active', jobs: activeJobs, useClosed: false },
+    { label: 'Wtd Avg', jobs: [...activeJobs, ...closedJobs], useClosed: null } // Mixed
+  ];
+  
+  // Calculate margins for each cell
+  const rowData = rows.map(row => {
+    const cells = WPR_SIZE_RANGES.map(range => {
+      // Filter jobs in this size range
+      const rangeJobs = row.jobs.filter(j => {
+        const value = row.useClosed === true ? (j.billed_revenue || 0) : 
+                      row.useClosed === false ? (j.revised_contract || 0) :
+                      j.job_status === 'C' ? (j.billed_revenue || 0) : (j.revised_contract || 0);
+        return value >= range.min && value < range.max;
+      });
+      
+      if (rangeJobs.length === 0) {
+        return { margin: null, jobCount: 0 };
+      }
+      
+      // Calculate totals
+      let totalRevenue = 0, totalCost = 0;
+      rangeJobs.forEach(j => {
+        if (row.useClosed === true || (row.useClosed === null && j.job_status === 'C')) {
+          // Closed: use actual revenue/cost
+          totalRevenue += j.billed_revenue || 0;
+          totalCost += j.actual_cost || 0;
+        } else {
+          // Active: use estimated revenue/cost
+          totalRevenue += j.revised_contract || 0;
+          totalCost += j.revised_cost || 0;
+        }
+      });
+      
+      const margin = totalRevenue > 0 ? ((totalRevenue - totalCost) / totalRevenue * 100) : 0;
+      return { margin, jobCount: rangeJobs.length };
+    });
+    
+    return { label: row.label, cells };
+  });
+  
+  // Find min/max for color scaling
+  let minMargin = 0, maxMargin = 30;
+  rowData.forEach(row => {
+    row.cells.forEach(cell => {
+      if (cell.margin !== null) {
+        minMargin = Math.min(minMargin, cell.margin);
+        maxMargin = Math.max(maxMargin, cell.margin);
+      }
+    });
+  });
+  
+  // Build HTML
+  let html = '<div class="wpr-heatmap-grid">';
+  
+  // Header row
+  html += '<div class="wpr-heatmap-cell header">Status</div>';
+  WPR_SIZE_RANGES.forEach(range => {
+    html += `<div class="wpr-heatmap-cell header">${range.label}</div>`;
+  });
+  
+  // Data rows
+  rowData.forEach((row, rowIdx) => {
+    const isWeightedAvg = rowIdx === 2;
+    html += `<div class="wpr-heatmap-cell row-label ${isWeightedAvg ? 'weighted-avg' : ''}">${row.label}</div>`;
+    
+    row.cells.forEach(cell => {
+      if (cell.margin === null || cell.jobCount === 0) {
+        html += `<div class="wpr-heatmap-cell no-data ${isWeightedAvg ? 'weighted-avg' : ''}">-</div>`;
+      } else {
+        const bgColor = getWprHeatmapColor(cell.margin, minMargin, maxMargin);
+        html += `<div class="wpr-heatmap-cell data-cell ${isWeightedAvg ? 'weighted-avg' : ''}" style="background:${bgColor}" title="${cell.jobCount} job${cell.jobCount !== 1 ? 's' : ''}">${cell.margin.toFixed(1)}%</div>`;
+      }
+    });
+  });
+  
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function getWprHeatmapColor(value, min, max) {
+  // Color scale: red (loss) -> yellow (breakeven) -> green (profit)
+  if (value <= 0) {
+    // Red for losses
+    const intensity = Math.min(1, Math.abs(value) / 20);
+    return `rgb(${180 + 75 * intensity}, ${50 - 30 * intensity}, ${50 - 30 * intensity})`;
+  } else if (value <= 15) {
+    // Yellow to light green for low profit
+    const t = value / 15;
+    const r = Math.round(220 - 100 * t);
+    const g = Math.round(150 + 50 * t);
+    const b = Math.round(50 + 30 * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  } else {
+    // Green for good profit
+    const t = Math.min(1, (value - 15) / 25);
+    const r = Math.round(120 - 80 * t);
+    const g = Math.round(200 - 30 * t);
+    const b = Math.round(80 - 30 * t);
+    return `rgb(${r}, ${g}, ${b})`;
   }
 }
 

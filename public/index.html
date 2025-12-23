@@ -3800,6 +3800,56 @@
           <div class="wpr-pm-tabs-loading">Loading Project Managers...</div>
         </div>
         
+        <!-- Key Metrics Tiles -->
+        <div class="wpr-metrics-section">
+          <div class="wpr-metrics-row">
+            <div class="wpr-metric-card primary">
+              <div class="wpr-metric-icon">📋</div>
+              <div class="wpr-metric-content">
+                <div class="wpr-metric-value" id="wprTotalJobs">-</div>
+                <div class="wpr-metric-label">Total Jobs</div>
+              </div>
+            </div>
+            <div class="wpr-metric-card">
+              <div class="wpr-metric-icon">📄</div>
+              <div class="wpr-metric-content">
+                <div class="wpr-metric-value" id="wprContractValue">-</div>
+                <div class="wpr-metric-label">Contract Value</div>
+              </div>
+            </div>
+            <div class="wpr-metric-card">
+              <div class="wpr-metric-icon">💰</div>
+              <div class="wpr-metric-content">
+                <div class="wpr-metric-value" id="wprBilledRevenue">-</div>
+                <div class="wpr-metric-label">Billed Revenue</div>
+              </div>
+            </div>
+            <div class="wpr-metric-card" id="wprOverUnderTile">
+              <div class="wpr-metric-icon">💵</div>
+              <div class="wpr-metric-content">
+                <div class="wpr-metric-value" id="wprOverUnderValue">-</div>
+                <div class="wpr-metric-label">Over/(Under) Bill</div>
+              </div>
+            </div>
+            <div class="wpr-metric-card">
+              <div class="wpr-metric-icon">📊</div>
+              <div class="wpr-metric-content">
+                <div class="wpr-metric-value" id="wprEstProfitMargin">-</div>
+                <div class="wpr-metric-label">Est. Profit Margin</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Mini Profitability Heat Map -->
+        <div class="wpr-heatmap-section">
+          <h3 class="wpr-heatmap-title">Profitability Heat Map</h3>
+          <p class="wpr-heatmap-desc">Profit margin by job status and size. Green = high margin, red = loss.</p>
+          <div class="wpr-heatmap-container" id="wprHeatmapContainer">
+            <div class="wpr-heatmap-placeholder">Select a PM to view heat map</div>
+          </div>
+        </div>
+        
         <!-- Client Summary Table -->
         <div class="wpr-content" id="wprContent">
           <div class="wpr-table-container">

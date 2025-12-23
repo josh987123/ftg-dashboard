@@ -8171,6 +8171,155 @@ body.dark-mode #accounts .summary-tile .tile-label {
    WEEKLY PM REPORT STYLES
    ======================================== */
 
+/* Key Metrics Tiles */
+.wpr-metrics-section {
+  margin-bottom: 20px;
+}
+
+.wpr-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .wpr-metrics-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .wpr-metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.wpr-metric-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wpr-metric-card.primary {
+  border-left: 3px solid var(--accent-primary);
+}
+
+.wpr-metric-card.positive .wpr-metric-value {
+  color: #10b981;
+}
+
+.wpr-metric-card.negative .wpr-metric-value {
+  color: #ef4444;
+}
+
+.wpr-metric-icon {
+  font-size: 20px;
+  opacity: 0.8;
+}
+
+.wpr-metric-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.wpr-metric-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wpr-metric-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Mini Heat Map */
+.wpr-heatmap-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.wpr-heatmap-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: var(--text-primary);
+}
+
+.wpr-heatmap-desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin: 0 0 12px 0;
+}
+
+.wpr-heatmap-container {
+  overflow-x: auto;
+}
+
+.wpr-heatmap-placeholder {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+.wpr-heatmap-grid {
+  display: grid;
+  grid-template-columns: 100px repeat(5, 1fr);
+  gap: 2px;
+  min-width: 500px;
+}
+
+.wpr-heatmap-cell {
+  padding: 8px 6px;
+  text-align: center;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.wpr-heatmap-cell.header {
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.wpr-heatmap-cell.row-label {
+  text-align: left;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.wpr-heatmap-cell.data-cell {
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.wpr-heatmap-cell.no-data {
+  color: var(--text-tertiary);
+  background: var(--bg-primary);
+}
+
+.wpr-heatmap-cell.weighted-avg {
+  font-weight: 700;
+  border-top: 2px solid var(--border-color);
+}
+
 .wpr-pm-tabs {
   display: flex;
   flex-wrap: wrap;
