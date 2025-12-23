@@ -3847,7 +3847,6 @@ let isRowStates = {};
 // ===========================================
 function updateGreeting() {
   const greetingText = document.getElementById('greetingText');
-  const greetingSubtext = document.getElementById('greetingSubtext');
   const greetingDate = document.getElementById('greetingDate');
   
   if (!greetingText) return;
@@ -3861,21 +3860,17 @@ function updateGreeting() {
     displayName = currentUser ? currentUser.split('@')[0].charAt(0).toUpperCase() + currentUser.split('@')[0].slice(1) : '';
   }
   
-  let greeting, subtext;
+  let greeting;
   
   if (hour < 12) {
     greeting = displayName ? `Good morning, ${displayName}` : 'Good morning';
-    subtext = "Start your day with a clear view of your finances";
   } else if (hour < 17) {
     greeting = displayName ? `Good afternoon, ${displayName}` : 'Good afternoon';
-    subtext = "Here's your mid-day financial snapshot";
   } else {
     greeting = displayName ? `Good evening, ${displayName}` : 'Good evening';
-    subtext = "Review today's financial performance";
   }
   
   greetingText.textContent = greeting;
-  if (greetingSubtext) greetingSubtext.textContent = subtext;
   
   if (greetingDate) {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
