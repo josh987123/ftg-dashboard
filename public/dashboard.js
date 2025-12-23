@@ -1681,6 +1681,8 @@ function initNavigation() {
   const finStatementsChildren = document.getElementById("navFinancialStatementsChildren");
   const jobsParent = document.getElementById("navJobs");
   const jobsChildren = document.getElementById("navJobsChildren");
+  const distReportsParent = document.getElementById("navDistReports");
+  const distReportsChildren = document.getElementById("navDistReportsChildren");
 
   navItems.forEach(item => {
     item.addEventListener("click", () => {
@@ -1704,10 +1706,11 @@ function initNavigation() {
       const section = document.getElementById(id);
       if (section) section.classList.add("visible");
       
-      // Hide export ribbon on admin page
+      // Hide export ribbon on admin page and distribution reports pages
       const exportArea = document.querySelector('.content-export-area');
+      const hideExportPages = ['admin', 'deptHeadMeeting', 'dailyCashReport', 'weeklyPmReport', 'monthEndReporting'];
       if (exportArea) {
-        exportArea.style.display = id === 'admin' ? 'none' : '';
+        exportArea.style.display = hideExportPages.includes(id) ? 'none' : '';
       }
 
       // Auto-expand Financials if child is clicked
@@ -1725,6 +1728,15 @@ function initNavigation() {
         if (jobsChildItems.includes(id)) {
           jobsParent.classList.add("expanded");
           jobsChildren.classList.add("expanded");
+        }
+      }
+      
+      // Auto-expand Distribution Reports if child is clicked
+      if (item.classList.contains("nav-child") && distReportsParent && distReportsChildren) {
+        const distReportsChildItems = ['deptHeadMeeting', 'dailyCashReport', 'weeklyPmReport', 'monthEndReporting'];
+        if (distReportsChildItems.includes(id)) {
+          distReportsParent.classList.add("expanded");
+          distReportsChildren.classList.add("expanded");
         }
       }
 
@@ -23526,7 +23538,11 @@ const sectionToPermission = {
   'aiInsights': 'ai_insights',
   'payments': 'payments',
   'cashReports': 'cash_balances',
-  'admin': 'admin'
+  'admin': 'admin',
+  'deptHeadMeeting': 'admin',
+  'dailyCashReport': 'admin',
+  'weeklyPmReport': 'admin',
+  'monthEndReporting': 'admin'
 };
 
 // Order of sections for default page selection
@@ -23590,6 +23606,18 @@ async function checkAdminAccess() {
         console.log('[DEBUG] adminNavItem classList after:', adminNavItem.classList.toString());
       }
       
+      // Special handling for Distribution Reports section - only visible to admin role
+      const distReportsSection = document.getElementById('distReportsSection');
+      if (distReportsSection) {
+        if (isAdmin) {
+          distReportsSection.classList.remove('hidden');
+          console.log('[DEBUG] Removed hidden class from distReportsSection');
+        } else {
+          distReportsSection.classList.add('hidden');
+          console.log('[DEBUG] Added hidden class to distReportsSection');
+        }
+      }
+      
       // Store permissions for later use (in memory and localStorage for page refresh)
       window.userPermissions = userPerms;
       window.isAdminUser = isAdmin;
@@ -23626,6 +23654,11 @@ async function checkAdminAccess() {
           adminNavItem.classList.remove('hidden');
           console.log('[DEBUG] Session invalid - Preserved admin nav from cache');
         }
+        const distReportsSection = document.getElementById('distReportsSection');
+        if (distReportsSection) {
+          distReportsSection.classList.remove('hidden');
+          console.log('[DEBUG] Session invalid - Preserved dist reports nav from cache');
+        }
       }
       showDefaultSection();
     }
@@ -23640,6 +23673,11 @@ async function checkAdminAccess() {
       if (adminNavItem) {
         adminNavItem.classList.remove('hidden');
         console.log('[DEBUG] Error catch - Preserved admin nav visibility from cache');
+      }
+      const distReportsSection = document.getElementById('distReportsSection');
+      if (distReportsSection) {
+        distReportsSection.classList.remove('hidden');
+        console.log('[DEBUG] Error catch - Preserved dist reports nav from cache');
       }
     }
     showDefaultSection();
