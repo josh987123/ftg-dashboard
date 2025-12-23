@@ -8320,6 +8320,49 @@ body.dark-mode #accounts .summary-tile .tile-label {
   border-top: 2px solid var(--border-color);
 }
 
+/* Mini Charts Section */
+.wpr-charts-section {
+  margin-bottom: 20px;
+}
+
+.wpr-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1000px) {
+  .wpr-charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .wpr-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wpr-chart-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.wpr-chart-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+
+.wpr-chart-wrapper {
+  height: 140px;
+  position: relative;
+}
+
 .wpr-pm-tabs {
   display: flex;
   flex-wrap: wrap;

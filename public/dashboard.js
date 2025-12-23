@@ -20641,6 +20641,7 @@ function buildWprPmTabs() {
       wprSelectedPm = tab.getAttribute('data-pm');
       updateWprMetrics();
       updateWprHeatmap();
+      updateWprCharts();
       updateWprClientSummary();
       updateWprOverUnderTable();
       updateWprMissingBudgetsTable();
@@ -20821,6 +20822,335 @@ function getWprHeatmapColor(value, min, max) {
     const b = Math.round(80 - 30 * t);
     return `rgb(${r}, ${g}, ${b})`;
   }
+}
+
+// WPR Chart instances
+let wprMarginChart = null;
+let wprBudgetActualChart = null;
+let wprBillingChart = null;
+let wprArAgingChart = null;
+
+function updateWprCharts() {
+  renderWprMarginChart();
+  renderWprBudgetActualChart();
+  renderWprBillingChart();
+  renderWprArAgingChart();
+}
+
+function renderWprMarginChart() {
+  const canvas = document.getElementById('wprMarginChart');
+  if (!canvas || !wprSelectedPm) return;
+  
+  const jobs = wprJobsData.filter(j => 
+    j.project_manager_name === wprSelectedPm && 
+    j.job_status === 'A' && 
+    (j.revised_contract || 0) > 0
+  );
+  
+  if (jobs.length === 0) {
+    if (wprMarginChart) { wprMarginChart.destroy(); wprMarginChart = null; }
+    return;
+  }
+  
+  // Group jobs by margin range
+  const ranges = { low: 0, medium: 0, high: 0 };
+  jobs.forEach(j => {
+    const margin = ((j.revised_contract - j.revised_cost) / j.revised_contract) * 100;
+    if (margin < 10) ranges.low++;
+    else if (margin < 20) ranges.medium++;
+    else ranges.high++;
+  });
+  
+  if (wprMarginChart) { wprMarginChart.destroy(); wprMarginChart = null; }
+  
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#1f2937';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+  
+  const ctx = canvas.getContext('2d');
+  wprMarginChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['<10%', '10-20%', '>20%'],
+      datasets: [{
+        label: 'Jobs',
+        data: [ranges.low, ranges.medium, ranges.high],
+        backgroundColor: ['#dc2626', '#f59e0b', '#10b981'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: textColor,
+          font: { weight: 'bold', size: 10 },
+          formatter: (value) => value > 0 ? value : ''
+        }
+      },
+      scales: {
+        y: { 
+          beginAtZero: true,
+          max: Math.ceil(Math.max(ranges.low, ranges.medium, ranges.high) * 1.3) || 1,
+          ticks: { stepSize: 1, color: textColor, font: { size: 9 } },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor, font: { size: 9 } },
+          grid: { display: false }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+function renderWprBudgetActualChart() {
+  const canvas = document.getElementById('wprBudgetActualChart');
+  if (!canvas || !wprSelectedPm) return;
+  
+  const jobs = wprJobsData.filter(j => 
+    j.project_manager_name === wprSelectedPm && j.job_status === 'A'
+  );
+  
+  if (jobs.length === 0) {
+    if (wprBudgetActualChart) { wprBudgetActualChart.destroy(); wprBudgetActualChart = null; }
+    return;
+  }
+  
+  const totalBudgetedCost = jobs.reduce((sum, j) => sum + (j.revised_cost || 0), 0);
+  const totalActualCost = jobs.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
+  const totalBudgetedRevenue = jobs.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
+  const totalEarnedRevenue = jobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
+  
+  if (wprBudgetActualChart) { wprBudgetActualChart.destroy(); wprBudgetActualChart = null; }
+  
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#1f2937';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+  
+  const ctx = canvas.getContext('2d');
+  wprBudgetActualChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Cost', 'Revenue'],
+      datasets: [
+        {
+          label: 'Budget',
+          data: [totalBudgetedCost, totalBudgetedRevenue],
+          backgroundColor: '#6b7280',
+          borderRadius: 4
+        },
+        {
+          label: 'Actual',
+          data: [totalActualCost, totalEarnedRevenue],
+          backgroundColor: ['#3b82f6', '#10b981'],
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { 
+          display: true,
+          position: 'top',
+          labels: { boxWidth: 10, padding: 6, font: { size: 9 }, color: textColor }
+        },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: textColor,
+          font: { weight: 'bold', size: 8 },
+          formatter: (value) => value > 0 ? formatCurrencyCompact(value) : ''
+        }
+      },
+      scales: {
+        y: { 
+          beginAtZero: true, 
+          ticks: { callback: (v) => formatCurrencyShort(v), color: textColor, font: { size: 9 } },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor, font: { size: 9 } },
+          grid: { display: false }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+function renderWprBillingChart() {
+  const canvas = document.getElementById('wprBillingChart');
+  if (!canvas || !wprSelectedPm) return;
+  
+  const jobs = wprJobsData.filter(j => j.project_manager_name === wprSelectedPm);
+  if (jobs.length === 0) {
+    if (wprBillingChart) { wprBillingChart.destroy(); wprBillingChart = null; }
+    return;
+  }
+  
+  const pmJobNos = new Set(jobs.map(j => String(j.job_no)));
+  const excelEpoch = new Date(1899, 11, 30);
+  
+  // Get last 6 months of billing
+  const now = new Date();
+  const months = [];
+  const billingByMonth = {};
+  
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    months.push(key);
+    billingByMonth[key] = 0;
+  }
+  
+  wprArInvoices.forEach(inv => {
+    if (inv.project_manager_name !== wprSelectedPm) return;
+    if (!pmJobNos.has(String(inv.job_no))) return;
+    
+    const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
+    const invoiceDate = new Date(excelEpoch.getTime() + invoiceDateSerial * 24 * 60 * 60 * 1000);
+    const key = `${invoiceDate.getFullYear()}-${String(invoiceDate.getMonth() + 1).padStart(2, '0')}`;
+    
+    if (billingByMonth[key] !== undefined) {
+      billingByMonth[key] += parseFloat(inv.invoice_amount) || 0;
+    }
+  });
+  
+  const labels = months.map(m => {
+    const [y, mo] = m.split('-');
+    return new Date(y, parseInt(mo) - 1, 1).toLocaleDateString('en-US', { month: 'short' });
+  });
+  const data = months.map(m => billingByMonth[m]);
+  
+  if (wprBillingChart) { wprBillingChart.destroy(); wprBillingChart = null; }
+  
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#1f2937';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+  
+  const ctx = canvas.getContext('2d');
+  wprBillingChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Billing',
+        data: data,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3,
+        pointBackgroundColor: '#3b82f6'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: (v) => formatCurrencyShort(v), color: textColor, font: { size: 9 } },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor, font: { size: 9 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function renderWprArAgingChart() {
+  const canvas = document.getElementById('wprArAgingChart');
+  if (!canvas || !wprSelectedPm) return;
+  
+  // Fetch AR aging data filtered by PM
+  const params = new URLSearchParams({
+    sortColumn: 'days_90_plus',
+    sortDirection: 'desc',
+    pm: wprSelectedPm
+  });
+  
+  fetch(`/api/ar-aging?${params.toString()}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.success && data.totals) {
+        const totals = data.totals;
+        const aging = {
+          current: totals.current || 0,
+          days31_60: totals.days_31_60 || 0,
+          days61_90: totals.days_61_90 || 0,
+          days90Plus: totals.days_90_plus || 0
+        };
+        renderWprArAgingChartWithData(canvas, aging);
+      } else {
+        renderWprArAgingChartWithData(canvas, { current: 0, days31_60: 0, days61_90: 0, days90Plus: 0 });
+      }
+    })
+    .catch(err => {
+      console.error('Error loading AR aging for WPR:', err);
+      renderWprArAgingChartWithData(canvas, { current: 0, days31_60: 0, days61_90: 0, days90Plus: 0 });
+    });
+}
+
+function renderWprArAgingChartWithData(canvas, aging) {
+  if (wprArAgingChart) { wprArAgingChart.destroy(); wprArAgingChart = null; }
+  
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#ffffff' : '#1f2937';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+  
+  const ctx = canvas.getContext('2d');
+  wprArAgingChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['0-30', '31-60', '61-90', '90+'],
+      datasets: [{
+        label: 'AR Aging',
+        data: [aging.current, aging.days31_60, aging.days61_90, aging.days90Plus],
+        backgroundColor: ['#22c55e', '#eab308', '#f97316', '#ef4444'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return formatCurrency(context.raw);
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: (v) => formatCurrencyShort(v), color: textColor, font: { size: 9 } },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor, font: { size: 9 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
 }
 
 function updateWprClientSummary() {
