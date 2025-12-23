@@ -4635,6 +4635,7 @@ function renderOverUnderBillingChart(labels, metricData, compare, currentMonthIn
   overUnderChartInstance = new Chart(canvas, {
     type: 'bar',
     data: { labels, datasets },
+    plugins: showDataLabels ? [ChartDataLabels] : [],
     options: {
       responsive: true,
       maintainAspectRatio: false,
