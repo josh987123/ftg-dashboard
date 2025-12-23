@@ -20,27 +20,15 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
-  <link rel="stylesheet" href="style.css?v=20251222a" />
-
-  <!-- EmailJS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  
-  <!-- html2canvas for chart screenshots -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  
-  <!-- jsPDF for PDF generation -->
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-
-  <!-- SheetJS for Excel export -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- ExcelJS for styled Excel export -->
-  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-
-  <!-- Google Fonts -->
+  <!-- Google Fonts - Optimized loading -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css?v=20251223a" />
+
+  <!-- PERFORMANCE: Export libraries (EmailJS, html2canvas, jsPDF, XLSX, ExcelJS) are now lazy-loaded in dashboard.js when needed -->
 </head>
 
 <body>
@@ -4070,12 +4058,12 @@
     </div>
   </div>
 
-  <!-- JS LIBRARIES -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <!-- JS LIBRARIES - defer for non-blocking load -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script src="dashboard.js?v=20251222a"></script>
+  <script defer src="dashboard.js?v=20251223a"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>

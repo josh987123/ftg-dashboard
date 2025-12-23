@@ -3259,7 +3259,23 @@ def serve_static(path):
         return jsonify({'error': 'Not found'}), 404
     try:
         response = send_from_directory('.', path)
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        
+        # Optimized cache control for different file types
+        # Static assets that rarely change get long cache (1 year with versioning)
+        # Dynamic content gets no-cache
+        if path.endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.svg', '.woff', '.woff2', '.ttf')):
+            # Images and fonts - cache for 1 year (versioned via query string or path)
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        elif path.startswith('data/') and path.endswith('.json'):
+            # Data files - cache for 5 minutes (frequently accessed, rarely changed)
+            response.headers['Cache-Control'] = 'public, max-age=300'
+        elif path.endswith('.css') or path.endswith('.js'):
+            # CSS/JS with version query strings - cache for 1 day
+            response.headers['Cache-Control'] = 'public, max-age=86400'
+        else:
+            # All other files - no cache
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        
         return response
     except Exception as e:
         # Only fallback to index.html for non-API, non-data paths

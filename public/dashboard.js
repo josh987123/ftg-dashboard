@@ -66,6 +66,58 @@ const debouncedRenderCashChart = debounce(() => {
 }, 150);
 
 /* ------------------------------------------------------------
+   LAZY LOADING UTILITY - Load heavy libraries on-demand
+   Reduces initial page load time by ~500KB+
+------------------------------------------------------------ */
+const LazyLoader = {
+  loaded: {},
+  loading: {},
+  
+  libraries: {
+    html2canvas: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+    jspdf: 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+    xlsx: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+    exceljs: 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+    emailjs: 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js'
+  },
+  
+  load(name) {
+    if (this.loaded[name]) {
+      return Promise.resolve();
+    }
+    if (this.loading[name]) {
+      return this.loading[name];
+    }
+    
+    const url = this.libraries[name];
+    if (!url) {
+      return Promise.reject(new Error(`Unknown library: ${name}`));
+    }
+    
+    this.loading[name] = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = url;
+      script.onload = () => {
+        this.loaded[name] = true;
+        delete this.loading[name];
+        resolve();
+      };
+      script.onerror = () => {
+        delete this.loading[name];
+        reject(new Error(`Failed to load ${name}`));
+      };
+      document.head.appendChild(script);
+    });
+    
+    return this.loading[name];
+  },
+  
+  async loadMultiple(names) {
+    await Promise.all(names.map(name => this.load(name)));
+  }
+};
+
+/* ------------------------------------------------------------
    MY PM VIEW - Username to PM Name Mapping
    Maps usernames to their full project manager names in the data
 ------------------------------------------------------------ */
@@ -6555,10 +6607,19 @@ async function universalExportToPdf() {
   
   const loadingOverlay = document.createElement('div');
   loadingOverlay.id = 'pdfLoadingOverlay';
-  loadingOverlay.innerHTML = '<div class="pdf-loading-content"><div class="ai-spinner"></div><div>Generating PDF...</div></div>';
+  loadingOverlay.innerHTML = '<div class="pdf-loading-content"><div class="ai-spinner"></div><div>Loading PDF libraries...</div></div>';
   loadingOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
   loadingOverlay.querySelector('.pdf-loading-content').style.cssText = 'background:#fff;padding:30px 50px;border-radius:12px;text-align:center;font-size:16px;color:#1f2937;';
   document.body.appendChild(loadingOverlay);
+  
+  try {
+    await LazyLoader.loadMultiple(['html2canvas', 'jspdf']);
+    loadingOverlay.querySelector('.pdf-loading-content').innerHTML = '<div class="ai-spinner"></div><div>Generating PDF...</div>';
+  } catch (err) {
+    loadingOverlay.remove();
+    alert('Failed to load PDF libraries. Please check your internet connection.');
+    return;
+  }
   
   // Hide UI elements that shouldn't appear in the PDF
   const elementsToHide = visibleSection.querySelectorAll('.config-panel, .config-header, .config-body, .ai-analysis-panel:not(.has-analysis), .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay, .loading-spinner, [class*="LoadingOverlay"]');
@@ -6685,8 +6746,10 @@ async function universalExportToExcel() {
   const data = getReportData();
   if (!data) return alert("Please navigate to a report view to export to Excel.");
   
-  if (typeof ExcelJS === "undefined") {
-    return alert("Excel export library not loaded. Please refresh the page and try again.");
+  try {
+    await LazyLoader.load('exceljs');
+  } catch (err) {
+    return alert("Failed to load Excel library. Please check your internet connection.");
   }
   
   const view = getCurrentView();
@@ -7338,11 +7401,13 @@ async function sendReportEmail() {
     return;
   }
   
-  statusEl.textContent = "Capturing screenshot...";
+  statusEl.textContent = "Loading email libraries...";
   statusEl.className = "email-status";
   sendBtn.disabled = true;
   
   try {
+    await LazyLoader.loadMultiple(['emailjs', 'html2canvas']);
+    statusEl.textContent = "Capturing screenshot...";
     emailjs.init(EMAILJS_CONFIG.publicKey);
     
     const view = getCurrentView();
@@ -14074,8 +14139,10 @@ function initCashExportButtons() {
 }
 
 async function exportDailyBalancesToExcel() {
-  if (typeof ExcelJS === "undefined") {
-    alert("ExcelJS library not loaded. Please refresh the page and try again.");
+  try {
+    await LazyLoader.load('exceljs');
+  } catch (err) {
+    alert("Failed to load Excel library. Please check your internet connection.");
     return;
   }
   
@@ -14339,8 +14406,10 @@ function addResizeHandlesToTable(tableId) {
 }
 
 async function exportTransactionsToExcel() {
-  if (typeof ExcelJS === "undefined") {
-    alert("ExcelJS library not loaded. Please refresh the page and try again.");
+  try {
+    await LazyLoader.load('exceljs');
+  } catch (err) {
+    alert("Failed to load Excel library. Please check your internet connection.");
     return;
   }
   
