@@ -3291,6 +3291,19 @@ function syncTimePeriodButtons(viewType) {
   document.querySelectorAll('.time-period-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === viewType);
   });
+  
+  // Update year controls visibility
+  const yearSelectWrapper = document.getElementById("overviewYearSelectWrapper");
+  const yearSliderSection = document.getElementById("overviewYearSliderSection");
+  if (yearSelectWrapper && yearSliderSection) {
+    if (viewType === "annual") {
+      yearSelectWrapper.style.display = "none";
+      yearSliderSection.style.display = "flex";
+    } else {
+      yearSelectWrapper.style.display = "flex";
+      yearSliderSection.style.display = "none";
+    }
+  }
 }
 
 function applyMetricVisibility() {
@@ -3961,9 +3974,10 @@ function setupOverviewUI() {
       return;
     }
     
-    // Populate hidden year select for compatibility
+    // Populate year select (descending order - most recent first)
     if (yearSelect) {
-      yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
+      const yearsDesc = [...years].sort((a, b) => b - a);
+      yearSelect.innerHTML = yearsDesc.map(y => `<option value="${y}">${y}</option>`).join("");
       yearSelect.value = Math.max(...years);
     }
   
@@ -3976,6 +3990,9 @@ function setupOverviewUI() {
     document.getElementById("overviewRangeEndLabel").textContent = rangeEnd.value;
   
     const trendCheck = document.getElementById("overviewTrend");
+    
+    // Initialize visibility based on current view type
+    syncTimePeriodButtons(viewTypeInput.value);
   
     // Time period button click handlers
     document.querySelectorAll('.time-period-btn').forEach(btn => {
@@ -3983,6 +4000,7 @@ function setupOverviewUI() {
         document.querySelectorAll('.time-period-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         viewTypeInput.value = btn.dataset.view;
+        syncTimePeriodButtons(btn.dataset.view);
         updateOverviewCharts();
         saveOverviewConfig();
       });

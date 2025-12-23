@@ -660,7 +660,11 @@
                   </div>
                   <input type="hidden" id="overviewViewType" value="quarterly">
                 </div>
-                <div class="year-slider-section year-range-inline" id="overviewYearSliderSection">
+                <div class="overview-year-select-wrapper" id="overviewYearSelectWrapper">
+                  <label>Year:</label>
+                  <select id="overviewYear"></select>
+                </div>
+                <div class="year-slider-section year-range-inline" id="overviewYearSliderSection" style="display: none;">
                   <label>Year Range:</label>
                   <span id="overviewRangeStartLabel" class="year-label">2018</span>
                   <input type="range" id="overviewRangeStart" min="2015" max="2025" value="2018" step="1" class="year-slider">
@@ -668,7 +672,6 @@
                   <input type="range" id="overviewRangeEnd" min="2015" max="2025" value="2025" step="1" class="year-slider">
                   <span id="overviewRangeEndLabel" class="year-label">2025</span>
                 </div>
-                <select id="overviewYear" style="display: none;"></select>
               </div>
 
               <div class="overview-config-box overview-visuals-box">
