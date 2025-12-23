@@ -1846,6 +1846,209 @@
           </div>
         </div>
 
+        <!-- ============================================================
+             PM PERFORMANCE SECTION (Migrated from PM Report)
+        ============================================================= -->
+        
+        <!-- PM Report Desktop Layout: Left (Radar + Metrics) | Right (Charts Stack) -->
+        <div class="pmr-desktop-layout jo-pmr-section">
+          <!-- Left Column: Radar + Metrics -->
+          <div class="pmr-left-column">
+            <!-- PM Performance Radar Chart -->
+            <div class="pm-radar-section">
+              <div class="radar-header">
+                <h3 class="pmr-section-title">PM Performance Radar</h3>
+              </div>
+              <p class="radar-description">Compare selected PM performance across key metrics vs portfolio average. Higher values = better performance.</p>
+              <div class="radar-chart-container">
+                <canvas id="joPmRadarChart"></canvas>
+              </div>
+              <div class="radar-legend-box" id="joRadarLegendBox"></div>
+            </div>
+
+            <!-- Key Metrics Summary - 4 columns layout -->
+            <div class="pmr-metrics-wrapper">
+              <h3 class="pmr-section-title">PM Key Metrics</h3>
+              <!-- Row 1: 4 tiles -->
+              <div class="pmr-metrics-row pmr-metrics-4col">
+                <div class="pmr-metric-tile">
+                  <div class="pmr-metric-label">Active Jobs</div>
+                  <div class="pmr-metric-value" id="joPmrTotalJobs">-</div>
+                  <div class="pmr-metric-trend" id="joPmrJobsTrend"></div>
+                </div>
+                <div class="pmr-metric-tile">
+                  <div class="pmr-metric-label">Contract Value</div>
+                  <div class="pmr-metric-value" id="joPmrTotalContract">-</div>
+                  <div class="pmr-metric-trend" id="joPmrContractTrend"></div>
+                </div>
+                <div class="pmr-metric-tile">
+                  <div class="pmr-metric-label">Backlog</div>
+                  <div class="pmr-metric-value" id="joPmrBacklog">-</div>
+                  <div class="pmr-metric-subtext" id="joPmrBacklogPct">-</div>
+                </div>
+                <div class="pmr-metric-tile">
+                  <div class="pmr-metric-label">Gross Margin</div>
+                  <div class="pmr-metric-value" id="joPmrGrossMargin">-</div>
+                  <div class="pmr-metric-subtext" id="joPmrGrossMarginAmt">-</div>
+                  <div class="pmr-metric-trend" id="joPmrMarginTrend"></div>
+                </div>
+              </div>
+
+              <!-- Row 2: 4 tiles -->
+              <div class="pmr-metrics-row pmr-metrics-4col">
+                <div class="pmr-metric-tile">
+                  <div class="pmr-metric-label">Net Over/(Under)</div>
+                  <div class="pmr-metric-value" id="joPmrNetOverUnder">-</div>
+                  <div class="pmr-metric-trend" id="joPmrOverUnderTrend"></div>
+                </div>
+                <div class="pmr-metric-tile">
+                  <div class="pmr-metric-label">Avg % Complete</div>
+                  <div class="pmr-metric-value" id="joPmrAvgPctComplete">-</div>
+                  <div class="pmr-progress-bar"><div class="pmr-progress-fill" id="joPmrProgressFill"></div></div>
+                </div>
+                <div class="pmr-metric-tile">
+                  <div class="pmr-metric-label">Billed Last Month</div>
+                  <div class="pmr-metric-value" id="joPmrBilledLastMonth">-</div>
+                  <div class="pmr-metric-trend" id="joPmrBillingTrend"></div>
+                </div>
+                <div class="pmr-metric-tile">
+                  <div class="pmr-metric-label">AR Exposure</div>
+                  <div class="pmr-metric-value" id="joPmrArExposure">-</div>
+                  <div class="pmr-metric-subtext" id="joPmrArOver60">-</div>
+                </div>
+              </div>
+
+              <!-- Row 3: 2 tiles (left-aligned, 2 empty spaces on right) -->
+              <div class="pmr-metrics-row pmr-metrics-4col pmr-metrics-partial">
+                <div class="pmr-metric-tile">
+                  <div class="pmr-metric-label">Actual Cost</div>
+                  <div class="pmr-metric-value" id="joPmrTotalActualCost">-</div>
+                  <div class="pmr-metric-trend" id="joPmrCostTrend"></div>
+                </div>
+                <div class="pmr-metric-tile">
+                  <div class="pmr-metric-label">Earned Revenue</div>
+                  <div class="pmr-metric-value" id="joPmrTotalEarnedRevenue">-</div>
+                  <div class="pmr-metric-trend" id="joPmrRevenueTrend"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Charts Stack -->
+          <div class="pmr-right-column">
+            <div class="pmr-chart-container">
+              <h4 class="pmr-chart-title">Margin Distribution</h4>
+              <canvas id="joPmrMarginChart" width="280" height="150"></canvas>
+            </div>
+            <div class="pmr-chart-container">
+              <h4 class="pmr-chart-title">Budget vs Actual</h4>
+              <canvas id="joPmrBudgetActualChart" width="280" height="150"></canvas>
+            </div>
+            <div class="pmr-chart-container">
+              <h4 class="pmr-chart-title">Monthly Billing Trend</h4>
+              <canvas id="joPmrBillingChart" width="280" height="150"></canvas>
+            </div>
+            <div class="pmr-chart-container">
+              <h4 class="pmr-chart-title">AR Aging</h4>
+              <canvas id="joPmrArAgingChart" width="280" height="150"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Client Summary Section -->
+        <div class="pmr-section jo-pmr-section">
+          <div class="pmr-section-header">
+            <div>
+              <h3 class="pmr-section-title">Client Summary</h3>
+              <div class="pmr-section-desc">All clients with jobs for the selected PM/status</div>
+            </div>
+            <button class="pmr-toggle-btn" id="joClientSummaryToggle" onclick="toggleJoClientSummaryDetail()">Expand</button>
+          </div>
+          <div class="table-container pmr-table-container">
+            <table class="data-table pmr-client-summary-table" id="joClientSummaryTable">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th class="text-right">Est. Contract</th>
+                  <th class="text-right">Est. Cost</th>
+                  <th class="text-right">Est. Profit</th>
+                  <th class="text-right">Margin %</th>
+                  <th class="text-right">Billed (Last Mo.)</th>
+                  <th class="text-right">Billed to Date</th>
+                  <th class="text-right">Cost to Date</th>
+                </tr>
+              </thead>
+              <tbody id="joClientSummaryTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pmr-table-footer">
+            <span id="joClientSummaryCount">0 clients</span>
+          </div>
+        </div>
+
+        <!-- Over/Under Billing Section -->
+        <div class="pmr-section jo-pmr-section">
+          <div class="pmr-section-header">
+            <div>
+              <h3 class="pmr-section-title">Over/(Under) Billing</h3>
+              <div class="pmr-section-desc">Jobs with billing variance for the selected PM/status</div>
+            </div>
+            <button class="pmr-toggle-btn" id="joOverUnderToggle" onclick="toggleJoOverUnderDetail()">Expand</button>
+          </div>
+          <div class="table-container pmr-table-container">
+            <table class="data-table pmr-over-under-table" id="joOverUnderTable">
+              <thead>
+                <tr>
+                  <th>Job #</th>
+                  <th>Description</th>
+                  <th>Client</th>
+                  <th class="text-right pmr-expandable-col">Contract</th>
+                  <th class="text-right pmr-expandable-col">Actual Cost</th>
+                  <th class="text-right pmr-expandable-col">% Complete</th>
+                  <th class="text-right pmr-expandable-col">Earned Rev</th>
+                  <th class="text-right pmr-expandable-col">Billed Rev</th>
+                  <th class="text-right">Over/(Under)</th>
+                </tr>
+              </thead>
+              <tbody id="joOverUnderTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pmr-table-footer">
+            <span id="joOverUnderCount">0 jobs</span>
+          </div>
+        </div>
+
+        <!-- Missing Budgets Section -->
+        <div class="pmr-section jo-pmr-section">
+          <div class="pmr-section-header">
+            <div>
+              <h3 class="pmr-section-title">Missing Budgets</h3>
+              <div class="pmr-section-desc">Jobs with &gt;$2,500 actual cost but missing budgeted revenue or cost</div>
+            </div>
+            <button class="pmr-toggle-btn" id="joMissingBudgetsToggle" onclick="toggleJoMissingBudgetsDetail()">Expand</button>
+          </div>
+          <div class="table-container pmr-table-container">
+            <table class="data-table pmr-missing-budgets-table" id="joMissingBudgetsTable">
+              <thead>
+                <tr>
+                  <th>Job #</th>
+                  <th>Description</th>
+                  <th class="pmr-mb-expandable-col">Client</th>
+                  <th class="pmr-mb-expandable-col">Status</th>
+                  <th class="text-right">Actual Cost</th>
+                  <th class="text-right">Budgeted Revenue</th>
+                  <th class="text-right">Budgeted Cost</th>
+                  <th>Issue</th>
+                </tr>
+              </thead>
+              <tbody id="joMissingBudgetsTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pmr-table-footer">
+            <span id="joMissingBudgetsCount">0 jobs</span>
+          </div>
+        </div>
+
       </section>
 
       <!-- ============================================================
