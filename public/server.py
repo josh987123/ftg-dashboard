@@ -3907,6 +3907,7 @@ def api_get_ap_aging():
     
     try:
         search = request.args.get('search', '').strip().lower()
+        job_search = request.args.get('job', '').strip().lower()
         sort_column = request.args.get('sortColumn', 'total_due')
         sort_direction = request.args.get('sortDirection', 'desc')
         
@@ -3916,6 +3917,10 @@ def api_get_ap_aging():
             invoices_json = json.load(f)
         
         invoices = invoices_json.get('invoices', [])
+        
+        # Filter by job number if provided
+        if job_search:
+            invoices = [inv for inv in invoices if job_search in str(inv.get('job_no', '')).lower()]
         
         # Use same exclusion list as payments
         excluded_vendors = PAYMENTS_EXCLUDED_VENDORS

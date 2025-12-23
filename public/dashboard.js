@@ -25904,6 +25904,7 @@ let apAgingInitialized = false;
 let apAgingSortColumn = 'days_90_plus';
 let apAgingSortDirection = 'desc';
 let apAgingSearchTerm = '';
+let apAgingJobSearchTerm = '';
 let apAgingChart = null;
 
 function initApAging() {
@@ -25926,6 +25927,14 @@ function setupApAgingEventHandlers() {
   if (searchInput) {
     searchInput.addEventListener('input', debounce(() => {
       apAgingSearchTerm = searchInput.value.trim();
+      loadApAgingData();
+    }, 300));
+  }
+  
+  const jobSearchInput = document.getElementById('apAgingJobSearch');
+  if (jobSearchInput) {
+    jobSearchInput.addEventListener('input', debounce(() => {
+      apAgingJobSearchTerm = jobSearchInput.value.trim();
       loadApAgingData();
     }, 300));
   }
@@ -25956,6 +25965,9 @@ function loadApAgingData() {
   
   if (apAgingSearchTerm) {
     params.set('search', apAgingSearchTerm);
+  }
+  if (apAgingJobSearchTerm) {
+    params.set('job', apAgingJobSearchTerm);
   }
   
   fetch(`/api/ap-aging?${params.toString()}`)
