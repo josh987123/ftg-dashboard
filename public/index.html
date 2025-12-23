@@ -1473,88 +1473,8 @@
           </div>
         </div>
 
-        <!-- Key Metrics by Project Manager -->
-        <div class="job-overview-charts">
-          <h3 class="jo-section-header">Key Metrics by Project Manager</h3>
-          <div class="jo-chart-grid-3">
-            <div class="overview-chart-card">
-              <div class="chart-title"># of Jobs</div>
-              <div class="chart-container">
-                <canvas id="joPmJobsChart"></canvas>
-              </div>
-              <div class="chart-stats jo-chart-stats">
-                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joPmJobsAvg">-</div></div>
-                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joPmJobsHigh">-</div><div class="stat-period" id="joPmJobsHighName"></div></div>
-                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joPmJobsLow">-</div><div class="stat-period" id="joPmJobsLowName"></div></div>
-              </div>
-            </div>
-            <div class="overview-chart-card">
-              <div class="chart-title">Contract Value</div>
-              <div class="chart-container">
-                <canvas id="joPmContractChart"></canvas>
-              </div>
-              <div class="chart-stats jo-chart-stats">
-                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joPmContractAvg">-</div></div>
-                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joPmContractHigh">-</div><div class="stat-period" id="joPmContractHighName"></div></div>
-                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joPmContractLow">-</div><div class="stat-period" id="joPmContractLowName"></div></div>
-              </div>
-            </div>
-            <div class="overview-chart-card">
-              <div class="chart-title">Est. Profit Margin %</div>
-              <div class="chart-container">
-                <canvas id="joPmMarginChart"></canvas>
-              </div>
-              <div class="chart-stats jo-chart-stats">
-                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joPmMarginAvg">-</div></div>
-                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joPmMarginHigh">-</div><div class="stat-period" id="joPmMarginHighName"></div></div>
-                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joPmMarginLow">-</div><div class="stat-period" id="joPmMarginLowName"></div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Key Metrics by Client -->
-        <div class="job-overview-charts">
-          <h3 class="jo-section-header">Key Metrics by Client</h3>
-          <div class="jo-chart-grid-3">
-            <div class="overview-chart-card">
-              <div class="chart-title"># of Jobs</div>
-              <div class="chart-container">
-                <canvas id="joClientJobsChart"></canvas>
-              </div>
-              <div class="chart-stats jo-chart-stats">
-                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joClientJobsAvg">-</div></div>
-                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joClientJobsHigh">-</div><div class="stat-period" id="joClientJobsHighName"></div></div>
-                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joClientJobsLow">-</div><div class="stat-period" id="joClientJobsLowName"></div></div>
-              </div>
-            </div>
-            <div class="overview-chart-card">
-              <div class="chart-title">Contract Value</div>
-              <div class="chart-container">
-                <canvas id="joClientContractChart"></canvas>
-              </div>
-              <div class="chart-stats jo-chart-stats">
-                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joClientContractAvg">-</div></div>
-                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joClientContractHigh">-</div><div class="stat-period" id="joClientContractHighName"></div></div>
-                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joClientContractLow">-</div><div class="stat-period" id="joClientContractLowName"></div></div>
-              </div>
-            </div>
-            <div class="overview-chart-card">
-              <div class="chart-title">Est. Profit Margin %</div>
-              <div class="chart-container">
-                <canvas id="joClientMarginChart"></canvas>
-              </div>
-              <div class="chart-stats jo-chart-stats">
-                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joClientMarginAvg">-</div></div>
-                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joClientMarginHigh">-</div><div class="stat-period" id="joClientMarginHighName"></div></div>
-                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joClientMarginLow">-</div><div class="stat-period" id="joClientMarginLowName"></div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- ============================================================
-             PM PERFORMANCE SECTION (Migrated from PM Report)
+             PM PERFORMANCE SECTION
         ============================================================= -->
         
         <!-- PM Report Desktop Layout: Left (Radar + Metrics) | Right (Charts Stack) -->
@@ -1635,6 +1555,86 @@
             <div class="pmr-chart-container">
               <h4 class="pmr-chart-title">AR Aging</h4>
               <canvas id="joPmrArAgingChart" width="280" height="150"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Metrics by Project Manager -->
+        <div class="job-overview-charts">
+          <h3 class="jo-section-header">Key Metrics by Project Manager</h3>
+          <div class="jo-chart-grid-3">
+            <div class="overview-chart-card">
+              <div class="chart-title"># of Jobs</div>
+              <div class="chart-container">
+                <canvas id="joPmJobsChart"></canvas>
+              </div>
+              <div class="chart-stats jo-chart-stats">
+                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joPmJobsAvg">-</div></div>
+                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joPmJobsHigh">-</div><div class="stat-period" id="joPmJobsHighName"></div></div>
+                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joPmJobsLow">-</div><div class="stat-period" id="joPmJobsLowName"></div></div>
+              </div>
+            </div>
+            <div class="overview-chart-card">
+              <div class="chart-title">Contract Value</div>
+              <div class="chart-container">
+                <canvas id="joPmContractChart"></canvas>
+              </div>
+              <div class="chart-stats jo-chart-stats">
+                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joPmContractAvg">-</div></div>
+                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joPmContractHigh">-</div><div class="stat-period" id="joPmContractHighName"></div></div>
+                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joPmContractLow">-</div><div class="stat-period" id="joPmContractLowName"></div></div>
+              </div>
+            </div>
+            <div class="overview-chart-card">
+              <div class="chart-title">Est. Profit Margin %</div>
+              <div class="chart-container">
+                <canvas id="joPmMarginChart"></canvas>
+              </div>
+              <div class="chart-stats jo-chart-stats">
+                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joPmMarginAvg">-</div></div>
+                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joPmMarginHigh">-</div><div class="stat-period" id="joPmMarginHighName"></div></div>
+                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joPmMarginLow">-</div><div class="stat-period" id="joPmMarginLowName"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Metrics by Client -->
+        <div class="job-overview-charts">
+          <h3 class="jo-section-header">Key Metrics by Client</h3>
+          <div class="jo-chart-grid-3">
+            <div class="overview-chart-card">
+              <div class="chart-title"># of Jobs</div>
+              <div class="chart-container">
+                <canvas id="joClientJobsChart"></canvas>
+              </div>
+              <div class="chart-stats jo-chart-stats">
+                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joClientJobsAvg">-</div></div>
+                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joClientJobsHigh">-</div><div class="stat-period" id="joClientJobsHighName"></div></div>
+                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joClientJobsLow">-</div><div class="stat-period" id="joClientJobsLowName"></div></div>
+              </div>
+            </div>
+            <div class="overview-chart-card">
+              <div class="chart-title">Contract Value</div>
+              <div class="chart-container">
+                <canvas id="joClientContractChart"></canvas>
+              </div>
+              <div class="chart-stats jo-chart-stats">
+                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joClientContractAvg">-</div></div>
+                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joClientContractHigh">-</div><div class="stat-period" id="joClientContractHighName"></div></div>
+                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joClientContractLow">-</div><div class="stat-period" id="joClientContractLowName"></div></div>
+              </div>
+            </div>
+            <div class="overview-chart-card">
+              <div class="chart-title">Est. Profit Margin %</div>
+              <div class="chart-container">
+                <canvas id="joClientMarginChart"></canvas>
+              </div>
+              <div class="chart-stats jo-chart-stats">
+                <div class="stat-box"><div class="stat-label">Average</div><div class="stat-value" id="joClientMarginAvg">-</div></div>
+                <div class="stat-box"><div class="stat-label">Highest</div><div class="stat-value" id="joClientMarginHigh">-</div><div class="stat-period" id="joClientMarginHighName"></div></div>
+                <div class="stat-box"><div class="stat-label">Lowest</div><div class="stat-value" id="joClientMarginLow">-</div><div class="stat-period" id="joClientMarginLowName"></div></div>
+              </div>
             </div>
           </div>
         </div>
