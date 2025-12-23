@@ -20641,6 +20641,7 @@ function buildWprPmTabs() {
       wprSelectedPm = tab.getAttribute('data-pm');
       updateWprClientSummary();
       updateWprOverUnderTable();
+      updateWprMissingBudgetsTable();
     });
   });
   
@@ -20934,6 +20935,107 @@ function toggleWprOverUnder() {
   if (toggleBtn) {
     toggleBtn.textContent = wprOverUnderExpanded ? 'Collapse' : 'Expand';
   }
+}
+
+function updateWprMissingBudgetsTable() {
+  const tbody = document.getElementById('wprMissingBudgetsTableBody');
+  const countEl = document.getElementById('wprMissingBudgetsCount');
+  
+  if (!tbody || !wprSelectedPm) {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="wpr-empty-state">Select a Project Manager to view their report</td></tr>';
+    return;
+  }
+  
+  // Get jobs with >$2,500 actual cost but missing budget data for selected PM
+  const threshold = 2500;
+  
+  // Filter jobs for selected PM
+  const pmJobs = wprJobsData.filter(job => 
+    job.project_manager_name === wprSelectedPm
+  );
+  
+  // Find jobs with actual cost > threshold but missing budget revenue or cost
+  // Only show ACTIVE jobs (status 'A')
+  const missingBudgets = [];
+  
+  pmJobs.forEach(job => {
+    const actualCost = job.actual_cost || 0;
+    if (actualCost < threshold) return;
+    
+    const jobStatus = job.job_status || '';
+    
+    // Only include active jobs
+    if (jobStatus !== 'A') return;
+    
+    const revisedContract = job.revised_contract || 0;
+    const revisedCost = job.revised_cost || 0;
+    
+    if (revisedContract === 0 || revisedCost === 0) {
+      let issue = '';
+      let issueClass = '';
+      if (revisedContract === 0 && revisedCost === 0) {
+        issue = 'No Budget';
+        issueClass = 'no-both';
+      } else if (revisedContract === 0) {
+        issue = 'No Revenue';
+        issueClass = 'no-revenue';
+      } else {
+        issue = 'No Cost';
+        issueClass = 'no-cost';
+      }
+      
+      missingBudgets.push({
+        job_no: job.job_no,
+        job_description: job.job_description || '',
+        customer_name: job.customer_name || '',
+        job_status: jobStatus,
+        actual_cost: actualCost,
+        revised_contract: revisedContract,
+        revised_cost: revisedCost,
+        issue: issue,
+        issueClass: issueClass
+      });
+    }
+  });
+  
+  // Sort by actual cost descending
+  missingBudgets.sort((a, b) => b.actual_cost - a.actual_cost);
+  
+  if (missingBudgets.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="wpr-empty-state">No jobs with missing budgets above $2,500</td></tr>';
+    if (countEl) countEl.textContent = '0 jobs';
+    return;
+  }
+  
+  // Calculate total actual cost
+  const totalActualCost = missingBudgets.reduce((sum, job) => sum + (job.actual_cost || 0), 0);
+  
+  // Build subtotal row first, then data rows (expanded by default)
+  let html = `<tr class="wpr-subtotal-row">
+    <td colspan="4"><strong>Total (${missingBudgets.length} jobs)</strong></td>
+    <td class="text-right"><strong>${formatCurrencyCompact(totalActualCost)}</strong></td>
+    <td colspan="3"></td>
+  </tr>`;
+  
+  // Data rows - always visible (expanded by default)
+  missingBudgets.forEach(job => {
+    const statusLabel = job.job_status === 'A' ? 'Active' : 'Inactive';
+    const statusClass = job.job_status === 'A' ? 'status-active' : 'status-inactive';
+    
+    html += `<tr>
+      <td>${job.job_no || ''}</td>
+      <td>${job.job_description || ''}</td>
+      <td>${job.customer_name || ''}</td>
+      <td><span class="wpr-status-badge ${statusClass}">${statusLabel}</span></td>
+      <td class="text-right">${formatCurrencyCompact(job.actual_cost)}</td>
+      <td class="text-right">${formatCurrencyCompact(job.revised_contract)}</td>
+      <td class="text-right">${formatCurrencyCompact(job.revised_cost)}</td>
+      <td><span class="wpr-issue-badge ${job.issueClass}">${job.issue}</span></td>
+    </tr>`;
+  });
+  
+  tbody.innerHTML = html;
+  if (countEl) countEl.textContent = `${missingBudgets.length} job${missingBudgets.length !== 1 ? 's' : ''}`;
 }
 
 // ========================================

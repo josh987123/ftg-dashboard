@@ -3862,6 +3862,36 @@
             </table>
           </div>
         </div>
+        
+        <!-- Missing Budgets Section -->
+        <div class="wpr-table-container" style="margin-top: 20px;">
+          <div class="wpr-table-header">
+            <div>
+              <h3>Missing Budgets</h3>
+              <span class="wpr-section-desc">Jobs with >$2,500 actual cost but missing budgeted revenue or cost</span>
+            </div>
+            <span class="wpr-client-count" id="wprMissingBudgetsCount">0 jobs</span>
+          </div>
+          <div class="wpr-table-wrapper">
+            <table class="wpr-table" id="wprMissingBudgetsTable">
+              <thead>
+                <tr>
+                  <th>Job #</th>
+                  <th>Description</th>
+                  <th>Client</th>
+                  <th>Status</th>
+                  <th class="text-right">Actual Cost</th>
+                  <th class="text-right">Budgeted Revenue</th>
+                  <th class="text-right">Budgeted Cost</th>
+                  <th>Issue</th>
+                </tr>
+              </thead>
+              <tbody id="wprMissingBudgetsTableBody">
+                <tr><td colspan="8" class="wpr-empty-state">Select a Project Manager to view their report</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       <section id="monthEndReporting" class="dashboard-section">

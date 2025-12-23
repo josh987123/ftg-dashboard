@@ -8410,6 +8410,74 @@ body.dark-mode #accounts .summary-tile .tile-label {
   display: table-row;
 }
 
+/* Issue badges for Missing Budgets */
+.wpr-issue-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.wpr-issue-badge.no-both {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.wpr-issue-badge.no-revenue {
+  background: #fefce8;
+  color: #ca8a04;
+}
+
+.wpr-issue-badge.no-cost {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+[data-theme="dark"] .wpr-issue-badge.no-both {
+  background: #450a0a;
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .wpr-issue-badge.no-revenue {
+  background: #422006;
+  color: #fde047;
+}
+
+[data-theme="dark"] .wpr-issue-badge.no-cost {
+  background: #172554;
+  color: #93c5fd;
+}
+
+/* Job status badge */
+.wpr-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.wpr-status-badge.status-active {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.wpr-status-badge.status-inactive {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+[data-theme="dark"] .wpr-status-badge.status-active {
+  background: #14532d;
+  color: #86efac;
+}
+
+[data-theme="dark"] .wpr-status-badge.status-inactive {
+  background: #374151;
+  color: #9ca3af;
+}
+
 /* ========================================
    ADMIN SECTION STYLES
    ======================================== */
