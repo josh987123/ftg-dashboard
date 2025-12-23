@@ -30,6 +30,11 @@ The dashboard provides several key views for financial analysis:
 - **Jobs Module**: Contains Job Overview, Budgets, Job Actuals, Cost Codes, and PM Report views for detailed job costing and performance analysis. Includes:
   - **Profitability Heat Map** (Job Overview): Visualizes profit margins by Project Manager or Client and job size range (contract value buckets), with color-coded cells (green = high margin, red = loss) and hover tooltips showing job counts and totals. Width matches AI Analysis section on desktop.
   - **PM Performance Radar Chart** (PM Report): Located under AI Analysis section. Compares individual PM metrics to portfolio average across 5 normalized dimensions (profit margin, job count, contract value, avg job size, billing position). Excludes Josh Angelo.
+- **Distribution Reports (Admin Only)**: A dedicated section visible only to admin users, containing placeholder pages for future specialized reports:
+  - Dept Head Meeting
+  - Daily Cash Report
+  - Weekly PM Report
+  - Month End Reporting
 - **Income Statement**: Supports single period and matrix views with AI analysis.
   - **Revenue to Operating Income Waterfall Chart**: Displayed under AI Analysis section, only visible in single period mode. Shows detailed waterfall flow: Revenue → Direct Labor → Materials → Subcontracts → Other Direct → Indirect Labor → Other Indirect → Gross Profit → Operating Exp → Operating Income. Uses floating bars for proper deduction visualization. Profit bars shown in green, deduction bars in red.
 
