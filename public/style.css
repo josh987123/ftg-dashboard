@@ -10954,38 +10954,40 @@ body.dark-mode .jo-metrics-chart-card .chart-title {
   }
 }
 
-/* Job Overview 5-tile row */
+/* Job Overview 5-tile row - using CSS grid for responsive sizing */
 .jo-metrics-row-5 {
-  display: flex;
-  gap: 12px;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  width: 60%;
+  max-width: 60%;
 }
 
 .jo-metrics-row-5 .job-metric-card.compact {
-  flex: 1;
   min-width: 0;
   max-width: none;
   overflow: hidden;
+  padding: clamp(6px, 1vw, 14px) clamp(8px, 1.2vw, 18px);
 }
 
 .jo-metrics-row-5 .job-metric-card.compact .metric-value {
-  font-size: clamp(12px, 1.6vw, 18px);
+  font-size: clamp(11px, 1.4vw, 18px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .jo-metrics-row-5 .job-metric-card.compact .metric-label {
-  font-size: clamp(8px, 0.9vw, 11px);
+  font-size: clamp(7px, 0.8vw, 11px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .jo-metrics-row-5 .job-metric-card.compact .metric-icon {
-  width: clamp(24px, 2.5vw, 36px);
-  height: clamp(24px, 2.5vw, 36px);
-  font-size: clamp(12px, 1.2vw, 18px);
+  width: clamp(20px, 2.2vw, 36px);
+  height: clamp(20px, 2.2vw, 36px);
+  font-size: clamp(10px, 1.1vw, 18px);
   flex-shrink: 0;
 }
 
@@ -10996,53 +10998,56 @@ body.dark-mode .jo-metrics-chart-card .chart-title {
 
 @media (max-width: 1200px) {
   .jo-metrics-row-5 {
-    flex-wrap: wrap;
+    grid-template-columns: repeat(5, 1fr);
+    width: 80%;
+    max-width: 80%;
   }
-  
-  .jo-metrics-row-5 .job-metric-card.compact {
-    flex: 1 1 calc(33.333% - 10px);
-    min-width: 140px;
+}
+
+@media (max-width: 900px) {
+  .jo-metrics-row-5 {
+    width: 100%;
+    max-width: 100%;
   }
 }
 
 @media (max-width: 768px) {
   .jo-metrics-row-5 {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
     gap: 6px !important;
-    justify-content: flex-start;
-    overflow-x: auto;
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact {
-    flex: 0 0 auto !important;
-    min-width: auto !important;
-    max-width: none !important;
-    padding: 8px 10px !important;
-    flex-direction: row !important;
+    min-width: 0 !important;
+    padding: 6px !important;
+    flex-direction: column !important;
+    text-align: center !important;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact .metric-icon {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 14px !important;
+    width: clamp(18px, 5vw, 28px) !important;
+    height: clamp(18px, 5vw, 28px) !important;
+    font-size: clamp(9px, 2.5vw, 14px) !important;
     border-radius: 6px !important;
+    margin: 0 auto 4px auto !important;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact .metric-value {
-    font-size: 14px !important;
+    font-size: clamp(10px, 2.8vw, 14px) !important;
     line-height: 1.2 !important;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact .metric-label {
-    font-size: 9px !important;
+    font-size: clamp(6px, 1.8vw, 9px) !important;
     white-space: nowrap !important;
-    line-height: 1.2 !important;
+    line-height: 1.1 !important;
   }
   
   .jo-metrics-row-5 .job-metric-card.compact .metric-content {
-    text-align: left !important;
+    text-align: center !important;
   }
 }
 
@@ -11678,33 +11683,42 @@ body.dark-mode .job-budgets-table td.margin-cell {
     text-align: center;
   }
   
-  /* Job Overview key metrics - keep horizontal layout */
+  /* Job Overview key metrics - keep horizontal layout with fluid sizing */
   #jobOverview .jo-metrics-row-5 .job-metric-card.compact {
     flex-direction: row !important;
     text-align: left !important;
-    padding: 8px 10px !important;
-    gap: 8px !important;
+    padding: 6px 8px !important;
+    gap: 6px !important;
   }
   
   #jobOverview .jo-metrics-row-5 .job-metric-card.compact .metric-icon {
     margin: 0 !important;
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 14px !important;
+    width: clamp(20px, 3vw, 28px) !important;
+    height: clamp(20px, 3vw, 28px) !important;
+    font-size: clamp(10px, 1.5vw, 14px) !important;
+    flex-shrink: 0 !important;
   }
   
   #jobOverview .jo-metrics-row-5 .job-metric-card.compact .metric-content {
     text-align: left !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
   }
   
   #jobOverview .jo-metrics-row-5 .job-metric-card.compact .metric-value {
-    font-size: 14px !important;
+    font-size: clamp(11px, 1.5vw, 14px) !important;
     line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   
   #jobOverview .jo-metrics-row-5 .job-metric-card.compact .metric-label {
-    font-size: 9px !important;
+    font-size: clamp(7px, 0.9vw, 9px) !important;
     line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 }
 
