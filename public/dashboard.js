@@ -17042,14 +17042,37 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
         Math.min(100, pmBillingPosition)
       ];
       
+      // Generate point colors based on comparison to company average
+      // Green if above average, yellow/orange/red if below (closer to center = more red)
+      const getPointColor = (pmVal, avgVal) => {
+        if (pmVal >= avgVal) {
+          return '#10b981'; // Green - above average
+        } else {
+          // Below average: interpolate from yellow to orange to red based on how far below
+          const ratio = avgVal > 0 ? pmVal / avgVal : 0; // 0 = at center, 1 = at average
+          if (ratio >= 0.75) {
+            return '#eab308'; // Yellow - slightly below
+          } else if (ratio >= 0.5) {
+            return '#f97316'; // Orange - moderately below
+          } else {
+            return '#ef4444'; // Red - significantly below
+          }
+        }
+      };
+      
+      const pointColors = pmData.map((val, i) => getPointColor(val, avgData[i]));
+      
       // Add PM dataset first (on top)
       datasets.push({
         label: selectedPm,
         data: pmData,
-        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        backgroundColor: 'rgba(59, 130, 246, 0.15)',
         borderColor: '#3b82f6',
         borderWidth: 2,
-        pointBackgroundColor: '#3b82f6'
+        pointBackgroundColor: pointColors,
+        pointBorderColor: pointColors,
+        pointRadius: 5,
+        pointHoverRadius: 7
       });
       
       legendHtml = `
