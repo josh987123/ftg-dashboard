@@ -10965,6 +10965,33 @@ body.dark-mode .jo-metrics-chart-card .chart-title {
   flex: 1;
   min-width: 0;
   max-width: none;
+  overflow: hidden;
+}
+
+.jo-metrics-row-5 .job-metric-card.compact .metric-value {
+  font-size: clamp(12px, 1.6vw, 18px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jo-metrics-row-5 .job-metric-card.compact .metric-label {
+  font-size: clamp(8px, 0.9vw, 11px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jo-metrics-row-5 .job-metric-card.compact .metric-icon {
+  width: clamp(24px, 2.5vw, 36px);
+  height: clamp(24px, 2.5vw, 36px);
+  font-size: clamp(12px, 1.2vw, 18px);
+  flex-shrink: 0;
+}
+
+.jo-metrics-row-5 .job-metric-card.compact .metric-content {
+  min-width: 0;
+  overflow: hidden;
 }
 
 @media (max-width: 1200px) {
