@@ -203,7 +203,8 @@ const pmTabsState = {
   jo: '__ALL__',    // Job Overview
   jb: '__ALL__',    // Job Budgets
   ja: '__ALL__',    // Job Actuals
-  cc: '__ALL__'     // Cost Codes
+  cc: '__ALL__',    // Cost Codes
+  oub: '__ALL__'    // Over/Under Billing
 };
 
 /**
@@ -22154,7 +22155,7 @@ async function initOverUnderBilling() {
     
     // Build OUB data by combining budgets, actuals, and billed revenue
     buildOubData();
-    populateOubFilters();
+    populateOubPmTabs();
     setupOubEventListeners();
     updateOverUnderBilling();
     oubInitialized = true;
@@ -22239,34 +22240,17 @@ function buildOubData() {
   }
 }
 
-function populateOubFilters() {
+function populateOubPmTabs() {
   // Only show PMs with active jobs
   const activePms = getActivePmsFromData(oubData);
   
-  const pmSelect = document.getElementById('oubPmFilter');
-  if (pmSelect) {
-    pmSelect.innerHTML = '<option value="">All Project Managers</option>' + 
-      activePms.map(pm => `<option value="${pm}">${pm}</option>`).join('');
-    
-    // Apply My PM View filter if enabled
-    if (getMyPmViewEnabled() && isUserProjectManager()) {
-      const pmName = getCurrentUserPmName();
-      const option = Array.from(pmSelect.options).find(opt => opt.value === pmName);
-      if (option) pmSelect.value = option.value;
-    }
-  }
+  buildPmTabs('oubPmTabs', activePms, 'oub', () => {
+    oubCurrentPage = 1;
+    updateOverUnderBilling();
+  });
 }
 
 function setupOubEventListeners() {
-  // PM filter
-  const pmFilter = document.getElementById('oubPmFilter');
-  if (pmFilter) {
-    pmFilter.addEventListener('change', () => {
-      oubCurrentPage = 1;
-      updateOverUnderBilling();
-    });
-  }
-  
   // Job search
   const jobSearch = document.getElementById('oubJobSearch');
   if (jobSearch) {
@@ -22324,7 +22308,7 @@ function updateOubSortIndicators() {
 
 function updateOverUnderBilling() {
   // Apply filters
-  const pmFilter = document.getElementById('oubPmFilter')?.value || '';
+  const pmFilter = getSelectedPmForPage('oub');
   const jobSearch = (document.getElementById('oubJobSearch')?.value || '').toLowerCase().trim();
   
   oubFiltered = oubData.filter(job => {
