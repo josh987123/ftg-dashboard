@@ -4109,7 +4109,8 @@ function updateOverviewCharts() {
     opMargin: { label: "Operating Profit %", values: [], priorValues: [], isPercent: true },
     cash: { label: "Cash", values: [], priorValues: [], isBalance: true },
     currentRatio: { label: "Current Ratio", values: [], priorValues: [], isRatio: true },
-    arApRatio: { label: "AR/AP Ratio", values: [], priorValues: [], isRatio: true }
+    arApRatio: { label: "AR/AP Ratio", values: [], priorValues: [], isRatio: true },
+    overUnder: { label: "Net Over/(Under) Billing", values: [], priorValues: [], isBalance: true }
   };
   
   const cashAccounts = [1001, 1003, 1004, 1005, 1006, 1007, 1040, 1090];
@@ -4119,6 +4120,9 @@ function updateOverviewCharts() {
   const arAccountsNoRetention = [1100, 1050, 1105];
   // AP accounts excluding retention (2010, 2015)
   const apAccountsNoRetention = [2000, 2005];
+  // Over/Under billing accounts
+  const underbillingAccount = 1050;
+  const overbillingAccount = 2120;
   
   periods.forEach((periodMonths, idx) => {
     const rows = buildIncomeStatementRows(periodMonths, groups);
@@ -4148,10 +4152,16 @@ function updateOverviewCharts() {
       const arBal = getCumulativeBalance(arAccountsNoRetention, endOfPeriod, true);
       const apBal = getCumulativeBalance(apAccountsNoRetention, endOfPeriod, false);
       metrics.arApRatio.values.push(apBal !== 0 ? arBal / Math.abs(apBal) : 0);
+      
+      // Net Over/(Under) Billing = Underbillings - Overbillings
+      const underbillings = getCumulativeBalance([underbillingAccount], endOfPeriod, true);
+      const overbillings = getCumulativeBalance([overbillingAccount], endOfPeriod, false);
+      metrics.overUnder.values.push(underbillings - overbillings);
     } else {
       metrics.cash.values.push(0);
       metrics.currentRatio.values.push(0);
       metrics.arApRatio.values.push(0);
+      metrics.overUnder.values.push(0);
     }
     
     if ((compare || needPriorForYoY) && priorPeriods[idx]) {
@@ -4181,10 +4191,16 @@ function updateOverviewCharts() {
         const pArBal = getCumulativeBalance(arAccountsNoRetention, priorEndOfPeriod, true);
         const pApBal = getCumulativeBalance(apAccountsNoRetention, priorEndOfPeriod, false);
         metrics.arApRatio.priorValues.push(pApBal !== 0 ? pArBal / Math.abs(pApBal) : 0);
+        
+        // Prior Net Over/(Under) Billing
+        const pUnderbillings = getCumulativeBalance([underbillingAccount], priorEndOfPeriod, true);
+        const pOverbillings = getCumulativeBalance([overbillingAccount], priorEndOfPeriod, false);
+        metrics.overUnder.priorValues.push(pUnderbillings - pOverbillings);
       } else {
         metrics.cash.priorValues.push(0);
         metrics.currentRatio.priorValues.push(0);
         metrics.arApRatio.priorValues.push(0);
+        metrics.overUnder.priorValues.push(0);
       }
     }
   });
@@ -4237,6 +4253,9 @@ function updateOverviewCharts() {
     renderOverviewChart(cfg.id, labels, cfg.data, compare, showTrend, currentMonthIndices);
   });
   
+  // Render Over/Under Billing chart separately (bar chart with pos/neg coloring)
+  renderOverUnderBillingChart(labels, metrics.overUnder, compare, currentMonthIndices);
+  
   updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndices);
   
   // Render data tables for each chart
@@ -4246,7 +4265,8 @@ function updateOverviewCharts() {
     { tableId: 'overviewOpMarginTable', data: metrics.opMargin, isPercent: true, isRatio: false },
     { tableId: 'overviewCashTable', data: metrics.cash, isPercent: false, isRatio: false },
     { tableId: 'overviewArApRatioTable', data: metrics.arApRatio, isPercent: false, isRatio: true },
-    { tableId: 'overviewCurrentRatioTable', data: metrics.currentRatio, isPercent: false, isRatio: true }
+    { tableId: 'overviewCurrentRatioTable', data: metrics.currentRatio, isPercent: false, isRatio: true },
+    { tableId: 'overviewOverUnderTable', data: metrics.overUnder, isPercent: false, isRatio: false }
   ];
   
   tableConfigs.forEach(cfg => {
@@ -4432,11 +4452,139 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
       animatePercent(cagrEl, growthRate, 600, true);
     }
   });
+  
+  // Update Over/Under Billing stats separately (uses current instead of CAGR)
+  const overUnderValues = metrics.overUnder?.values || [];
+  if (overUnderValues.length > 0) {
+    const nonZeroValues = overUnderValues.filter(v => v !== 0);
+    const avg = nonZeroValues.length > 0 ? nonZeroValues.reduce((a, b) => a + b, 0) / nonZeroValues.length : 0;
+    const high = overUnderValues.length > 0 ? Math.max(...overUnderValues) : 0;
+    const low = nonZeroValues.length > 0 ? Math.min(...nonZeroValues) : 0;
+    const current = overUnderValues[overUnderValues.length - 1] || 0;
+    
+    const highIdx = overUnderValues.indexOf(high);
+    const lowIdx = nonZeroValues.length > 0 ? overUnderValues.indexOf(low) : -1;
+    const highPeriod = highIdx >= 0 && labels[highIdx] ? labels[highIdx] : '';
+    const lowPeriod = lowIdx >= 0 && labels[lowIdx] ? labels[lowIdx] : '';
+    
+    const avgEl = document.getElementById('overUnderAvg');
+    const highEl = document.getElementById('overUnderHigh');
+    const lowEl = document.getElementById('overUnderLow');
+    const currentEl = document.getElementById('overUnderCurrent');
+    const highPeriodEl = document.getElementById('overUnderHighPeriod');
+    const lowPeriodEl = document.getElementById('overUnderLowPeriod');
+    
+    if (avgEl) {
+      avgEl.className = avg < 0 ? 'stat-value negative' : 'stat-value';
+      animateCurrency(avgEl, avg, 600);
+    }
+    if (highEl) {
+      highEl.className = high < 0 ? 'stat-value negative' : 'stat-value';
+      animateCurrency(highEl, high, 600);
+    }
+    if (lowEl) {
+      lowEl.className = low < 0 ? 'stat-value negative' : 'stat-value';
+      animateCurrency(lowEl, low, 600);
+    }
+    if (currentEl) {
+      currentEl.className = current < 0 ? 'stat-value negative' : 'stat-value';
+      animateCurrency(currentEl, current, 600);
+    }
+    if (highPeriodEl) highPeriodEl.textContent = highPeriod;
+    if (lowPeriodEl) lowPeriodEl.textContent = lowPeriod;
+  }
   } catch (err) {
     console.error("Error updating overview stats:", err);
   }
 }
 
+let overUnderChartInstance = null;
+
+function renderOverUnderBillingChart(labels, metricData, compare, currentMonthIndices) {
+  const canvas = document.getElementById('overviewOverUnderChart');
+  if (!canvas) return;
+  
+  if (overUnderChartInstance) {
+    overUnderChartInstance.destroy();
+  }
+  
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#e2e8f0' : '#374151';
+  const gridColor = isDark ? '#334155' : '#e5e7eb';
+  
+  const values = metricData.values || [];
+  const priorValues = metricData.priorValues || [];
+  
+  // Create bar colors based on positive/negative values
+  const barColors = values.map(v => v >= 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)');
+  const borderColors = values.map(v => v >= 0 ? '#22c55e' : '#ef4444');
+  
+  const datasets = [{
+    label: 'Net Over/(Under)',
+    data: values,
+    backgroundColor: barColors,
+    borderColor: borderColors,
+    borderWidth: 1,
+    borderRadius: 4
+  }];
+  
+  if (compare && priorValues.length > 0) {
+    const priorBarColors = priorValues.map(v => v >= 0 ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)');
+    const priorBorderColors = priorValues.map(v => v >= 0 ? '#22c55e' : '#ef4444');
+    
+    datasets.unshift({
+      label: 'Prior Year',
+      data: priorValues,
+      backgroundColor: priorBarColors,
+      borderColor: priorBorderColors,
+      borderWidth: 1,
+      borderRadius: 4
+    });
+  }
+  
+  overUnderChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: compare && priorValues.length > 0,
+          position: 'bottom',
+          labels: { color: textColor, boxWidth: 12, padding: 8, font: { size: 10 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const value = context.raw;
+              return context.dataset.label + ': ' + formatCurrency(value);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: gridColor, drawBorder: false },
+          ticks: { color: textColor, font: { size: 10 } }
+        },
+        y: {
+          grid: { color: gridColor, drawBorder: false },
+          ticks: {
+            color: textColor,
+            font: { size: 10 },
+            callback: function(value) {
+              return formatCurrencyCompact(value);
+            }
+          }
+        }
+      }
+    }
+  });
+}
 
 function createBarGradient(ctx, chartArea, colorStart, colorEnd) {
   if (!chartArea) return colorStart;
