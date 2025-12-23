@@ -1006,6 +1006,10 @@ function openPageChartFullscreen(chartId, title) {
   // Determine if this is the cash chart - disable data labels for it
   const isCashChart = chartId === "cashChart";
   
+  // Force white color for fullscreen mode (dark background) - override global defaults
+  const fullscreenWhite = "#ffffff";
+  const fullscreenGridColor = "rgba(255, 255, 255, 0.15)";
+  
   // Handle doughnut charts differently
   if (isDonutChart) {
     fullscreenChartInstance = new Chart(ctx, {
@@ -1022,12 +1026,13 @@ function openPageChartFullscreen(chartId, title) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        color: fullscreenWhite,
         plugins: {
           legend: { 
             display: true, 
             position: "right",
             labels: { 
-              color: "#fff", 
+              color: fullscreenWhite, 
               font: { size: 14 }, 
               boxWidth: 16, 
               padding: 12,
@@ -1040,6 +1045,7 @@ function openPageChartFullscreen(chartId, title) {
                   return {
                     text: `${label}: ${pct}%`,
                     fillStyle: data.datasets[0].backgroundColor[i],
+                    fontColor: fullscreenWhite,
                     strokeStyle: '#1e293b',
                     lineWidth: 2,
                     hidden: false,
@@ -1051,8 +1057,8 @@ function openPageChartFullscreen(chartId, title) {
           },
           tooltip: {
             backgroundColor: "rgba(31, 41, 55, 0.95)",
-            titleColor: "#fff",
-            bodyColor: "#fff",
+            titleColor: fullscreenWhite,
+            bodyColor: fullscreenWhite,
             callbacks: {
               label: function(context) {
                 const value = context.raw;
@@ -1083,16 +1089,22 @@ function openPageChartFullscreen(chartId, title) {
         responsive: true,
         maintainAspectRatio: false,
         indexAxis: 'y',
+        color: fullscreenWhite,
         layout: { padding: { right: 60 } },
         plugins: {
           legend: { display: false },
+          tooltip: {
+            backgroundColor: "rgba(31, 41, 55, 0.95)",
+            titleColor: fullscreenWhite,
+            bodyColor: fullscreenWhite
+          },
           datalabels: {
             display: true,
             anchor: "end",
             align: "right",
             offset: 4,
             font: { size: 12, weight: "600" },
-            color: "#fff",
+            color: fullscreenWhite,
             formatter: (value) => {
               if (value === 0 || value === null) return "";
               if (isPercentageChart) return value.toFixed(1) + "%";
@@ -1105,9 +1117,9 @@ function openPageChartFullscreen(chartId, title) {
         scales: {
           x: { 
             beginAtZero: true,
-            grid: { color: "rgba(255,255,255,0.1)" },
+            grid: { color: fullscreenGridColor },
             ticks: { 
-              color: "#fff", 
+              color: fullscreenWhite, 
               font: { size: 12 },
               callback: v => {
                 if (isPercentageChart) return v + "%";
@@ -1116,11 +1128,11 @@ function openPageChartFullscreen(chartId, title) {
                 return "$" + v;
               }
             },
-            title: isPercentageChart ? { display: true, text: '% of Revenue', color: '#fff' } : undefined
+            title: isPercentageChart ? { display: true, text: '% of Revenue', color: fullscreenWhite } : undefined
           },
           y: {
             grid: { display: false },
-            ticks: { color: "#fff", font: { size: 12 } }
+            ticks: { color: fullscreenWhite, font: { size: 12 } }
           }
         }
       }
@@ -1147,12 +1159,18 @@ function openPageChartFullscreen(chartId, title) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        color: fullscreenWhite,
         layout: { padding: { top: 30 } },
         plugins: {
           legend: { 
             display: true, 
             position: "bottom",
-            labels: { color: "#fff", font: { size: 10 }, boxWidth: 12, padding: 8 }
+            labels: { color: fullscreenWhite, font: { size: 10 }, boxWidth: 12, padding: 8 }
+          },
+          tooltip: {
+            backgroundColor: "rgba(31, 41, 55, 0.95)",
+            titleColor: fullscreenWhite,
+            bodyColor: fullscreenWhite
           },
           datalabels: isCashChart ? { display: false } : {
             display: true,
@@ -1160,7 +1178,7 @@ function openPageChartFullscreen(chartId, title) {
             align: "top",
             offset: 4,
             font: { size: 12, weight: "600" },
-            color: "#fff",
+            color: fullscreenWhite,
             formatter: (value) => {
               if (value === 0 || value === null) return "";
               if (Math.abs(value) >= 1000000) return "$" + (value / 1000000).toFixed(1) + "M";
@@ -1172,16 +1190,16 @@ function openPageChartFullscreen(chartId, title) {
         scales: {
           x: { 
             stacked: isStacked,
-            grid: { color: "rgba(255,255,255,0.1)" },
-            ticks: { color: "#fff", font: { size: 14 } }
+            grid: { color: fullscreenGridColor },
+            ticks: { color: fullscreenWhite, font: { size: 14 } }
           },
           y: {
             stacked: isStacked,
             min: yMin,
             max: yMax,
-            grid: { color: "rgba(255,255,255,0.1)" },
+            grid: { color: fullscreenGridColor },
             ticks: { 
-              color: "#fff",
+              color: fullscreenWhite,
               font: { size: 12 },
               callback: v => {
                 if (Math.abs(v) >= 1000000) return "$" + (v / 1000000).toFixed(1) + "M";

@@ -5048,8 +5048,14 @@ body.dark-mode .nav-item.nav-parent.expanded {
 }
 
 .chart-fullscreen-body canvas {
-  width: 100% !important;
+  max-width: 100%;
   height: 100% !important;
+}
+
+/* Force white text for all Chart.js elements in fullscreen mode */
+.chart-fullscreen-modal,
+.chart-fullscreen-modal * {
+  --chart-text-color: #ffffff !important;
 }
 
 .chart-fullscreen-stats {
