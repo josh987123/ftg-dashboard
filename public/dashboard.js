@@ -118,6 +118,118 @@ const LazyLoader = {
 };
 
 /* ------------------------------------------------------------
+   PM EXCLUSION CONFIGURATION
+   Centralized list of PMs to exclude from analysis/comparisons
+   These are typically non-full-time PMs or special cases
+------------------------------------------------------------ */
+const PM_EXCLUSION_CONFIG = {
+  excludedPMs: ['Josh Angelo'],
+  
+  isExcluded(pmName) {
+    if (!pmName) return false;
+    return this.excludedPMs.some(excluded => 
+      pmName.toLowerCase().trim() === excluded.toLowerCase().trim()
+    );
+  },
+  
+  getExclusionNote() {
+    return this.excludedPMs.length > 0 
+      ? `Excluding ${this.excludedPMs.join(', ')} from analysis.`
+      : '';
+  },
+  
+  getAIPromptExclusion() {
+    if (this.excludedPMs.length === 0) return '';
+    return `IMPORTANT: Disregard ${this.excludedPMs.join(' and ')}'s numbers from your analysis and commentary. Do not include any data or mention of ${this.excludedPMs.join(' or ')} in your response.`;
+  }
+};
+
+/* ------------------------------------------------------------
+   DATA CACHE - Centralized caching for financial data
+   Reduces redundant network requests across pages
+------------------------------------------------------------ */
+const DataCache = {
+  cache: {},
+  loading: {},
+  ttl: 5 * 60 * 1000, // 5 minute cache TTL
+  
+  async get(key, fetchFn) {
+    const cached = this.cache[key];
+    if (cached && (Date.now() - cached.timestamp) < this.ttl) {
+      return cached.data;
+    }
+    
+    if (this.loading[key]) {
+      return this.loading[key];
+    }
+    
+    this.loading[key] = fetchFn().then(data => {
+      this.cache[key] = { data, timestamp: Date.now() };
+      delete this.loading[key];
+      return data;
+    }).catch(err => {
+      delete this.loading[key];
+      throw err;
+    });
+    
+    return this.loading[key];
+  },
+  
+  async getGLData() {
+    return this.get('gl', async () => {
+      const resp = await fetch('data/financials_gl.json');
+      const text = await resp.text();
+      return JSON.parse(text.replace(/^\uFEFF/, ''));
+    });
+  },
+  
+  async getJobsData() {
+    return this.get('jobs', async () => {
+      const resp = await fetch('data/financials_jobs.json');
+      const text = await resp.text();
+      return JSON.parse(text.replace(/^\uFEFF/, ''));
+    });
+  },
+  
+  async getARData() {
+    return this.get('ar', async () => {
+      const resp = await fetch('data/ar_invoices.json');
+      const text = await resp.text();
+      return JSON.parse(text.replace(/^\uFEFF/, ''));
+    });
+  },
+  
+  async getAPData() {
+    return this.get('ap', async () => {
+      const resp = await fetch('data/ap_invoices.json');
+      const text = await resp.text();
+      return JSON.parse(text.replace(/^\uFEFF/, ''));
+    });
+  },
+  
+  async getAccountGroups() {
+    return this.get('account_groups', async () => {
+      const resp = await fetch('data/account_groups.json');
+      const text = await resp.text();
+      return JSON.parse(text.replace(/^\uFEFF/, ''));
+    });
+  },
+  
+  invalidate(key) {
+    if (key) {
+      delete this.cache[key];
+    } else {
+      this.cache = {};
+    }
+  },
+  
+  preload() {
+    this.getGLData().catch(() => {});
+    this.getJobsData().catch(() => {});
+  }
+};
+
+/* ------------------------------------------------------------
    MY PM VIEW - Username to PM Name Mapping
    Maps usernames to their full project manager names in the data
 ------------------------------------------------------------ */
@@ -14697,9 +14809,7 @@ async function loadJobBudgetsData() {
   if (loadingOverlay) loadingOverlay.classList.remove('hidden');
   
   try {
-    const resp = await fetch('data/financials_jobs.json');
-    const text = await resp.text();
-    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+    const data = await DataCache.getJobsData();
     
     jobBudgetsData = (data.job_budgets || []).map(job => ({
       ...job,
@@ -15638,9 +15748,7 @@ function setupJobOverviewEventListeners() {
 
 async function loadJobOverviewData() {
   try {
-    const resp = await fetch('data/financials_jobs.json');
-    const text = await resp.text();
-    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+    const data = await DataCache.getJobsData();
     
     const jobBudgets = data.job_budgets || [];
     const jobActualsRaw = data.job_actuals || [];
@@ -15853,11 +15961,11 @@ function renderProfitabilityHeatmap() {
   }
   // 'all' = no status filtering
   
-  // Exclude Josh Angelo (for PM view) and jobs without valid financial data
+  // Exclude configured PMs (for PM view) and jobs without valid financial data
   // For closed jobs: must have billed revenue and actual cost
   // For active jobs: must have revised contract and revised cost (budget)
   const jobs = baseJobs.filter(j => {
-    if (groupByFilter === 'pm' && j.project_manager_name === 'Josh Angelo') return false;
+    if (groupByFilter === 'pm' && PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name)) return false;
     
     const isClosed = j.job_status === 'C';
     if (isClosed) {
@@ -15893,7 +16001,7 @@ function renderProfitabilityHeatmap() {
     // Get PMs with active jobs from the full joData
     const activePMs = new Set(
       (joData || [])
-        .filter(j => j.job_status === 'A' && j.project_manager_name && j.project_manager_name !== 'Josh Angelo')
+        .filter(j => j.job_status === 'A' && j.project_manager_name && !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name))
         .map(j => j.project_manager_name)
     );
     // Only include PMs that have active jobs AND appear in our filtered data
@@ -16063,13 +16171,13 @@ function calculatePmRadarData() {
   const budgetMap = new Map();
   jobBudgetsData.forEach(b => budgetMap.set(String(b.job_no), b));
   
-  // Filter to active jobs only, excluding Josh Angelo
+  // Filter to active jobs only, excluding configured PMs
   const activeJobs = jobActualsData.filter(j => {
     const budget = budgetMap.get(String(j.job_no));
     const status = budget?.job_status || j.job_status;
     const pmName = j.project_manager_name || budget?.project_manager_name;
     const contract = parseFloat(budget?.revised_contract) || j.revised_contract || 0;
-    return status === 'A' && pmName && pmName !== 'Josh Angelo' && contract > 0;
+    return status === 'A' && pmName && !PM_EXCLUSION_CONFIG.isExcluded(pmName) && contract > 0;
   });
   
   if (activeJobs.length === 0) return null;
@@ -16147,7 +16255,7 @@ function renderPmRadarChart() {
   
   const ctx = canvas.getContext('2d');
   // Use the PM selected in config options (pmrSelectedPm) - ignore '__ALL__' for radar comparison
-  const selectedPm = (pmrSelectedPm && pmrSelectedPm !== '__ALL__' && pmrSelectedPm !== 'Josh Angelo') 
+  const selectedPm = (pmrSelectedPm && pmrSelectedPm !== '__ALL__' && !PM_EXCLUSION_CONFIG.isExcluded(pmrSelectedPm)) 
     ? pmrSelectedPm 
     : null;
   
@@ -16622,11 +16730,11 @@ function renderWaterfallChart() {
   const ctx = canvas.getContext('2d');
   const groupBy = document.getElementById('waterfallGroupBy')?.value || 'portfolio';
   
-  // Filter to active jobs only, excluding Josh Angelo
+  // Filter to active jobs only, excluding configured PMs
   const activeJobs = joData.filter(j => 
     j.job_status === 'A' && 
     j.project_manager_name && 
-    j.project_manager_name !== 'Josh Angelo' &&
+    !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name) &&
     (j.revised_contract || 0) > 0
   );
   
@@ -17050,7 +17158,7 @@ function updateJobOverviewCharts() {
   const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
   const showDataLabels = document.getElementById('joDataLabels')?.checked === true;
   
-  const pmFilteredJobs = joFiltered.filter(j => j.project_manager_name !== 'Josh Angelo');
+  const pmFilteredJobs = joFiltered.filter(j => !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name));
   const pmData = aggregateJobsByField(pmFilteredJobs, 'project_manager_name');
   const customerData = aggregateJobsByField(joFiltered, 'customer_name');
   
@@ -17593,9 +17701,7 @@ async function loadJobActualsData() {
   if (loadingOverlay) loadingOverlay.classList.remove('hidden');
   
   try {
-    const resp = await fetch('data/financials_jobs.json');
-    const text = await resp.text();
-    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+    const data = await DataCache.getJobsData();
     
     const jobBudgets = data.job_budgets || [];
     const jobActualsRaw = data.job_actuals || [];
@@ -18346,9 +18452,7 @@ async function loadJobCostsData() {
   if (loadingOverlay) loadingOverlay.classList.remove('hidden');
   
   try {
-    const resp = await fetch('data/financials_jobs.json');
-    const text = await resp.text();
-    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+    const data = await DataCache.getJobsData();
     
     const jobBudgets = data.job_budgets || [];
     const jobActualsRaw = data.job_actuals || [];
@@ -20523,8 +20627,8 @@ async function extractAiInsightsData() {
       text += "=== JOB PORTFOLIO ===\n";
       const budgets = jobsData.job_budgets || [];
       const actuals = jobsData.job_actuals || [];
-      // Exclude Josh Angelo's jobs from analysis (not a full-time PM)
-      const activeJobs = budgets.filter(j => j.job_status === 'A' && j.project_manager_name !== 'Josh Angelo');
+      // Exclude configured PMs from analysis
+      const activeJobs = budgets.filter(j => j.job_status === 'A' && !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name));
       
       const totalContract = activeJobs.reduce((s, j) => s + (parseFloat(j.revised_contract) || 0), 0);
       const totalCost = activeJobs.reduce((s, j) => s + (parseFloat(j.revised_cost) || 0), 0);
@@ -20537,7 +20641,7 @@ async function extractAiInsightsData() {
       (actuals || []).forEach(a => {
         const jobNum = String(a.Job_No || a.job_no || a.job_number || a.Job_Number || '');
         const cost = parseFloat(a.Value || a.value || a.actual_cost || a.Actual_Cost) || 0;
-        // Only include actuals for active jobs (Josh Angelo already excluded)
+        // Only include actuals for active jobs (excluded PMs already filtered)
         if (jobNum && activeJobNumbers.has(jobNum)) {
           actualCostByJob[jobNum] = (actualCostByJob[jobNum] || 0) + cost;
         }
@@ -20551,12 +20655,12 @@ async function extractAiInsightsData() {
       text += `Estimated Profit: $${estProfit.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}\n`;
       text += `Estimated Margin: ${margin.toFixed(1)}%\n\n`;
       
-      // PM Summary - Exclude Josh Angelo (not a full-time PM)
+      // PM Summary - Exclude configured PMs
       const pmStats = {};
       activeJobs.forEach(j => {
         const pm = j.project_manager_name || 'Unassigned';
-        // Exclude Josh Angelo from PM analysis
-        if (pm === 'Josh Angelo') return;
+        // Exclude configured PMs from PM analysis
+        if (PM_EXCLUSION_CONFIG.isExcluded(pm)) return;
         if (!pmStats[pm]) pmStats[pm] = {jobs: 0, contract: 0, cost: 0};
         pmStats[pm].jobs++;
         pmStats[pm].contract += parseFloat(j.revised_contract) || 0;
@@ -20895,7 +20999,7 @@ Over 90 days: ${formatCurrency(ap.over90 || 0)}
 Top Vendors with Outstanding AP:
 ${(ap.topVendors || []).map(v => `- ${v.name}: ${formatCurrency(v.amount)}`).join('\n')}
 
-IMPORTANT: Disregard Josh Angelo's numbers from your analysis and commentary. Do not include any data or mention of Josh Angelo in your response.
+${PM_EXCLUSION_CONFIG.getAIPromptExclusion()}
 
 Please provide a comprehensive analysis with the following sections (use markdown formatting):
 
@@ -20912,7 +21016,7 @@ Analysis of job portfolio, billing status, and project execution.
 Analysis of AR aging, AP management, and cash position.
 
 ## PROJECT MANAGER PERFORMANCE
-Comparison of PM performance and any concerns (excluding Josh Angelo).
+Comparison of PM performance and any concerns${PM_EXCLUSION_CONFIG.excludedPMs.length ? ` (excluding ${PM_EXCLUSION_CONFIG.excludedPMs.join(', ')})` : ''}.
 
 ## STRATEGIC RECOMMENDATIONS
 Top 3-5 actionable recommendations prioritized by impact.`;
