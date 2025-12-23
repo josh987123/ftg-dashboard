@@ -20640,8 +20640,15 @@ function buildWprPmTabs() {
       tab.classList.add('active');
       wprSelectedPm = tab.getAttribute('data-pm');
       updateWprClientSummary();
+      updateWprOverUnderTable();
     });
   });
+  
+  // Set up toggle button for Over/Under table
+  const toggleBtn = document.getElementById('wprOverUnderToggle');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', toggleWprOverUnder);
+  }
   
   // Auto-select first PM
   const firstTab = tabsContainer.querySelector('.wpr-pm-tab');
@@ -20812,6 +20819,121 @@ function updateWprClientSummary() {
   
   tbody.innerHTML = html;
   if (countEl) countEl.textContent = `${clients.length} client${clients.length !== 1 ? 's' : ''}, ${pmJobs.length} job${pmJobs.length !== 1 ? 's' : ''}`;
+}
+
+// Track collapse state for WPR Over/Under section
+let wprOverUnderExpanded = false;
+
+function updateWprOverUnderTable() {
+  const tbody = document.getElementById('wprOverUnderTableBody');
+  const countEl = document.getElementById('wprOverUnderCount');
+  const table = document.getElementById('wprOverUnderTable');
+  const toggleBtn = document.getElementById('wprOverUnderToggle');
+  
+  if (!tbody || !wprSelectedPm) {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="wpr-empty-state">Select a Project Manager to view their report</td></tr>';
+    return;
+  }
+  
+  // Filter active jobs for selected PM
+  const pmJobs = wprJobsData.filter(job => 
+    job.project_manager_name === wprSelectedPm && job.job_status === 'A'
+  );
+  
+  // Filter to show only jobs with non-zero variance (over_under = billed - earned)
+  const overUnderJobs = pmJobs.map(job => ({
+    ...job,
+    over_under: (job.billed_revenue || 0) - (job.earned_revenue || 0),
+    percent_complete: job.revised_contract > 0 ? ((job.earned_revenue || 0) / job.revised_contract * 100) : 0
+  })).filter(j => Math.abs(j.over_under) > 0.01)
+    .sort((a, b) => a.over_under - b.over_under); // Under-billed first
+  
+  if (overUnderJobs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="wpr-empty-state">No jobs with billing variance</td></tr>';
+    if (countEl) countEl.textContent = '0 jobs';
+    if (toggleBtn) toggleBtn.style.display = 'none';
+    return;
+  }
+  
+  // Calculate totals for subtotal row
+  const totals = overUnderJobs.reduce((acc, j) => ({
+    contract: acc.contract + (j.revised_contract || 0),
+    actualCost: acc.actualCost + (j.actual_cost || 0),
+    earnedRev: acc.earnedRev + (j.earned_revenue || 0),
+    billedRev: acc.billedRev + (j.billed_revenue || 0),
+    overUnder: acc.overUnder + (j.over_under || 0)
+  }), { contract: 0, actualCost: 0, earnedRev: 0, billedRev: 0, overUnder: 0 });
+  
+  const avgPctComplete = overUnderJobs.length > 0 
+    ? overUnderJobs.reduce((sum, j) => sum + (j.percent_complete || 0), 0) / overUnderJobs.length 
+    : 0;
+  
+  const overUnderClass = totals.overUnder >= 0 ? 'over-billed' : 'under-billed';
+  
+  // Subtotal row first
+  let html = `<tr class="wpr-subtotal-row">
+    <td colspan="3"><strong>TOTAL (${overUnderJobs.length} jobs)</strong></td>
+    <td class="text-right wpr-expandable-col">${formatCurrencyCompact(totals.contract)}</td>
+    <td class="text-right wpr-expandable-col">${formatCurrencyCompact(totals.actualCost)}</td>
+    <td class="text-right wpr-expandable-col">${avgPctComplete.toFixed(1)}%</td>
+    <td class="text-right wpr-expandable-col">${formatCurrencyCompact(totals.earnedRev)}</td>
+    <td class="text-right wpr-expandable-col">${formatCurrencyCompact(totals.billedRev)}</td>
+    <td class="text-right ${overUnderClass}">${formatCurrencyCompact(totals.overUnder)}</td>
+  </tr>`;
+  
+  // Detail rows
+  overUnderJobs.forEach(job => {
+    const pctComplete = job.percent_complete || 0;
+    const jobOverUnderClass = job.over_under >= 0 ? 'over-billed' : 'under-billed';
+    html += `<tr class="wpr-ou-detail-row">
+      <td>${job.job_no || ''}</td>
+      <td>${job.job_description || ''}</td>
+      <td>${job.customer_name || ''}</td>
+      <td class="text-right wpr-expandable-col">${formatCurrencyCompact(job.revised_contract)}</td>
+      <td class="text-right wpr-expandable-col">${formatCurrencyCompact(job.actual_cost)}</td>
+      <td class="text-right wpr-expandable-col">${pctComplete.toFixed(1)}%</td>
+      <td class="text-right wpr-expandable-col">${formatCurrencyCompact(job.earned_revenue)}</td>
+      <td class="text-right wpr-expandable-col">${formatCurrencyCompact(job.billed_revenue)}</td>
+      <td class="text-right ${jobOverUnderClass}">${formatCurrencyCompact(job.over_under)}</td>
+    </tr>`;
+  });
+  
+  tbody.innerHTML = html;
+  
+  // Update toggle button
+  if (toggleBtn) {
+    toggleBtn.textContent = wprOverUnderExpanded ? 'Collapse' : 'Expand';
+    toggleBtn.style.display = 'inline-block';
+  }
+  
+  // Apply expanded state
+  if (table) {
+    if (wprOverUnderExpanded) {
+      table.classList.add('expanded');
+    } else {
+      table.classList.remove('expanded');
+    }
+  }
+  
+  if (countEl) countEl.textContent = `${overUnderJobs.length} job${overUnderJobs.length !== 1 ? 's' : ''}`;
+}
+
+function toggleWprOverUnder() {
+  wprOverUnderExpanded = !wprOverUnderExpanded;
+  const table = document.getElementById('wprOverUnderTable');
+  const toggleBtn = document.getElementById('wprOverUnderToggle');
+  
+  if (table) {
+    if (wprOverUnderExpanded) {
+      table.classList.add('expanded');
+    } else {
+      table.classList.remove('expanded');
+    }
+  }
+  
+  if (toggleBtn) {
+    toggleBtn.textContent = wprOverUnderExpanded ? 'Collapse' : 'Expand';
+  }
 }
 
 // ========================================

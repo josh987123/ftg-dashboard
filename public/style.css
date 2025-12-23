@@ -8359,6 +8359,57 @@ body.dark-mode #accounts .summary-tile .tile-label {
 [data-theme="dark"] .wpr-table .margin-good { color: #34d399; }
 [data-theme="dark"] .wpr-table .margin-bad { color: #f87171; }
 
+/* Toggle button */
+.wpr-toggle-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wpr-toggle-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+/* Section description */
+.wpr-section-desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* Expandable columns */
+.wpr-expandable-col {
+  display: none;
+}
+
+.wpr-table.expanded .wpr-expandable-col {
+  display: table-cell;
+}
+
+/* Over/Under billing colors */
+.wpr-table .over-billed { color: #10b981; }
+.wpr-table .under-billed { color: #ef4444; }
+
+[data-theme="dark"] .wpr-table .over-billed { color: #34d399; }
+[data-theme="dark"] .wpr-table .under-billed { color: #f87171; }
+
+/* Detail rows hidden by default */
+.wpr-ou-detail-row {
+  display: none;
+}
+
+.wpr-table.expanded .wpr-ou-detail-row {
+  display: table-row;
+}
+
 /* ========================================
    ADMIN SECTION STYLES
    ======================================== */

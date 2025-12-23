@@ -3828,6 +3828,40 @@
             </div>
           </div>
         </div>
+        
+        <!-- Over/Under Billing Section -->
+        <div class="wpr-table-container" style="margin-top: 20px;">
+          <div class="wpr-table-header">
+            <div>
+              <h3>Over/(Under) Billing</h3>
+              <span class="wpr-section-desc">Jobs with billing variance for this PM</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button class="wpr-toggle-btn" id="wprOverUnderToggle">Expand</button>
+              <span class="wpr-client-count" id="wprOverUnderCount">0 jobs</span>
+            </div>
+          </div>
+          <div class="wpr-table-wrapper">
+            <table class="wpr-table" id="wprOverUnderTable">
+              <thead>
+                <tr>
+                  <th>Job #</th>
+                  <th>Description</th>
+                  <th>Client</th>
+                  <th class="text-right wpr-expandable-col">Contract</th>
+                  <th class="text-right wpr-expandable-col">Actual Cost</th>
+                  <th class="text-right wpr-expandable-col">% Complete</th>
+                  <th class="text-right wpr-expandable-col">Earned Rev</th>
+                  <th class="text-right wpr-expandable-col">Billed Rev</th>
+                  <th class="text-right">Over/(Under)</th>
+                </tr>
+              </thead>
+              <tbody id="wprOverUnderTableBody">
+                <tr><td colspan="9" class="wpr-empty-state">Select a Project Manager to view their report</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       <section id="monthEndReporting" class="dashboard-section">
