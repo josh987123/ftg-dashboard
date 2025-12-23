@@ -15358,16 +15358,16 @@ function updateJobBudgetsSortIndicators() {
 }
 
 function updateJobSummaryMetrics() {
-  // Filter to Active jobs only for key metrics
-  const activeJobs = jobBudgetsData.filter(j => j.job_status === 'A');
-  const totalJobs = activeJobs.length;
-  const totalContract = activeJobs.reduce((sum, j) => sum + j.revised_contract, 0);
-  const totalCost = activeJobs.reduce((sum, j) => sum + j.revised_cost, 0);
-  const totalProfit = activeJobs.reduce((sum, j) => sum + j.estimated_profit, 0);
+  // Use filtered data based on PM tabs and status checkboxes
+  const jobs = jobBudgetsFiltered || [];
+  const totalJobs = jobs.length;
+  const totalContract = jobs.reduce((sum, j) => sum + j.revised_contract, 0);
+  const totalCost = jobs.reduce((sum, j) => sum + j.revised_cost, 0);
+  const totalProfit = jobs.reduce((sum, j) => sum + j.estimated_profit, 0);
   
   // Calculate avg margin excluding jobs with zero revised_contract OR zero revised_cost
   // Use weighted average (total profit / total contract) to match Job Overview calculation
-  const jobsWithValidMargin = activeJobs.filter(j => 
+  const jobsWithValidMargin = jobs.filter(j => 
     parseFloat(j.revised_contract) > 0 && parseFloat(j.revised_cost) > 0
   );
   let avgMargin = 0;
@@ -15433,10 +15433,10 @@ function renderPmDonutChart() {
   const canvas = document.getElementById('pmDonutChart');
   if (!canvas) return;
   
-  // Aggregate by Project Manager - use Active jobs only
-  const activeJobs = jobBudgetsData.filter(j => j.job_status === 'A');
+  // Aggregate by Project Manager - use filtered data
+  const jobs = jobBudgetsFiltered || [];
   const pmMap = new Map();
-  activeJobs.forEach(job => {
+  jobs.forEach(job => {
     const pm = job.project_manager_name || 'Unassigned';
     if (!pmMap.has(pm)) {
       pmMap.set(pm, 0);
@@ -15508,10 +15508,10 @@ function renderCustomerDonutChart() {
   const canvas = document.getElementById('customerDonutChart');
   if (!canvas) return;
   
-  // Aggregate by Customer - use Active jobs only
-  const activeJobs = jobBudgetsData.filter(j => j.job_status === 'A');
+  // Aggregate by Customer - use filtered data
+  const jobs = jobBudgetsFiltered || [];
   const custMap = new Map();
-  activeJobs.forEach(job => {
+  jobs.forEach(job => {
     const cust = job.customer_name || 'Unknown';
     if (!custMap.has(cust)) {
       custMap.set(cust, 0);
@@ -15583,10 +15583,10 @@ function renderJobBreakdownByPm() {
   const tbody = document.getElementById('jobPmBreakdownBody');
   if (!tbody) return;
   
-  // Aggregate by Project Manager - use Active jobs only
-  const activeJobs = jobBudgetsData.filter(j => j.job_status === 'A');
+  // Aggregate by Project Manager - use filtered data
+  const jobs = jobBudgetsFiltered || [];
   const pmMap = new Map();
-  activeJobs.forEach(job => {
+  jobs.forEach(job => {
     const pm = job.project_manager_name || 'Unassigned';
     if (!pmMap.has(pm)) {
       pmMap.set(pm, { jobs: 0, contract: 0, cost: 0, profit: 0 });
@@ -15673,10 +15673,10 @@ function renderJobBreakdownByCustomer() {
   const tbody = document.getElementById('jobCustomerBreakdownBody');
   if (!tbody) return;
   
-  // Aggregate by Customer - use Active jobs only
-  const activeJobs = jobBudgetsData.filter(j => j.job_status === 'A');
+  // Aggregate by Customer - use filtered data
+  const jobs = jobBudgetsFiltered || [];
   const custMap = new Map();
-  activeJobs.forEach(job => {
+  jobs.forEach(job => {
     const cust = job.customer_name || 'Unknown';
     if (!custMap.has(cust)) {
       custMap.set(cust, { jobs: 0, contract: 0, cost: 0, profit: 0 });
