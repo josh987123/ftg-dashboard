@@ -16099,8 +16099,7 @@ function renderProfitabilityHeatmap() {
   const container = document.getElementById('profitabilityHeatmap');
   if (!container) return;
   
-  // Get heat map's dedicated filters (overrides page filters)
-  const statusFilter = document.getElementById('heatmapStatusFilter')?.value || 'active';
+  // Get the "View by" filter (PM or Client)
   const groupByFilter = document.getElementById('heatmapGroupByFilter')?.value || 'pm';
   
   // Update description text based on groupBy selection
@@ -16113,16 +16112,8 @@ function renderProfitabilityHeatmap() {
     }
   }
   
-  // Start from joData (raw jobs), not joFiltered - this filter is independent
-  let baseJobs = joData || [];
-  
-  // Apply heat map's own status filter (status codes: A=Active, C=Closed, I=Inactive, O=Overhead)
-  if (statusFilter === 'active') {
-    baseJobs = baseJobs.filter(j => j.job_status === 'A');
-  } else if (statusFilter === 'closed') {
-    baseJobs = baseJobs.filter(j => j.job_status === 'C');
-  }
-  // 'all' = no status filtering
+  // Use joFiltered which is already filtered by page-level PM tabs and status checkboxes
+  let baseJobs = joFiltered || [];
   
   // Exclude configured PMs (for PM view) and jobs without valid financial data
   // For closed jobs: must have billed revenue and actual cost
@@ -16156,22 +16147,8 @@ function renderProfitabilityHeatmap() {
   const groupField = groupByFilter === 'pm' ? 'project_manager_name' : 'customer_name';
   const groupLabel = groupByFilter === 'pm' ? 'Project Manager' : 'Client';
   
-  // Get unique group values
-  // For PM view: only show PMs who have active jobs (regardless of status filter)
-  // For Client view: show all clients from the filtered jobs
-  let groups;
-  if (groupByFilter === 'pm') {
-    // Get PMs with active jobs from the full joData
-    const activePMs = new Set(
-      (joData || [])
-        .filter(j => j.job_status === 'A' && j.project_manager_name && !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name))
-        .map(j => j.project_manager_name)
-    );
-    // Only include PMs that have active jobs AND appear in our filtered data
-    groups = [...new Set(jobs.map(j => j[groupField]).filter(pm => pm && activePMs.has(pm)))].sort();
-  } else {
-    groups = [...new Set(jobs.map(j => j[groupField]).filter(Boolean))].sort();
-  }
+  // Get unique group values from the filtered jobs
+  const groups = [...new Set(jobs.map(j => j[groupField]).filter(Boolean))].sort();
   
   // Build data matrix: Group x Size Range
   const matrix = {};
