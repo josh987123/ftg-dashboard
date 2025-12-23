@@ -11448,7 +11448,8 @@ body.dark-mode .donut-legend-value {
 
 /* Child nav items in Financials and Jobs - dark forest green theme */
 #navFinancialStatementsChildren .nav-child,
-#navJobsChildren .nav-child {
+#navJobsChildren .nav-child,
+#navDistReportsChildren .nav-child {
   background: #1a3320;
   border-left: 3px solid #2d5a3a;
   color: #d4e6d8;
@@ -11457,13 +11458,15 @@ body.dark-mode .donut-legend-value {
 }
 
 #navFinancialStatementsChildren .nav-child:hover,
-#navJobsChildren .nav-child:hover {
+#navJobsChildren .nav-child:hover,
+#navDistReportsChildren .nav-child:hover {
   background: #254530;
   color: #e8f0ea;
 }
 
 #navFinancialStatementsChildren .nav-child.active,
-#navJobsChildren .nav-child.active {
+#navJobsChildren .nav-child.active,
+#navDistReportsChildren .nav-child.active {
   background: #2d5a3a;
   border-left-color: #4a8a5a;
   color: #ffffff;
@@ -11472,7 +11475,8 @@ body.dark-mode .donut-legend-value {
 
 /* Dark mode adjustments - dark forest green theme */
 body.dark-mode #navFinancialStatementsChildren .nav-child,
-body.dark-mode #navJobsChildren .nav-child {
+body.dark-mode #navJobsChildren .nav-child,
+body.dark-mode #navDistReportsChildren .nav-child {
   background: #0f1f14;
   border-left-color: #2d5a3a;
   color: #c4d6c8;
@@ -11481,13 +11485,15 @@ body.dark-mode #navJobsChildren .nav-child {
 }
 
 body.dark-mode #navFinancialStatementsChildren .nav-child:hover,
-body.dark-mode #navJobsChildren .nav-child:hover {
+body.dark-mode #navJobsChildren .nav-child:hover,
+body.dark-mode #navDistReportsChildren .nav-child:hover {
   background: #1a3320;
   color: #e0efe4;
 }
 
 body.dark-mode #navFinancialStatementsChildren .nav-child.active,
-body.dark-mode #navJobsChildren .nav-child.active {
+body.dark-mode #navJobsChildren .nav-child.active,
+body.dark-mode #navDistReportsChildren .nav-child.active {
   background: #254530;
   border-left-color: #4a8a5a;
   color: #ffffff;
