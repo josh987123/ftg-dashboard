@@ -4571,6 +4571,10 @@ function renderOverUnderBillingChart(labels, metricData, compare, currentMonthIn
   const textColor = isDark ? '#e2e8f0' : '#374151';
   const gridColor = isDark ? '#334155' : '#e5e7eb';
   
+  // Get trendline and data labels settings from config checkboxes
+  const showTrendline = document.getElementById('overviewTrend')?.checked || false;
+  const showDataLabels = document.getElementById('overviewDataLabels')?.checked || false;
+  
   const values = metricData.values || [];
   const priorValues = metricData.priorValues || [];
   
@@ -4601,24 +4605,71 @@ function renderOverUnderBillingChart(labels, metricData, compare, currentMonthIn
     });
   }
   
+  // Add trendline if enabled
+  if (showTrendline && values.length > 1) {
+    const validValues = values.map((v, i) => ({ x: i, y: v })).filter(p => p.y !== null && p.y !== undefined && !isNaN(p.y));
+    if (validValues.length > 1) {
+      const n = validValues.length;
+      const sumX = validValues.reduce((s, p) => s + p.x, 0);
+      const sumY = validValues.reduce((s, p) => s + p.y, 0);
+      const sumXY = validValues.reduce((s, p) => s + p.x * p.y, 0);
+      const sumXX = validValues.reduce((s, p) => s + p.x * p.x, 0);
+      const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+      const intercept = (sumY - slope * sumX) / n;
+      const trendData = values.map((_, i) => slope * i + intercept);
+      
+      datasets.push({
+        label: 'Trend',
+        data: trendData,
+        type: 'line',
+        borderColor: isDark ? '#94a3b8' : '#6b7280',
+        borderWidth: 2,
+        borderDash: [5, 5],
+        pointRadius: 0,
+        fill: false,
+        tension: 0
+      });
+    }
+  }
+  
   overUnderChartInstance = new Chart(canvas, {
     type: 'bar',
     data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: { top: showDataLabels ? 20 : 0 }
+      },
       plugins: {
         legend: {
-          display: compare && priorValues.length > 0,
+          display: (compare && priorValues.length > 0) || showTrendline,
           position: 'bottom',
           labels: { color: textColor, boxWidth: 12, padding: 8, font: { size: 10 } }
         },
         tooltip: {
           callbacks: {
             label: function(context) {
+              if (context.dataset.type === 'line') return null;
               const value = context.raw;
               return context.dataset.label + ': ' + formatCurrency(value);
             }
+          }
+        },
+        datalabels: {
+          display: (context) => {
+            if (!showDataLabels) return false;
+            if (context.dataset.type === 'line') return false;
+            return true;
+          },
+          anchor: 'end',
+          align: 'top',
+          offset: 2,
+          font: { size: 8, weight: '500' },
+          color: textColor,
+          formatter: (value) => {
+            if (value === 0 || value === null) return '';
+            return formatCurrencyCompact(value);
           }
         }
       },
