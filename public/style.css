@@ -19792,8 +19792,9 @@ body.dark-mode .dashboard-section > h2 {
 }
 
 .jo-metrics-column-tiles .job-metric-card.compact .metric-label {
-  font-size: 0.65rem;
+  font-size: 0.55rem;
   white-space: nowrap;
+  overflow: visible;
 }
 
 .profitability-heatmap-section {
