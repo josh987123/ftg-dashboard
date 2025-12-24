@@ -17054,19 +17054,56 @@ function renderJoPmrBillingChart(jobs) {
     joPmrBillingChart = null;
   }
   
-  const totalBilled = jobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
-  const totalEarned = jobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
-  const totalContract = jobs.reduce((sum, j) => sum + (j.revised_contract || 0), 0);
+  // Get selected PM for filtering
+  const selectedPm = getSelectedPmForPage('jo');
+  const isAllPms = !selectedPm || selectedPm === '__ALL__';
+  
+  // Calculate trailing 6 months
+  const now = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      label: d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+      start: d,
+      end: new Date(d.getFullYear(), d.getMonth() + 1, 0),
+      total: 0
+    });
+  }
+  
+  // Sum up invoice amounts by month from AR invoices
+  const excelEpoch = new Date(1899, 11, 30);
+  joArInvoices.forEach(inv => {
+    // Filter by PM if a specific PM is selected
+    if (!isAllPms && inv.project_manager_name !== selectedPm) return;
+    
+    const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
+    const invoiceDate = new Date(excelEpoch.getTime() + invoiceDateSerial * 24 * 60 * 60 * 1000);
+    const invoiceAmount = parseFloat(inv.invoice_amount) || 0;
+    
+    // Find which month bucket this invoice falls into
+    for (const month of months) {
+      if (invoiceDate >= month.start && invoiceDate <= month.end) {
+        month.total += invoiceAmount;
+        break;
+      }
+    }
+  });
   
   const ctx = canvas.getContext('2d');
   joPmrBillingChart = new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
-      labels: ['Contract', 'Earned', 'Billed'],
+      labels: months.map(m => m.label),
       datasets: [{
-        data: [totalContract, totalEarned, totalBilled],
-        backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981'],
-        borderRadius: 4
+        label: 'Billed',
+        data: months.map(m => m.total),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#3b82f6'
       }]
     },
     options: {
@@ -17075,7 +17112,7 @@ function renderJoPmrBillingChart(jobs) {
       plugins: { legend: { display: false } },
       scales: {
         y: { beginAtZero: true, ticks: { callback: v => formatCurrencyCompact(v), color: 'var(--text-secondary)' }, grid: { color: 'var(--border-color)' } },
-        x: { ticks: { color: 'var(--text-secondary)' }, grid: { display: false } }
+        x: { ticks: { color: 'var(--text-secondary)', font: { size: 9 } }, grid: { display: false } }
       }
     }
   });
