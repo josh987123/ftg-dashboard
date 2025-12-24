@@ -4079,78 +4079,104 @@ body.dark-mode .nav-item.nav-parent.expanded {
 
 
 @media (max-width: 768px) {
-  /* Income Statement mobile compact config */
+  /* ========================================
+     ULTRA COMPACT IS/BS/CF MOBILE CONFIG
+     Side-by-side sections, minimal spacing
+  ======================================== */
+  
+  /* Main controls container - flex row with wrap */
   #incomeStatement .is-controls,
   #balanceSheet .is-controls,
   #cashFlows .is-controls {
-    gap: 8px;
-    row-gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    row-gap: 6px;
+    align-items: flex-start;
   }
   
-  /* Time Period box - compact horizontal layout */
+  /* Time Period box - inline compact */
   #incomeStatement .overview-config-box,
   #balanceSheet .overview-config-box,
   #cashFlows .overview-config-box {
-    padding: 8px 10px;
+    padding: 6px 8px;
     margin: 0;
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 0;
   }
   
   #incomeStatement .overview-config-box > div:first-child,
   #balanceSheet .overview-config-box > div:first-child,
   #cashFlows .overview-config-box > div:first-child {
-    font-size: 11px;
-    margin-bottom: 6px;
+    font-size: 9px;
+    margin-bottom: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #6b7280;
   }
   
-  /* Make period rows more compact */
+  /* Period rows ultra compact - inline layout */
   #incomeStatement .is-period-stack,
   #balanceSheet .is-period-stack,
   #cashFlows .is-period-stack {
-    gap: 4px;
+    gap: 2px;
   }
   
   #incomeStatement .is-period-row,
   #balanceSheet .is-period-row,
   #cashFlows .is-period-row {
     gap: 4px;
+    display: flex;
+    align-items: center;
   }
   
   #incomeStatement .is-period-row label,
   #balanceSheet .is-period-row label,
   #cashFlows .is-period-row label {
-    font-size: 10px;
-    min-width: 60px;
+    font-size: 9px;
+    min-width: 50px;
+    color: #6b7280;
   }
   
   #incomeStatement .is-period-row select,
   #balanceSheet .is-period-row select,
   #cashFlows .is-period-row select {
     font-size: 10px;
-    padding: 3px 5px;
-    min-height: 24px;
+    padding: 2px 4px;
+    min-height: 22px;
   }
   
-  /* Compare/Detail wrapper - side by side, compact */
+  /* Compare/Detail wrapper - side by side, ultra compact */
   #incomeStatement .is-compare-detail-wrapper,
   #balanceSheet .is-compare-detail-wrapper,
   #cashFlows .is-compare-detail-wrapper {
-    padding: 6px 8px;
-    gap: 8px;
+    padding: 4px 6px;
+    gap: 12px;
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 0;
   }
   
   #incomeStatement .is-compare-detail-wrapper .config-section-label,
   #balanceSheet .is-compare-detail-wrapper .config-section-label,
   #cashFlows .is-compare-detail-wrapper .config-section-label {
-    font-size: 10px;
-    margin-bottom: 2px;
+    font-size: 9px;
+    margin-bottom: 1px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #6b7280;
   }
   
+  /* Radio buttons - tighter line height */
   #incomeStatement .is-compare-detail-wrapper .radio-label,
   #balanceSheet .is-compare-detail-wrapper .radio-label,
   #cashFlows .is-compare-detail-wrapper .radio-label {
     font-size: 10px;
-    height: 16px;
-    gap: 3px;
+    height: 14px;
+    gap: 2px;
+    line-height: 1;
   }
   
   #incomeStatement .is-compare-detail-wrapper .radio-label input[type="radio"],
@@ -4160,21 +4186,23 @@ body.dark-mode .nav-item.nav-parent.expanded {
     height: 10px;
   }
   
-  /* Checkboxes - horizontal wrap layout */
+  /* Checkboxes - inline horizontal wrap */
   #incomeStatement .is-controls > .is-options-stack:not(.is-compare-box):not(.is-detail-box),
   #balanceSheet .is-controls > .is-options-stack:not(.is-compare-box):not(.is-detail-box),
   #cashFlows .is-controls > .is-options-stack:not(.is-compare-box):not(.is-detail-box) {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 4px 10px;
-    padding: 6px 8px;
+    gap: 2px 8px;
+    padding: 4px 6px;
+    flex: 1 0 100%;
   }
   
   #incomeStatement .is-checkbox-label.small,
   #balanceSheet .is-checkbox-label.small,
   #cashFlows .is-checkbox-label.small {
     font-size: 10px;
-    gap: 4px;
+    gap: 3px;
+    white-space: nowrap;
   }
   
   #incomeStatement .is-checkbox-label.small input[type="checkbox"],
@@ -4184,40 +4212,47 @@ body.dark-mode .nav-item.nav-parent.expanded {
     height: 12px;
   }
   
-  /* Year Range sliders - compact on mobile */
+  /* Year Range sliders - compact inline on mobile */
   #incomeStatement .range-wrapper.year-range-inline,
   #balanceSheet .range-wrapper.year-range-inline,
   #cashFlows .range-wrapper.year-range-inline,
   #bsMatrixRangeControls,
   #cfMatrixYearControls,
   #isMatrixYearControls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-    padding: 6px 8px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 4px 6px;
     background: #f3f4f6;
-    border-radius: 6px;
+    border-radius: 4px;
     border: 1px solid #e5e7eb;
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 0;
   }
   
   #incomeStatement .range-wrapper.year-range-inline > label,
   #balanceSheet .range-wrapper.year-range-inline > label,
   #cashFlows .range-wrapper.year-range-inline > label {
-    font-size: 10px;
-    margin-bottom: 2px;
+    font-size: 9px;
+    margin-bottom: 0;
+    white-space: nowrap;
   }
   
   #incomeStatement .year-slider,
   #balanceSheet .year-slider,
   #cashFlows .year-slider {
     height: 4px;
+    width: 60px;
+    min-width: 50px;
   }
   
   #incomeStatement .year-label,
   #balanceSheet .year-label,
   #cashFlows .year-label {
-    font-size: 10px;
-    min-width: 30px;
+    font-size: 9px;
+    min-width: 24px;
   }
   
   #incomeStatement .range-separator,
@@ -4244,6 +4279,29 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #cashFlows .is-compare-detail-wrapper label[style*="font-weight"] {
     font-size: 10px !important;
     margin-bottom: 2px;
+  }
+  
+  /* Dark mode support for compact mobile labels */
+  [data-theme="dark"] #incomeStatement .overview-config-box > div:first-child,
+  [data-theme="dark"] #balanceSheet .overview-config-box > div:first-child,
+  [data-theme="dark"] #cashFlows .overview-config-box > div:first-child,
+  [data-theme="dark"] #incomeStatement .is-compare-detail-wrapper .config-section-label,
+  [data-theme="dark"] #balanceSheet .is-compare-detail-wrapper .config-section-label,
+  [data-theme="dark"] #cashFlows .is-compare-detail-wrapper .config-section-label,
+  [data-theme="dark"] #incomeStatement .is-period-row label,
+  [data-theme="dark"] #balanceSheet .is-period-row label,
+  [data-theme="dark"] #cashFlows .is-period-row label {
+    color: #94a3b8;
+  }
+  
+  [data-theme="dark"] #incomeStatement .range-wrapper.year-range-inline,
+  [data-theme="dark"] #balanceSheet .range-wrapper.year-range-inline,
+  [data-theme="dark"] #cashFlows .range-wrapper.year-range-inline,
+  [data-theme="dark"] #bsMatrixRangeControls,
+  [data-theme="dark"] #cfMatrixYearControls,
+  [data-theme="dark"] #isMatrixYearControls {
+    background: #1e293b;
+    border-color: #475569;
   }
 
   .is-controls {
@@ -6137,15 +6195,110 @@ body.dark-mode .overview-year-select-wrapper label {
     width: 100%;
   }
   
-  /* Stack overview config boxes on mobile */
+  /* COMPACT MOBILE CONFIG - Overview, IS, BS, CF pages */
+  /* Use side-by-side layout where possible, tighter spacing */
+  
+  /* Overview: Time Period + Visuals side-by-side, Metrics below */
   #overview .overview-time-visuals-row {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-start;
   }
   
   #overview .overview-time-period-box,
-  #overview .overview-visuals-box,
+  #overview .overview-visuals-box {
+    width: auto;
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+  
   #overview .overview-metrics-box {
     width: 100%;
+    flex: 1 0 100%;
+  }
+  
+  /* Tighter padding for all config boxes on mobile */
+  #overview .overview-config-box,
+  #overview .overview-time-period-box,
+  #overview .overview-visuals-box,
+  #overview .overview-metrics-box {
+    padding: 6px 8px;
+    margin: 0;
+  }
+  
+  /* Compact section labels */
+  #overview .overview-config-box > div:first-child,
+  #overview .overview-time-period-box > div:first-child,
+  #overview .overview-visuals-box > div:first-child,
+  #overview .overview-metrics-box > div:first-child {
+    font-size: 10px;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  
+  /* Time period buttons smaller and tighter */
+  #overview .time-period-tabs {
+    gap: 4px;
+  }
+  
+  #overview .time-period-tabs button {
+    padding: 4px 10px;
+    font-size: 11px;
+    min-height: 28px;
+  }
+  
+  /* Year selector compact */
+  #overview .overview-year-select-wrapper {
+    margin-top: 4px;
+    gap: 6px;
+  }
+  
+  #overview .overview-year-select-wrapper label {
+    font-size: 10px;
+  }
+  
+  #overview .overview-year-select-wrapper select {
+    padding: 3px 6px;
+    font-size: 11px;
+    min-width: 60px;
+  }
+  
+  /* Visuals checkboxes - horizontal inline */
+  #overview .visuals-checkboxes {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 3px 10px;
+  }
+  
+  #overview .visuals-checkboxes .checkbox-label {
+    font-size: 10px;
+    gap: 3px;
+    white-space: nowrap;
+  }
+  
+  #overview .visuals-checkboxes .checkbox-label input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+  }
+  
+  /* Metrics checkboxes - 2 columns */
+  #overview .overview-metrics-box .metrics-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 2px 16px;
+  }
+  
+  #overview .overview-metrics-box .checkbox-label {
+    font-size: 10px;
+    gap: 3px;
+    white-space: nowrap;
+  }
+  
+  #overview .overview-metrics-box .checkbox-label input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
   }
   
   /* AI Analysis panel mobile improvements */
