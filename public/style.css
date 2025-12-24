@@ -4095,14 +4095,14 @@ body.dark-mode .nav-item.nav-parent.expanded {
     align-items: flex-start !important;
   }
   
-  /* Time Period box - compact with title above dropdowns */
+  /* Time Period box - full width on its own row */
   #incomeStatement .overview-config-box,
   #balanceSheet .overview-config-box,
   #cashFlows .overview-config-box {
     padding: 6px 8px !important;
     margin: 0 !important;
-    flex: 0 1 auto !important;
-    width: auto !important;
+    flex: 1 0 100% !important;
+    width: 100% !important;
     min-width: 0 !important;
   }
   
@@ -4151,15 +4151,16 @@ body.dark-mode .nav-item.nav-parent.expanded {
     min-height: 22px !important;
   }
   
-  /* Compare/Detail wrapper - to the right of Time Period */
+  /* Compare/Detail wrapper - shares row with checkboxes */
   #incomeStatement .is-compare-detail-wrapper,
   #balanceSheet .is-compare-detail-wrapper,
   #cashFlows .is-compare-detail-wrapper {
     padding: 4px 6px !important;
-    gap: 10px !important;
-    flex: 0 1 auto !important;
+    gap: 8px !important;
+    flex: 0 0 auto !important;
     width: auto !important;
     min-width: 0 !important;
+    max-width: 50% !important;
   }
   
   #incomeStatement .is-compare-detail-wrapper .config-section-label,
@@ -4195,11 +4196,12 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #cashFlows .is-controls > .is-options-stack:not(.is-compare-box):not(.is-detail-box) {
     display: flex !important;
     flex-direction: column !important;
-    gap: 2px !important;
+    gap: 1px !important;
     padding: 4px 6px !important;
-    flex: 0 1 auto !important;
+    flex: 1 1 auto !important;
     width: auto !important;
     min-width: 0 !important;
+    max-width: 50% !important;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-primary);
     border-radius: 6px;
