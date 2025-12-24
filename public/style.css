@@ -7213,6 +7213,8 @@ body.dark-mode .overview-year-select-wrapper label {
   padding: 20px 16px;
   background: var(--card-bg, #f9fafb);
   border-radius: 8px;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 #revenue .summary-tile .tile-label,
