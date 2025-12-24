@@ -35,11 +35,13 @@ The dashboard provides several key views for financial analysis:
   - **PM Tables**: Client Summary, Over/Under Billing, and Missing Budgets tables.
 - **Distribution Reports (Admin Only)**: A dedicated section visible only to admin users, containing specialized reports:
   - Dept Head Meeting (placeholder)
-  - **Daily Cash Report**: Displays FTG Builders cash position with:
-    - 14-day trailing balance area chart showing daily cash positions
-    - Metric tiles: Current Balance, Prior Day Deposits, Prior Day Withdrawals, Percent Change
-    - Transaction table with date filtering and search
-    - Transfer detection logic excludes internal transfers from deposit/withdrawal calculations
+  - **Cash Report**: Displays FTG Builders cash position with Daily/Weekly view toggle:
+    - **Daily View**: 14-day trailing balance chart, prior day deposits/withdrawals
+    - **Weekly View**: 10-week trailing balance chart, past 7 days deposits/withdrawals
+    - Metric tiles: Current Balance, Deposits, Withdrawals, Percent Change
+    - **Cash Balance Safety Check**: Formula breakdown showing Cash Balance + AR - AP - Net Over/Under Bill = Safety Check total
+    - Top 5 Deposits and Top 5 Withdrawals sections (replacing full transaction table)
+    - Transfer detection logic excludes internal transfers from calculations
     - FTG Builders accounts identified by suffixes 1883, 2469, 7554
   - Month End Reporting (placeholder)
 - **Income Statement**: Supports single period and matrix views with AI analysis.
