@@ -16893,7 +16893,10 @@ function renderJoPmrMetrics(jobs) {
   const totalEarnedRevenue = jobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
   const totalBilledRevenue = jobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
   const backlog = totalContract - totalBilledRevenue;
-  const netOverUnder = totalBilledRevenue - totalEarnedRevenue;
+  
+  // Net Over/Under: Only include jobs with valid budgets (matching Over/Under Billing page calculation)
+  const jobsWithValidBudget = jobs.filter(j => (j.revised_contract || 0) > 0 && (j.revised_cost || 0) > 0);
+  const netOverUnder = jobsWithValidBudget.reduce((sum, j) => sum + ((j.billed_revenue || 0) - (j.earned_revenue || 0)), 0);
   
   // Get selected PM for filtering AR invoices
   const selectedPm = getSelectedPmForPage('jo');
