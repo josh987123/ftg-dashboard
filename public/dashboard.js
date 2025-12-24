@@ -16986,9 +16986,14 @@ function renderJoPmrMarginChart(jobs) {
     if (bucket) bucket.count++;
   });
   
+  // Calculate max value and add headroom for data labels
+  const maxCount = Math.max(...buckets.map(b => b.count));
+  const yMax = Math.max(maxCount + 2, Math.ceil(maxCount * 1.25));
+  
   const ctx = canvas.getContext('2d');
   joPmrMarginChart = new Chart(ctx, {
     type: 'bar',
+    plugins: [ChartDataLabels],
     data: {
       labels: buckets.map(b => b.label),
       datasets: [{
@@ -17000,9 +17005,20 @@ function renderJoPmrMarginChart(jobs) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          display: true,
+          anchor: 'end',
+          align: 'top',
+          offset: 2,
+          font: { size: 11, weight: '600' },
+          color: 'var(--text-primary)',
+          formatter: (value) => value > 0 ? value : ''
+        }
+      },
       scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1, color: 'var(--text-secondary)' }, grid: { color: 'var(--border-color)' } },
+        y: { beginAtZero: true, max: yMax, ticks: { stepSize: 1, color: 'var(--text-secondary)' }, grid: { color: 'var(--border-color)' } },
         x: { ticks: { color: 'var(--text-secondary)' }, grid: { display: false } }
       }
     }
