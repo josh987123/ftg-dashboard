@@ -17189,8 +17189,11 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
   allActiveJobs.forEach(job => {
     const pm = job.project_manager_name;
     if (!pm || PM_EXCLUSION_CONFIG.isExcluded(pm)) return;
-    if (!pmStats[pm]) pmStats[pm] = { jobs: 0, contract: 0, cost: 0, billed: 0, earned: 0 };
+    if (!pmStats[pm]) pmStats[pm] = { jobs: 0, jobsWithBudget: 0, contract: 0, cost: 0, billed: 0, earned: 0 };
     pmStats[pm].jobs++;
+    // Only count jobs with valid budgets for avgJobSize denominator
+    const hasBudget = (job.revised_contract || 0) > 0 && (job.revised_cost || 0) > 0;
+    if (hasBudget) pmStats[pm].jobsWithBudget++;
     pmStats[pm].contract += job.revised_contract || 0;
     pmStats[pm].cost += job.revised_cost || 0;
     pmStats[pm].billed += job.billed_revenue || 0;
@@ -17214,13 +17217,16 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
   const avgBilled = Object.values(pmStats).reduce((s, p) => s + p.billed, 0) / pmCount;
   const avgEarned = Object.values(pmStats).reduce((s, p) => s + p.earned, 0) / pmCount;
   const avgBillingPosition = avgEarned > 0 ? (avgBilled / avgEarned * 100) : 100;
-  const avgJobSize = avgJobs > 0 ? (avgContract / avgJobs) : 0;
+  // Average job size: only count jobs with budgets in denominator
+  const totalJobsWithBudget = Object.values(pmStats).reduce((s, p) => s + p.jobsWithBudget, 0);
+  const avgJobSize = totalJobsWithBudget > 0 ? (totalPortfolioContract / totalJobsWithBudget) : 0;
   
   // Normalize to 0-100 scale relative to max PM values
   const maxJobs = Math.max(...Object.values(pmStats).map(p => p.jobs));
   const maxContract = Math.max(...Object.values(pmStats).map(p => p.contract));
   const maxMargin = Math.max(...Object.values(pmStats).map(p => p.contract > 0 ? ((p.contract - p.cost) / p.contract * 100) : 0));
-  const maxJobSize = Math.max(...Object.values(pmStats).map(p => p.jobs > 0 ? (p.contract / p.jobs) : 0));
+  // Max job size uses only jobs with budgets in denominator
+  const maxJobSize = Math.max(...Object.values(pmStats).map(p => p.jobsWithBudget > 0 ? (p.contract / p.jobsWithBudget) : 0));
   
   const normalize = (val, max) => max > 0 ? Math.min(100, (val / max * 100)) : 0;
   
@@ -17251,7 +17257,9 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
       const pmBilled = pmJobs.reduce((s, j) => s + (j.billed_revenue || 0), 0);
       const pmEarned = pmJobs.reduce((s, j) => s + (j.earned_revenue || 0), 0);
       const pmBillingPosition = pmEarned > 0 ? (pmBilled / pmEarned * 100) : 100;
-      const pmJobSize = pmJobs.length > 0 ? (pmContract / pmJobs.length) : 0;
+      // Average job size: only count jobs with budgets in denominator
+      const pmJobsWithBudget = pmJobs.filter(j => (j.revised_contract || 0) > 0 && (j.revised_cost || 0) > 0).length;
+      const pmJobSize = pmJobsWithBudget > 0 ? (pmContract / pmJobsWithBudget) : 0;
       
       const pmData = [
         normalize(pmJobs.length, maxJobs),
@@ -17605,6 +17613,7 @@ function calculatePmRadarData() {
       pmStats[pm] = {
         name: pm,
         jobCount: 0,
+        jobsWithBudget: 0,
         contractValue: 0,
         revisedCost: 0,
         billedRevenue: 0,
@@ -17612,8 +17621,12 @@ function calculatePmRadarData() {
       };
     }
     pmStats[pm].jobCount++;
-    pmStats[pm].contractValue += parseFloat(budget.revised_contract) || job.revised_contract || 0;
-    pmStats[pm].revisedCost += parseFloat(budget.revised_cost) || job.revised_cost || 0;
+    const contract = parseFloat(budget.revised_contract) || job.revised_contract || 0;
+    const cost = parseFloat(budget.revised_cost) || job.revised_cost || 0;
+    // Only count jobs with valid budgets (both contract and cost > 0) for avgJobSize denominator
+    if (contract > 0 && cost > 0) pmStats[pm].jobsWithBudget++;
+    pmStats[pm].contractValue += contract;
+    pmStats[pm].revisedCost += cost;
     pmStats[pm].billedRevenue += job.billed_revenue || 0;
     pmStats[pm].earnedRevenue += job.earned_revenue || 0;
   });
@@ -17622,7 +17635,8 @@ function calculatePmRadarData() {
   const pmData = Object.values(pmStats).map(pm => {
     const profitMargin = pm.contractValue > 0 ? ((pm.contractValue - pm.revisedCost) / pm.contractValue) * 100 : 0;
     const overUnderPct = pm.earnedRevenue > 0 ? ((pm.billedRevenue - pm.earnedRevenue) / pm.earnedRevenue) * 100 : 0;
-    const avgJobSize = pm.jobCount > 0 ? pm.contractValue / pm.jobCount : 0;
+    // Average job size: only count jobs with budgets in denominator
+    const avgJobSize = pm.jobsWithBudget > 0 ? pm.contractValue / pm.jobsWithBudget : 0;
     
     return {
       ...pm,
@@ -17635,18 +17649,20 @@ function calculatePmRadarData() {
   // Calculate portfolio averages
   const totals = pmData.reduce((acc, pm) => {
     acc.jobCount += pm.jobCount;
+    acc.jobsWithBudget += pm.jobsWithBudget;
     acc.contractValue += pm.contractValue;
     acc.revisedCost += pm.revisedCost;
     acc.billedRevenue += pm.billedRevenue;
     acc.earnedRevenue += pm.earnedRevenue;
     return acc;
-  }, { jobCount: 0, contractValue: 0, revisedCost: 0, billedRevenue: 0, earnedRevenue: 0 });
+  }, { jobCount: 0, jobsWithBudget: 0, contractValue: 0, revisedCost: 0, billedRevenue: 0, earnedRevenue: 0 });
   
   const avgProfitMargin = totals.contractValue > 0 ? ((totals.contractValue - totals.revisedCost) / totals.contractValue) * 100 : 0;
   const avgOverUnderPct = totals.earnedRevenue > 0 ? ((totals.billedRevenue - totals.earnedRevenue) / totals.earnedRevenue) * 100 : 0;
   const avgJobCount = pmData.length > 0 ? totals.jobCount / pmData.length : 0;
   const avgContractValue = pmData.length > 0 ? totals.contractValue / pmData.length : 0;
-  const avgJobSize = totals.jobCount > 0 ? totals.contractValue / totals.jobCount : 0;
+  // Average job size: only count jobs with budgets in denominator
+  const avgJobSize = totals.jobsWithBudget > 0 ? totals.contractValue / totals.jobsWithBudget : 0;
   
   return {
     pms: pmData,
