@@ -4084,33 +4084,34 @@ body.dark-mode .nav-item.nav-parent.expanded {
      Time Period + Compare/Detail side-by-side
   ======================================== */
   
-  /* Main controls container - flex row, no wrap for main sections */
+  /* Main controls container - flex row for side-by-side layout */
   #incomeStatement .is-controls,
   #balanceSheet .is-controls,
   #cashFlows .is-controls {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 6px;
-    align-items: stretch;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    align-items: flex-start !important;
   }
   
   /* Time Period box - compact with title above dropdowns */
   #incomeStatement .overview-config-box,
   #balanceSheet .overview-config-box,
   #cashFlows .overview-config-box {
-    padding: 6px 8px;
-    margin: 0;
-    flex: 0 0 auto;
-    width: auto;
-    min-width: 0;
+    padding: 6px 8px !important;
+    margin: 0 !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
   }
   
   #incomeStatement .overview-config-box > div:first-child,
   #balanceSheet .overview-config-box > div:first-child,
   #cashFlows .overview-config-box > div:first-child {
-    font-size: 9px;
-    margin-bottom: 3px;
-    font-weight: 600;
+    font-size: 9px !important;
+    margin-bottom: 3px !important;
+    font-weight: 600 !important;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     color: #6b7280;
@@ -4120,45 +4121,45 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #incomeStatement .is-period-stack,
   #balanceSheet .is-period-stack,
   #cashFlows .is-period-stack {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 2px 8px;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 2px 8px !important;
   }
   
   #incomeStatement .is-period-row,
   #balanceSheet .is-period-row,
   #cashFlows .is-period-row {
-    gap: 3px;
-    display: flex;
-    align-items: center;
+    gap: 3px !important;
+    display: flex !important;
+    align-items: center !important;
   }
   
   #incomeStatement .is-period-row label,
   #balanceSheet .is-period-row label,
   #cashFlows .is-period-row label {
-    font-size: 9px;
-    min-width: auto;
+    font-size: 9px !important;
+    min-width: auto !important;
     color: #6b7280;
   }
   
   #incomeStatement .is-period-row select,
   #balanceSheet .is-period-row select,
   #cashFlows .is-period-row select {
-    font-size: 10px;
-    padding: 2px 4px;
-    min-height: 22px;
+    font-size: 10px !important;
+    padding: 2px 4px !important;
+    min-height: 22px !important;
   }
   
   /* Compare/Detail wrapper - to the right of Time Period */
   #incomeStatement .is-compare-detail-wrapper,
   #balanceSheet .is-compare-detail-wrapper,
   #cashFlows .is-compare-detail-wrapper {
-    padding: 4px 6px;
-    gap: 10px;
-    flex: 0 0 auto;
-    width: auto;
-    min-width: 0;
+    padding: 4px 6px !important;
+    gap: 10px !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
   }
   
   #incomeStatement .is-compare-detail-wrapper .config-section-label,
@@ -6197,27 +6198,27 @@ body.dark-mode .overview-year-select-wrapper label {
     width: 100%;
   }
   
-  /* COMPACT MOBILE CONFIG - Overview, IS, BS, CF pages */
-  /* Use side-by-side layout where possible, tighter spacing */
+  /* COMPACT MOBILE CONFIG - Overview page */
+  /* Visuals + Metrics side-by-side, Time Period above */
   
   /* Overview: Visuals + Metrics side-by-side, Time Period above */
   #overview .overview-time-visuals-row {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: stretch;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    align-items: stretch !important;
   }
   
   #overview .overview-time-period-box {
-    width: 100%;
-    flex: 1 0 100%;
+    width: 100% !important;
+    flex: 1 0 100% !important;
   }
   
   #overview .overview-visuals-box,
   #overview .overview-metrics-box {
-    width: auto;
-    flex: 1 1 auto;
-    min-width: 0;
+    width: auto !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
   }
   
   /* Tighter padding for all config boxes on mobile */
@@ -6268,38 +6269,38 @@ body.dark-mode .overview-year-select-wrapper label {
   
   /* Visuals checkboxes - vertical stack when side-by-side */
   #overview .visuals-checkboxes {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
   }
   
   #overview .visuals-checkboxes .checkbox-label {
-    font-size: 10px;
-    gap: 3px;
-    white-space: nowrap;
+    font-size: 10px !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
   }
   
   #overview .visuals-checkboxes .checkbox-label input[type="checkbox"] {
-    width: 12px;
-    height: 12px;
+    width: 12px !important;
+    height: 12px !important;
   }
   
   /* Metrics checkboxes - single column when side-by-side with visuals */
   #overview .overview-metrics-box .metric-checkboxes {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
   }
   
   #overview .overview-metrics-box .checkbox-label {
-    font-size: 10px;
-    gap: 3px;
-    white-space: nowrap;
+    font-size: 10px !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
   }
   
   #overview .overview-metrics-box .checkbox-label input[type="checkbox"] {
-    width: 12px;
-    height: 12px;
+    width: 12px !important;
+    height: 12px !important;
   }
   
   /* AI Analysis panel mobile improvements */
