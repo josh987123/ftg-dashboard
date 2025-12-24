@@ -4081,27 +4081,26 @@ body.dark-mode .nav-item.nav-parent.expanded {
 @media (max-width: 768px) {
   /* ========================================
      ULTRA COMPACT IS/BS/CF MOBILE CONFIG
-     Side-by-side sections, minimal spacing
+     Time Period + Compare/Detail side-by-side
   ======================================== */
   
-  /* Main controls container - flex row with wrap */
+  /* Main controls container - flex row, no wrap for main sections */
   #incomeStatement .is-controls,
   #balanceSheet .is-controls,
   #cashFlows .is-controls {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 6px;
-    row-gap: 6px;
-    align-items: flex-start;
+    align-items: stretch;
   }
   
-  /* Time Period box - inline compact */
+  /* Time Period box - compact with title above dropdowns */
   #incomeStatement .overview-config-box,
   #balanceSheet .overview-config-box,
   #cashFlows .overview-config-box {
     padding: 6px 8px;
     margin: 0;
-    flex: 0 1 auto;
+    flex: 0 0 auto;
     width: auto;
     min-width: 0;
   }
@@ -4117,17 +4116,20 @@ body.dark-mode .nav-item.nav-parent.expanded {
     color: #6b7280;
   }
   
-  /* Period rows ultra compact - inline layout */
+  /* Period rows ultra compact - horizontal inline */
   #incomeStatement .is-period-stack,
   #balanceSheet .is-period-stack,
   #cashFlows .is-period-stack {
-    gap: 2px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 2px 8px;
   }
   
   #incomeStatement .is-period-row,
   #balanceSheet .is-period-row,
   #cashFlows .is-period-row {
-    gap: 4px;
+    gap: 3px;
     display: flex;
     align-items: center;
   }
@@ -4136,7 +4138,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #balanceSheet .is-period-row label,
   #cashFlows .is-period-row label {
     font-size: 9px;
-    min-width: 50px;
+    min-width: auto;
     color: #6b7280;
   }
   
@@ -4148,13 +4150,13 @@ body.dark-mode .nav-item.nav-parent.expanded {
     min-height: 22px;
   }
   
-  /* Compare/Detail wrapper - side by side, ultra compact */
+  /* Compare/Detail wrapper - to the right of Time Period */
   #incomeStatement .is-compare-detail-wrapper,
   #balanceSheet .is-compare-detail-wrapper,
   #cashFlows .is-compare-detail-wrapper {
     padding: 4px 6px;
-    gap: 12px;
-    flex: 0 1 auto;
+    gap: 10px;
+    flex: 0 0 auto;
     width: auto;
     min-width: 0;
   }
