@@ -4189,30 +4189,35 @@ body.dark-mode .nav-item.nav-parent.expanded {
     height: 10px;
   }
   
-  /* Checkboxes - inline horizontal wrap */
+  /* Checkboxes stack - side-by-side with Compare/Detail on mobile */
   #incomeStatement .is-controls > .is-options-stack:not(.is-compare-box):not(.is-detail-box),
   #balanceSheet .is-controls > .is-options-stack:not(.is-compare-box):not(.is-detail-box),
   #cashFlows .is-controls > .is-options-stack:not(.is-compare-box):not(.is-detail-box) {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 2px 8px;
-    padding: 4px 6px;
-    flex: 1 0 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    padding: 4px 6px !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
   }
   
   #incomeStatement .is-checkbox-label.small,
   #balanceSheet .is-checkbox-label.small,
   #cashFlows .is-checkbox-label.small {
-    font-size: 10px;
-    gap: 3px;
-    white-space: nowrap;
+    font-size: 9px !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
   }
   
   #incomeStatement .is-checkbox-label.small input[type="checkbox"],
   #balanceSheet .is-checkbox-label.small input[type="checkbox"],
   #cashFlows .is-checkbox-label.small input[type="checkbox"] {
-    width: 12px;
-    height: 12px;
+    width: 10px !important;
+    height: 10px !important;
   }
   
   /* Year Range sliders - compact inline on mobile */
