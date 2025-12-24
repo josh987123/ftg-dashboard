@@ -7575,25 +7575,63 @@ body.dark-mode #accounts .summary-tile .tile-label {
 }
 
 /* ============================================================
-   DAILY CASH REPORT PAGE
+   CASH REPORT PAGE
 ============================================================ */
 
 /* Page header row */
-#dailyCashReport .page-header-row {
+#cashReport .page-header-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-#dailyCashReport .page-header-row h2 {
+#cashReport .page-header-row h2 {
   margin: 0 0 4px 0;
 }
 
-#dailyCashReport .section-description {
+#cashReport .section-description {
   margin: 0;
   font-size: 13px;
   color: var(--text-secondary);
+}
+
+/* Daily/Weekly Toggle */
+.dcr-view-toggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-tertiary);
+}
+
+.dcr-toggle-btn {
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dcr-toggle-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.dcr-toggle-btn.active {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+[data-theme="dark"] .dcr-toggle-btn.active {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
 }
 
 /* Chart Container */
@@ -7774,6 +7812,151 @@ body.dark-mode #accounts .summary-tile .tile-label {
   color: #dc2626;
 }
 
+/* Transactions Grid (Top 5 Deposits/Withdrawals) */
+.dcr-transactions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.dcr-top-transactions {
+  font-size: 12px;
+}
+
+.dcr-top-transactions .txn-description {
+  max-width: 200px;
+}
+
+.dcr-no-data {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+/* Cash Balance Safety Check Section */
+.dcr-safety-check-section {
+  background: var(--card-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.dcr-safety-header {
+  margin-bottom: 16px;
+}
+
+.dcr-safety-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dcr-safety-content {
+  overflow-x: auto;
+}
+
+.dcr-safety-calculation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+}
+
+.dcr-safety-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 12px 20px;
+  min-width: 120px;
+}
+
+.dcr-safety-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.dcr-safety-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'Menlo', 'Monaco', monospace;
+}
+
+.dcr-safety-value.positive {
+  color: #10b981;
+}
+
+.dcr-safety-value.negative {
+  color: #dc2626;
+}
+
+.dcr-safety-operator {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 0 4px;
+}
+
+.dcr-safety-equals {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 0 8px;
+}
+
+.dcr-safety-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+  border: 2px solid var(--border-primary);
+  border-radius: 10px;
+  padding: 16px 24px;
+  min-width: 140px;
+}
+
+.dcr-safety-total {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Menlo', 'Monaco', monospace;
+}
+
+.dcr-safety-total.positive {
+  color: #10b981;
+}
+
+.dcr-safety-total.negative {
+  color: #dc2626;
+}
+
+/* Dark mode for Safety Check */
+[data-theme="dark"] .dcr-safety-check-section {
+  background: #1e293b;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .dcr-safety-item {
+  background: #334155;
+}
+
+[data-theme="dark"] .dcr-safety-result {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(16, 185, 129, 0.1));
+  border-color: #475569;
+}
+
 /* Dark mode overrides */
 [data-theme="dark"] .dcr-chart-container,
 [data-theme="dark"] .dcr-table-section {
@@ -7804,9 +7987,39 @@ body.dark-mode #accounts .summary-tile .tile-label {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-  #dailyCashReport .page-header-row {
+  #cashReport .page-header-row {
     flex-direction: column;
     gap: 12px;
+    align-items: stretch;
+  }
+  
+  .dcr-view-toggle {
+    align-self: flex-start;
+  }
+  
+  .dcr-transactions-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .dcr-safety-calculation {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .dcr-safety-item {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .dcr-safety-operator,
+  .dcr-safety-equals {
+    font-size: 20px;
+  }
+  
+  .dcr-safety-result {
+    width: 100%;
+    max-width: 200px;
   }
   
   .dcr-chart-container {

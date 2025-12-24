@@ -571,7 +571,7 @@
             </div>
             <ul class="nav-section-items" id="navDistReportsChildren">
               <li class="nav-item nav-child" data-section="deptHeadMeeting">Dept Head Meeting</li>
-              <li class="nav-item nav-child" data-section="dailyCashReport">Daily Cash Report</li>
+              <li class="nav-item nav-child" data-section="cashReport">Cash Report</li>
               <li class="nav-item nav-child" data-section="monthEndReporting">Month End Reporting</li>
             </ul>
           </li>
@@ -3307,21 +3307,23 @@
         </div>
       </section>
 
-      <section id="dailyCashReport" class="dashboard-section">
+      <section id="cashReport" class="dashboard-section">
         <div class="page-header-row">
           <div>
-            <h2>Daily Cash Report</h2>
-            <p class="section-description">FTG Builders cash position and activity - trailing 14 days</p>
+            <h2>Cash Report</h2>
+            <p class="section-description" id="dcrDescription">FTG Builders cash position and activity - trailing 14 days</p>
           </div>
-          <button class="universal-export-btn" id="dcrExportBtn" title="Export Options">
-            <svg class="export-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
-          </button>
+          <!-- Daily/Weekly Toggle -->
+          <div class="dcr-view-toggle">
+            <button class="dcr-toggle-btn active" data-view="daily">Daily</button>
+            <button class="dcr-toggle-btn" data-view="weekly">Weekly</button>
+          </div>
         </div>
         
         <!-- Cash Balance Chart -->
         <div class="dcr-chart-container">
           <div class="dcr-chart-header">
-            <h3>Daily Cash Balance</h3>
+            <h3 id="dcrChartTitle">Daily Cash Balance</h3>
             <span class="dcr-chart-subtitle" id="dcrChartSubtitle">FTG Builders Combined</span>
           </div>
           <div class="chart-wrapper dcr-chart-wrapper">
@@ -3337,30 +3339,76 @@
             <div class="dcr-metric-sublabel">Morning balance</div>
           </div>
           <div class="dcr-metric-tile">
-            <div class="dcr-metric-label">Deposits</div>
+            <div class="dcr-metric-label" id="dcrDepositsLabel">Deposits</div>
             <div class="dcr-metric-value positive" id="dcrDeposits">--</div>
-            <div class="dcr-metric-sublabel">Prior day (excl. transfers)</div>
+            <div class="dcr-metric-sublabel" id="dcrDepositsSublabel">Prior day (excl. transfers)</div>
           </div>
           <div class="dcr-metric-tile">
-            <div class="dcr-metric-label">Withdrawals</div>
+            <div class="dcr-metric-label" id="dcrWithdrawalsLabel">Withdrawals</div>
             <div class="dcr-metric-value negative" id="dcrWithdrawals">--</div>
-            <div class="dcr-metric-sublabel">Prior day (excl. transfers)</div>
+            <div class="dcr-metric-sublabel" id="dcrWithdrawalsSublabel">Prior day (excl. transfers)</div>
           </div>
           <div class="dcr-metric-tile">
             <div class="dcr-metric-label">Change</div>
             <div class="dcr-metric-value" id="dcrPercentChange">--</div>
-            <div class="dcr-metric-sublabel">vs. prior day balance</div>
+            <div class="dcr-metric-sublabel" id="dcrChangeSublabel">vs. prior day balance</div>
           </div>
         </div>
         
-        <!-- Transactions Table -->
-        <div class="dcr-table-section">
-          <div class="dcr-table-header">
-            <h3>Recent Transactions</h3>
-            <span class="dcr-table-subtitle" id="dcrTableSubtitle">All FTG Builders accounts</span>
+        <!-- Cash Balance Safety Check -->
+        <div class="dcr-safety-check-section">
+          <div class="dcr-safety-header">
+            <h3>Cash Balance Safety Check</h3>
           </div>
-          <div class="dcr-table-container" id="dcrTransactionsContainer">
-            <div class="loading-spinner">Loading transactions...</div>
+          <div class="dcr-safety-content">
+            <div class="dcr-safety-calculation">
+              <div class="dcr-safety-item">
+                <span class="dcr-safety-label">Cash Balance</span>
+                <span class="dcr-safety-value" id="dcrSafetyCash">--</span>
+              </div>
+              <div class="dcr-safety-operator">+</div>
+              <div class="dcr-safety-item">
+                <span class="dcr-safety-label">Receivables (AR)</span>
+                <span class="dcr-safety-value positive" id="dcrSafetyAR">--</span>
+              </div>
+              <div class="dcr-safety-operator">−</div>
+              <div class="dcr-safety-item">
+                <span class="dcr-safety-label">Payables (AP)</span>
+                <span class="dcr-safety-value negative" id="dcrSafetyAP">--</span>
+              </div>
+              <div class="dcr-safety-operator">−</div>
+              <div class="dcr-safety-item">
+                <span class="dcr-safety-label">Net Over/Under Bill</span>
+                <span class="dcr-safety-value" id="dcrSafetyOUB">--</span>
+              </div>
+              <div class="dcr-safety-equals">=</div>
+              <div class="dcr-safety-result">
+                <span class="dcr-safety-label">Safety Check</span>
+                <span class="dcr-safety-total" id="dcrSafetyTotal">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Top Transactions Sections -->
+        <div class="dcr-transactions-grid">
+          <div class="dcr-table-section">
+            <div class="dcr-table-header">
+              <h3 id="dcrDepositsTitle">Top 5 Deposits</h3>
+              <span class="dcr-table-subtitle" id="dcrDepositsSubtitle">Prior day (excl. transfers)</span>
+            </div>
+            <div class="dcr-table-container" id="dcrDepositsContainer">
+              <div class="loading-spinner">Loading...</div>
+            </div>
+          </div>
+          <div class="dcr-table-section">
+            <div class="dcr-table-header">
+              <h3 id="dcrWithdrawalsTitle">Top 5 Withdrawals</h3>
+              <span class="dcr-table-subtitle" id="dcrWithdrawalsSubtitle">Prior day (excl. transfers)</span>
+            </div>
+            <div class="dcr-table-container" id="dcrWithdrawalsContainer">
+              <div class="loading-spinner">Loading...</div>
+            </div>
           </div>
         </div>
       </section>
