@@ -2130,6 +2130,7 @@ function initNavigation() {
       if (id === "balanceSheet") initBalanceSheet();
       if (id === "cashFlows") loadCashFlowStatement();
       if (id === "cashReports") initCashReports();
+      if (id === "dailyCashReport") initDailyCashReport();
       if (id === "jobOverview") initJobOverview();
       if (id === "jobBudgets") initJobBudgets();
       if (id === "jobActuals") initJobActuals();
@@ -16261,6 +16262,357 @@ function updateJobPagination(total) {
 }
 
 // ========================================
+// DAILY CASH REPORT MODULE
+// ========================================
+
+let dcrChartInstance = null;
+let dcrData = null;
+let dcrInitialized = false;
+
+async function initDailyCashReport() {
+  const chartContainer = document.getElementById('dcrCashChart');
+  const txnContainer = document.getElementById('dcrTransactionsContainer');
+  
+  if (txnContainer) txnContainer.innerHTML = '<div class="loading-spinner">Loading transactions...</div>';
+  
+  try {
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/cash-data' : '/.netlify/functions/cash-data';
+    
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch cash data');
+    }
+    
+    dcrData = data;
+    
+    renderDcrChart();
+    renderDcrMetrics();
+    renderDcrTransactionTable();
+    dcrInitialized = true;
+    
+  } catch (error) {
+    console.error('Daily Cash Report error:', error);
+    if (txnContainer) {
+      txnContainer.innerHTML = `<div class="error-message">Error loading cash data: ${error.message}</div>`;
+    }
+  }
+}
+
+function getDcrDateRange() {
+  const today = new Date();
+  const dates = [];
+  
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().split('T')[0]);
+  }
+  
+  return dates;
+}
+
+function renderDcrChart() {
+  const canvas = document.getElementById('dcrCashChart');
+  if (!canvas || !dcrData) return;
+  
+  const dates = getDcrDateRange();
+  const ftgAccounts = dcrData.accounts.filter(a => isFTGBuildersAccount(a.name));
+  
+  if (ftgAccounts.length === 0) {
+    console.warn('No FTG Builders accounts found');
+    return;
+  }
+  
+  const dailyBalances = calculateDcrDailyBalances(ftgAccounts, dates);
+  
+  const labels = dates.map(d => {
+    const date = new Date(d + 'T12:00:00');
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
+  
+  if (dcrChartInstance) dcrChartInstance.destroy();
+  
+  const themeColors = getChartThemeColors();
+  const isMobile = window.innerWidth <= 768;
+  
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+  gradient.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
+  
+  dcrChartInstance = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'FTG Builders Combined',
+        data: dailyBalances,
+        borderColor: '#3b82f6',
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.3,
+        pointRadius: isMobile ? 2 : 4,
+        pointHoverRadius: 6,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          padding: 10,
+          callbacks: {
+            label: function(context) {
+              return formatCurrency(context.parsed.y);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            color: themeColors.gridColor,
+            drawBorder: false
+          },
+          ticks: {
+            color: themeColors.textColor,
+            font: { size: isMobile ? 9 : 11 },
+            maxRotation: 45,
+            minRotation: 0
+          }
+        },
+        y: {
+          grid: {
+            color: themeColors.gridColor,
+            drawBorder: false
+          },
+          ticks: {
+            color: themeColors.textColor,
+            font: { size: isMobile ? 9 : 11 },
+            callback: function(value) {
+              return '$' + (value / 1000000).toFixed(1) + 'M';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function calculateDcrDailyBalances(ftgAccounts, dates) {
+  const ftgAccountNames = ftgAccounts.map(a => a.name);
+  const currentBalance = ftgAccounts.reduce((sum, a) => sum + a.balance, 0);
+  
+  const txnsByDate = {};
+  dcrData.transactions.forEach(txn => {
+    if (!ftgAccountNames.includes(txn.account)) return;
+    
+    try {
+      const txnDate = new Date(txn.date);
+      const dateStr = txnDate.toISOString().split('T')[0];
+      if (!txnsByDate[dateStr]) txnsByDate[dateStr] = 0;
+      txnsByDate[dateStr] += txn.amount;
+    } catch (e) {}
+  });
+  
+  const today = new Date().toISOString().split('T')[0];
+  const sortedDates = [...dates].sort((a, b) => b.localeCompare(a));
+  
+  const balances = {};
+  let runningBalance = currentBalance;
+  let prevDateStr = null;
+  
+  for (const dateStr of sortedDates) {
+    if (dateStr > today) {
+      balances[dateStr] = null;
+    } else if (dateStr === today) {
+      balances[dateStr] = currentBalance;
+      prevDateStr = dateStr;
+    } else {
+      const nextDayChange = prevDateStr ? (txnsByDate[prevDateStr] || 0) : 0;
+      runningBalance -= nextDayChange;
+      balances[dateStr] = runningBalance;
+      prevDateStr = dateStr;
+    }
+  }
+  
+  return dates.map(d => balances[d]);
+}
+
+function renderDcrMetrics() {
+  if (!dcrData) return;
+  
+  const ftgAccounts = dcrData.accounts.filter(a => isFTGBuildersAccount(a.name));
+  const currentBalance = ftgAccounts.reduce((sum, a) => sum + a.balance, 0);
+  
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  
+  const ftgAccountNames = ftgAccounts.map(a => a.name);
+  const yesterdayTxns = dcrData.transactions.filter(txn => {
+    if (!ftgAccountNames.includes(txn.account)) return false;
+    try {
+      const txnDate = new Date(txn.date);
+      return txnDate.toISOString().split('T')[0] === yesterdayStr;
+    } catch (e) { return false; }
+  });
+  
+  let deposits = 0;
+  let withdrawals = 0;
+  
+  yesterdayTxns.forEach(txn => {
+    if (isDcrTransfer(txn, yesterdayTxns)) return;
+    
+    if (txn.amount > 0) {
+      deposits += txn.amount;
+    } else {
+      withdrawals += Math.abs(txn.amount);
+    }
+  });
+  
+  const dates = getDcrDateRange();
+  const dailyBalances = calculateDcrDailyBalances(ftgAccounts, dates);
+  const todayBalance = dailyBalances[dailyBalances.length - 1] || currentBalance;
+  const priorDayBalance = dailyBalances[dailyBalances.length - 2];
+  
+  let percentChange = 0;
+  if (priorDayBalance && priorDayBalance !== 0) {
+    percentChange = ((todayBalance - priorDayBalance) / priorDayBalance) * 100;
+  }
+  
+  const currentBalanceEl = document.getElementById('dcrCurrentBalance');
+  const depositsEl = document.getElementById('dcrDeposits');
+  const withdrawalsEl = document.getElementById('dcrWithdrawals');
+  const percentChangeEl = document.getElementById('dcrPercentChange');
+  
+  if (currentBalanceEl) currentBalanceEl.textContent = formatCurrency(currentBalance);
+  if (depositsEl) depositsEl.textContent = '+' + formatCurrency(deposits);
+  if (withdrawalsEl) withdrawalsEl.textContent = '-' + formatCurrency(withdrawals);
+  
+  if (percentChangeEl) {
+    const sign = percentChange >= 0 ? '+' : '';
+    percentChangeEl.textContent = sign + percentChange.toFixed(2) + '%';
+    percentChangeEl.className = 'dcr-metric-value ' + (percentChange >= 0 ? 'positive' : 'negative');
+  }
+}
+
+function isDcrTransfer(txn, allTxns) {
+  const descLower = (txn.description || '').toLowerCase();
+  const payeeLower = (txn.payee || '').toLowerCase();
+  
+  if (descLower.includes('transfer') || payeeLower.includes('transfer')) {
+    const hasOffset = allTxns.some(other => 
+      other !== txn && 
+      Math.abs(other.amount + txn.amount) < 0.01 &&
+      (other.description || '').toLowerCase().includes('transfer')
+    );
+    if (hasOffset) return true;
+  }
+  
+  const hasExactOffset = allTxns.some(other =>
+    other !== txn && Math.abs(other.amount + txn.amount) < 0.01
+  );
+  
+  return hasExactOffset;
+}
+
+function renderDcrTransactionTable() {
+  const container = document.getElementById('dcrTransactionsContainer');
+  if (!container || !dcrData) return;
+  
+  const dates = getDcrDateRange();
+  const startDate = dates[0];
+  const endDate = dates[dates.length - 1];
+  
+  const ftgAccountNames = dcrData.accounts
+    .filter(a => isFTGBuildersAccount(a.name))
+    .map(a => a.name);
+  
+  const filteredTxns = dcrData.transactions.filter(txn => {
+    if (!ftgAccountNames.includes(txn.account)) return false;
+    
+    try {
+      const txnDate = new Date(txn.date);
+      const dateStr = txnDate.toISOString().split('T')[0];
+      return dateStr >= startDate && dateStr <= endDate;
+    } catch (e) { return false; }
+  });
+  
+  filteredTxns.sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateB - dateA;
+  });
+  
+  if (filteredTxns.length === 0) {
+    container.innerHTML = '<div class="error-message" style="padding:20px;text-align:center;color:#6b7280;">No transactions found for FTG Builders accounts in the last 14 days</div>';
+    return;
+  }
+  
+  let html = `
+    <table class="dcr-transaction-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Account</th>
+          <th>Description</th>
+          <th style="text-align:right;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  filteredTxns.forEach(txn => {
+    const dateObj = new Date(txn.date);
+    const displayDate = dateObj.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+    
+    const amountClass = txn.amount >= 0 ? 'positive' : 'negative';
+    const amountDisplay = formatCurrency(txn.amount);
+    
+    let shortAccount = txn.account;
+    const acctMatch = txn.account.match(/\((\d+)\)$/);
+    if (acctMatch && txn.account.length > 25) {
+      shortAccount = txn.account.substring(0, 18) + '..(' + acctMatch[1] + ')';
+    }
+    
+    const descDisplay = txn.description || txn.payee || '-';
+    
+    html += `
+      <tr>
+        <td class="txn-date">${displayDate}</td>
+        <td class="txn-account" title="${txn.account}">${shortAccount}</td>
+        <td class="txn-description">${descDisplay}</td>
+        <td class="txn-amount ${amountClass}">${amountDisplay}</td>
+      </tr>
+    `;
+  });
+  
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ========================================
 // JOB OVERVIEW MODULE
 // ========================================
 
@@ -25167,6 +25519,7 @@ function navigateToDefaultPage(userRole, userPerms, isAdmin) {
     if (targetSection === "balanceSheet") initBalanceSheet();
     if (targetSection === "cashFlows") loadCashFlowStatement();
     if (targetSection === "cashReports") initCashReports();
+    if (targetSection === "dailyCashReport") initDailyCashReport();
     if (targetSection === "jobOverview") initJobOverview();
     if (targetSection === "jobBudgets") initJobBudgets();
     if (targetSection === "jobActuals") initJobActuals();

@@ -7574,6 +7574,284 @@ body.dark-mode #accounts .summary-tile .tile-label {
   }
 }
 
+/* ============================================================
+   DAILY CASH REPORT PAGE
+============================================================ */
+
+/* Page header row */
+#dailyCashReport .page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+#dailyCashReport .page-header-row h2 {
+  margin: 0 0 4px 0;
+}
+
+#dailyCashReport .section-description {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Chart Container */
+.dcr-chart-container {
+  background: var(--card-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.dcr-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.dcr-chart-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dcr-chart-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.dcr-chart-wrapper {
+  height: 280px;
+  position: relative;
+}
+
+/* Metric Tiles Row */
+.dcr-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.dcr-metric-tile {
+  background: var(--card-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+
+.dcr-metric-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.dcr-metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.dcr-metric-value.positive {
+  color: #10b981;
+}
+
+.dcr-metric-value.negative {
+  color: #dc2626;
+}
+
+.dcr-metric-sublabel {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* Table Section */
+.dcr-table-section {
+  background: var(--card-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.dcr-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.dcr-table-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dcr-table-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.dcr-table-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Transaction Table */
+.dcr-transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dcr-transaction-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.dcr-transaction-table th {
+  background: var(--table-header-bg);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-primary);
+}
+
+.dcr-transaction-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+.dcr-transaction-table tbody tr:hover {
+  background: var(--table-row-hover);
+}
+
+.dcr-transaction-table .txn-date {
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.dcr-transaction-table .txn-account {
+  color: var(--text-secondary);
+  font-size: 12px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dcr-transaction-table .txn-description {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dcr-transaction-table .txn-amount {
+  text-align: right;
+  font-weight: 600;
+  font-family: 'Menlo', 'Monaco', monospace;
+}
+
+.dcr-transaction-table .txn-amount.positive {
+  color: #10b981;
+}
+
+.dcr-transaction-table .txn-amount.negative {
+  color: #dc2626;
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] .dcr-chart-container,
+[data-theme="dark"] .dcr-metric-tile,
+[data-theme="dark"] .dcr-table-section {
+  background: var(--bg-tertiary);
+  border-color: var(--border-primary);
+}
+
+[data-theme="dark"] .dcr-transaction-table th {
+  background: #1f2937;
+}
+
+[data-theme="dark"] .dcr-transaction-table tbody tr:hover {
+  background: #374151;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  #dailyCashReport .page-header-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .dcr-chart-container {
+    padding: 12px;
+  }
+  
+  .dcr-chart-wrapper {
+    height: 200px;
+  }
+  
+  .dcr-metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .dcr-metric-tile {
+    padding: 12px 8px;
+  }
+  
+  .dcr-metric-label {
+    font-size: 10px;
+  }
+  
+  .dcr-metric-value {
+    font-size: 18px;
+  }
+  
+  .dcr-metric-sublabel {
+    font-size: 9px;
+  }
+  
+  .dcr-table-section {
+    padding: 12px;
+  }
+  
+  .dcr-table-container {
+    max-height: 300px;
+  }
+  
+  .dcr-transaction-table {
+    font-size: 12px;
+  }
+  
+  .dcr-transaction-table th,
+  .dcr-transaction-table td {
+    padding: 8px 6px;
+  }
+  
+  .dcr-transaction-table .txn-account {
+    max-width: 80px;
+  }
+  
+  .dcr-transaction-table .txn-description {
+    max-width: 120px;
+  }
+}
+
 /* Cash Tabs */
 .cash-tabs {
   display: flex;

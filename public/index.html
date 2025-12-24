@@ -3308,11 +3308,60 @@
       </section>
 
       <section id="dailyCashReport" class="dashboard-section">
-        <h2>Daily Cash Report</h2>
-        <p class="section-description">Daily cash report content will appear here.</p>
-        <div class="placeholder-content">
-          <div class="placeholder-icon">💵</div>
-          <p>This report is under development.</p>
+        <div class="page-header-row">
+          <div>
+            <h2>Daily Cash Report</h2>
+            <p class="section-description">FTG Builders cash position and activity - trailing 14 days</p>
+          </div>
+          <button class="universal-export-btn" id="dcrExportBtn" title="Export Options">
+            <svg class="export-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
+          </button>
+        </div>
+        
+        <!-- Cash Balance Chart -->
+        <div class="dcr-chart-container">
+          <div class="dcr-chart-header">
+            <h3>Daily Cash Balance</h3>
+            <span class="dcr-chart-subtitle" id="dcrChartSubtitle">FTG Builders Combined</span>
+          </div>
+          <div class="chart-wrapper dcr-chart-wrapper">
+            <canvas id="dcrCashChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Key Metric Tiles -->
+        <div class="dcr-metrics-row">
+          <div class="dcr-metric-tile">
+            <div class="dcr-metric-label">Current Balance</div>
+            <div class="dcr-metric-value" id="dcrCurrentBalance">--</div>
+            <div class="dcr-metric-sublabel">Morning balance</div>
+          </div>
+          <div class="dcr-metric-tile">
+            <div class="dcr-metric-label">Deposits</div>
+            <div class="dcr-metric-value positive" id="dcrDeposits">--</div>
+            <div class="dcr-metric-sublabel">Prior day (excl. transfers)</div>
+          </div>
+          <div class="dcr-metric-tile">
+            <div class="dcr-metric-label">Withdrawals</div>
+            <div class="dcr-metric-value negative" id="dcrWithdrawals">--</div>
+            <div class="dcr-metric-sublabel">Prior day (excl. transfers)</div>
+          </div>
+          <div class="dcr-metric-tile">
+            <div class="dcr-metric-label">Change</div>
+            <div class="dcr-metric-value" id="dcrPercentChange">--</div>
+            <div class="dcr-metric-sublabel">vs. prior day balance</div>
+          </div>
+        </div>
+        
+        <!-- Transactions Table -->
+        <div class="dcr-table-section">
+          <div class="dcr-table-header">
+            <h3>Recent Transactions</h3>
+            <span class="dcr-table-subtitle" id="dcrTableSubtitle">All FTG Builders accounts</span>
+          </div>
+          <div class="dcr-table-container" id="dcrTransactionsContainer">
+            <div class="loading-spinner">Loading transactions...</div>
+          </div>
         </div>
       </section>
 
