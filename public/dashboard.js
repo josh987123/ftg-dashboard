@@ -16272,6 +16272,10 @@ let dcrInitialized = false;
 async function initDailyCashReport() {
   const chartContainer = document.getElementById('dcrCashChart');
   const txnContainer = document.getElementById('dcrTransactionsContainer');
+  const currentBalanceEl = document.getElementById('dcrCurrentBalance');
+  const depositsEl = document.getElementById('dcrDeposits');
+  const withdrawalsEl = document.getElementById('dcrWithdrawals');
+  const percentChangeEl = document.getElementById('dcrPercentChange');
   
   if (txnContainer) txnContainer.innerHTML = '<div class="loading-spinner">Loading transactions...</div>';
   
@@ -16280,11 +16284,23 @@ async function initDailyCashReport() {
     const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
     const apiUrl = isReplit ? '/api/cash-data' : '/.netlify/functions/cash-data';
     
+    console.log('[DCR] Fetching cash data from:', apiUrl);
+    
     const response = await fetch(apiUrl);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const data = await response.json();
+    console.log('[DCR] Received data:', { accounts: data.accounts?.length, transactions: data.transactions?.length, success: data.success });
     
     if (!data.success) {
       throw new Error(data.error || 'Failed to fetch cash data');
+    }
+    
+    if (!data.accounts || data.accounts.length === 0) {
+      throw new Error('No accounts found in cash data');
     }
     
     dcrData = data;
@@ -16294,8 +16310,16 @@ async function initDailyCashReport() {
     renderDcrTransactionTable();
     dcrInitialized = true;
     
+    console.log('[DCR] Initialization complete');
+    
   } catch (error) {
-    console.error('Daily Cash Report error:', error);
+    console.error('[DCR] Daily Cash Report error:', error);
+    
+    if (currentBalanceEl) currentBalanceEl.textContent = 'Error';
+    if (depositsEl) depositsEl.textContent = '--';
+    if (withdrawalsEl) withdrawalsEl.textContent = '--';
+    if (percentChangeEl) percentChangeEl.textContent = '--';
+    
     if (txnContainer) {
       txnContainer.innerHTML = `<div class="error-message">Error loading cash data: ${error.message}</div>`;
     }

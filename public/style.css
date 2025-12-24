@@ -7776,10 +7776,22 @@ body.dark-mode #accounts .summary-tile .tile-label {
 
 /* Dark mode overrides */
 [data-theme="dark"] .dcr-chart-container,
-[data-theme="dark"] .dcr-metric-tile,
 [data-theme="dark"] .dcr-table-section {
-  background: var(--bg-tertiary);
-  border-color: var(--border-primary);
+  background: #1e293b;
+  border-color: #374151;
+}
+
+[data-theme="dark"] .dcr-metric-tile {
+  background: #334155 !important;
+  border: 1px solid #475569 !important;
+}
+
+[data-theme="dark"] .dcr-metric-label {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .dcr-metric-sublabel {
+  color: #6b7280;
 }
 
 [data-theme="dark"] .dcr-transaction-table th {
@@ -7799,6 +7811,10 @@ body.dark-mode #accounts .summary-tile .tile-label {
   
   .dcr-chart-container {
     padding: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-primary);
+    border-radius: 10px;
+    margin-bottom: 16px;
   }
   
   .dcr-chart-wrapper {
@@ -7806,24 +7822,41 @@ body.dark-mode #accounts .summary-tile .tile-label {
   }
   
   .dcr-metrics-row {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 16px;
   }
   
   .dcr-metric-tile {
-    padding: 12px 8px;
+    padding: 12px 8px !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-primary) !important;
+    border-radius: 10px !important;
+    text-align: center;
+  }
+  
+  [data-theme="dark"] .dcr-metric-tile {
+    background: #334155 !important;
+    border: 1px solid #475569 !important;
   }
   
   .dcr-metric-label {
     font-size: 10px;
+    display: block;
+    margin-bottom: 6px;
   }
   
   .dcr-metric-value {
-    font-size: 18px;
+    font-size: 16px;
+    font-weight: 700;
+    display: block;
   }
   
   .dcr-metric-sublabel {
     font-size: 9px;
+    display: block;
+    margin-top: 4px;
   }
   
   .dcr-table-section {
