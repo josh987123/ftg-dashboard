@@ -16276,17 +16276,24 @@ let dcrViewMode = 'daily'; // 'daily' or 'weekly'
 async function initCashReport() {
   console.log('[DCR] Initializing Cash Report...');
   
-  // Setup view toggle listeners
-  setupDcrViewToggle();
-  
-  // Load all required data
-  await loadCashReportData();
-  
-  // Render everything based on current view mode
-  renderCashReport();
-  
-  dcrInitialized = true;
-  console.log('[DCR] Initialization complete');
+  try {
+    // Setup view toggle listeners
+    setupDcrViewToggle();
+    
+    // Load all required data
+    await loadCashReportData();
+    
+    console.log('[DCR] Data loaded, dcrData:', dcrData ? 'exists' : 'null');
+    
+    // Render everything based on current view mode
+    renderCashReport();
+    
+    dcrInitialized = true;
+    console.log('[DCR] Initialization complete');
+  } catch (error) {
+    console.error('[DCR] Initialization failed:', error);
+    showDcrError('Failed to initialize: ' + error.message);
+  }
 }
 
 function setupDcrViewToggle() {
@@ -16673,8 +16680,8 @@ function renderDcrMetrics() {
   const percentChangeEl = document.getElementById('dcrPercentChange');
   
   if (currentBalanceEl) currentBalanceEl.textContent = formatCurrency(currentBalance);
-  if (depositsEl) depositsEl.textContent = '+' + formatCurrency(deposits);
-  if (withdrawalsEl) withdrawalsEl.textContent = '-' + formatCurrency(withdrawals);
+  if (depositsEl) depositsEl.textContent = deposits > 0 ? '+' + formatCurrency(deposits) : '$0';
+  if (withdrawalsEl) withdrawalsEl.textContent = withdrawals > 0 ? '-' + formatCurrency(withdrawals) : '$0';
   
   if (percentChangeEl) {
     const sign = percentChange >= 0 ? '+' : '';
