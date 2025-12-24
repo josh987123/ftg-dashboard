@@ -17145,18 +17145,48 @@ function renderJoPmrArAgingChart(jobs) {
     joPmrArAgingChart = null;
   }
   
+  // Get selected PM for filtering AR invoices
+  const selectedPm = getSelectedPmForPage('jo');
+  const isAllPms = !selectedPm || selectedPm === '__ALL__';
+  
+  // Get total billed revenue from jobs
   const totalBilled = jobs.reduce((sum, j) => sum + (j.billed_revenue || 0), 0);
-  const totalEarned = jobs.reduce((sum, j) => sum + (j.earned_revenue || 0), 0);
-  const arBalance = totalBilled - totalEarned;
+  
+  // Calculate AR Outstanding from actual AR invoices (filtered by PM if applicable)
+  let arOutstanding = 0;
+  joArInvoices.forEach(inv => {
+    if (!isAllPms) {
+      const invPm = inv.project_manager_name || inv.pm_name || '';
+      if (invPm !== selectedPm) return;
+    }
+    arOutstanding += parseFloat(inv.amount_due) || 0;
+  });
+  
+  // Collected revenue = Total Billed - AR Outstanding
+  const collected = Math.max(0, totalBilled - arOutstanding);
+  
+  // Calculate underbilled revenue: sum of (earned - billed) for jobs where billed < earned (only underbilled jobs)
+  // Only include active jobs in underbilled calculation
+  const activeJobs = jobs.filter(j => j.job_status === 'A');
+  let underbilled = 0;
+  activeJobs.forEach(j => {
+    const billed = j.billed_revenue || 0;
+    const earned = j.earned_revenue || 0;
+    if (billed < earned) {
+      // Job is underbilled - add the difference
+      underbilled += (earned - billed);
+    }
+    // Do not count overbilled jobs (where billed > earned)
+  });
   
   const ctx = canvas.getContext('2d');
   joPmrArAgingChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Collected', 'Outstanding'],
+      labels: ['Collected', 'AR Outstanding', 'Underbilled'],
       datasets: [{
-        data: [Math.max(0, totalEarned), Math.max(0, arBalance)],
-        backgroundColor: ['#10b981', '#f59e0b'],
+        data: [Math.max(0, collected), Math.max(0, arOutstanding), Math.max(0, underbilled)],
+        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
         borderWidth: 0
       }]
     },
@@ -17164,7 +17194,14 @@ function renderJoPmrArAgingChart(jobs) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { color: 'var(--text-primary)', font: { size: 10 } } }
+        legend: { position: 'bottom', labels: { color: 'var(--text-primary)', font: { size: 10 } } },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.label + ': ' + formatCurrencyCompact(context.raw);
+            }
+          }
+        }
       }
     }
   });
