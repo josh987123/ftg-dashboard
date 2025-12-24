@@ -16266,6 +16266,7 @@ function updateJobPagination(total) {
 
 let joData = [];
 let joFiltered = [];
+let joArInvoices = [];
 let joPmJobsChart = null;
 let joPmContractChart = null;
 let joPmMarginChart = null;
@@ -16305,6 +16306,15 @@ function setupJobOverviewEventListeners() {
 async function loadJobOverviewData() {
   try {
     const data = await DataCache.getJobsData();
+    
+    // Also load AR invoices for metrics calculation
+    try {
+      const arData = await DataCache.getARData();
+      joArInvoices = arData?.invoices || [];
+    } catch (arErr) {
+      console.warn('Could not load AR invoices for job overview:', arErr);
+      joArInvoices = [];
+    }
     
     const jobBudgets = data.job_budgets || [];
     const jobActualsRaw = data.job_actuals || [];
@@ -16886,11 +16896,40 @@ function renderJoPmrMetrics(jobs) {
   const backlog = totalContract - totalBilledRevenue;
   const netOverUnder = totalBilledRevenue - totalEarnedRevenue;
   
-  // Calculate billed last month from job data
-  const billedLastMonth = jobs.reduce((sum, j) => sum + (j.billed_last_month || 0), 0);
+  // Get selected PM for filtering AR invoices
+  const selectedPm = getSelectedPmForPage('jo');
+  const isAllPms = !selectedPm || selectedPm === '__ALL__';
   
-  // AR Exposure = outstanding AR balance
-  const arExposure = jobs.reduce((sum, j) => sum + (j.ar_balance || 0), 0);
+  // Build set of job numbers from filtered jobs for AR matching
+  const filteredJobNos = new Set(jobs.map(j => j.job_no));
+  
+  // Calculate AR Exposure from AR invoices (matching PM and/or jobs)
+  let arExposure = 0;
+  joArInvoices.forEach(inv => {
+    // Filter by PM if a specific PM is selected
+    if (!isAllPms && inv.project_manager_name !== selectedPm) return;
+    // Use calculated_amount_due (same as AR Aging report)
+    const amtDue = parseFloat(inv.calculated_amount_due) || 0;
+    if (amtDue <= 0) return;
+    arExposure += amtDue;
+  });
+  
+  // Calculate billed last month from AR invoices
+  const now = new Date();
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+  const lastMonthStart = new Date(lastMonthEnd.getFullYear(), lastMonthEnd.getMonth(), 1);
+  const excelEpoch = new Date(1899, 11, 30);
+  let billedLastMonth = 0;
+  
+  joArInvoices.forEach(inv => {
+    // Filter by PM if a specific PM is selected
+    if (!isAllPms && inv.project_manager_name !== selectedPm) return;
+    const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
+    const invoiceDate = new Date(excelEpoch.getTime() + invoiceDateSerial * 24 * 60 * 60 * 1000);
+    if (invoiceDate >= lastMonthStart && invoiceDate <= lastMonthEnd) {
+      billedLastMonth += parseFloat(inv.invoice_amount) || 0;
+    }
+  });
   
   // Update metric tiles
   const setMetric = (id, value) => {
