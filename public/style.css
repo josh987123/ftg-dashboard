@@ -4079,6 +4079,111 @@ body.dark-mode .nav-item.nav-parent.expanded {
 
 
 @media (max-width: 768px) {
+  /* Income Statement mobile compact config */
+  #incomeStatement .is-controls,
+  #balanceSheet .is-controls,
+  #cashFlows .is-controls {
+    gap: 8px;
+    row-gap: 8px;
+  }
+  
+  /* Time Period box - compact horizontal layout */
+  #incomeStatement .overview-config-box,
+  #balanceSheet .overview-config-box,
+  #cashFlows .overview-config-box {
+    padding: 8px 10px;
+    margin: 0;
+  }
+  
+  #incomeStatement .overview-config-box > div:first-child,
+  #balanceSheet .overview-config-box > div:first-child,
+  #cashFlows .overview-config-box > div:first-child {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+  
+  /* Make period rows more compact */
+  #incomeStatement .is-period-stack,
+  #balanceSheet .is-period-stack,
+  #cashFlows .is-period-stack {
+    gap: 4px;
+  }
+  
+  #incomeStatement .is-period-row,
+  #balanceSheet .is-period-row,
+  #cashFlows .is-period-row {
+    gap: 4px;
+  }
+  
+  #incomeStatement .is-period-row label,
+  #balanceSheet .is-period-row label,
+  #cashFlows .is-period-row label {
+    font-size: 10px;
+    min-width: 60px;
+  }
+  
+  #incomeStatement .is-period-row select,
+  #balanceSheet .is-period-row select,
+  #cashFlows .is-period-row select {
+    font-size: 10px;
+    padding: 3px 5px;
+    min-height: 24px;
+  }
+  
+  /* Compare/Detail wrapper - side by side, compact */
+  #incomeStatement .is-compare-detail-wrapper,
+  #balanceSheet .is-compare-detail-wrapper,
+  #cashFlows .is-compare-detail-wrapper {
+    padding: 6px 8px;
+    gap: 8px;
+  }
+  
+  #incomeStatement .is-compare-detail-wrapper .config-section-label,
+  #balanceSheet .is-compare-detail-wrapper .config-section-label,
+  #cashFlows .is-compare-detail-wrapper .config-section-label {
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+  
+  #incomeStatement .is-compare-detail-wrapper .radio-label,
+  #balanceSheet .is-compare-detail-wrapper .radio-label,
+  #cashFlows .is-compare-detail-wrapper .radio-label {
+    font-size: 10px;
+    height: 16px;
+    gap: 3px;
+  }
+  
+  #incomeStatement .is-compare-detail-wrapper .radio-label input[type="radio"],
+  #balanceSheet .is-compare-detail-wrapper .radio-label input[type="radio"],
+  #cashFlows .is-compare-detail-wrapper .radio-label input[type="radio"] {
+    width: 10px;
+    height: 10px;
+  }
+  
+  /* Checkboxes - horizontal wrap layout */
+  #incomeStatement .is-controls > .is-options-stack:last-child,
+  #balanceSheet .is-controls > .is-options-stack:last-child,
+  #cashFlows .is-controls > .is-options-stack:last-child {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 6px 8px;
+  }
+  
+  #incomeStatement .is-checkbox-label.small,
+  #balanceSheet .is-checkbox-label.small,
+  #cashFlows .is-checkbox-label.small {
+    font-size: 10px;
+    gap: 4px;
+  }
+  
+  #incomeStatement .is-checkbox-label.small input[type="checkbox"],
+  #balanceSheet .is-checkbox-label.small input[type="checkbox"],
+  #cashFlows .is-checkbox-label.small input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+  }
+
   .is-controls {
     flex-direction: column;
     width: 100%;
