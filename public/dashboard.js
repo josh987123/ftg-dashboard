@@ -16300,7 +16300,6 @@ function setupJobOverviewEventListeners() {
   document.getElementById('joStatusOverhead')?.addEventListener('change', filterJobOverview);
   document.getElementById('joPmFilter')?.addEventListener('change', filterJobOverview);
   document.getElementById('joCustomerFilter')?.addEventListener('change', filterJobOverview);
-  document.getElementById('joDataLabels')?.addEventListener('change', updateJobOverviewCharts);
 }
 
 async function loadJobOverviewData() {
@@ -18593,18 +18592,17 @@ function updateJobOverviewCharts() {
   const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark" || document.body.classList.contains('dark-mode');
   const textColor = isDarkMode ? '#e2e8f0' : '#374151';
   const gridColor = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-  const showDataLabels = document.getElementById('joDataLabels')?.checked === true;
   
   const pmFilteredJobs = joFiltered.filter(j => !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name));
   const pmData = aggregateJobsByField(pmFilteredJobs, 'project_manager_name');
   const customerData = aggregateJobsByField(joFiltered, 'customer_name');
   
-  renderJoPmJobsChart(pmData, textColor, gridColor, showDataLabels);
-  renderJoPmContractChart(pmData, textColor, gridColor, showDataLabels);
-  renderJoPmMarginChart(pmData, textColor, gridColor, showDataLabels);
-  renderJoClientJobsChart(customerData, textColor, gridColor, showDataLabels);
-  renderJoClientContractChart(customerData, textColor, gridColor, showDataLabels);
-  renderJoClientMarginChart(customerData, textColor, gridColor, showDataLabels);
+  renderJoPmJobsChart(pmData, textColor, gridColor, false);
+  renderJoPmContractChart(pmData, textColor, gridColor, false);
+  renderJoPmMarginChart(pmData, textColor, gridColor, false);
+  renderJoClientJobsChart(customerData, textColor, gridColor, false);
+  renderJoClientContractChart(customerData, textColor, gridColor, false);
+  renderJoClientMarginChart(customerData, textColor, gridColor, false);
   
   updateJoChartStats(pmData, customerData);
 }
