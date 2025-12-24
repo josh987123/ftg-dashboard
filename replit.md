@@ -33,10 +33,15 @@ The dashboard provides several key views for financial analysis:
   - **PM Key Metrics**: 10 metric tiles showing Active Jobs, Contract Value, Backlog, Gross Margin, Net Over/Under, Avg % Complete, Billed Last Month, AR Exposure, Actual Cost, and Earned Revenue.
   - **PM Charts**: 4 charts - Margin Distribution, Budget vs Actual, Billing Trend, and AR Aging.
   - **PM Tables**: Client Summary, Over/Under Billing, and Missing Budgets tables.
-- **Distribution Reports (Admin Only)**: A dedicated section visible only to admin users, containing placeholder pages for future specialized reports:
-  - Dept Head Meeting
-  - Daily Cash Report
-  - Month End Reporting
+- **Distribution Reports (Admin Only)**: A dedicated section visible only to admin users, containing specialized reports:
+  - Dept Head Meeting (placeholder)
+  - **Daily Cash Report**: Displays FTG Builders cash position with:
+    - 14-day trailing balance area chart showing daily cash positions
+    - Metric tiles: Current Balance, Prior Day Deposits, Prior Day Withdrawals, Percent Change
+    - Transaction table with date filtering and search
+    - Transfer detection logic excludes internal transfers from deposit/withdrawal calculations
+    - FTG Builders accounts identified by suffixes 1883, 2469, 7554
+  - Month End Reporting (placeholder)
 - **Income Statement**: Supports single period and matrix views with AI analysis.
   - **Revenue to Operating Income Waterfall Chart**: Displayed under AI Analysis section, only visible in single period mode. Shows detailed waterfall flow: Revenue → Direct Labor → Materials → Subcontracts → Other Direct → Indirect Labor → Other Indirect → Gross Profit → Operating Exp → Operating Income. Uses floating bars for proper deduction visualization. Profit bars shown in green, deduction bars in red.
 
