@@ -6198,24 +6198,24 @@ body.dark-mode .overview-year-select-wrapper label {
   /* COMPACT MOBILE CONFIG - Overview, IS, BS, CF pages */
   /* Use side-by-side layout where possible, tighter spacing */
   
-  /* Overview: Time Period + Visuals side-by-side, Metrics below */
+  /* Overview: Visuals + Metrics side-by-side, Time Period above */
   #overview .overview-time-visuals-row {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 8px;
-    align-items: flex-start;
+    align-items: stretch;
   }
   
-  #overview .overview-time-period-box,
-  #overview .overview-visuals-box {
-    width: auto;
-    flex: 0 1 auto;
-    min-width: 0;
-  }
-  
-  #overview .overview-metrics-box {
+  #overview .overview-time-period-box {
     width: 100%;
     flex: 1 0 100%;
+  }
+  
+  #overview .overview-visuals-box,
+  #overview .overview-metrics-box {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
   }
   
   /* Tighter padding for all config boxes on mobile */
@@ -6264,12 +6264,11 @@ body.dark-mode .overview-year-select-wrapper label {
     min-width: 60px;
   }
   
-  /* Visuals checkboxes - horizontal inline */
+  /* Visuals checkboxes - vertical stack when side-by-side */
   #overview .visuals-checkboxes {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 3px 10px;
+    flex-direction: column;
+    gap: 2px;
   }
   
   #overview .visuals-checkboxes .checkbox-label {
@@ -6283,11 +6282,11 @@ body.dark-mode .overview-year-select-wrapper label {
     height: 12px;
   }
   
-  /* Metrics checkboxes - 2 columns */
-  #overview .overview-metrics-box .metrics-checkboxes {
-    display: grid;
-    grid-template-columns: repeat(2, auto);
-    gap: 2px 16px;
+  /* Metrics checkboxes - single column when side-by-side with visuals */
+  #overview .overview-metrics-box .metric-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
   
   #overview .overview-metrics-box .checkbox-label {
