@@ -4161,12 +4161,12 @@ body.dark-mode .nav-item.nav-parent.expanded {
   }
   
   /* Checkboxes - horizontal wrap layout */
-  #incomeStatement .is-controls > .is-options-stack:last-child,
-  #balanceSheet .is-controls > .is-options-stack:last-child,
-  #cashFlows .is-controls > .is-options-stack:last-child {
+  #incomeStatement .is-controls > .is-options-stack:not(.is-compare-box):not(.is-detail-box),
+  #balanceSheet .is-controls > .is-options-stack:not(.is-compare-box):not(.is-detail-box),
+  #cashFlows .is-controls > .is-options-stack:not(.is-compare-box):not(.is-detail-box) {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 6px 12px;
+    gap: 4px 10px;
     padding: 6px 8px;
   }
   
@@ -4182,6 +4182,68 @@ body.dark-mode .nav-item.nav-parent.expanded {
   #cashFlows .is-checkbox-label.small input[type="checkbox"] {
     width: 12px;
     height: 12px;
+  }
+  
+  /* Year Range sliders - compact on mobile */
+  #incomeStatement .range-wrapper.year-range-inline,
+  #balanceSheet .range-wrapper.year-range-inline,
+  #cashFlows .range-wrapper.year-range-inline,
+  #bsMatrixRangeControls,
+  #cfMatrixYearControls,
+  #isMatrixYearControls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 6px 8px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+  }
+  
+  #incomeStatement .range-wrapper.year-range-inline > label,
+  #balanceSheet .range-wrapper.year-range-inline > label,
+  #cashFlows .range-wrapper.year-range-inline > label {
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+  
+  #incomeStatement .year-slider,
+  #balanceSheet .year-slider,
+  #cashFlows .year-slider {
+    height: 4px;
+  }
+  
+  #incomeStatement .year-label,
+  #balanceSheet .year-label,
+  #cashFlows .year-label {
+    font-size: 10px;
+    min-width: 30px;
+  }
+  
+  #incomeStatement .range-separator,
+  #balanceSheet .range-separator,
+  #cashFlows .range-separator {
+    font-size: 10px;
+    margin: 0 4px;
+  }
+  
+  /* Year Range row layout on mobile */
+  #incomeStatement .year-range-inline,
+  #balanceSheet .year-range-inline,
+  #cashFlows .year-range-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  
+  /* Compare/Detail section labels more compact */
+  #incomeStatement .is-compare-detail-wrapper label[style*="font-weight"],
+  #balanceSheet .is-compare-detail-wrapper label[style*="font-weight"],
+  #cashFlows .is-compare-detail-wrapper label[style*="font-weight"] {
+    font-size: 10px !important;
+    margin-bottom: 2px;
   }
 
   .is-controls {
