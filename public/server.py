@@ -4301,6 +4301,7 @@ def api_metrics_jobs():
         has_budget = request.args.get('has_budget', '').strip()
         sort_by = request.args.get('sort_by', 'contract')
         limit = int(request.args.get('limit', 100))
+        exclude_josh = request.args.get('exclude_josh', 'true').lower() == 'true'
         
         has_budget_filter = None
         if has_budget == 'true':
@@ -4309,6 +4310,7 @@ def api_metrics_jobs():
             has_budget_filter = False
         
         jobs = metrics_cache.filter_jobs(
+            exclude_josh=exclude_josh,
             pm=pm if pm else None,
             status=status if status else None,
             customer=customer if customer else None,
