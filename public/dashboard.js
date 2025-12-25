@@ -16697,21 +16697,39 @@ function renderDcrSafetyCheck() {
   const ftgAccounts = dcrData.accounts.filter(a => isFTGBuildersAccount(a.name));
   const cashBalance = ftgAccounts.reduce((sum, a) => sum + a.balance, 0);
   
-  // Get total AR (receivables)
+  // Get total AR (receivables) - use calculated_amount_due or amount_due field
   let totalAR = 0;
   if (dcrArData?.invoices) {
-    totalAR = dcrArData.invoices.reduce((sum, inv) => sum + (parseFloat(inv.balance) || 0), 0);
+    totalAR = dcrArData.invoices.reduce((sum, inv) => {
+      const amount = parseFloat(inv.calculated_amount_due) || parseFloat(inv.amount_due) || 0;
+      return sum + amount;
+    }, 0);
   }
   
-  // Get total AP (payables)
+  // Get total AP (payables) - use remaining_balance field
   let totalAP = 0;
   if (dcrApData?.invoices) {
-    totalAP = dcrApData.invoices.reduce((sum, inv) => sum + (parseFloat(inv.balance) || 0), 0);
+    totalAP = dcrApData.invoices.reduce((sum, inv) => {
+      const amount = parseFloat(inv.remaining_balance) || 0;
+      return sum + amount;
+    }, 0);
   }
   
   // Get Net Over/Under Bill from jobs data
+  // Calculate from job_actuals: billings_to_date - earned_revenue (cost_to_date * gross_profit %)
   let netOUB = 0;
-  if (dcrJobsData?.job_budgets) {
+  if (dcrJobsData?.job_actuals) {
+    dcrJobsData.job_actuals.forEach(job => {
+      // Only include active jobs
+      if (job.job_status === 'A') {
+        const billings = parseFloat(job.billings_to_date) || 0;
+        const earnedRevenue = parseFloat(job.earned_revenue) || 0;
+        const oub = billings - earnedRevenue;
+        netOUB += oub;
+      }
+    });
+  } else if (dcrJobsData?.job_budgets) {
+    // Fallback: try to get from job_budgets if available
     dcrJobsData.job_budgets.forEach(job => {
       const oub = parseFloat(job.over_under_billing) || parseFloat(job.Over_Under_Billing) || 0;
       netOUB += oub;
@@ -16722,6 +16740,8 @@ function renderDcrSafetyCheck() {
   // If Net OUB is positive (over-billed), it reduces safety
   // If Net OUB is negative (under-billed), it increases safety
   const safetyTotal = cashBalance + totalAR - totalAP - netOUB;
+  
+  console.log('[DCR] Safety Check values:', { cashBalance, totalAR, totalAP, netOUB, safetyTotal });
   
   // Update DOM
   const cashEl = document.getElementById('dcrSafetyCash');
