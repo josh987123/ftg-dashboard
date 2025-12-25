@@ -21852,68 +21852,13 @@ body.dark-mode .dashboard-section > h2 {
     min-width: 150px !important;
   }
   
-  /* Table export - single small dropdown button */
-  .table-export-row {
-    display: flex !important;
-    justify-content: flex-end !important;
-  }
-  
-  .table-export-btns {
-    position: relative !important;
-  }
-  
-  /* Hide individual CSV/Excel buttons, show dropdown trigger */
-  .table-export-btns .export-table-btn.csv-btn,
-  .table-export-btns .export-table-btn.excel-btn {
-    display: none !important;
-  }
-  
-  .table-export-btns .table-export-dropdown-btn {
-    display: flex !important;
-  }
-  
-  .table-export-dropdown-btn {
-    width: 32px !important;
-    height: 32px !important;
-    padding: 0 !important;
-    font-size: 14px !important;
-    background: #475569 !important;
-    border: none !important;
-    border-radius: 6px !important;
-    color: #fff !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  
+  /* Hide ALL table export buttons on mobile - users use desktop for spreadsheet exports */
+  .table-export-row,
+  .table-export-btns,
+  .export-table-btn,
+  .table-export-dropdown-btn,
   .table-export-dropdown-menu {
-    position: absolute !important;
-    top: 100% !important;
-    right: 0 !important;
-    margin-top: 4px !important;
-    background: var(--bg-secondary, #1e293b) !important;
-    border: 1px solid var(--border-primary, #334155) !important;
-    border-radius: 6px !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
-    z-index: 1000 !important;
-    min-width: 100px !important;
-  }
-  
-  .table-export-dropdown-menu button {
-    display: block !important;
-    width: 100% !important;
-    padding: 10px 14px !important;
-    background: transparent !important;
-    border: none !important;
-    color: var(--text-primary, #e2e8f0) !important;
-    text-align: left !important;
-    font-size: 13px !important;
-    cursor: pointer !important;
-  }
-  
-  .table-export-dropdown-menu button:hover {
-    background: var(--bg-tertiary, #334155) !important;
+    display: none !important;
   }
 }
 

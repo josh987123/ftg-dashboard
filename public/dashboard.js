@@ -2082,9 +2082,9 @@ function initNavigation() {
       const section = document.getElementById(id);
       if (section) section.classList.add("visible");
       
-      // Hide export ribbon on admin page and distribution reports pages
+      // Hide export ribbon on admin page and placeholder distribution reports pages only
       const exportArea = document.querySelector('.content-export-area');
-      const hideExportPages = ['admin', 'deptHeadMeeting', 'cashReport', 'monthEndReporting'];
+      const hideExportPages = ['admin', 'deptHeadMeeting', 'monthEndReporting'];
       if (exportArea) {
         exportArea.style.display = hideExportPages.includes(id) ? 'none' : '';
       }
