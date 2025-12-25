@@ -4750,6 +4750,11 @@ def execute_nlq_query(query_plan, data):
                 sort_field = field_aliases.get(sort_field, sort_field)  # Apply alias
                 filtered.sort(key=lambda x: x.get(sort_field, 0), reverse=True)
                 results = {'items': filtered[:limit], 'sort_by': sort_field}
+            elif aggregation == 'closest_to_completion':
+                # Filter for jobs with budgets and sort by percent_complete descending
+                with_budgets = [j for j in filtered if j['budget_cost'] > 0 and j['percent_complete'] > 0 and j['percent_complete'] < 100]
+                with_budgets.sort(key=lambda x: x['percent_complete'], reverse=True)
+                results = {'items': with_budgets[:limit or 10], 'total_with_budgets': len(with_budgets)}
             else:
                 results = {'items': filtered[:limit], 'total_count': len(filtered)}
         
@@ -4812,6 +4817,18 @@ def execute_nlq_query(query_plan, data):
                     else:
                         buckets['days_90_plus'] += inv['collectible']
                 results = buckets
+            elif aggregation == 'by_job':
+                by_job = {}
+                for inv in filtered:
+                    j = inv['job_no']
+                    if j not in by_job:
+                        by_job[j] = {'job_no': j, 'collectible': 0, 'retainage': 0, 'invoice_count': 0, 'customer': inv['customer'], 'pm': inv['pm']}
+                    by_job[j]['collectible'] += inv['collectible']
+                    by_job[j]['retainage'] += inv['retainage']
+                    by_job[j]['invoice_count'] += 1
+                sorted_jobs = sorted(by_job.values(), key=lambda x: x['collectible'], reverse=True)[:limit or 10]
+                total_collectible = sum(i['collectible'] for i in filtered)
+                results = {'total_ar': total_collectible, 'items': sorted_jobs}
             else:
                 filtered.sort(key=lambda x: x['collectible'], reverse=True)
                 results = {'items': filtered[:limit], 'total_count': len(filtered)}
@@ -5213,7 +5230,7 @@ Respond with ONLY a valid JSON object containing:
     "account_range": [start, end] for GL accounts,
     "date_range": "last 7 days|last 2 weeks|last 30 days|this month|this week for cash transactions"
   }},
-  "aggregation": "count|sum|average|top|list|by_customer|by_vendor|aging|by_month|balance|transactions",
+  "aggregation": "count|sum|average|top|list|by_customer|by_vendor|by_job|aging|by_month|by_year|balance|transactions|closest_to_completion",
   "fields": ["field names for aggregation like contract, margin, collectible"],
   "limit": 10,
   "explanation": "Brief explanation of what data will be retrieved"
@@ -5229,6 +5246,8 @@ Examples:
 - "For job 4484, show top vendors and budget" -> target_data: "job_detail", filters: {{job_no: "4484"}}
 - "Revenue over the past 5 years" -> target_data: "gl", aggregation: "by_year", filters: {{year: null, account_range: [4000, 5000]}}
 - "Compare Rodney and Pedro metrics side by side" -> target_data: "pm_comparison", filters: {{pm: "Rodney,Pedro"}}
+- "AR by job, which job has most receivables?" -> target_data: "ar", aggregation: "by_job", limit: 10
+- "Top 10 active jobs closest to completion" -> target_data: "jobs", aggregation: "closest_to_completion", filters: {{status: "A"}}, limit: 10
 
 Respond with ONLY the JSON object, no markdown or explanation."""
         
