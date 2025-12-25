@@ -16718,23 +16718,49 @@ function renderDcrSafetyCheck() {
   }
   
   // Get Net Over/Under Bill from jobs data
-  // Calculate from job_actuals: billings_to_date - earned_revenue (cost_to_date * gross_profit %)
+  // Use the same calculation as the Over/Under Billing page:
+  // Over/(Under) = Billed Revenue - Earned Revenue (for active jobs only)
   let netOUB = 0;
-  if (dcrJobsData?.job_actuals) {
-    dcrJobsData.job_actuals.forEach(job => {
-      // Only include active jobs
-      if (job.job_status === 'A') {
-        const billings = parseFloat(job.billings_to_date) || 0;
-        const earnedRevenue = parseFloat(job.earned_revenue) || 0;
-        const oub = billings - earnedRevenue;
-        netOUB += oub;
+  if (dcrJobsData?.job_budgets && dcrJobsData?.job_billed_revenue) {
+    // Build billed revenue map
+    const billedRevenueMap = new Map();
+    (dcrJobsData.job_billed_revenue || []).forEach(row => {
+      const jobNo = String(row.Job_No || row.job_no);
+      if (jobNo) {
+        const billedRev = parseFloat(row.Billed_Revenue || row.billed_revenue) || 0;
+        billedRevenueMap.set(jobNo, billedRev);
       }
     });
-  } else if (dcrJobsData?.job_budgets) {
-    // Fallback: try to get from job_budgets if available
-    dcrJobsData.job_budgets.forEach(job => {
-      const oub = parseFloat(job.over_under_billing) || parseFloat(job.Over_Under_Billing) || 0;
-      netOUB += oub;
+    
+    // Build actuals map for actual costs
+    const actualsMap = new Map();
+    (dcrJobsData.job_actuals || []).forEach(job => {
+      const jobNo = String(job.job_no);
+      actualsMap.set(jobNo, parseFloat(job.actual_cost) || 0);
+    });
+    
+    // Calculate over/under for each active job with valid budget data
+    dcrJobsData.job_budgets.forEach(budget => {
+      if (budget.job_status !== 'A') return;
+      
+      const contractValue = parseFloat(budget.revised_contract) || 0;
+      const estCost = parseFloat(budget.revised_cost) || 0;
+      
+      if (contractValue === 0 || estCost === 0) return;
+      
+      const jobNo = String(budget.job_no);
+      const actualCost = actualsMap.get(jobNo) || 0;
+      const pctComplete = estCost > 0 ? (actualCost / estCost) : 0;
+      const billedRevenue = billedRevenueMap.get(jobNo) || 0;
+      const earnedRevenue = pctComplete * contractValue;
+      const overUnder = billedRevenue - earnedRevenue;
+      
+      netOUB += overUnder;
+    });
+  } else if (typeof oubData !== 'undefined' && oubData.length > 0) {
+    // Fallback: use pre-calculated oubData if available from Over/Under Billing page
+    oubData.forEach(job => {
+      netOUB += job.over_under || 0;
     });
   }
   
