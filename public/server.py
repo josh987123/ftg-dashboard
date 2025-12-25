@@ -4565,45 +4565,137 @@ def api_get_customer_invoices():
 # NATURAL LANGUAGE QUERY ENDPOINT FOR AI INSIGHTS
 # =============================================================================
 
-# Data schema for Claude to understand available data
-NLQ_DATA_SCHEMA = """
-Available data sources and their key fields:
+# Comprehensive semantic data catalog for flexible NLQ
+NLQ_SEMANTIC_CATALOG = """
+=== FTG BUILDERS FINANCIAL DATA CATALOG ===
 
-1. JOBS DATA (financials_jobs.json):
-   - job_budgets[]: job_no, job_description, project_manager_name, customer_name, job_status (A=Active, C=Closed, I=Inactive), 
-     original_contract, revised_contract, original_cost, revised_cost (percent_complete is calculated as actual_cost/revised_cost)
-   - job_actuals[]: Job_No, Job_Description, Project_Manager, Cost_Code_No, Cost_Code_Description, Value (actual cost amount)
-   - job_billed_revenue[]: Job_No, Job_Description, Billed_Revenue (total billed to date)
+ENTITY: Job
+  Source: job_budgets (4259 records)
+  Fields:
+    - job_no (string): Unique job identifier
+    - job_description (string): Project name/description
+    - project_manager_name (string): PM responsible for job
+    - customer_name (string): Client name
+    - job_status (string): A=Active, C=Closed, I=Inactive, O=Overhead
+    - original_contract (number): Initial contract value
+    - revised_contract (number): Current contract value after change orders
+    - original_cost (number): Initial budget cost
+    - revised_cost (number): Current budget cost
+  Computed:
+    - actual_cost: Sum of Value from job_actuals where Job_No matches
+    - billed_revenue: From job_billed_revenue.Billed_Revenue
+    - percent_complete: actual_cost / revised_cost * 100
+    - gross_margin: (revised_contract - revised_cost) / revised_contract * 100
+    - over_under_billing: billed_revenue - (percent_complete * revised_contract)
+  Relationships:
+    - Links to AR invoices via job_no
+    - Links to AP invoices via job_no
+    - Links to job_actuals via Job_No (note capital letters)
+    - Links to job_billed_revenue via Job_No
 
-2. AR DATA (ar_invoices.json):
-   - invoices[]: customer_name, invoice_no, calculated_amount_due (actual balance), retainage_amount, 
-     days_outstanding, project_manager_name, job_no, job_description
+ENTITY: JobActual (cost detail)
+  Source: job_actuals (19349 records)
+  Fields:
+    - Job_No (string): Links to job_budgets.job_no
+    - Job_Description (string)
+    - Project_Manager (string)
+    - Cost_Code_No (string): Cost category code
+    - Cost_Code_Description (string): Cost category name
+    - Value (number): Actual cost amount
 
-3. AP DATA (ap_invoices.json):
-   - invoices[]: vendor_name, invoice_no, invoice_amount, remaining_balance, days_outstanding, job_no, job_description
-   - Can filter by job_no to get vendor spend for a specific job
+ENTITY: ARInvoice (accounts receivable)
+  Source: ar_invoices (324 records)
+  Fields:
+    - customer_name (string): Client name
+    - invoice_no (string): Invoice identifier
+    - invoice_amount (number): Original invoice total
+    - calculated_amount_due (number): Current balance
+    - retainage_amount (number): Held retainage
+    - amount_paid_to_date (number)
+    - days_outstanding (number): Age in days
+    - aging_bucket (string): current/31-60/61-90/90+
+    - project_manager_name (string)
+    - job_no (string): Links to jobs
+    - job_description (string)
+  Computed:
+    - collectible: calculated_amount_due - retainage_amount (what can actually be collected now)
 
-6. JOB_DETAIL (combines job budget + AP vendor spend):
-   - Use target_data="job_detail" with filters.job_no to get comprehensive job info
-   - Returns: job budget info (revised_cost, revised_contract) + top vendors by spend from AP
+ENTITY: APInvoice (accounts payable)
+  Source: ap_invoices (55391 records)
+  Fields:
+    - vendor_name (string): Supplier/vendor name
+    - invoice_no (string)
+    - invoice_date (string)
+    - invoice_amount (number): Original amount
+    - remaining_balance (number): Amount still owed
+    - retainage_amount (number)
+    - amount_paid_to_date (number)
+    - days_outstanding (number)
+    - aging_bucket (string)
+    - payment_status (string)
+    - job_no (string): Links to jobs
+    - job_description (string)
+    - project_manager_name (string)
 
-4. GL DATA (financials_gl.json):
-   - gl_history_all[]: Account_Num (4xxx=Revenue, 5xxx=Direct Cost, 6xxx=Indirect, 7xxx=SG&A),
-     Account_Description, monthly columns like "2024-01", "2024-02", ... "2025-12"
-   - For multi-year trends: set year filter to null and use aggregation="by_year"
-   - For gross margin: query revenue (4000-4999) and direct costs (5000-5999) separately
+ENTITY: GLAccount (general ledger)
+  Source: gl_history_all (179 accounts)
+  Fields:
+    - Account_Num (number): 4-digit account code
+    - Account_Description (string): Account name
+    - Monthly columns: "2020-01" through "2025-12" (actual amounts)
+  Account Ranges:
+    - 4000-4999: Revenue accounts
+    - 5000-5999: Direct costs (labor, materials, subcontracts)
+    - 6000-6999: Indirect costs
+    - 7000-7999: SG&A / Operating expenses
+  Computed:
+    - gross_profit: revenue - direct_costs
+    - gross_margin: gross_profit / revenue * 100
+    - operating_income: gross_profit - sg&a
 
-7. PM_COMPARISON (side-by-side PM metrics):
-   - Use target_data="pm_comparison" with filters.pm containing comma-separated PM names
-   - Returns key metrics for each PM for direct comparison
+ENTITY: CashAccount
+  Source: Google Sheets API (/api/cash-data)
+  Fields:
+    - name (string): Account name (contains 1883, 2469, or 7554 for FTG Builders)
+    - balance (number): Current balance
+    - last_update (string): Last sync date
 
-5. CASH DATA (from Google Sheets via API):
-   - accounts[]: name, balance (current balance)
-   - transactions[]: date (YYYY-MM-DD format), account, amount (positive=deposit, negative=withdrawal), description, payee
-   - FTG Builders accounts contain "1883", "2469", or "7554" in name
-   - For transaction queries: use aggregation="transactions" and set date_range filter (e.g., "last 7 days", "last 2 weeks", "this month")
+ENTITY: CashTransaction
+  Source: Google Sheets API transactions array
+  Fields:
+    - date (string): YYYY-MM-DD format
+    - account (string): Account name
+    - amount (number): Positive=deposit, negative=withdrawal
+    - description (string): Transaction description
+    - payee (string): Payee name if available
+    - category (string): Transaction category
 
-PM_EXCLUSION: Always exclude "Josh Angelo" from PM analysis.
+=== QUERY TARGET SELECTION GUIDE ===
+
+pm_summary: Use for analyzing ALL PMs or finding highest/lowest PM metrics (margin, jobs, contract)
+  - "Which PM has the lowest margin?" -> pm_summary with aggregation=margin_analysis or bottom
+  - "Top PMs by contract value" -> pm_summary with aggregation=top
+  
+pm_comparison: Use ONLY when comparing specific named PMs side by side
+  - "Compare Rodney and Pedro metrics" -> pm_comparison with filters.pm="Rodney,Pedro"
+
+jobs: Use for job-level queries, can aggregate by_pm, by_customer
+cost_codes: Use for cost code analysis across jobs
+customers: Use for customer-level aggregations combining jobs and AR data
+
+=== COMMON ANALYSIS PATTERNS ===
+
+PM Performance: Use target=pm_summary, aggregation=top/bottom/margin_analysis
+Customer Analysis: Use target=customers or jobs with aggregation=by_customer
+Vendor Analysis: Use target=ap with aggregation=by_vendor
+Job Health: Use target=jobs with status filter and percent_complete/margin fields
+Aging Analysis: Use target=ar or ap with aggregation=aging
+Time Trends: Use target=gl with aggregation=by_year or by_month
+Cash Flow: Use target=cash with aggregation=transactions and date_range filter
+
+=== EXCLUSIONS ===
+Always exclude "Josh Angelo" from all PM analysis.
+FTG Builders cash accounts contain "1883", "2469", or "7554" in name.
 """
 
 def load_nlq_data():
@@ -4703,23 +4795,34 @@ def execute_nlq_query(query_plan, data):
                 # Calculate percent complete as actual cost / budget cost
                 percent_complete = (actual_cost / budget_cost * 100) if budget_cost > 0 else 0
                 
+                contract_val = float(job.get('revised_contract') or 0)
+                billed_val = billed_by_job.get(job_no, 0)
+                
+                # Calculate gross margin (based on estimated cost vs contract)
+                if contract_val > 0:
+                    gross_margin = (contract_val - budget_cost) / contract_val * 100
+                else:
+                    gross_margin = 0
+                
+                # Calculate over/under billing: billed - (percent_complete/100 * contract)
+                # Positive = overbilled, Negative = underbilled
+                earned_revenue = (percent_complete / 100) * contract_val if percent_complete > 0 else 0
+                over_under_billing = billed_val - earned_revenue
+                
                 job_data = {
                     'job_no': job_no,
                     'description': job.get('job_description', ''),
                     'pm': pm,
                     'customer': job.get('customer_name', ''),
                     'status': job.get('job_status', ''),
-                    'contract': float(job.get('revised_contract') or 0),
+                    'contract': contract_val,
                     'budget_cost': budget_cost,
                     'actual_cost': actual_cost,
-                    'billed': billed_by_job.get(job_no, 0),
-                    'percent_complete': percent_complete
+                    'billed': billed_val,
+                    'percent_complete': round(percent_complete, 1),
+                    'margin': round(gross_margin, 1),
+                    'over_under_billing': round(over_under_billing, 2)
                 }
-                # Calculate margin
-                if job_data['contract'] > 0:
-                    job_data['margin'] = (job_data['contract'] - job_data['budget_cost']) / job_data['contract'] * 100
-                else:
-                    job_data['margin'] = 0
                 
                 filtered.append(job_data)
             
@@ -4755,6 +4858,48 @@ def execute_nlq_query(query_plan, data):
                 with_budgets = [j for j in filtered if j['budget_cost'] > 0 and j['percent_complete'] > 0 and j['percent_complete'] < 100]
                 with_budgets.sort(key=lambda x: x['percent_complete'], reverse=True)
                 results = {'items': with_budgets[:limit or 10], 'total_with_budgets': len(with_budgets)}
+            elif aggregation == 'by_pm':
+                # Group jobs by PM
+                by_pm = {}
+                for j in filtered:
+                    pm = j['pm']
+                    if pm not in by_pm:
+                        by_pm[pm] = {'pm': pm, 'job_count': 0, 'active_jobs': 0, 'contract': 0, 'budget_cost': 0, 'actual_cost': 0}
+                    by_pm[pm]['job_count'] += 1
+                    if j['status'] == 'A':
+                        by_pm[pm]['active_jobs'] += 1
+                    by_pm[pm]['contract'] += j['contract']
+                    by_pm[pm]['budget_cost'] += j['budget_cost']
+                    by_pm[pm]['actual_cost'] += j['actual_cost']
+                
+                for pm_data in by_pm.values():
+                    if pm_data['contract'] > 0:
+                        pm_data['margin'] = round((pm_data['contract'] - pm_data['budget_cost']) / pm_data['contract'] * 100, 1)
+                    else:
+                        pm_data['margin'] = 0
+                
+                sort_field = fields[0] if fields else 'contract'
+                sort_field = field_aliases.get(sort_field, sort_field)
+                sorted_pms = sorted(by_pm.values(), key=lambda x: x.get(sort_field, 0), reverse=True)
+                results = {'items': sorted_pms[:limit or 20], 'total_pms': len(by_pm)}
+            elif aggregation == 'by_customer':
+                # Group jobs by customer
+                by_cust = {}
+                for j in filtered:
+                    cust = j['customer']
+                    if cust not in by_cust:
+                        by_cust[cust] = {'customer': cust, 'job_count': 0, 'contract': 0}
+                    by_cust[cust]['job_count'] += 1
+                    by_cust[cust]['contract'] += j['contract']
+                
+                sorted_custs = sorted(by_cust.values(), key=lambda x: x['contract'], reverse=True)
+                results = {'items': sorted_custs[:limit or 20], 'total_customers': len(by_cust)}
+            elif aggregation == 'bottom':
+                # Lowest ranked by field
+                sort_field = fields[0] if fields else 'margin'
+                sort_field = field_aliases.get(sort_field, sort_field)
+                filtered.sort(key=lambda x: x.get(sort_field, 0), reverse=False)
+                results = {'items': filtered[:limit], 'sort_by': sort_field}
             else:
                 results = {'items': filtered[:limit], 'total_count': len(filtered)}
         
@@ -4985,9 +5130,17 @@ def execute_nlq_query(query_plan, data):
             if filters.get('pm'):
                 pm_list = [p for p in pm_list if pm_matches(p['pm'], filters['pm'])]
             
-            sort_field = fields[0] if fields else 'active_jobs'
-            pm_list.sort(key=lambda x: x.get(sort_field, 0), reverse=True)
-            results = {'items': pm_list[:limit]}
+            # Support sort_order from query plan
+            sort_order = query_plan.get('sort_order', 'desc')
+            sort_by_field = query_plan.get('sort_by') or (fields[0] if fields else 'active_jobs')
+            
+            # Handle margin_analysis and bottom aggregations for lowest values
+            if aggregation in ('margin_analysis', 'bottom'):
+                pm_list.sort(key=lambda x: x.get('margin', 0), reverse=False)  # Ascending for lowest
+            else:
+                pm_list.sort(key=lambda x: x.get(sort_by_field, 0), reverse=(sort_order == 'desc'))
+            
+            results = {'items': pm_list[:limit], 'total_pms': len(pm_list)}
         
         # PM comparison (side-by-side)
         elif target == 'pm_comparison':
@@ -5180,6 +5333,105 @@ def execute_nlq_query(query_plan, data):
                     'top_vendors': [{'vendor': v, 'spend': s} for v, s in top_vendors]
                 }
         
+        # Cost codes analysis
+        elif target == 'cost_codes':
+            actuals = data.get('jobs', {}).get('job_actuals', [])
+            budgets = data.get('jobs', {}).get('job_budgets', [])
+            
+            # Build PM lookup from budgets
+            pm_by_job = {}
+            for b in budgets:
+                pm_by_job[str(b.get('job_no', ''))] = b.get('project_manager_name', '')
+            
+            # Filter actuals
+            filtered = []
+            for a in actuals:
+                job_no = str(a.get('Job_No') or a.get('job_no', ''))
+                pm = pm_by_job.get(job_no, a.get('Project_Manager', ''))
+                
+                if 'josh angelo' in pm.lower():
+                    continue
+                if filters.get('pm') and not pm_matches(pm, filters['pm']):
+                    continue
+                if filters.get('job_no') and str(filters['job_no']) != job_no:
+                    continue
+                if filters.get('cost_code') and str(filters['cost_code']) != str(a.get('Cost_Code_No', '')):
+                    continue
+                
+                filtered.append({
+                    'job_no': job_no,
+                    'cost_code': a.get('Cost_Code_No', ''),
+                    'cost_code_desc': a.get('Cost_Code_Description', ''),
+                    'value': float(a.get('Value') or 0),
+                    'pm': pm
+                })
+            
+            # Aggregate by cost code
+            if aggregation == 'by_cost_code':
+                by_cc = {}
+                for item in filtered:
+                    cc = item['cost_code']
+                    if cc not in by_cc:
+                        by_cc[cc] = {'cost_code': cc, 'description': item['cost_code_desc'], 'total': 0, 'job_count': 0}
+                    by_cc[cc]['total'] += item['value']
+                    by_cc[cc]['job_count'] += 1
+                sorted_cc = sorted(by_cc.values(), key=lambda x: x['total'], reverse=True)
+                results = {'items': sorted_cc[:limit or 20], 'total_cost_codes': len(by_cc)}
+            else:
+                total = sum(item['value'] for item in filtered)
+                results = {'total_cost': total, 'record_count': len(filtered)}
+        
+        # Customer analysis (across jobs and AR)
+        elif target == 'customers':
+            budgets = data.get('jobs', {}).get('job_budgets', [])
+            ar_invoices = data.get('ar', {}).get('invoices', [])
+            
+            customer_data = {}
+            
+            # Aggregate from jobs
+            for job in budgets:
+                customer = job.get('customer_name', '')
+                if not customer:
+                    continue
+                pm = job.get('project_manager_name', '')
+                if 'josh angelo' in pm.lower():
+                    continue
+                if filters.get('pm') and not pm_matches(pm, filters['pm']):
+                    continue
+                if filters.get('status') and job.get('job_status') != filters['status']:
+                    continue
+                
+                if customer not in customer_data:
+                    customer_data[customer] = {'customer': customer, 'job_count': 0, 'active_jobs': 0, 'contract': 0, 'ar_balance': 0, 'ar_retainage': 0, 'invoice_count': 0}
+                
+                customer_data[customer]['job_count'] += 1
+                if job.get('job_status') == 'A':
+                    customer_data[customer]['active_jobs'] += 1
+                customer_data[customer]['contract'] += float(job.get('revised_contract') or 0)
+            
+            # Add AR balances (includes customers not in jobs if they have AR)
+            for inv in ar_invoices:
+                customer = inv.get('customer_name', '')
+                if not customer:
+                    continue
+                    
+                calc_due = float(inv.get('calculated_amount_due', 0) or 0)
+                retainage = float(inv.get('retainage_amount', 0) or 0)
+                collectible = max(0, calc_due - retainage)
+                
+                if customer not in customer_data:
+                    customer_data[customer] = {'customer': customer, 'job_count': 0, 'active_jobs': 0, 'contract': 0, 'ar_balance': 0, 'ar_retainage': 0, 'invoice_count': 0}
+                
+                customer_data[customer]['ar_balance'] += collectible
+                customer_data[customer]['ar_retainage'] += retainage
+                customer_data[customer]['invoice_count'] += 1
+            
+            # Sort by requested field or default to contract
+            sort_field = query_plan.get('sort_by', 'contract')
+            sort_order = query_plan.get('sort_order', 'desc')
+            sorted_customers = sorted(customer_data.values(), key=lambda x: x.get(sort_field, 0), reverse=(sort_order == 'desc'))
+            results = {'items': sorted_customers[:limit or 20], 'total_customers': len(customer_data)}
+        
         else:
             results = {'error': f'Unknown target: {target}'}
         
@@ -5215,46 +5467,50 @@ def api_natural_language_query():
         # Step 2: Use Claude to interpret the question and create a query plan
         client = get_anthropic_client()
         
-        intent_prompt = f"""You are a data analyst assistant. Analyze this question about a construction company's financial data and create a structured query plan.
+        intent_prompt = f"""You are a financial data analyst for a construction company. Use the semantic data catalog below to answer ANY question about the business data.
 
-{NLQ_DATA_SCHEMA}
+{NLQ_SEMANTIC_CATALOG}
 
 User Question: "{question}"
 
-Respond with ONLY a valid JSON object containing:
+Create a query plan to answer this question. You can query ANY combination of data based on the catalog above.
+
+Respond with ONLY a valid JSON object:
 {{
-  "target_data": "jobs|ar|ap|gl|pm_summary|cash|job_detail|pm_comparison",
+  "target_data": "jobs|ar|ap|gl|pm_summary|cash|job_detail|pm_comparison|cost_codes|customers|multi_source",
   "filters": {{
-    "pm": "PM first or full name if filtering by PM, null otherwise",
-    "status": "A|C|I if filtering job status, null otherwise",
-    "customer": "customer name if filtering, null otherwise",
-    "vendor": "vendor name if filtering, null otherwise",
-    "job_no": "specific job number if asking about a particular job, null otherwise",
-    "year": 2025,
-    "min_days": "minimum days outstanding if filtering aged items, null otherwise",
-    "account_range": [start, end] for GL accounts,
-    "date_range": "last 7 days|last 2 weeks|last 30 days|this month|this week for cash transactions"
+    "pm": "PM name or null",
+    "status": "A|C|I|O or null",
+    "customer": "customer name or null",
+    "vendor": "vendor name or null",
+    "job_no": "job number or null",
+    "year": year number or null for all years,
+    "min_days": minimum days or null,
+    "max_days": maximum days or null,
+    "min_amount": minimum amount threshold or null,
+    "max_amount": maximum amount threshold or null,
+    "account_range": [start, end] or null,
+    "date_range": "last N days|last N weeks|last N months" or null,
+    "cost_code": "cost code number or null"
   }},
-  "aggregation": "count|sum|average|top|list|by_customer|by_vendor|by_job|aging|by_month|by_year|balance|transactions|closest_to_completion",
-  "fields": ["field names for aggregation like contract, margin, collectible"],
-  "limit": 10,
-  "explanation": "Brief explanation of what data will be retrieved"
+  "aggregation": "count|sum|average|top|bottom|list|by_customer|by_vendor|by_job|by_pm|by_cost_code|aging|by_month|by_year|balance|transactions|closest_to_completion|margin_analysis|comparison",
+  "sort_by": "field to sort by or null",
+  "sort_order": "desc|asc",
+  "fields": ["specific fields needed"],
+  "limit": number or null,
+  "include_details": true/false for detailed breakdowns,
+  "explanation": "What data will be retrieved and how"
 }}
 
-Examples:
-- "How many active jobs does Pedro have?" -> target_data: "jobs", filters: {{pm: "Pedro", status: "A"}}, aggregation: "count"
-- "Top 5 vendors by spend" -> target_data: "ap", aggregation: "by_vendor", limit: 5
-- "What is Rodney's profit margin?" -> target_data: "pm_summary", filters: {{pm: "Rodney"}}, fields: ["margin"]
-- "AR aging breakdown" -> target_data: "ar", aggregation: "aging"
-- "What is our current cash balance?" -> target_data: "cash", aggregation: "balance"
-- "How many deposits in the last 2 weeks?" -> target_data: "cash", aggregation: "transactions", filters: {{date_range: "last 2 weeks"}}
-- "For job 4484, show top vendors and budget" -> target_data: "job_detail", filters: {{job_no: "4484"}}
-- "Revenue over the past 5 years" -> target_data: "gl", aggregation: "by_year", filters: {{year: null, account_range: [4000, 5000]}}
-- "Compare Rodney and Pedro metrics side by side" -> target_data: "pm_comparison", filters: {{pm: "Rodney,Pedro"}}
-- "AR by job, which job has most receivables?" -> target_data: "ar", aggregation: "by_job", limit: 10
-- "Top 10 active jobs closest to completion" -> target_data: "jobs", aggregation: "closest_to_completion", filters: {{status: "A"}}, limit: 10
+The system can handle:
+- Filtering by any field (amount thresholds, date ranges, specific values)
+- Grouping/aggregating by any dimension (PM, customer, vendor, job, cost code, time period)
+- Cross-source queries (e.g., job info + AR + AP combined)
+- Comparisons between entities (PMs, customers, time periods)
+- Trend analysis over time
+- Top/bottom rankings with any criteria
 
-Respond with ONLY the JSON object, no markdown or explanation."""
+Respond with ONLY the JSON object, no markdown."""
         
         intent_response = client.messages.create(
             model="claude-sonnet-4-20250514",
