@@ -4580,7 +4580,7 @@ Available data sources and their key fields:
      days_outstanding, project_manager_name, job_no, job_description
 
 3. AP DATA (ap_invoices.json):
-   - invoices[]: vendor, invoice_no, remaining_balance, days_outstanding, job_no, description
+   - invoices[]: vendor_name, invoice_no, remaining_balance, days_outstanding, job_no, job_description
 
 4. GL DATA (financials_gl.json):
    - gl_history_all[]: Account_Num (4xxx=Revenue, 5xxx=Direct Cost, 6xxx=Indirect, 7xxx=SG&A),
