@@ -2995,6 +2995,9 @@ body.dark-mode .nav-item.nav-parent.expanded {
   display: flex;
   gap: 6px;
   margin-left: auto;
+  margin-top: 8px;
+  margin-right: 8px;
+  margin-bottom: 4px;
 }
 
 .table-export-btns .export-table-btn {
