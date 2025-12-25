@@ -2041,7 +2041,9 @@ function initNavigation() {
   sectionHeaders.forEach(header => {
     const childrenContainer = header.nextElementSibling;
     if (childrenContainer && childrenContainer.classList.contains("nav-section-items")) {
-      // Start collapsed by default (do not add expanded class)
+      // Start expanded by default
+      header.classList.add("expanded");
+      childrenContainer.classList.add("expanded");
       
       header.addEventListener("click", () => {
         header.classList.toggle("expanded");
