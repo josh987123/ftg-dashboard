@@ -2941,6 +2941,34 @@ body.dark-mode .nav-item.nav-parent.expanded {
   transform: scale(0.98);
 }
 
+.table-export-btns {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.table-export-btns .export-table-btn {
+  margin-left: 0;
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
+.table-export-btns .export-table-btn.csv-btn {
+  background: #10b981;
+}
+
+.table-export-btns .export-table-btn.csv-btn:hover {
+  background: #059669;
+}
+
+.table-export-btns .export-table-btn.excel-btn {
+  background: #217346;
+}
+
+.table-export-btns .export-table-btn.excel-btn:hover {
+  background: #1a5c38;
+}
+
 .table-scroll{ overflow-x:auto; }
 
 #revTable{

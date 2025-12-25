@@ -5374,41 +5374,42 @@ function setupExportButtons() {
   const dropdown = document.getElementById("exportDropdownMenu");
   const dropdownBtn = document.getElementById("exportDropdownBtn");
   
-  dropdownBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    dropdown.classList.toggle("hidden");
-  });
+  if (dropdownBtn) {
+    dropdownBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("hidden");
+    });
+  }
   
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".export-dropdown")) {
-      dropdown.classList.add("hidden");
+      if (dropdown) dropdown.classList.add("hidden");
     }
   });
   
-  document.getElementById("exportPrintBtn").onclick = () => {
-    dropdown.classList.add("hidden");
-    universalPrint();
-  };
+  const printBtn = document.getElementById("exportPrintBtn");
+  if (printBtn) {
+    printBtn.onclick = () => {
+      dropdown.classList.add("hidden");
+      universalPrint();
+    };
+  }
   
-  document.getElementById("exportPdfBtn").onclick = () => {
-    dropdown.classList.add("hidden");
-    universalExportToPdf();
-  };
+  const pdfBtn = document.getElementById("exportPdfBtn");
+  if (pdfBtn) {
+    pdfBtn.onclick = () => {
+      dropdown.classList.add("hidden");
+      universalExportToPdf();
+    };
+  }
   
-  document.getElementById("exportCsvBtn").onclick = () => {
-    dropdown.classList.add("hidden");
-    universalExportToCsv();
-  };
-  
-  document.getElementById("exportExcelBtn").onclick = () => {
-    dropdown.classList.add("hidden");
-    universalExportToExcel();
-  };
-  
-  document.getElementById("exportEmailBtn").onclick = () => {
-    dropdown.classList.add("hidden");
-    openEmailModal();
-  };
+  const emailBtn = document.getElementById("exportEmailBtn");
+  if (emailBtn) {
+    emailBtn.onclick = () => {
+      dropdown.classList.add("hidden");
+      openEmailModal();
+    };
+  }
   
   const scheduleEmailBtn = document.getElementById("scheduleEmailBtn");
   if (scheduleEmailBtn) {
@@ -5421,17 +5422,238 @@ function setupExportButtons() {
   // Desktop ribbon buttons
   const ribbonPrint = document.getElementById("exportPrintBtnRibbon");
   const ribbonPdf = document.getElementById("exportPdfBtnRibbon");
-  const ribbonCsv = document.getElementById("exportCsvBtnRibbon");
-  const ribbonExcel = document.getElementById("exportExcelBtnRibbon");
   const ribbonEmail = document.getElementById("exportEmailBtnRibbon");
   const ribbonSchedule = document.getElementById("scheduleEmailBtnRibbon");
   
   if (ribbonPrint) ribbonPrint.onclick = () => universalPrint();
   if (ribbonPdf) ribbonPdf.onclick = () => universalExportToPdf();
-  if (ribbonCsv) ribbonCsv.onclick = () => universalExportToCsv();
-  if (ribbonExcel) ribbonExcel.onclick = () => universalExportToExcel();
   if (ribbonEmail) ribbonEmail.onclick = () => openEmailModal();
   if (ribbonSchedule) ribbonSchedule.onclick = () => openScheduleEmailModal();
+  
+  // Setup table-specific export buttons
+  setupTableExportButtons();
+}
+
+function setupTableExportButtons() {
+  const tables = [
+    { id: 'incomeStatementTable', name: 'income-statement', section: 'incomeStatement' },
+    { id: 'balanceSheetTable', name: 'balance-sheet', section: 'balanceSheet' },
+    { id: 'cashFlowTable', name: 'cash-flows', section: 'cashFlows' },
+    { id: 'jobBudgetsTable', name: 'job-budgets', section: 'jobBudgets' },
+    { id: 'jobActualsTable', name: 'job-actuals', section: 'jobActuals' },
+    { id: 'oubTable', name: 'over-under-billing', section: 'overUnderBilling' },
+    { id: 'costCodesTable', name: 'cost-codes', section: 'costCodes' },
+    { id: 'paymentsTable', name: 'payments', section: 'payments' },
+    { id: 'apAgingTable', name: 'ap-aging', section: 'apAging' },
+    { id: 'arAgingTable', name: 'ar-aging', section: 'arAging' }
+  ];
+  
+  tables.forEach(({ id, name, section }) => {
+    const table = document.getElementById(id);
+    if (!table) return;
+    
+    const container = table.closest('.job-table-container, .table-wrapper, .is-table-box, .rev-table-box');
+    if (!container) return;
+    
+    // Check if export buttons already exist
+    if (container.querySelector('.table-export-btns')) return;
+    
+    // Create export button row
+    const btnRow = document.createElement('div');
+    btnRow.className = 'table-export-row';
+    btnRow.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:8px;';
+    
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'table-export-btns';
+    
+    const csvBtn = document.createElement('button');
+    csvBtn.className = 'export-table-btn csv-btn';
+    csvBtn.textContent = 'CSV';
+    csvBtn.title = 'Export to CSV';
+    csvBtn.onclick = () => exportTableToCsv(id, name);
+    
+    const excelBtn = document.createElement('button');
+    excelBtn.className = 'export-table-btn excel-btn';
+    excelBtn.textContent = 'Excel';
+    excelBtn.title = 'Export to Excel';
+    excelBtn.onclick = () => exportTableToExcel(id, name);
+    
+    btnGroup.appendChild(csvBtn);
+    btnGroup.appendChild(excelBtn);
+    btnRow.appendChild(btnGroup);
+    
+    container.insertBefore(btnRow, table);
+  });
+}
+
+function exportTableToCsv(tableId, filename) {
+  const table = document.getElementById(tableId);
+  if (!table) return alert('Table not found');
+  
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  if (!tbody || tbody.children.length === 0) return alert('No data to export');
+  
+  let csv = '';
+  
+  if (thead) {
+    const headers = [];
+    thead.querySelectorAll('th').forEach(th => {
+      if (!th.classList.contains('hidden') && th.style.display !== 'none') {
+        headers.push(`"${th.textContent.trim().replace(/"/g, '""')}"`);
+      }
+    });
+    csv += headers.join(',') + '\n';
+  }
+  
+  Array.from(tbody.children).forEach(tr => {
+    if (tr.style.display === 'none') return;
+    const cells = [];
+    tr.querySelectorAll('td').forEach(td => {
+      if (!td.classList.contains('hidden') && td.style.display !== 'none') {
+        cells.push(`"${td.textContent.trim().replace(/"/g, '""')}"`);
+      }
+    });
+    if (cells.length > 0) csv += cells.join(',') + '\n';
+  });
+  
+  const dateStr = new Date().toISOString().split('T')[0];
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ftg_${filename}_${dateStr}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function exportTableToExcel(tableId, filename) {
+  const table = document.getElementById(tableId);
+  if (!table) return alert('Table not found');
+  
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  if (!tbody || tbody.children.length === 0) return alert('No data to export');
+  
+  try {
+    await LazyLoader.load('exceljs');
+  } catch (err) {
+    return alert('Failed to load Excel library. Please check your internet connection.');
+  }
+  
+  const rows = [];
+  
+  if (thead) {
+    thead.querySelectorAll('tr').forEach(tr => {
+      const cells = [];
+      tr.querySelectorAll('th').forEach(th => {
+        if (!th.classList.contains('hidden') && th.style.display !== 'none') {
+          cells.push(th.textContent.trim());
+        }
+      });
+      if (cells.length > 0) rows.push({ cells, isHeader: true });
+    });
+  }
+  
+  Array.from(tbody.children).forEach(tr => {
+    if (tr.style.display === 'none') return;
+    const cells = [];
+    const isGroupHeader = tr.classList.contains('is-group-header') || tr.classList.contains('bs-group-header');
+    const isTotalRow = tr.classList.contains('is-total') || tr.classList.contains('bs-total') || tr.classList.contains('grand-total');
+    
+    tr.querySelectorAll('td').forEach(td => {
+      if (!td.classList.contains('hidden') && td.style.display !== 'none') {
+        cells.push(td.textContent.trim());
+      }
+    });
+    if (cells.length > 0) rows.push({ cells, isHeader: false, isGroupHeader, isTotalRow });
+  });
+  
+  if (rows.length === 0) return alert('No data to export');
+  
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'FTG Dashboard';
+  workbook.created = new Date();
+  
+  const sheetName = filename.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).substring(0, 31);
+  const worksheet = workbook.addWorksheet(sheetName);
+  
+  const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F2937' } };
+  const headerFont = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+  const groupHeaderFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
+  const groupHeaderFont = { bold: true, color: { argb: 'FF374151' }, size: 11 };
+  const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+  const totalFont = { bold: true, color: { argb: 'FF111827' }, size: 11 };
+  const borderStyle = { style: 'thin', color: { argb: 'FFD1D5DB' } };
+  const allBorders = { top: borderStyle, left: borderStyle, bottom: borderStyle, right: borderStyle };
+  
+  const currencyColumns = new Set();
+  rows.forEach((row, idx) => {
+    if (row.isHeader) return;
+    row.cells.forEach((cell, colIdx) => {
+      if (cell.includes('$')) currencyColumns.add(colIdx);
+    });
+  });
+  
+  rows.forEach((row, rowIdx) => {
+    const excelRow = worksheet.addRow(row.cells.map((cell, colIdx) => {
+      if (row.isHeader) return cell;
+      const cleanValue = cell.replace(/[$,]/g, '').replace(/\(([^)]+)\)/g, '-$1');
+      const numValue = parseFloat(cleanValue);
+      if (!isNaN(numValue) && cleanValue !== '' && !cell.includes('%')) return numValue;
+      return cell;
+    }));
+    
+    excelRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      cell.border = allBorders;
+      cell.alignment = { vertical: 'middle' };
+      
+      if (row.isHeader) {
+        cell.fill = headerFill;
+        cell.font = headerFont;
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      } else if (row.isGroupHeader) {
+        cell.fill = groupHeaderFill;
+        cell.font = groupHeaderFont;
+      } else if (row.isTotalRow) {
+        cell.fill = totalFill;
+        cell.font = totalFont;
+      }
+      
+      if (!row.isHeader && currencyColumns.has(colNumber - 1) && typeof cell.value === 'number') {
+        cell.numFmt = '"$"#,##0';
+        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+      }
+    });
+  });
+  
+  const colCount = rows[0]?.cells.length || 0;
+  for (let i = 1; i <= colCount; i++) {
+    let maxWidth = 12;
+    worksheet.getColumn(i).eachCell({ includeEmpty: false }, cell => {
+      const len = String(cell.value || '').length;
+      maxWidth = Math.max(maxWidth, len + 2);
+    });
+    worksheet.getColumn(i).width = Math.min(maxWidth, 45);
+  }
+  
+  const headerRowCount = rows.filter(r => r.isHeader).length || 1;
+  worksheet.views = [{ state: 'frozen', ySplit: headerRowCount }];
+  
+  const buffer = await workbook.xlsx.writeBuffer();
+  const dateStr = new Date().toISOString().split('T')[0];
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ftg_${filename}_${dateStr}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Keep old function for backwards compatibility
+function exportTableToCSV(tableId, filename) {
+  exportTableToCsv(tableId, filename);
 }
 
 /* ------------------------------------------------------------

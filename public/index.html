@@ -601,14 +601,6 @@
             <span class="ribbon-icon">📄</span>
             <span class="ribbon-label">PDF</span>
           </button>
-          <button id="exportCsvBtnRibbon" class="ribbon-btn" title="CSV">
-            <span class="ribbon-icon">📊</span>
-            <span class="ribbon-label">CSV</span>
-          </button>
-          <button id="exportExcelBtnRibbon" class="ribbon-btn" title="Excel">
-            <span class="ribbon-icon">📗</span>
-            <span class="ribbon-label">Excel</span>
-          </button>
           <button id="exportEmailBtnRibbon" class="ribbon-btn" title="Email">
             <span class="ribbon-icon">📧</span>
             <span class="ribbon-label">Email</span>
@@ -624,8 +616,6 @@
           <div id="exportDropdownMenu" class="dropdown-menu hidden">
             <button id="exportPrintBtn" class="dropdown-item">🖨️ Print</button>
             <button id="exportPdfBtn" class="dropdown-item">📄 PDF</button>
-            <button id="exportCsvBtn" class="dropdown-item">📊 CSV</button>
-            <button id="exportExcelBtn" class="dropdown-item">📗 Excel</button>
             <button id="exportEmailBtn" class="dropdown-item">📧 Email</button>
             <button id="scheduleEmailBtn" class="dropdown-item">📅 Schedule Email</button>
           </div>
@@ -3744,11 +3734,11 @@
   <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script defer src="dashboard.js?v=20251225j"></script>
+  <script defer src="dashboard.js?v=20251225k"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251225j';
+    const APP_VERSION = '20251225k';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {
