@@ -210,7 +210,7 @@ function getActivePmsFromData(dataArray) {
   }
   return [...new Set(
     dataArray
-      .filter(j => j.job_status === 'A' && j.project_manager_name)
+      .filter(j => j.job_status === 'A' && j.project_manager_name && !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name))
       .map(j => j.project_manager_name)
   )].sort();
 }
@@ -249,14 +249,17 @@ function buildPmTabs(containerId, pms, pageKey, onSelect) {
     return;
   }
   
-  if (!pms || pms.length === 0) {
+  // Filter out excluded PMs (e.g., Josh Angelo)
+  const filteredPms = (pms || []).filter(pm => !PM_EXCLUSION_CONFIG.isExcluded(pm));
+  
+  if (filteredPms.length === 0) {
     container.innerHTML = '<button class="pm-tab-btn all-pm active" data-pm="__ALL__">All Project Managers</button>';
     pmTabsState[pageKey] = '__ALL__';
     return;
   }
   
   // Sort PMs: preferred order first by matching first name, then alphabetically
-  const sortedPms = [...pms].sort((a, b) => {
+  const sortedPms = [...filteredPms].sort((a, b) => {
     const aFirst = a.split(' ')[0];
     const bFirst = b.split(' ')[0];
     const aIndex = PM_TAB_ORDER.indexOf(aFirst);
