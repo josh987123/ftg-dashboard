@@ -4609,16 +4609,19 @@ ENTITY: ARInvoice (accounts receivable)
     - customer_name (string): Client name
     - invoice_no (string): Invoice identifier
     - invoice_amount (number): Original invoice total
-    - calculated_amount_due (number): Current balance
-    - retainage_amount (number): Held retainage
+    - calculated_amount_due (number): Current balance (total owed including retainage)
+    - retainage_amount (number): Held retainage (cannot be collected until job complete)
     - amount_paid_to_date (number)
-    - days_outstanding (number): Age in days
-    - aging_bucket (string): current/31-60/61-90/90+
+    - days_outstanding (number): Age in days from invoice date
+    - aging_bucket (string): current (0-30)/31-60/61-90/90+
     - project_manager_name (string)
     - job_no (string): Links to jobs
     - job_description (string)
-  Computed:
-    - collectible: calculated_amount_due - retainage_amount (what can actually be collected now)
+  Computed (matches AR Aging page):
+    - collectible: calculated_amount_due - retainage_amount (what can be collected now)
+    - total_due: calculated_amount_due (collectible + retainage)
+  Aging buckets use COLLECTIBLE amounts, retainage tracked separately
+  Note: Only invoices with calculated_amount_due > 0 are included (fully paid excluded)
 
 ENTITY: APInvoice (accounts payable)
   Source: ap_invoices (55391 records)
@@ -4643,15 +4646,19 @@ ENTITY: GLAccount (general ledger)
     - Account_Num (number): 4-digit account code
     - Account_Description (string): Account name
     - Monthly columns: "2020-01" through "2025-12" (actual amounts)
-  Account Ranges:
-    - 4000-4999: Revenue accounts
-    - 5000-5999: Direct costs (labor, materials, subcontracts)
-    - 6000-6999: Indirect costs
-    - 7000-7999: SG&A / Operating expenses
-  Computed:
-    - gross_profit: revenue - direct_costs
-    - gross_margin: gross_profit / revenue * 100
-    - operating_income: gross_profit - sg&a
+  Income Statement Structure (from account_groups.json):
+    - Revenue: 4000 (Contract Revenue) + 4090 (Over/Under Billing)
+    - Direct Expenses: 5000-5025 (Direct Labor) + 5200 (Materials) + 5300 (Subcontracts) + 5410 (Rented Equipment) + 5500 (Other Direct)
+    - Indirect Expenses: 6010-6065 (Indirect Labor) + 6xxx (Other Indirect)
+    - Total Cost of Sales: Direct Expenses + Indirect Expenses
+    - Gross Profit: Revenue - Total Cost of Sales
+    - Operating Expenses: 7000-7599 (Salaries & Benefits, Admin, Facility, etc.)
+    - Operating Income: Gross Profit - Operating Expenses
+  Key Account Ranges for NLQ:
+    - [4000, 5000]: Revenue accounts only
+    - [5000, 6000]: Direct costs
+    - [6000, 7000]: Indirect costs
+    - [7000, 8000]: Operating/SG&A expenses
 
 ENTITY: CashAccount
   Source: Google Sheets API (/api/cash-data)
@@ -4903,25 +4910,30 @@ def execute_nlq_query(query_plan, data):
             else:
                 results = {'items': filtered[:limit], 'total_count': len(filtered)}
         
-        # AR queries
+        # AR queries - matches AR Aging page logic exactly
         elif target == 'ar':
             invoices = data.get('ar', {}).get('invoices', [])
             filtered = []
             
             for inv in invoices:
                 calc_due = float(inv.get('calculated_amount_due') or 0)
+                
+                # AR Aging page only includes invoices with calc_due > 0
+                if calc_due <= 0:
+                    continue
+                
                 retainage = float(inv.get('retainage_amount') or 0)
                 collectible = max(0, calc_due - retainage)
                 
-                if collectible <= 0 and retainage <= 0:
-                    continue
-                
                 pm = inv.get('project_manager_name', '')
-                if 'josh angelo' in pm.lower():
-                    continue
+                # Note: AR Aging page does NOT exclude Josh Angelo - only PM analysis does
+                # But for NLQ queries involving PM metrics, we exclude Josh Angelo
+                if filters.get('pm'):
+                    if 'josh angelo' in pm.lower():
+                        continue
+                    if not pm_matches(pm, filters['pm']):
+                        continue
                 
-                if filters.get('pm') and not pm_matches(pm, filters['pm']):
-                    continue
                 if filters.get('customer'):
                     cust = (inv.get('customer_name') or '').lower()
                     if filters['customer'].lower() not in cust:
@@ -4929,10 +4941,14 @@ def execute_nlq_query(query_plan, data):
                 if filters.get('min_days'):
                     if int(inv.get('days_outstanding') or 0) < filters['min_days']:
                         continue
+                if filters.get('max_days'):
+                    if int(inv.get('days_outstanding') or 0) > filters['max_days']:
+                        continue
                 
                 filtered.append({
                     'customer': inv.get('customer_name', ''),
                     'invoice_no': inv.get('invoice_no', ''),
+                    'calc_due': calc_due,
                     'collectible': collectible,
                     'retainage': retainage,
                     'days_outstanding': int(inv.get('days_outstanding') or 0),
@@ -4941,7 +4957,15 @@ def execute_nlq_query(query_plan, data):
                 })
             
             if aggregation == 'sum':
-                results = {'total': sum(i['collectible'] for i in filtered), 'count': len(filtered)}
+                # Total AR matches AR Aging page: collectible + retainage = calc_due
+                total_collectible = sum(i['collectible'] for i in filtered)
+                total_retainage = sum(i['retainage'] for i in filtered)
+                results = {
+                    'total_due': total_collectible + total_retainage,
+                    'collectible': total_collectible,
+                    'retainage': total_retainage,
+                    'invoice_count': len(filtered)
+                }
             elif aggregation == 'by_customer':
                 by_cust = {}
                 for inv in filtered:
@@ -4950,7 +4974,8 @@ def execute_nlq_query(query_plan, data):
                 sorted_custs = sorted(by_cust.items(), key=lambda x: x[1], reverse=True)[:limit]
                 results = {'items': [{'customer': c, 'amount': a} for c, a in sorted_custs]}
             elif aggregation == 'aging':
-                buckets = {'current': 0, 'days_31_60': 0, 'days_61_90': 0, 'days_90_plus': 0}
+                # Matches AR Aging page: aging buckets for collectible, retainage tracked separately
+                buckets = {'current': 0, 'days_31_60': 0, 'days_61_90': 0, 'days_90_plus': 0, 'retainage': 0}
                 for inv in filtered:
                     d = inv['days_outstanding']
                     if d <= 30:
@@ -4961,7 +4986,24 @@ def execute_nlq_query(query_plan, data):
                         buckets['days_61_90'] += inv['collectible']
                     else:
                         buckets['days_90_plus'] += inv['collectible']
+                    buckets['retainage'] += inv['retainage']
+                buckets['total_collectible'] = buckets['current'] + buckets['days_31_60'] + buckets['days_61_90'] + buckets['days_90_plus']
+                buckets['total_due'] = buckets['total_collectible'] + buckets['retainage']
                 results = buckets
+            elif aggregation == 'by_pm':
+                # Group AR by PM (excludes Josh Angelo for PM analysis)
+                by_pm = {}
+                for inv in filtered:
+                    pm = inv['pm']
+                    if 'josh angelo' in pm.lower():
+                        continue
+                    if pm not in by_pm:
+                        by_pm[pm] = {'pm': pm, 'collectible': 0, 'retainage': 0, 'invoice_count': 0}
+                    by_pm[pm]['collectible'] += inv['collectible']
+                    by_pm[pm]['retainage'] += inv['retainage']
+                    by_pm[pm]['invoice_count'] += 1
+                sorted_pms = sorted(by_pm.values(), key=lambda x: x['collectible'], reverse=True)
+                results = {'items': sorted_pms[:limit or 20], 'total_pms': len(by_pm)}
             elif aggregation == 'by_job':
                 by_job = {}
                 for inv in filtered:
