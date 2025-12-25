@@ -4941,6 +4941,49 @@ def execute_nlq_query(query_plan, data):
             pm_list.sort(key=lambda x: x.get(sort_field, 0), reverse=True)
             results = {'items': pm_list[:limit]}
         
+        # Cash queries (from Google Sheets)
+        elif target == 'cash':
+            try:
+                # Fetch cash data from internal API endpoint
+                import requests
+                cash_response = requests.get('http://127.0.0.1:5000/api/cash-data', timeout=30)
+                if cash_response.status_code == 200:
+                    cash_data = cash_response.json()
+                    accounts = cash_data.get('accounts', [])
+                    transactions = cash_data.get('transactions', [])
+                    
+                    # Filter for FTG Builders accounts (contain 1883, 2469, or 7554)
+                    ftg_accounts = [a for a in accounts if any(x in str(a.get('name', '')) for x in ['1883', '2469', '7554'])]
+                    
+                    if aggregation == 'balance':
+                        total_balance = sum(float(a.get('balance', 0) or 0) for a in ftg_accounts)
+                        results = {
+                            'total_balance': total_balance,
+                            'accounts': [{'name': a.get('name', ''), 'balance': float(a.get('balance', 0) or 0)} for a in ftg_accounts]
+                        }
+                    elif aggregation == 'transactions':
+                        # Get recent deposits and withdrawals
+                        deposits = [t for t in transactions if float(t.get('amount', 0) or 0) > 0]
+                        withdrawals = [t for t in transactions if float(t.get('amount', 0) or 0) < 0]
+                        results = {
+                            'deposits': deposits[:limit],
+                            'withdrawals': withdrawals[:limit],
+                            'deposit_total': sum(float(t.get('amount', 0) or 0) for t in deposits),
+                            'withdrawal_total': sum(float(t.get('amount', 0) or 0) for t in withdrawals)
+                        }
+                    else:
+                        total_balance = sum(float(a.get('balance', 0) or 0) for a in ftg_accounts)
+                        results = {
+                            'total_balance': total_balance,
+                            'account_count': len(ftg_accounts),
+                            'accounts': [{'name': a.get('name', ''), 'balance': float(a.get('balance', 0) or 0)} for a in ftg_accounts]
+                        }
+                else:
+                    results = {'error': 'Unable to fetch cash data from Google Sheets'}
+            except Exception as cash_err:
+                print(f"[NLQ] Cash data error: {cash_err}")
+                results = {'error': f'Cash data unavailable: {str(cash_err)}'}
+        
         else:
             results = {'error': f'Unknown target: {target}'}
         

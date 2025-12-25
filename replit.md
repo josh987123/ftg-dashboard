@@ -56,8 +56,8 @@ A dedicated AI-powered analysis page aggregates data from all sources to provide
 The AI Insights page includes a chat interface for asking natural language questions about financial data:
 - **Backend**: `/api/nlq` endpoint uses Claude to classify intent and generate structured query plans
 - **Data Resolvers**: Python functions query cached JSON data (jobs, AR, AP, GL) based on the query plan
-- **Field Mappings**: AR uses `calculated_amount_due - retainage_amount` for collectible amounts; AP uses `vendor_name` field and `remaining_balance`; Jobs uses `Job_No`/`Value` from job_actuals and `Job_No`/`Billed_Revenue` from job_billed_revenue (note capital letters)
-- **Query Types**: Supports PM-specific questions, AR/AP aging, vendor/customer summaries, GL account analysis
+- **Field Mappings**: AR uses `calculated_amount_due - retainage_amount` for collectible amounts; AP uses `vendor_name` field and `remaining_balance`; Jobs uses `Job_No`/`Value` from job_actuals and `Job_No`/`Billed_Revenue` from job_billed_revenue (note capital letters); Cash uses `/api/cash-data` with accounts[].balance
+- **Query Types**: Supports PM-specific questions, AR/AP aging, vendor/customer summaries, GL account analysis, cash balance queries
 - **Example Questions**: Pre-built buttons for common queries like "How many active jobs?" and "Show AR aging breakdown"
 
 ### Responsive Design
