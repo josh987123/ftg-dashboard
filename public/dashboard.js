@@ -24013,13 +24013,26 @@ async function extractAiInsightsData() {
     if (arData && arData.invoices) {
       text += "=== ACCOUNTS RECEIVABLE ===\n";
       const invoices = arData.invoices;
-      const totalAR = invoices.reduce((s, i) => s + (parseFloat(i.amount_due || i.calculated_amount_due) || 0), 0);
-      const current = invoices.filter(i => (i.days_outstanding || 0) <= 30).reduce((s, i) => s + (parseFloat(i.amount_due || i.calculated_amount_due) || 0), 0);
-      const over30 = invoices.filter(i => (i.days_outstanding || 0) > 30 && (i.days_outstanding || 0) <= 60).reduce((s, i) => s + (parseFloat(i.amount_due || i.calculated_amount_due) || 0), 0);
-      const over60 = invoices.filter(i => (i.days_outstanding || 0) > 60 && (i.days_outstanding || 0) <= 90).reduce((s, i) => s + (parseFloat(i.amount_due || i.calculated_amount_due) || 0), 0);
-      const over90 = invoices.filter(i => (i.days_outstanding || 0) > 90).reduce((s, i) => s + (parseFloat(i.amount_due || i.calculated_amount_due) || 0), 0);
+      // Use calculated_amount_due (actual remaining balance after payments) - this matches AR Aging page
+      const getCollectible = (inv) => {
+        const calcDue = parseFloat(inv.calculated_amount_due) || 0;
+        const retainage = parseFloat(inv.retainage_amount) || 0;
+        return Math.max(0, calcDue - retainage); // Collectible amount excluding retainage
+      };
+      const getRetainage = (inv) => parseFloat(inv.retainage_amount) || 0;
+      
+      const totalCollectible = invoices.reduce((s, i) => s + getCollectible(i), 0);
+      const totalRetainage = invoices.reduce((s, i) => s + getRetainage(i), 0);
+      const totalAR = totalCollectible + totalRetainage;
+      
+      const current = invoices.filter(i => (parseInt(i.days_outstanding) || 0) <= 30).reduce((s, i) => s + getCollectible(i), 0);
+      const over30 = invoices.filter(i => (parseInt(i.days_outstanding) || 0) > 30 && (parseInt(i.days_outstanding) || 0) <= 60).reduce((s, i) => s + getCollectible(i), 0);
+      const over60 = invoices.filter(i => (parseInt(i.days_outstanding) || 0) > 60 && (parseInt(i.days_outstanding) || 0) <= 90).reduce((s, i) => s + getCollectible(i), 0);
+      const over90 = invoices.filter(i => (parseInt(i.days_outstanding) || 0) > 90).reduce((s, i) => s + getCollectible(i), 0);
       
       text += `Total AR Outstanding: $${totalAR.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Collectible (excl. Retainage): $${totalCollectible.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Retainage Held: $${totalRetainage.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
       text += `Current (0-30 days): $${current.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
       text += `31-60 Days: $${over30.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
       text += `61-90 Days: $${over60.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
@@ -24229,28 +24242,34 @@ async function aggregateAllBusinessData() {
       .slice(0, 5);
   }
   
-  // Aggregate AR Data - use correct field names (invoices, amount_due, days_outstanding)
+  // Aggregate AR Data - use calculated_amount_due (actual balance after payments) matching AR Aging page
   if (arData && arData.invoices) {
     const invoices = arData.invoices;
-    let totalAR = 0, current = 0, over30 = 0, over60 = 0, over90 = 0;
+    let totalCollectible = 0, totalRetainage = 0, current = 0, over30 = 0, over60 = 0, over90 = 0;
     const customerAR = new Map();
     
     invoices.forEach(inv => {
-      const amtDue = parseFloat(inv.amount_due || inv.calculated_amount_due) || 0;
+      const calcDue = parseFloat(inv.calculated_amount_due) || 0;
+      const retainage = parseFloat(inv.retainage_amount) || 0;
+      const collectible = Math.max(0, calcDue - retainage);
       const daysOut = parseInt(inv.days_outstanding) || 0;
       const customer = inv.customer_name || 'Unknown';
       
-      totalAR += amtDue;
-      if (daysOut <= 30) current += amtDue;
-      else if (daysOut <= 60) over30 += amtDue;
-      else if (daysOut <= 90) over60 += amtDue;
-      else over90 += amtDue;
+      totalCollectible += collectible;
+      totalRetainage += retainage;
+      if (daysOut <= 30) current += collectible;
+      else if (daysOut <= 60) over30 += collectible;
+      else if (daysOut <= 90) over60 += collectible;
+      else over90 += collectible;
       
-      customerAR.set(customer, (customerAR.get(customer) || 0) + amtDue);
+      customerAR.set(customer, (customerAR.get(customer) || 0) + collectible);
     });
     
+    const totalAR = totalCollectible + totalRetainage;
     data.ar = {
       totalOutstanding: totalAR,
+      totalCollectible,
+      totalRetainage,
       current,
       over30,
       over60,
