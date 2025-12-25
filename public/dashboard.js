@@ -17383,14 +17383,15 @@ function renderDcrMetrics() {
     percentChangeEl.className = 'dcr-metric-value ' + (netChange >= 0 ? 'positive' : 'negative');
   }
   
-  // Update delta badges - only show for balance and net change
+  // Update delta badges - only show for balance (first tile)
   updateDeltaBadge('dcrBalanceDelta', balanceChange, true);
-  // Hide deposits/withdrawals deltas - just show totals
+  // Hide deposits/withdrawals/net deltas - just show totals
   const depositsDeltaEl = document.getElementById('dcrDepositsDelta');
   const withdrawalsDeltaEl = document.getElementById('dcrWithdrawalsDelta');
+  const netDeltaEl = document.getElementById('dcrNetDelta');
   if (depositsDeltaEl) depositsDeltaEl.style.display = 'none';
   if (withdrawalsDeltaEl) withdrawalsDeltaEl.style.display = 'none';
-  updateDeltaBadge('dcrNetDelta', netDelta, true);
+  if (netDeltaEl) netDeltaEl.style.display = 'none';
 }
 
 function updateDeltaBadge(elementId, delta, positiveIsGood) {
