@@ -4993,13 +4993,21 @@ def execute_nlq_query(query_plan, data):
                 # Default list with summary stats about budget coverage
                 jobs_with_budget = [j for j in filtered if j['has_budget']]
                 jobs_without_budget = [j for j in filtered if not j['has_budget']]
+                
+                # Sort by contract value descending to show most significant jobs first
+                sort_field = query_plan.get('sort_by') or 'contract'
+                sort_field = field_aliases.get(sort_field, sort_field)
+                filtered.sort(key=lambda x: x.get(sort_field, 0), reverse=True)
+                
                 results = {
                     'items': filtered[:limit or 20],
                     'total_count': len(filtered),
                     'jobs_with_budget': len(jobs_with_budget),
                     'jobs_without_budget': len(jobs_without_budget),
                     'total_actual_cost': sum(j['actual_cost'] for j in filtered),
-                    'note': 'Jobs without budgets show 0% completion but may have actual costs'
+                    'total_contract': sum(j['contract'] for j in filtered),
+                    'avg_completion_with_budget': round(sum(j['percent_complete'] for j in jobs_with_budget) / len(jobs_with_budget), 1) if jobs_with_budget else 0,
+                    'note': f'Showing top {min(limit or 20, len(filtered))} jobs by {sort_field}. {len(jobs_without_budget)} jobs have no budget.'
                 }
         
         # AR queries - matches AR Aging page logic exactly
