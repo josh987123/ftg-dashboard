@@ -23885,6 +23885,18 @@ async function extractAiInsightsData() {
       text += "=== JOB PORTFOLIO ===\n";
       const budgets = jobsData.job_budgets || [];
       const actuals = jobsData.job_actuals || [];
+      const billedRevenueRaw = jobsData.job_billed_revenue || [];
+      
+      // Build billed revenue map from job_billed_revenue
+      const billedRevenueMap = new Map();
+      billedRevenueRaw.forEach(row => {
+        const jobNo = String(row.Job_No || row.job_no || '');
+        if (jobNo) {
+          const billedRev = parseFloat(row.Billed_Revenue || row.billed_revenue) || 0;
+          billedRevenueMap.set(jobNo, (billedRevenueMap.get(jobNo) || 0) + billedRev);
+        }
+      });
+      
       // Exclude configured PMs from analysis
       const activeJobs = budgets.filter(j => j.job_status === 'A' && !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name));
       
@@ -23913,13 +23925,22 @@ async function extractAiInsightsData() {
       text += `Estimated Profit: $${estProfit.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}\n`;
       text += `Estimated Margin: ${margin.toFixed(1)}%\n\n`;
       
-      // Over/Under Billing Summary
+      // Over/Under Billing Summary - calculate from actual data
       let totalBilled = 0, totalEarned = 0, overBilledCount = 0, underBilledCount = 0;
       activeJobs.forEach(j => {
-        const billed = parseFloat(j.billed_to_date) || 0;
-        const pctComplete = parseFloat(j.percent_complete) || 0;
-        const contract = parseFloat(j.revised_contract) || 0;
-        const earned = contract * (pctComplete / 100);
+        const jobNo = String(j.job_no);
+        const billed = billedRevenueMap.get(jobNo) || 0;
+        const revisedContract = parseFloat(j.revised_contract) || 0;
+        const revisedCost = parseFloat(j.revised_cost) || 0;
+        const actualCost = actualCostByJob[jobNo] || 0;
+        
+        // Calculate earned revenue: (actualCost / revisedCost) * revisedContract
+        let earned = 0;
+        if (revisedCost > 0 && revisedContract > 0 && actualCost > 0) {
+          earned = (actualCost / revisedCost) * revisedContract;
+        }
+        if (!isFinite(earned)) earned = 0;
+        
         totalBilled += billed;
         totalEarned += earned;
         if (billed > earned) overBilledCount++;
@@ -23939,13 +23960,23 @@ async function extractAiInsightsData() {
         if (PM_EXCLUSION_CONFIG.isExcluded(pm)) return;
         if (!pmStats[pm]) pmStats[pm] = {jobs: 0, contract: 0, cost: 0, billed: 0, earned: 0};
         pmStats[pm].jobs++;
+        const jobNo = String(j.job_no);
         const jobContract = parseFloat(j.revised_contract) || 0;
+        const revisedCost = parseFloat(j.revised_cost) || 0;
+        const actualCost = actualCostByJob[jobNo] || 0;
         pmStats[pm].contract += jobContract;
-        pmStats[pm].cost += parseFloat(j.revised_cost) || 0;
-        const billed = parseFloat(j.billed_to_date) || 0;
-        const pctComplete = parseFloat(j.percent_complete) || 0;
-        const jobEarned = jobContract * (pctComplete / 100);
+        pmStats[pm].cost += revisedCost;
+        
+        // Get billed from billedRevenueMap
+        const billed = billedRevenueMap.get(jobNo) || 0;
         pmStats[pm].billed += billed;
+        
+        // Calculate earned: (actualCost / revisedCost) * revisedContract
+        let jobEarned = 0;
+        if (revisedCost > 0 && jobContract > 0 && actualCost > 0) {
+          jobEarned = (actualCost / revisedCost) * jobContract;
+        }
+        if (!isFinite(jobEarned)) jobEarned = 0;
         pmStats[pm].earned += jobEarned;
       });
       text += "Project Managers (Active Jobs):\n";
