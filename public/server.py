@@ -5016,11 +5016,29 @@ def execute_nlq_query(query_plan, data):
                 # Total AR matches AR Aging page: collectible + retainage = calc_due
                 total_collectible = sum(i['collectible'] for i in filtered)
                 total_retainage = sum(i['retainage'] for i in filtered)
+                total_due = total_collectible + total_retainage
+                
+                # Weighted avg days outstanding (weighted by collectible amount)
+                weighted_days = sum(i['collectible'] * i['days_outstanding'] for i in filtered)
+                avg_days_outstanding = weighted_days / total_collectible if total_collectible > 0 else 0
+                
+                # Concentration: top 5 customers as % of total
+                by_cust = {}
+                for inv in filtered:
+                    c = inv['customer']
+                    by_cust[c] = by_cust.get(c, 0) + inv['collectible']
+                sorted_custs = sorted(by_cust.items(), key=lambda x: -x[1])[:5]
+                top5_total = sum(amt for _, amt in sorted_custs)
+                top5_concentration = (top5_total / total_collectible * 100) if total_collectible > 0 else 0
+                
                 results = {
-                    'total_due': total_collectible + total_retainage,
+                    'total_due': total_due,
                     'collectible': total_collectible,
                     'retainage': total_retainage,
-                    'invoice_count': len(filtered)
+                    'invoice_count': len(filtered),
+                    'avg_days_outstanding': round(avg_days_outstanding, 1),
+                    'top5_concentration_pct': round(top5_concentration, 1),
+                    'top5_customers': [{'customer': c, 'amount': a} for c, a in sorted_custs]
                 }
             elif aggregation == 'by_customer':
                 by_cust = {}
@@ -5106,7 +5124,28 @@ def execute_nlq_query(query_plan, data):
                 })
             
             if aggregation == 'sum':
-                results = {'total': sum(i['amount'] for i in filtered), 'count': len(filtered)}
+                total_ap = sum(i['amount'] for i in filtered)
+                
+                # Weighted avg days outstanding
+                weighted_days = sum(i['amount'] * i['days_outstanding'] for i in filtered)
+                avg_days_outstanding = weighted_days / total_ap if total_ap > 0 else 0
+                
+                # Concentration: top 5 vendors as % of total
+                by_vendor = {}
+                for inv in filtered:
+                    v = inv['vendor']
+                    by_vendor[v] = by_vendor.get(v, 0) + inv['amount']
+                sorted_vendors = sorted(by_vendor.items(), key=lambda x: -x[1])[:5]
+                top5_total = sum(amt for _, amt in sorted_vendors)
+                top5_concentration = (top5_total / total_ap * 100) if total_ap > 0 else 0
+                
+                results = {
+                    'total': total_ap,
+                    'invoice_count': len(filtered),
+                    'avg_days_outstanding': round(avg_days_outstanding, 1),
+                    'top5_concentration_pct': round(top5_concentration, 1),
+                    'top5_vendors': [{'vendor': v, 'amount': a} for v, a in sorted_vendors]
+                }
             elif aggregation == 'by_vendor':
                 by_vendor = {}
                 for inv in filtered:

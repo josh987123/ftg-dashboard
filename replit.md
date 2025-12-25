@@ -34,9 +34,14 @@ A dedicated AI-powered analysis page aggregates data to provide strategic busine
 
 #### NLQ Calculation Consistency (Dec 2025)
 Critical alignment between page-level calculations and NLQ resolvers:
-- **AR Aging**: Only includes invoices with `calculated_amount_due > 0`; collectible = calc_due - retainage; aging buckets use collectible amounts; retainage tracked separately; total_due = collectible + retainage
+- **AR Aging**: Only includes invoices with `calculated_amount_due > 0`; collectible = calc_due - retainage; aging buckets use collectible amounts; retainage tracked separately; total_due = collectible + retainage; includes weighted avg days outstanding and top5 customer concentration
+- **AP Aging**: Uses remaining_balance > 0; includes weighted avg days outstanding and top5 vendor concentration
 - **Income Statement**: Revenue = accounts 4000 + 4090; Direct Expenses = 5000-5025 + 5200 + 5300 + 5410 + 5500; Indirect = 6xxx; Operating Expenses = 7000-7599; formulas match account_groups.json
-- **Jobs**: percent_complete = actual_cost / budget_cost * 100; margin = (contract - budget_cost) / contract * 100; over_under_billing = billed - (percent_complete/100 * contract)
+- **Jobs**: percent_complete = actual_cost / budget_cost * 100 (0% when no budget!); earned_revenue = (actual_cost/budget_cost) * contract; margin = (contract - budget_cost) / contract * 100; over_under_billing = billed - earned_revenue; backlog = contract - earned_revenue; has_budget flag tracks jobs without budgets
+
+#### Important Data Flags
+- **has_budget**: Critical flag on jobs - many jobs show 0% completion because they have no budget (revised_cost = 0). NLQ explains this and shows actual_cost instead.
+- Josh Angelo is excluded from all PM analysis but NOT from AR Aging page totals (only when PM filter is applied)
 
 ### Responsive Design
 The application uses a mobile-first approach with a responsive sidebar, hamburger menu, CSS flexbox layouts, and orientation-aware media queries for landscape mobile/tablet compatibility.
