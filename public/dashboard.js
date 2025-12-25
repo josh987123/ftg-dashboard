@@ -23794,12 +23794,79 @@ async function extractAiInsightsData() {
   text += "NOTE: All dollar values below are in USD and represent real business data.\n\n";
   
   try {
-    // Load jobs data for portfolio analysis
-    const [jobsData, arData, apData] = await Promise.all([
-      DataCache.getJobsData().catch(() => null),
-      DataCache.getARData().catch(() => null),
-      DataCache.getAPData().catch(() => null)
+    // Load ALL data sources for comprehensive analysis
+    const [jobsData, arData, apData, glData, cashData] = await Promise.all([
+      DataCache.getJobsData().catch(e => { console.warn('Jobs data load failed:', e); return null; }),
+      DataCache.getARData().catch(e => { console.warn('AR data load failed:', e); return null; }),
+      DataCache.getAPData().catch(e => { console.warn('AP data load failed:', e); return null; }),
+      DataCache.getGLData().catch(e => { console.warn('GL data load failed:', e); return null; }),
+      fetch('/data/cash_balances.json').then(r => r.ok ? r.json() : null).catch(e => { console.warn('Cash data load failed:', e); return null; })
     ]);
+    
+    // FINANCIAL PERFORMANCE from GL Data
+    if (glData && glData.gl_history) {
+      text += "=== FINANCIAL PERFORMANCE ===\n";
+      const glHistory = glData.gl_history;
+      const currentYear = new Date().getFullYear();
+      const lastYear = currentYear - 1;
+      
+      let revenueCurrentYear = 0, revenueLastYear = 0;
+      let directCostsCurrent = 0, indirectCostsCurrent = 0, sgaCurrent = 0;
+      
+      glHistory.forEach(entry => {
+        const acct = parseInt(entry.gl_account) || 0;
+        const amt = parseFloat(entry.amount) || 0;
+        const year = parseInt(entry.fiscal_year);
+        
+        if (acct >= 4000 && acct < 5000) {
+          if (year === currentYear) revenueCurrentYear += amt;
+          if (year === lastYear) revenueLastYear += amt;
+        } else if (acct >= 5000 && acct < 6000 && year === currentYear) {
+          directCostsCurrent += amt;
+        } else if (acct >= 6000 && acct < 7000 && year === currentYear) {
+          indirectCostsCurrent += amt;
+        } else if (acct >= 7000 && acct < 8000 && year === currentYear) {
+          sgaCurrent += amt;
+        }
+      });
+      
+      const normalizedRevCurrent = Math.abs(revenueCurrentYear);
+      const normalizedRevLast = Math.abs(revenueLastYear);
+      const grossProfit = normalizedRevCurrent - Math.abs(directCostsCurrent) - Math.abs(indirectCostsCurrent);
+      const operatingIncome = grossProfit - Math.abs(sgaCurrent);
+      const revenueGrowth = normalizedRevLast > 0 ? ((normalizedRevCurrent - normalizedRevLast) / normalizedRevLast * 100) : 0;
+      
+      text += `Revenue YTD (${currentYear}): $${normalizedRevCurrent.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Revenue Prior Year (${lastYear}): $${normalizedRevLast.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `YoY Revenue Growth: ${revenueGrowth.toFixed(1)}%\n`;
+      text += `Gross Profit YTD: $${grossProfit.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Gross Margin: ${normalizedRevCurrent > 0 ? (grossProfit / normalizedRevCurrent * 100).toFixed(1) : 0}%\n`;
+      text += `Operating Income YTD: $${operatingIncome.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Operating Margin: ${normalizedRevCurrent > 0 ? (operatingIncome / normalizedRevCurrent * 100).toFixed(1) : 0}%\n\n`;
+    }
+    
+    // CASH POSITION
+    if (cashData && cashData.bank_accounts) {
+      text += "=== CASH POSITION ===\n";
+      const accounts = cashData.bank_accounts;
+      const ftgAccounts = accounts.filter(a => ['1883', '2469', '7554'].some(suffix => String(a.account_number || '').endsWith(suffix)));
+      const totalCash = ftgAccounts.reduce((sum, a) => {
+        const balances = a.daily_balances || [];
+        const latestBalance = balances.length > 0 ? parseFloat(balances[balances.length - 1]?.balance) || 0 : 0;
+        return sum + latestBalance;
+      }, 0);
+      
+      const weekAgoBalance = ftgAccounts.reduce((sum, a) => {
+        const balances = a.daily_balances || [];
+        const weekAgo = balances.length > 7 ? parseFloat(balances[balances.length - 8]?.balance) || 0 : 0;
+        return sum + weekAgo;
+      }, 0);
+      
+      const weekChange = totalCash - weekAgoBalance;
+      
+      text += `Current Cash Balance (FTG Builders): $${totalCash.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `7-Day Change: $${weekChange.toLocaleString('en-US', {maximumFractionDigits: 0})} (${weekChange >= 0 ? '+' : ''}${weekAgoBalance > 0 ? (weekChange / weekAgoBalance * 100).toFixed(1) : 0}%)\n\n`;
+    }
     
     // Jobs Summary
     if (jobsData) {
@@ -23834,21 +23901,46 @@ async function extractAiInsightsData() {
       text += `Estimated Profit: $${estProfit.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}\n`;
       text += `Estimated Margin: ${margin.toFixed(1)}%\n\n`;
       
+      // Over/Under Billing Summary
+      let totalBilled = 0, totalEarned = 0, overBilledCount = 0, underBilledCount = 0;
+      activeJobs.forEach(j => {
+        const billed = parseFloat(j.billed_to_date) || 0;
+        const pctComplete = parseFloat(j.percent_complete) || 0;
+        const contract = parseFloat(j.revised_contract) || 0;
+        const earned = contract * (pctComplete / 100);
+        totalBilled += billed;
+        totalEarned += earned;
+        if (billed > earned) overBilledCount++;
+        else if (billed < earned) underBilledCount++;
+      });
+      const netOverUnder = totalBilled - totalEarned;
+      
+      text += `Total Billed to Date: $${totalBilled.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Total Earned Revenue: $${totalEarned.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Net Over/(Under) Billing: $${netOverUnder.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      text += `Jobs Over-Billed: ${overBilledCount} | Jobs Under-Billed: ${underBilledCount}\n\n`;
+      
       // PM Summary - Exclude configured PMs
       const pmStats = {};
       activeJobs.forEach(j => {
         const pm = j.project_manager_name || 'Unassigned';
-        // Exclude configured PMs from PM analysis
         if (PM_EXCLUSION_CONFIG.isExcluded(pm)) return;
-        if (!pmStats[pm]) pmStats[pm] = {jobs: 0, contract: 0, cost: 0};
+        if (!pmStats[pm]) pmStats[pm] = {jobs: 0, contract: 0, cost: 0, billed: 0, earned: 0};
         pmStats[pm].jobs++;
-        pmStats[pm].contract += parseFloat(j.revised_contract) || 0;
+        const jobContract = parseFloat(j.revised_contract) || 0;
+        pmStats[pm].contract += jobContract;
         pmStats[pm].cost += parseFloat(j.revised_cost) || 0;
+        const billed = parseFloat(j.billed_to_date) || 0;
+        const pctComplete = parseFloat(j.percent_complete) || 0;
+        const jobEarned = jobContract * (pctComplete / 100);
+        pmStats[pm].billed += billed;
+        pmStats[pm].earned += jobEarned;
       });
       text += "Project Managers (Active Jobs):\n";
       Object.entries(pmStats).sort((a, b) => b[1].contract - a[1].contract).forEach(([pm, stats]) => {
         const pmMargin = stats.contract > 0 ? ((stats.contract - stats.cost) / stats.contract * 100).toFixed(1) : 0;
-        text += `- ${pm}: ${stats.jobs} jobs, $${stats.contract.toLocaleString('en-US', {maximumFractionDigits: 0})} contract, ${pmMargin}% margin\n`;
+        const pmOverUnder = stats.billed - stats.earned;
+        text += `- ${pm}: ${stats.jobs} jobs, $${stats.contract.toLocaleString('en-US', {maximumFractionDigits: 0})} contract, ${pmMargin}% margin, O/U: $${pmOverUnder.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
       });
       text += "\n";
     }

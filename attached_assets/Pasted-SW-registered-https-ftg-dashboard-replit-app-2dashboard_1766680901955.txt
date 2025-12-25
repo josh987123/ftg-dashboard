@@ -1,0 +1,44 @@
+SW registered: https://ftg-dashboard.replit.app/
+2dashboard.js?v=20251225q:4992 Canvas not found: overviewCurrentRatioChart
+renderOverviewChart @ dashboard.js?v=20251225q:4992Understand this error
+(index):1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">Understand this warning
+dashboard.js?v=20251225q:26969 [DEBUG] Fallback check - cachedIsAdmin: true adminNav: <li class=​"nav-item admin-nav-item" data-section=​"admin" id=​"adminNavItem">​…​</li>​
+dashboard.js?v=20251225q:26700 [DEBUG] checkAdminAccess - token: exists
+dashboard.js?v=20251225q:26710 [DEBUG] verify-session response: {"success":true,"user":{"displayName":"Josh","email":"joshl@ftgbuilders.com","id":3,"permissions":["overview","revenue","account","income_statement","balance_sheet","cash_flow","over_under","receivables","job_analytics","cash_balances","admin","job_budgets","missing_budgets","job_actuals","cost_detail","job_overview","payments","cost_codes","over_under_billing","ap_aging","ar_aging","pm_report","ai_insights"],"role":"admin"}}
+dashboard.js?v=20251225q:26717 [DEBUG] userRole: admin isAdmin: true
+dashboard.js?v=20251225q:26738 [DEBUG] adminNavItem element: <li class=​"nav-item admin-nav-item" data-section=​"admin" id=​"adminNavItem">​…​</li>​
+dashboard.js?v=20251225q:26739 [DEBUG] adminNavItem classList before: nav-item admin-nav-item
+dashboard.js?v=20251225q:26743 [DEBUG] Removed hidden class from adminNavItem
+dashboard.js?v=20251225q:26748 [DEBUG] adminNavItem classList after: nav-item admin-nav-item
+dashboard.js?v=20251225q:26756 [DEBUG] Removed hidden class from distReportsSection
+dashboard.js?v=20251225q:4992 Canvas not found: overviewCurrentRatioChart
+renderOverviewChart @ dashboard.js?v=20251225q:4992Understand this error
+dashboard.js?v=20251225q:26710 [DEBUG] verify-session response: {"success":true,"user":{"displayName":"Josh","email":"joshl@ftgbuilders.com","id":3,"permissions":["overview","revenue","account","income_statement","balance_sheet","cash_flow","over_under","receivables","job_analytics","cash_balances","admin","job_budgets","missing_budgets","job_actuals","cost_detail","job_overview","payments","cost_codes","over_under_billing","ap_aging","ar_aging","pm_report","ai_insights"],"role":"admin"}}
+dashboard.js?v=20251225q:26717 [DEBUG] userRole: admin isAdmin: true
+dashboard.js?v=20251225q:26738 [DEBUG] adminNavItem element: <li class=​"nav-item admin-nav-item" data-section=​"admin" id=​"adminNavItem">​…​</li>​
+dashboard.js?v=20251225q:26739 [DEBUG] adminNavItem classList before: nav-item admin-nav-item
+dashboard.js?v=20251225q:26743 [DEBUG] Removed hidden class from adminNavItem
+dashboard.js?v=20251225q:26748 [DEBUG] adminNavItem classList after: nav-item admin-nav-item
+dashboard.js?v=20251225q:26756 [DEBUG] Removed hidden class from distReportsSection
+dashboard.js?v=20251225q:4992 Canvas not found: overviewCurrentRatioChart
+renderOverviewChart @ dashboard.js?v=20251225q:4992Understand this error
+dashboard.js?v=20251225q:23742 AI Insights data being sent: FTG Builders Financial Dashboard - Comprehensive Business Analysis
+
+NOTE: All dollar values below are in USD and represent real business data.
+
+=== JOB PORTFOLIO ===
+Total Active Jobs: 353
+Total Contract Value: $132,970,499
+Total Budgeted Cost: $107,197,736
+Total Actual Cost to Date: $55,230,720
+Estimated Profit: $25,772,763
+Estimated Margin: 19.4%
+
+Project Managers (Active Jobs):
+- Pedro Becerra: 24 jobs, $32,954,577 contract, 20.2% margin
+- Rodney Terra: 129 jobs, $32,428,083 contract, 20.3% margin
+- Daniel Acosta: 9 jobs, $24,074,355 contract, 16.6% margin
+- Jennifer Angelo: 65 jobs, $19,502,909 contract, 17.9% margin
+- Kathy Roth: 38 jobs, $14,602,614 contract, 18.5% margin
+- Doris Quai Hoi: 86 jobs, $9,171,807 contract, 25.0% margin
+- Jose M Diaz Rodriguez: 2 jobs, $236,154 contract, 18.3% margin
