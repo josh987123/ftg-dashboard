@@ -3904,7 +3904,7 @@ def api_get_top_vendors():
 
 @app.route('/api/ap-aging', methods=['GET', 'OPTIONS'])
 def api_get_ap_aging():
-    """Get AP aging report grouped by vendor with aging buckets"""
+    """Get AP aging report grouped by vendor with aging buckets - uses metrics cache"""
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'})
     
@@ -3915,20 +3915,8 @@ def api_get_ap_aging():
         sort_column = request.args.get('sortColumn', 'total_due')
         sort_direction = request.args.get('sortDirection', 'desc')
         
-        # Load invoices data
-        invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ap_invoices.json')
-        with open(invoices_path, 'r', encoding='utf-8-sig') as f:
-            invoices_json = json.load(f)
-        
-        invoices = invoices_json.get('invoices', [])
-        
-        # Filter by PM if provided
-        if pm_filter:
-            invoices = [inv for inv in invoices if inv.get('project_manager_name', '').strip() == pm_filter]
-        
-        # Filter by job number if provided
-        if job_search:
-            invoices = [inv for inv in invoices if job_search in str(inv.get('job_no', '')).lower()]
+        # Use pre-computed AP metrics from cache
+        ap_invoices = metrics_cache.ap
         
         # Use same exclusion list as payments
         excluded_vendors = PAYMENTS_EXCLUDED_VENDORS
@@ -3936,10 +3924,17 @@ def api_get_ap_aging():
         # Group by vendor and calculate aging buckets
         vendor_aging = {}
         
-        for inv in invoices:
-            remaining = float(inv.get('remaining_balance', 0) or 0)
-            if remaining <= 0:
-                continue  # Skip fully paid invoices
+        for inv in ap_invoices:
+            # Filter by PM if provided
+            if pm_filter:
+                inv_pm = (inv.get('project_manager', '') or '').strip()
+                if inv_pm != pm_filter:
+                    continue
+            
+            # Filter by job number if provided
+            if job_search:
+                if job_search not in str(inv.get('job_no', '')).lower():
+                    continue
             
             vendor = (inv.get('vendor_name', '') or '').strip()
             if not vendor:
@@ -3960,19 +3955,20 @@ def api_get_ap_aging():
                     'retainage': 0
                 }
             
-            retainage = float(inv.get('retainage_amount', 0) or 0)
+            # Use pre-computed values from metrics cache
+            remaining = inv.get('remaining_balance', 0)
+            retainage = inv.get('retainage', 0)
+            aging_bucket = inv.get('aging_bucket', 'current')
+            
             # Amount due excluding retainage
             amount_ex_ret = remaining - retainage if retainage > 0 else remaining
             
-            # Get days outstanding
-            days = int(float(inv.get('days_outstanding', 0) or 0))
-            
             # Add to appropriate bucket
-            if days <= 30:
+            if aging_bucket == 'current':
                 vendor_aging[vendor]['current'] += amount_ex_ret
-            elif days <= 60:
+            elif aging_bucket == 'days_31_60':
                 vendor_aging[vendor]['days_31_60'] += amount_ex_ret
-            elif days <= 90:
+            elif aging_bucket == 'days_61_90':
                 vendor_aging[vendor]['days_61_90'] += amount_ex_ret
             else:
                 vendor_aging[vendor]['days_90_plus'] += amount_ex_ret
@@ -3990,7 +3986,6 @@ def api_get_ap_aging():
         # Sort - default is multi-column: 90+ desc, then 61-90 desc, then 31-60 desc, then 0-30 desc
         reverse = sort_direction.lower() == 'desc'
         if sort_column == 'days_90_plus':
-            # Multi-column sort: 90+ -> 61-90 -> 31-60 -> 0-30 all descending
             vendors_list.sort(key=lambda x: (
                 x.get('days_90_plus', 0),
                 x.get('days_61_90', 0),
@@ -4413,7 +4408,7 @@ def api_metrics_summary():
 
 @app.route('/api/ar-aging', methods=['GET', 'OPTIONS'])
 def api_get_ar_aging():
-    """Get AR aging report grouped by customer with aging buckets"""
+    """Get AR aging report grouped by customer with aging buckets - uses metrics cache"""
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'})
     
@@ -4424,25 +4419,16 @@ def api_get_ar_aging():
         pm_filter = request.args.get('pm', '').strip()
         customer_filter = request.args.get('customer', '').strip()
         
-        # Load AR invoices data
-        invoices_path = os.path.join(os.path.dirname(__file__), 'data', 'ar_invoices.json')
-        with open(invoices_path, 'r', encoding='utf-8-sig') as f:
-            invoices_json = json.load(f)
-        
-        invoices = invoices_json.get('invoices', [])
+        # Use pre-computed AR metrics from cache
+        ar_invoices = metrics_cache.ar
         
         # Group by customer and calculate aging buckets
         customer_aging = {}
         
-        for inv in invoices:
-            # Use calculated_amount_due as the actual outstanding balance
-            calc_due = float(inv.get('calculated_amount_due', 0) or 0)
-            if calc_due <= 0:
-                continue  # Skip fully paid invoices
-            
+        for inv in ar_invoices:
             # Filter by PM if specified
             if pm_filter:
-                inv_pm = (inv.get('project_manager_name', '') or '').strip()
+                inv_pm = (inv.get('project_manager', '') or '').strip()
                 if inv_pm.lower() != pm_filter.lower():
                     continue
             
@@ -4466,34 +4452,17 @@ def api_get_ar_aging():
                     'retainage': 0
                 }
             
-            retainage = float(inv.get('retainage_amount', 0) or 0)
+            # Use pre-computed values from metrics cache
+            collectible = inv.get('collectible', 0)
+            retainage = inv.get('retainage', 0)
+            aging_bucket = inv.get('aging_bucket', 'current')
             
-            # Collectible amount excludes retainage (retainage tracked separately)
-            collectible = max(0, calc_due - retainage)
-            
-            # Calculate days outstanding from invoice date
-            # AR aging is based on how many days since the invoice date
-            days = 0
-            date_val = inv.get('invoice_date')
-            if date_val:
-                try:
-                    excel_date = float(date_val)
-                    if excel_date > 0:
-                        invoice_date = datetime.fromtimestamp((excel_date - 25569) * 86400)
-                        days = (datetime.now() - invoice_date).days
-                        # If negative (future date), treat as current (0 days)
-                        if days < 0:
-                            days = 0
-                except (ValueError, TypeError):
-                    # Fall back to days_outstanding from file
-                    days = int(float(inv.get('days_outstanding', 0) or 0))
-            
-            # Add collectible amount to appropriate aging bucket (excludes retainage)
-            if days <= 30:
+            # Add collectible amount to appropriate aging bucket
+            if aging_bucket == 'current':
                 customer_aging[customer]['current'] += collectible
-            elif days <= 60:
+            elif aging_bucket == 'days_31_60':
                 customer_aging[customer]['days_31_60'] += collectible
-            elif days <= 90:
+            elif aging_bucket == 'days_61_90':
                 customer_aging[customer]['days_61_90'] += collectible
             else:
                 customer_aging[customer]['days_90_plus'] += collectible
@@ -4511,7 +4480,6 @@ def api_get_ar_aging():
         # Sort - default is multi-column: 90+ desc, 61-90 desc, 31-60 desc, 0-30 desc, retainage desc
         reverse = sort_direction.lower() == 'desc'
         if sort_column == 'days_90_plus' or sort_column == 'total_due':
-            # Multi-column sort: 90+ -> 61-90 -> 31-60 -> 0-30 -> retainage all descending
             customers_list.sort(key=lambda x: (
                 x.get('days_90_plus', 0),
                 x.get('days_61_90', 0),

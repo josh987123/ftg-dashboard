@@ -20979,87 +20979,29 @@ async function loadJobActualsData() {
   if (loadingOverlay) loadingOverlay.classList.remove('hidden');
   
   try {
-    const data = await DataCache.getJobsData();
+    // Fetch pre-computed job metrics from the canonical metrics API
+    const metricsData = await DataCache.getJobsMetrics();
+    const jobs = metricsData.jobs || [];
     
-    const jobBudgets = data.job_budgets || [];
-    const jobActualsRaw = data.job_actuals || [];
-    const jobBilledRevenueRaw = data.job_billed_revenue || [];
-    
-    // Normalize all job numbers to strings for consistent lookups
-    const budgetMap = new Map();
-    jobBudgets.forEach(job => {
-      const jobNo = String(job.job_no);
-      budgetMap.set(jobNo, {
-        customer_name: job.customer_name,
-        project_manager_name: job.project_manager_name,
-        job_status: job.job_status,
-        job_description: job.job_description,
-        revised_contract: parseFloat(job.revised_contract) || 0,
-        revised_cost: parseFloat(job.revised_cost) || 0
-      });
-    });
-    
-    const billedRevenueMap = new Map();
-    jobBilledRevenueRaw.forEach(row => {
-      const jobNo = String(row.Job_No || row.job_no);
-      if (jobNo && jobNo !== 'undefined') {
-        const billedRev = parseFloat(row.Billed_Revenue || row.billed_revenue) || 0;
-        billedRevenueMap.set(jobNo, billedRev);
-      }
-    });
-    
-    const jobMap = new Map();
-    jobActualsRaw.forEach(row => {
-      // Handle both capitalized (Job_No, Value) and lowercase (job_no, actual_cost) key names
-      const jobNo = String(row.Job_No || row.job_no);
-      const actualCost = parseFloat(row.Value || row.actual_cost) || 0;
-      if (!jobNo || jobNo === 'undefined') return;
-      
-      if (!jobMap.has(jobNo)) {
-        jobMap.set(jobNo, {
-          job_no: jobNo,
-          job_status: row.job_status || row.Job_Status || '',
-          job_description: row.Job_Description || row.job_description || '',
-          project_manager_name: row.Project_Manager || row.project_manager_name || '',
-          actual_cost: 0
-        });
-      }
-      jobMap.get(jobNo).actual_cost += actualCost;
-    });
-    
-    jobActualsData = [];
-    jobMap.forEach((job, jobNo) => {
-      const budget = budgetMap.get(jobNo) || {};
-      const revisedCost = budget.revised_cost || 0;
-      const revisedContract = budget.revised_contract || 0;
-      const billedRevenue = billedRevenueMap.get(jobNo) || 0;
-      
-      let earnedRevenue = 0;
-      if (revisedCost > 0 && revisedContract > 0 && job.actual_cost > 0) {
-        earnedRevenue = (job.actual_cost / revisedCost) * revisedContract;
-      }
-      if (!isFinite(earnedRevenue)) earnedRevenue = 0;
-      
-      let percentComplete = 0;
-      if (revisedCost > 0 && job.actual_cost > 0) {
-        percentComplete = (job.actual_cost / revisedCost) * 100;
-      }
-      if (!isFinite(percentComplete)) percentComplete = 0;
-      
-      jobActualsData.push({
-        ...job,
-        // Get job_status from budget data (actuals data doesn't have it)
-        job_status: budget.job_status || job.job_status || '',
-        job_description: budget.job_description || job.job_description || '',
-        project_manager_name: budget.project_manager_name || job.project_manager_name || '',
-        customer_name: budget.customer_name || '',
-        revised_contract: revisedContract,
-        revised_cost: revisedCost,
-        billed_revenue: billedRevenue,
-        earned_revenue: earnedRevenue,
-        percent_complete: percentComplete
-      });
-    });
+    // Map metrics API response to expected format for the page
+    jobActualsData = jobs.map(job => ({
+      job_no: job.job_no,
+      job_description: job.job_description,
+      customer_name: job.customer_name,
+      project_manager_name: job.project_manager,
+      job_status: job.job_status,
+      revised_contract: job.contract,
+      revised_cost: job.budget_cost,
+      actual_cost: job.actual_cost,
+      billed_revenue: job.billed,
+      earned_revenue: job.earned_revenue,
+      percent_complete: job.percent_complete,
+      backlog: job.backlog,
+      over_under: job.over_under_billing,
+      estimated_profit: job.estimated_profit,
+      profit_margin: job.margin,
+      has_budget: job.has_budget
+    }));
     
     // Initialize column filter dropdowns
     initJobActualsColumnFilters();
@@ -21069,8 +21011,8 @@ async function loadJobActualsData() {
     populateJaPmTabs();
     
     const dataAsOf = document.getElementById('jobActualsDataAsOf');
-    if (dataAsOf && data.generated_at) {
-      dataAsOf.textContent = new Date(data.generated_at).toLocaleDateString();
+    if (dataAsOf && metricsData.generated_at) {
+      dataAsOf.textContent = new Date(metricsData.generated_at).toLocaleDateString();
     }
     
     filterJobActuals();
@@ -21082,7 +21024,6 @@ async function loadJobActualsData() {
     if (loadingOverlay) loadingOverlay.classList.add('hidden');
   }
 }
-
 function initJobActualsColumnFilters() {
   const filterColumns = ['job_no', 'job_description', 'customer_name', 'job_status'];
   
@@ -24580,44 +24521,33 @@ async function initOverUnderBilling() {
   }
   
   try {
-    const data = await DataCache.getJobsData();
+    // Fetch pre-computed job metrics from the canonical metrics API
+    const metricsData = await DataCache.getJobsMetrics();
+    const jobs = metricsData.jobs || [];
     
-    if (data.job_budgets && (!jobBudgetsData || jobBudgetsData.length === 0)) {
-      jobBudgetsData = (data.job_budgets || []).map(job => ({
-        ...job,
-        original_contract: parseFloat(job.original_contract) || 0,
-        tot_income_adj: parseFloat(job.tot_income_adj) || 0,
-        revised_contract: parseFloat(job.revised_contract) || 0,
-        original_cost: parseFloat(job.original_cost) || 0,
-        tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
-        revised_cost: parseFloat(job.revised_cost) || 0,
-        estimated_profit: (parseFloat(job.revised_contract) || 0) - (parseFloat(job.revised_cost) || 0)
+    // Build OUB data directly from metrics (already has all calculated values)
+    oubData = jobs
+      .filter(job => job.job_status === 'A' && job.contract > 0 && job.budget_cost > 0)
+      .map(job => ({
+        job_no: job.job_no,
+        job_description: job.job_description || '',
+        project_manager_name: job.project_manager || '',
+        job_status: job.job_status || '',
+        contract_value: job.contract,
+        est_cost: job.budget_cost,
+        est_profit: job.estimated_profit,
+        actual_cost: job.actual_cost,
+        pct_complete: job.percent_complete,
+        billed_revenue: job.billed,
+        earned_revenue: job.earned_revenue,
+        over_under: job.over_under_billing,
+        has_budget: job.has_budget
       }));
+    
+    if (metricsData.generated_at) {
+      jobsDataAsOf = new Date(metricsData.generated_at).toLocaleDateString();
     }
     
-    // Load billed revenue data directly
-    // IMPORTANT: Normalize job numbers to strings for consistent key matching
-    oubBilledRevenueMap = new Map();
-    const billedRevenueRaw = data.job_billed_revenue || [];
-    billedRevenueRaw.forEach(row => {
-      const jobNo = String(row.Job_No || row.job_no);
-      if (jobNo) {
-        const billedRev = parseFloat(row.Billed_Revenue || row.billed_revenue) || 0;
-        oubBilledRevenueMap.set(jobNo, billedRev);
-      }
-    });
-    
-    if (data.generated_at) {
-      jobsDataAsOf = new Date(data.generated_at).toLocaleDateString();
-    }
-    
-    // Load job actuals if not already loaded
-    if (!jobActualsData || jobActualsData.length === 0) {
-      await loadJobActualsData();
-    }
-    
-    // Build OUB data by combining budgets, actuals, and billed revenue
-    buildOubData();
     populateOubPmTabs();
     setupOubEventListeners();
     updateOverUnderBilling();
@@ -24630,76 +24560,6 @@ async function initOverUnderBilling() {
   } catch (err) {
     console.error('Error initializing Over/(Under) Billing:', err);
     document.getElementById('oubTableBody').innerHTML = '<tr><td colspan="10" class="error-cell">Error loading data</td></tr>';
-  }
-}
-
-function buildOubData() {
-  oubData = [];
-  
-  // Create lookup for actuals by job number (for actual costs)
-  // IMPORTANT: Normalize job numbers to strings to ensure consistent key matching
-  const actualsMap = new Map();
-  if (jobActualsData && Array.isArray(jobActualsData)) {
-    jobActualsData.forEach(job => {
-      const jobNo = String(job.job_no);
-      actualsMap.set(jobNo, {
-        actual_cost: job.actual_cost || 0
-      });
-    });
-  }
-  
-  // Build combined data from budgets - ONLY ACTIVE JOBS with valid budget data
-  if (jobBudgetsData && Array.isArray(jobBudgetsData)) {
-    jobBudgetsData.forEach(budget => {
-      // Only include Active jobs (status 'A')
-      if (budget.job_status !== 'A') return;
-      
-      // Contract Value = revised_contract (already includes original + change orders)
-      const contractValue = parseFloat(budget.revised_contract) || 0;
-      
-      // Est. Cost = revised_cost (already includes original + adjustments)
-      const estCost = parseFloat(budget.revised_cost) || 0;
-      
-      // Skip jobs with no estimated cost or contract value
-      if (contractValue === 0 || estCost === 0) return;
-      
-      // Normalize job number to string for consistent lookup
-      const jobNo = String(budget.job_no);
-      const actuals = actualsMap.get(jobNo) || { actual_cost: 0 };
-      
-      // Est. Profit = Contract Value - Est. Cost
-      const estProfit = contractValue - estCost;
-      
-      // Actual Cost from actuals
-      const actualCost = actuals.actual_cost;
-      
-      // % Complete = Actual Cost / Est. Cost (cost-based completion)
-      const pctComplete = estCost > 0 ? (actualCost / estCost) * 100 : 0;
-      
-      // Billed Revenue from the directly loaded billed revenue map (use normalized jobNo)
-      const billedRevenue = oubBilledRevenueMap.get(jobNo) || 0;
-      
-      // Earned Revenue = % Complete × Contract Value
-      const earnedRevenue = (pctComplete / 100) * contractValue;
-      
-      // Over/(Under) = Billed Revenue - Earned Revenue
-      const overUnder = billedRevenue - earnedRevenue;
-      
-      oubData.push({
-        job_no: budget.job_no,
-        job_description: budget.job_description || '',
-        project_manager_name: budget.project_manager_name || '',
-        job_status: budget.job_status || '',
-        contract_value: contractValue,
-        est_cost: estCost,
-        est_profit: estProfit,
-        actual_cost: actualCost,
-        pct_complete: pctComplete,
-        billed_revenue: billedRevenue,
-        earned_revenue: earnedRevenue,
-        over_under: overUnder
-      });
-    });
   }
 }
 
