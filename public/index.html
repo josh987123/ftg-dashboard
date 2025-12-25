@@ -3311,19 +3311,19 @@
         <div class="page-header-row">
           <div>
             <h2>Cash Report</h2>
-            <p class="section-description" id="dcrDescription">FTG Builders cash position and activity - trailing 14 days</p>
+            <p class="section-description" id="dcrDescription">FTG Builders cash position and activity - trailing 10 weeks</p>
           </div>
           <!-- Daily/Weekly Toggle -->
           <div class="dcr-view-toggle">
-            <button class="dcr-toggle-btn active" data-view="daily">Daily</button>
-            <button class="dcr-toggle-btn" data-view="weekly">Weekly</button>
+            <button class="dcr-toggle-btn" data-view="daily">Daily</button>
+            <button class="dcr-toggle-btn active" data-view="weekly">Weekly</button>
           </div>
         </div>
         
         <!-- Cash Balance Chart -->
         <div class="dcr-chart-container">
           <div class="dcr-chart-header">
-            <h3 id="dcrChartTitle">Daily Cash Balance</h3>
+            <h3 id="dcrChartTitle">Weekly Cash Balance</h3>
             <span class="dcr-chart-subtitle" id="dcrChartSubtitle">FTG Builders Combined</span>
           </div>
           <div class="chart-wrapper dcr-chart-wrapper">
@@ -3341,17 +3341,17 @@
           <div class="dcr-metric-tile">
             <div class="dcr-metric-label" id="dcrDepositsLabel">Deposits</div>
             <div class="dcr-metric-value positive" id="dcrDeposits">--</div>
-            <div class="dcr-metric-sublabel" id="dcrDepositsSublabel">Prior day (excl. transfers)</div>
+            <div class="dcr-metric-sublabel" id="dcrDepositsSublabel">Past 7 days (excl. transfers)</div>
           </div>
           <div class="dcr-metric-tile">
             <div class="dcr-metric-label" id="dcrWithdrawalsLabel">Withdrawals</div>
             <div class="dcr-metric-value negative" id="dcrWithdrawals">--</div>
-            <div class="dcr-metric-sublabel" id="dcrWithdrawalsSublabel">Prior day (excl. transfers)</div>
+            <div class="dcr-metric-sublabel" id="dcrWithdrawalsSublabel">Past 7 days (excl. transfers)</div>
           </div>
           <div class="dcr-metric-tile">
             <div class="dcr-metric-label">Change</div>
             <div class="dcr-metric-value" id="dcrPercentChange">--</div>
-            <div class="dcr-metric-sublabel" id="dcrChangeSublabel">vs. prior day balance</div>
+            <div class="dcr-metric-sublabel" id="dcrChangeSublabel">vs. prior week balance</div>
           </div>
         </div>
         
@@ -3728,11 +3728,11 @@
   <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script defer src="dashboard.js?v=20251224e"></script>
+  <script defer src="dashboard.js?v=20251224f"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251224e';
+    const APP_VERSION = '20251224f';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {

@@ -16273,7 +16273,7 @@ let dcrArData = null;
 let dcrApData = null;
 let dcrJobsData = null;
 let dcrInitialized = false;
-let dcrViewMode = 'daily'; // 'daily' or 'weekly'
+let dcrViewMode = 'weekly'; // 'daily' or 'weekly' - weekly is default
 
 async function initCashReport() {
   console.log('[DCR] Initializing Cash Report...');
@@ -16568,6 +16568,78 @@ function renderDcrChart() {
   });
 }
 
+// Helper: Check if a date is a weekend (Saturday=6, Sunday=0)
+function isDcrWeekend(dateStr) {
+  const date = new Date(dateStr + 'T12:00:00');
+  const day = date.getDay();
+  return day === 0 || day === 6;
+}
+
+// Helper: Get US federal holidays for a given year
+function getDcrHolidays(year) {
+  const holidays = [];
+  
+  // New Year's Day - Jan 1
+  holidays.push(`${year}-01-01`);
+  
+  // MLK Day - 3rd Monday of January
+  let d = new Date(year, 0, 1);
+  let mondayCount = 0;
+  while (mondayCount < 3) {
+    if (d.getDay() === 1) mondayCount++;
+    if (mondayCount < 3) d.setDate(d.getDate() + 1);
+  }
+  holidays.push(d.toISOString().split('T')[0]);
+  
+  // Presidents Day - 3rd Monday of February
+  d = new Date(year, 1, 1);
+  mondayCount = 0;
+  while (mondayCount < 3) {
+    if (d.getDay() === 1) mondayCount++;
+    if (mondayCount < 3) d.setDate(d.getDate() + 1);
+  }
+  holidays.push(d.toISOString().split('T')[0]);
+  
+  // Memorial Day - Last Monday of May
+  d = new Date(year, 5, 0); // Last day of May
+  while (d.getDay() !== 1) d.setDate(d.getDate() - 1);
+  holidays.push(d.toISOString().split('T')[0]);
+  
+  // Independence Day - July 4
+  holidays.push(`${year}-07-04`);
+  
+  // Labor Day - 1st Monday of September
+  d = new Date(year, 8, 1);
+  while (d.getDay() !== 1) d.setDate(d.getDate() + 1);
+  holidays.push(d.toISOString().split('T')[0]);
+  
+  // Thanksgiving - 4th Thursday of November
+  d = new Date(year, 10, 1);
+  let thursdayCount = 0;
+  while (thursdayCount < 4) {
+    if (d.getDay() === 4) thursdayCount++;
+    if (thursdayCount < 4) d.setDate(d.getDate() + 1);
+  }
+  holidays.push(d.toISOString().split('T')[0]);
+  
+  // Christmas - Dec 25
+  holidays.push(`${year}-12-25`);
+  
+  return holidays;
+}
+
+// Helper: Check if a date is a US federal holiday
+function isDcrHoliday(dateStr) {
+  const year = parseInt(dateStr.substring(0, 4));
+  const holidays = getDcrHolidays(year);
+  return holidays.includes(dateStr);
+}
+
+// Helper: Check if a date is a business day (not weekend, not holiday)
+function isDcrBusinessDay(dateStr) {
+  return !isDcrWeekend(dateStr) && !isDcrHoliday(dateStr);
+}
+
 function calculateDcrDailyBalances(ftgAccounts, dates) {
   const ftgAccountNames = ftgAccounts.map(a => a.name);
   const currentBalance = ftgAccounts.reduce((sum, a) => sum + a.balance, 0);
@@ -16589,17 +16661,29 @@ function calculateDcrDailyBalances(ftgAccounts, dates) {
   const balances = {};
   let runningBalance = currentBalance;
   let prevDateStr = null;
+  let lastBusinessDayBalance = currentBalance;
   
   for (const dateStr of sortedDates) {
     if (dateStr > today) {
       balances[dateStr] = null;
     } else if (dateStr === today) {
       balances[dateStr] = currentBalance;
+      if (isDcrBusinessDay(dateStr)) {
+        lastBusinessDayBalance = currentBalance;
+      }
       prevDateStr = dateStr;
     } else {
+      // Calculate balance change from previous day's transactions
       const nextDayChange = prevDateStr ? (txnsByDate[prevDateStr] || 0) : 0;
       runningBalance -= nextDayChange;
-      balances[dateStr] = runningBalance;
+      
+      // For weekends/holidays, use the last business day balance
+      if (!isDcrBusinessDay(dateStr)) {
+        balances[dateStr] = lastBusinessDayBalance;
+      } else {
+        balances[dateStr] = runningBalance;
+        lastBusinessDayBalance = runningBalance;
+      }
       prevDateStr = dateStr;
     }
   }
