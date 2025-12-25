@@ -4856,7 +4856,8 @@ def execute_nlq_query(query_plan, data):
                 values = [j.get(field, 0) for j in filtered]
                 results = {'average': sum(values) / len(values) if values else 0, 'field': field, 'count': len(filtered)}
             elif aggregation == 'top':
-                sort_field = fields[0] if fields else 'contract'
+                # Use sort_by from query plan, fallback to contract
+                sort_field = query_plan.get('sort_by') or 'contract'
                 sort_field = field_aliases.get(sort_field, sort_field)  # Apply alias
                 filtered.sort(key=lambda x: x.get(sort_field, 0), reverse=True)
                 results = {'items': filtered[:limit], 'sort_by': sort_field}
@@ -4885,7 +4886,8 @@ def execute_nlq_query(query_plan, data):
                     else:
                         pm_data['margin'] = 0
                 
-                sort_field = fields[0] if fields else 'contract'
+                # Use sort_by from query plan
+                sort_field = query_plan.get('sort_by') or 'contract'
                 sort_field = field_aliases.get(sort_field, sort_field)
                 sorted_pms = sorted(by_pm.values(), key=lambda x: x.get(sort_field, 0), reverse=True)
                 results = {'items': sorted_pms[:limit or 20], 'total_pms': len(by_pm)}
@@ -4902,8 +4904,8 @@ def execute_nlq_query(query_plan, data):
                 sorted_custs = sorted(by_cust.values(), key=lambda x: x['contract'], reverse=True)
                 results = {'items': sorted_custs[:limit or 20], 'total_customers': len(by_cust)}
             elif aggregation == 'bottom':
-                # Lowest ranked by field
-                sort_field = fields[0] if fields else 'margin'
+                # Lowest ranked by field - use sort_by from query plan
+                sort_field = query_plan.get('sort_by') or 'margin'
                 sort_field = field_aliases.get(sort_field, sort_field)
                 filtered.sort(key=lambda x: x.get(sort_field, 0), reverse=False)
                 results = {'items': filtered[:limit], 'sort_by': sort_field}
