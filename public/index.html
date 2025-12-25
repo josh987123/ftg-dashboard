@@ -3153,63 +3153,109 @@
       ============================================================= -->
       <section id="aiInsights" class="dashboard-section">
         <h2>AI Insights</h2>
-        <div class="section-subtitle">Comprehensive Business Intelligence</div>
+        <div class="section-subtitle">Ask questions about your financial data</div>
         
-        <div class="ai-insights-container">
-          <!-- Hero Card with Run Button -->
-          <div class="ai-insights-hero">
-            <h3>Full Business Analysis</h3>
-            <p>Analyze all financial data, jobs, accounts receivable, accounts payable, project managers, clients, and vendors to generate comprehensive insights and recommendations.</p>
-            <button type="button" id="aiInsightsRunBtn" class="ai-insights-run-btn">
-              <span class="btn-icon">✨</span>
-              <span class="btn-text">Run Full Analysis</span>
-            </button>
-            <div id="aiInsightsProgress" class="ai-insights-progress hidden">
-              <div class="progress-bar">
-                <div class="progress-fill" id="aiInsightsProgressFill"></div>
+        <div class="ai-chat-container">
+          <!-- Chat Messages Area -->
+          <div class="ai-chat-messages" id="aiChatMessages">
+            <!-- Welcome message -->
+            <div class="ai-chat-welcome">
+              <div class="ai-chat-welcome-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                  <circle cx="9" cy="9" r="1.5"/>
+                  <circle cx="15" cy="9" r="1.5"/>
+                </svg>
               </div>
-              <div class="progress-text" id="aiInsightsProgressText">Aggregating data...</div>
+              <h3>Welcome to AI Insights</h3>
+              <p>Ask any question about your jobs, AR/AP, project managers, vendors, or financial data.</p>
+              <div class="ai-chat-suggestions">
+                <button type="button" class="ai-suggestion-btn" data-question="How many active jobs does Pedro have?">
+                  <span class="suggestion-icon">📊</span>
+                  Pedro's active jobs
+                </button>
+                <button type="button" class="ai-suggestion-btn" data-question="What are the top 5 vendors by spend this year?">
+                  <span class="suggestion-icon">💳</span>
+                  Top vendors by spend
+                </button>
+                <button type="button" class="ai-suggestion-btn" data-question="What is Rodney's profit margin on his jobs?">
+                  <span class="suggestion-icon">📈</span>
+                  Rodney's margins
+                </button>
+                <button type="button" class="ai-suggestion-btn" data-question="Show me the AR aging breakdown">
+                  <span class="suggestion-icon">📋</span>
+                  AR aging breakdown
+                </button>
+                <button type="button" class="ai-suggestion-btn" data-question="What is the current backlog amount?">
+                  <span class="suggestion-icon">🎯</span>
+                  Current backlog
+                </button>
+                <button type="button" class="ai-suggestion-btn" data-question="Which PMs have the highest margin?">
+                  <span class="suggestion-icon">👤</span>
+                  PM performance
+                </button>
+              </div>
+            </div>
+            
+            <!-- Chat conversation will be appended here -->
+            <div id="aiQaConversation" class="ai-qa-conversation"></div>
+            
+            <!-- Full Analysis Results -->
+            <div id="aiInsightsResults" class="ai-insights-results hidden">
+              <div class="ai-chat-message assistant">
+                <div class="message-avatar">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                    <circle cx="9" cy="9" r="1.5"/>
+                    <circle cx="15" cy="9" r="1.5"/>
+                  </svg>
+                </div>
+                <div class="message-content">
+                  <div class="message-header">Full Business Analysis</div>
+                  <div id="aiInsightsContent" class="ai-insights-content"></div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Error State -->
+            <div id="aiInsightsError" class="ai-insights-error hidden">
+              <div class="ai-chat-message error">
+                <div class="message-avatar error">⚠️</div>
+                <div class="message-content">
+                  <div class="error-message" id="aiInsightsErrorMsg">An error occurred during analysis.</div>
+                  <button type="button" id="aiInsightsRetryBtn" class="ai-insights-retry-btn">Try Again</button>
+                </div>
+              </div>
             </div>
           </div>
-
-          <!-- AI Q&A Chat Panel -->
-          <div class="ai-qa-panel">
-            <h3>Ask a Question</h3>
-            <p>Get instant answers about your financial data - jobs, AR/AP, vendors, PMs, and more.</p>
-            <div class="ai-qa-input-row">
-              <input type="text" id="aiQaInput" class="ai-qa-input" placeholder="e.g., How many active jobs does Pedro have?" />
-              <button type="button" id="aiQaSubmitBtn" class="ai-qa-submit-btn">
-                <span class="btn-text">Ask</span>
+          
+          <!-- Progress Bar (shown during analysis) -->
+          <div id="aiInsightsProgress" class="ai-chat-progress hidden">
+            <div class="progress-bar">
+              <div class="progress-fill" id="aiInsightsProgressFill"></div>
+            </div>
+            <div class="progress-text" id="aiInsightsProgressText">Aggregating data...</div>
+          </div>
+          
+          <!-- Chat Input Area (Fixed at bottom) -->
+          <div class="ai-chat-input-area">
+            <div class="ai-chat-input-container">
+              <button type="button" id="aiInsightsRunBtn" class="ai-chat-analysis-btn" title="Run comprehensive analysis of all financial data">
+                <span class="btn-icon">✨</span>
+                <span class="btn-text">Run Full Analysis</span>
               </button>
+              <div class="ai-chat-input-wrapper">
+                <input type="text" id="aiQaInput" class="ai-chat-input" placeholder="Ask a question about your financial data..." />
+                <button type="button" id="aiQaSubmitBtn" class="ai-chat-send-btn" title="Send">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13"/>
+                    <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div class="ai-qa-examples">
-              <span class="examples-label">Try:</span>
-              <button type="button" class="ai-qa-example-btn" data-question="How many active jobs does Pedro have?">Pedro's jobs</button>
-              <button type="button" class="ai-qa-example-btn" data-question="What are the top 5 vendors by spend this year?">Top vendors</button>
-              <button type="button" class="ai-qa-example-btn" data-question="What is Rodney's profit margin on his jobs?">Rodney's margins</button>
-              <button type="button" class="ai-qa-example-btn" data-question="Show me the AR aging breakdown">AR aging</button>
-            </div>
-            <div id="aiQaConversation" class="ai-qa-conversation hidden">
-              <!-- Chat messages will be appended here -->
-            </div>
-          </div>
-
-          <!-- Results Container - Single unified section -->
-          <div id="aiInsightsResults" class="ai-insights-results hidden">
-            <div class="ai-insights-section">
-              <h4 class="ai-insights-section-title">
-                <span class="section-icon">🎯</span>
-                Analysis & Insights
-              </h4>
-              <div id="aiInsightsContent" class="ai-insights-content"></div>
-            </div>
-          </div>
-
-          <!-- Error State -->
-          <div id="aiInsightsError" class="ai-insights-error hidden">
-            <div class="error-icon">⚠️</div>
-            <div class="error-message" id="aiInsightsErrorMsg">An error occurred during analysis.</div>
-            <button type="button" id="aiInsightsRetryBtn" class="ai-insights-retry-btn">Try Again</button>
           </div>
         </div>
       </section>

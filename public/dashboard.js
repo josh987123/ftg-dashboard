@@ -23737,6 +23737,7 @@ function initAiQaChat() {
   const input = document.getElementById('aiQaInput');
   const submitBtn = document.getElementById('aiQaSubmitBtn');
   const exampleBtns = document.querySelectorAll('.ai-qa-example-btn');
+  const suggestionBtns = document.querySelectorAll('.ai-suggestion-btn');
   
   // Submit on button click
   submitBtn?.addEventListener('click', submitAiQaQuestion);
@@ -23749,8 +23750,19 @@ function initAiQaChat() {
     }
   });
   
-  // Example button clicks
+  // Example button clicks (legacy)
   exampleBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const question = btn.dataset.question;
+      if (question && input) {
+        input.value = question;
+        submitAiQaQuestion();
+      }
+    });
+  });
+  
+  // New suggestion button clicks (chat interface)
+  suggestionBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const question = btn.dataset.question;
       if (question && input) {
@@ -23765,27 +23777,31 @@ async function submitAiQaQuestion() {
   const input = document.getElementById('aiQaInput');
   const submitBtn = document.getElementById('aiQaSubmitBtn');
   const conversation = document.getElementById('aiQaConversation');
-  
+  const welcome = document.querySelector('.ai-chat-welcome');
+
   const question = input?.value?.trim();
   if (!question) return;
   
   // Disable input while processing
   input.disabled = true;
   submitBtn.disabled = true;
-  submitBtn.querySelector('.btn-text').textContent = '...';
+  
+  // Hide welcome screen when conversation starts
+  if (welcome) welcome.classList.add('hidden');
   
   // Show conversation container
   conversation.classList.remove('hidden');
+
   
   // Add user message
   const userMsg = document.createElement('div');
-  userMsg.className = 'ai-qa-message user';
+  userMsg.className = 'ai-chat-message user';
   userMsg.innerHTML = `<div class="message-content">${escapeHtml(question)}</div>`;
   conversation.appendChild(userMsg);
   
   // Add loading message
   const loadingMsg = document.createElement('div');
-  loadingMsg.className = 'ai-qa-message assistant loading';
+  loadingMsg.className = 'ai-chat-message assistant loading';
   loadingMsg.innerHTML = `
     <div class="message-content">
       <div class="ai-qa-loading-dots">
@@ -23797,7 +23813,8 @@ async function submitAiQaQuestion() {
   conversation.appendChild(loadingMsg);
   
   // Scroll to bottom
-  conversation.scrollTop = conversation.scrollHeight;
+  const chatMessages = document.getElementById('aiChatMessages');
+  if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
   
   // Clear input
   input.value = '';
@@ -23816,7 +23833,7 @@ async function submitAiQaQuestion() {
     
     // Add assistant response
     const assistantMsg = document.createElement('div');
-    assistantMsg.className = 'ai-qa-message assistant';
+    assistantMsg.className = 'ai-chat-message assistant';
     
     if (result.success) {
       assistantMsg.innerHTML = `<div class="message-content">${formatAiQaResponse(result.answer)}</div>`;
@@ -23825,14 +23842,15 @@ async function submitAiQaQuestion() {
     }
     
     conversation.appendChild(assistantMsg);
-    conversation.scrollTop = conversation.scrollHeight;
+    const chatMessages = document.getElementById('aiChatMessages');
+  if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
     
   } catch (err) {
     console.error('AI Q&A error:', err);
     loadingMsg.remove();
     
     const errorMsg = document.createElement('div');
-    errorMsg.className = 'ai-qa-message assistant';
+    errorMsg.className = 'ai-chat-message assistant';
     errorMsg.innerHTML = `<div class="message-content" style="color: var(--error-color);">Sorry, there was an error processing your question. Please try again.</div>`;
     conversation.appendChild(errorMsg);
   } finally {
