@@ -1942,38 +1942,59 @@ body.dark-mode .nav-item.nav-parent.expanded {
 @media (max-width:768px) {
   .content {
     padding: 20px 16px;
+    position: relative;
   }
   
   .content-export-area {
-    top: 12px;
-    right: 12px;
+    position: fixed;
+    top: auto;
+    bottom: 80px;
+    right: 16px;
+    z-index: 1000;
   }
   
   /* Hide ribbon on mobile, show dropdown */
   .export-ribbon {
-    display: none;
+    display: none !important;
   }
   
   .export-dropdown.mobile-only {
-    display: block;
+    display: block !important;
   }
   
-  /* Larger touch target on mobile */
+  /* Floating action button style on mobile */
   .content-export-area .export-dropdown-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 18px;
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+    border-radius: 50%;
+    background: var(--primary-color, #3b82f6);
+    border: none;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
   
-  /* Table export buttons - stack on mobile */
+  .content-export-area .export-dropdown-btn:hover,
+  .content-export-area .export-dropdown-btn:active {
+    background: var(--primary-hover, #2563eb);
+  }
+  
+  .content-export-area .dropdown-menu {
+    bottom: 100%;
+    top: auto;
+    margin-bottom: 8px;
+    margin-top: 0;
+  }
+  
+  /* Table export buttons - compact on mobile */
   .table-export-row {
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 4px;
   }
   
   .table-export-btns .export-table-btn {
-    padding: 8px 12px;
-    font-size: 12px;
+    padding: 4px 8px;
+    font-size: 10px;
   }
 }
 
