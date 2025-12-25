@@ -4571,9 +4571,9 @@ Available data sources and their key fields:
 
 1. JOBS DATA (financials_jobs.json):
    - job_budgets[]: job_no, job_description, project_manager_name, customer_name, job_status (A=Active, C=Closed, I=Inactive), 
-     original_contract, revised_contract, original_cost, revised_cost, percent_complete
-   - job_actuals[]: job_no, cost_type, actual_cost, actual_hours
-   - job_billed_revenue[]: job_no, billed_revenue (total billed to date)
+     original_contract, revised_contract, original_cost, revised_cost (percent_complete is calculated as actual_cost/revised_cost)
+   - job_actuals[]: Job_No, Job_Description, Project_Manager, Cost_Code_No, Cost_Code_Description, Value (actual cost amount)
+   - job_billed_revenue[]: Job_No, Job_Description, Billed_Revenue (total billed to date)
 
 2. AR DATA (ar_invoices.json):
    - invoices[]: customer_name, invoice_no, calculated_amount_due (actual balance), retainage_amount, 
@@ -4584,7 +4584,7 @@ Available data sources and their key fields:
 
 4. GL DATA (financials_gl.json):
    - gl_history_all[]: Account_Num (4xxx=Revenue, 5xxx=Direct Cost, 6xxx=Indirect, 7xxx=SG&A),
-     Description, monthly columns like "2024-01", "2024-02", ... "2025-12"
+     Account_Description, monthly columns like "2024-01", "2024-02", ... "2025-12"
 
 5. CASH DATA (from Google Sheets via API):
    - accounts[]: name, balance (current balance)
@@ -4654,14 +4654,17 @@ def execute_nlq_query(query_plan, data):
             actuals = data.get('jobs', {}).get('job_actuals', [])
             billed = data.get('jobs', {}).get('job_billed_revenue', [])
             
-            # Build actual cost by job
+            # Build actual cost by job (job_actuals uses Job_No and Value fields)
             actual_cost_by_job = {}
             for a in actuals:
-                job_no = str(a.get('job_no', ''))
-                actual_cost_by_job[job_no] = actual_cost_by_job.get(job_no, 0) + (float(a.get('actual_cost') or 0))
+                job_no = str(a.get('Job_No') or a.get('job_no') or '')
+                actual_cost_by_job[job_no] = actual_cost_by_job.get(job_no, 0) + float(a.get('Value') or a.get('actual_cost') or 0)
             
-            # Build billed by job
-            billed_by_job = {str(b.get('job_no', '')): float(b.get('billed_revenue') or 0) for b in billed}
+            # Build billed by job (job_billed_revenue uses Job_No and Billed_Revenue fields)
+            billed_by_job = {}
+            for b in billed:
+                job_no = str(b.get('Job_No') or b.get('job_no') or '')
+                billed_by_job[job_no] = float(b.get('Billed_Revenue') or b.get('billed_revenue') or 0)
             
             # Filter jobs
             filtered = []
@@ -4682,6 +4685,11 @@ def execute_nlq_query(query_plan, data):
                         continue
                 
                 job_no = str(job.get('job_no', ''))
+                actual_cost = actual_cost_by_job.get(job_no, 0)
+                budget_cost = float(job.get('revised_cost') or 0)
+                # Calculate percent complete as actual cost / budget cost
+                percent_complete = (actual_cost / budget_cost * 100) if budget_cost > 0 else 0
+                
                 job_data = {
                     'job_no': job_no,
                     'description': job.get('job_description', ''),
@@ -4689,10 +4697,10 @@ def execute_nlq_query(query_plan, data):
                     'customer': job.get('customer_name', ''),
                     'status': job.get('job_status', ''),
                     'contract': float(job.get('revised_contract') or 0),
-                    'budget_cost': float(job.get('revised_cost') or 0),
-                    'actual_cost': actual_cost_by_job.get(job_no, 0),
+                    'budget_cost': budget_cost,
+                    'actual_cost': actual_cost,
                     'billed': billed_by_job.get(job_no, 0),
-                    'percent_complete': float(job.get('percent_complete') or 0)
+                    'percent_complete': percent_complete
                 }
                 # Calculate margin
                 if job_data['contract'] > 0:
@@ -4702,18 +4710,31 @@ def execute_nlq_query(query_plan, data):
                 
                 filtered.append(job_data)
             
+            # Field name aliases (map schema names to internal names)
+            field_aliases = {
+                'revised_contract': 'contract',
+                'revised_cost': 'budget_cost',
+                'project_manager_name': 'pm',
+                'job_description': 'description',
+                'customer_name': 'customer',
+                'job_status': 'status'
+            }
+            
             # Aggregations
             if aggregation == 'count':
                 results = {'count': len(filtered)}
             elif aggregation == 'sum':
                 field = fields[0] if fields else 'contract'
+                field = field_aliases.get(field, field)  # Apply alias
                 results = {'total': sum(j.get(field, 0) for j in filtered), 'field': field, 'count': len(filtered)}
             elif aggregation == 'average':
                 field = fields[0] if fields else 'margin'
+                field = field_aliases.get(field, field)  # Apply alias
                 values = [j.get(field, 0) for j in filtered]
                 results = {'average': sum(values) / len(values) if values else 0, 'field': field, 'count': len(filtered)}
             elif aggregation == 'top':
                 sort_field = fields[0] if fields else 'contract'
+                sort_field = field_aliases.get(sort_field, sort_field)  # Apply alias
                 filtered.sort(key=lambda x: x.get(sort_field, 0), reverse=True)
                 results = {'items': filtered[:limit], 'sort_by': sort_field}
             else:
