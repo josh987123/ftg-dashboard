@@ -5078,16 +5078,21 @@ def execute_nlq_query(query_plan, data):
                         date_range = filters.get('date_range', 'last 30 days')
                         today = datetime.now().date()
                         
-                        if 'week' in str(date_range).lower() and '2' in str(date_range):
-                            start_date = today - timedelta(days=14)
+                        # Try to extract number of days from the date_range string
+                        import re
+                        days_match = re.search(r'(\d+)\s*day', str(date_range).lower())
+                        weeks_match = re.search(r'(\d+)\s*week', str(date_range).lower())
+                        
+                        if days_match:
+                            start_date = today - timedelta(days=int(days_match.group(1)))
+                        elif weeks_match:
+                            start_date = today - timedelta(days=int(weeks_match.group(1)) * 7)
+                        elif 'month' in str(date_range).lower():
+                            start_date = today - timedelta(days=30)
                         elif 'week' in str(date_range).lower():
                             start_date = today - timedelta(days=7)
-                        elif '30' in str(date_range) or 'month' in str(date_range).lower():
-                            start_date = today - timedelta(days=30)
-                        elif '7' in str(date_range):
-                            start_date = today - timedelta(days=7)
                         else:
-                            start_date = today - timedelta(days=14)  # Default to 2 weeks
+                            start_date = today - timedelta(days=30)  # Default to 30 days
                         
                         # Filter transactions by date and FTG accounts
                         ftg_account_names = [a.get('name', '') for a in ftg_accounts]
