@@ -16930,11 +16930,11 @@ function updateDcrLabels() {
   if (isWeekly) {
     if (depositsSubLabel) depositsSubLabel.textContent = 'Past 7 days (excl. transfers)';
     if (withdrawalsSubLabel) withdrawalsSubLabel.textContent = 'Past 7 days (excl. transfers)';
-    if (changeSubLabel) changeSubLabel.textContent = 'vs. prior week balance';
+    if (changeSubLabel) changeSubLabel.textContent = 'Deposits minus withdrawals';
   } else {
     if (depositsSubLabel) depositsSubLabel.textContent = 'Prior day (excl. transfers)';
     if (withdrawalsSubLabel) withdrawalsSubLabel.textContent = 'Prior day (excl. transfers)';
-    if (changeSubLabel) changeSubLabel.textContent = 'vs. prior day balance';
+    if (changeSubLabel) changeSubLabel.textContent = 'Deposits minus withdrawals';
   }
   
   // Update transaction section labels
@@ -17377,9 +17377,10 @@ function renderDcrMetrics() {
   if (withdrawalsEl) withdrawalsEl.textContent = withdrawals > 0 ? '-' + formatCurrency(withdrawals) : '$0';
   
   if (percentChangeEl) {
-    const sign = percentChange >= 0 ? '+' : '';
-    percentChangeEl.textContent = sign + percentChange.toFixed(2) + '%';
-    percentChangeEl.className = 'dcr-metric-value ' + (percentChange >= 0 ? 'positive' : 'negative');
+    // Show net change as dollar amount (deposits - withdrawals), not percent
+    const sign = netChange >= 0 ? '+' : '';
+    percentChangeEl.textContent = sign + formatCurrency(Math.abs(netChange));
+    percentChangeEl.className = 'dcr-metric-value ' + (netChange >= 0 ? 'positive' : 'negative');
   }
   
   // Update delta badges
