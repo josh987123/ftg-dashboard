@@ -7835,6 +7835,56 @@ body.dark-mode #accounts .summary-tile .tile-label {
   font-size: 13px;
 }
 
+/* Transaction Match Row (Cross-reference info) */
+.dcr-match-row {
+  background: var(--bg-tertiary);
+  border-top: none;
+}
+
+.dcr-match-row td {
+  padding: 4px 12px 8px 12px !important;
+  font-size: 10px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.dcr-match-row .match-indicator {
+  display: inline-block;
+  font-size: 8px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.dcr-match-row.match-high .match-indicator {
+  color: #10b981;
+}
+
+.dcr-match-row.match-medium .match-indicator {
+  color: #f59e0b;
+}
+
+.dcr-match-row .match-info {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.dcr-match-row.match-high .match-info {
+  color: #10b981;
+}
+
+.dcr-match-row.match-medium .match-info {
+  color: #f59e0b;
+}
+
+.dcr-transaction-table tbody tr:has(+ .dcr-match-row) {
+  border-bottom: none;
+}
+
+.dcr-transaction-table tbody tr:has(+ .dcr-match-row) td {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
 /* Cash Balance Safety Check Section */
 .dcr-safety-check-section {
   background: var(--card-bg);

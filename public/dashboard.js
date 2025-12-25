@@ -17049,6 +17049,121 @@ function renderDcrTopTransactions() {
   withdrawalsContainer.innerHTML = renderDcrTransactionList(topWithdrawals, 'withdrawal');
 }
 
+// Match deposit amount against AR invoices to find potential customer/job
+function matchDepositToAR(amount) {
+  if (!dcrArData?.invoices) return null;
+  
+  const absAmount = Math.abs(amount);
+  const matches = [];
+  
+  // Look for AR invoices where total_cash_applied matches the deposit amount
+  // or invoice_amount matches (for full payment scenarios)
+  dcrArData.invoices.forEach(inv => {
+    const cashApplied = parseFloat(inv.total_cash_applied) || 0;
+    const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
+    const calcDue = parseFloat(inv.calculated_amount_due) || 0;
+    
+    // Check for exact or near-exact matches (within $0.01)
+    if (Math.abs(cashApplied - absAmount) < 0.01 || 
+        Math.abs(invoiceAmt - absAmount) < 0.01 ||
+        Math.abs(invoiceAmt - calcDue - absAmount) < 0.01) {
+      matches.push({
+        type: 'exact',
+        customer: inv.customer_name,
+        job_no: inv.job_no,
+        job_desc: inv.job_description,
+        pm: inv.project_manager_name,
+        invoice_no: inv.invoice_no,
+        confidence: 'high'
+      });
+    }
+  });
+  
+  // If no exact matches, look for close matches (within 5%)
+  if (matches.length === 0) {
+    dcrArData.invoices.forEach(inv => {
+      const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
+      if (invoiceAmt > 0 && Math.abs(invoiceAmt - absAmount) / invoiceAmt < 0.05) {
+        matches.push({
+          type: 'close',
+          customer: inv.customer_name,
+          job_no: inv.job_no,
+          job_desc: inv.job_description,
+          pm: inv.project_manager_name,
+          invoice_no: inv.invoice_no,
+          confidence: 'medium'
+        });
+      }
+    });
+  }
+  
+  // Return the best match (prefer exact, then by job number presence)
+  matches.sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'exact' ? -1 : 1;
+    if (a.job_no && !b.job_no) return -1;
+    if (!a.job_no && b.job_no) return 1;
+    return 0;
+  });
+  
+  return matches.length > 0 ? matches[0] : null;
+}
+
+// Match withdrawal amount against AP invoices to find potential vendor/job
+function matchWithdrawalToAP(amount) {
+  if (!dcrApData?.invoices) return null;
+  
+  const absAmount = Math.abs(amount);
+  const matches = [];
+  
+  // Look for AP invoices where invoice_amount or amount_paid_to_date matches
+  dcrApData.invoices.forEach(inv => {
+    const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
+    const paidAmt = parseFloat(inv.amount_paid_to_date) || 0;
+    
+    // Check for exact or near-exact matches (within $0.01)
+    if (Math.abs(invoiceAmt - absAmount) < 0.01 || 
+        Math.abs(paidAmt - absAmount) < 0.01) {
+      matches.push({
+        type: 'exact',
+        vendor: inv.vendor_name,
+        job_no: inv.job_no,
+        job_desc: inv.job_description,
+        pm: inv.project_manager_name,
+        invoice_no: inv.invoice_no,
+        confidence: 'high'
+      });
+    }
+  });
+  
+  // If no exact matches, look for close matches (within 5%)
+  if (matches.length === 0) {
+    dcrApData.invoices.forEach(inv => {
+      const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
+      if (invoiceAmt > 0 && Math.abs(invoiceAmt - absAmount) / invoiceAmt < 0.05) {
+        matches.push({
+          type: 'close',
+          vendor: inv.vendor_name,
+          job_no: inv.job_no,
+          job_desc: inv.job_description,
+          pm: inv.project_manager_name,
+          invoice_no: inv.invoice_no,
+          confidence: 'medium'
+        });
+      }
+    });
+  }
+  
+  // Return the best match (prefer exact, then by job number presence)
+  matches.sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'exact' ? -1 : 1;
+    if (a.job_no && !b.job_no) return -1;
+    if (!a.job_no && b.job_no) return 1;
+    return 0;
+  });
+  
+  return matches.length > 0 ? matches[0] : null;
+}
+
 function renderDcrTransactionList(txns, type) {
   if (txns.length === 0) {
     const periodLabel = dcrViewMode === 'weekly' ? 'past 7 days' : 'prior day';
@@ -17077,12 +17192,41 @@ function renderDcrTransactionList(txns, type) {
     const sign = txn.amount >= 0 ? '+' : '-';
     const descDisplay = txn.description || txn.payee || '-';
     
+    // Try to match transaction to AR/AP data
+    const match = type === 'deposit' 
+      ? matchDepositToAR(txn.amount)
+      : matchWithdrawalToAP(txn.amount);
+    
+    // Build match info row if we have a match
+    let matchRow = '';
+    if (match) {
+      const entityName = match.customer || match.vendor || '';
+      const jobInfo = match.job_no ? `Job ${match.job_no}` : '';
+      const jobDesc = match.job_desc ? ` - ${match.job_desc.substring(0, 25)}${match.job_desc.length > 25 ? '...' : ''}` : '';
+      const pmInfo = match.pm ? ` (${match.pm.split(' ')[0]})` : '';
+      const confidenceIcon = match.confidence === 'high' ? '●' : '○';
+      const confidenceClass = match.confidence === 'high' ? 'match-high' : 'match-medium';
+      
+      // Show either job info or entity name, prioritize job
+      const displayInfo = jobInfo 
+        ? `${jobInfo}${jobDesc}${pmInfo}`
+        : entityName.substring(0, 35) + (entityName.length > 35 ? '...' : '');
+      
+      matchRow = `
+        <tr class="dcr-match-row ${confidenceClass}">
+          <td colspan="3">
+            <span class="match-indicator" title="${match.confidence === 'high' ? 'Exact match' : 'Close match'}">${confidenceIcon}</span>
+            <span class="match-info" title="${entityName}${jobInfo ? ' | ' + jobInfo + jobDesc : ''}">${displayInfo}</span>
+          </td>
+        </tr>`;
+    }
+    
     html += `
       <tr>
         <td class="txn-date">${displayDate}</td>
         <td class="txn-description" title="${descDisplay}">${descDisplay.length > 40 ? descDisplay.substring(0, 37) + '...' : descDisplay}</td>
         <td class="txn-amount ${amountClass}">${sign}${amountDisplay}</td>
-      </tr>`;
+      </tr>${matchRow}`;
   });
   
   html += '</tbody></table>';
