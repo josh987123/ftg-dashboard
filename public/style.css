@@ -7681,7 +7681,8 @@ body.dark-mode #accounts .summary-tile .tile-label {
 
 /* Daily/Weekly Toggle */
 .dcr-view-toggle {
-  display: flex;
+  display: inline-flex;
+  width: fit-content;
   gap: 0;
   border: 1px solid var(--border-primary);
   border-radius: 8px;
