@@ -23726,7 +23726,144 @@ function initAiInsights() {
   runBtn?.addEventListener('click', runFullAiAnalysis);
   retryBtn?.addEventListener('click', runFullAiAnalysis);
   
+  // Initialize AI Q&A Chat
+  initAiQaChat();
+  
   aiInsightsInitialized = true;
+}
+
+// AI Q&A Chat functionality
+function initAiQaChat() {
+  const input = document.getElementById('aiQaInput');
+  const submitBtn = document.getElementById('aiQaSubmitBtn');
+  const exampleBtns = document.querySelectorAll('.ai-qa-example-btn');
+  
+  // Submit on button click
+  submitBtn?.addEventListener('click', submitAiQaQuestion);
+  
+  // Submit on Enter key
+  input?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submitAiQaQuestion();
+    }
+  });
+  
+  // Example button clicks
+  exampleBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const question = btn.dataset.question;
+      if (question && input) {
+        input.value = question;
+        submitAiQaQuestion();
+      }
+    });
+  });
+}
+
+async function submitAiQaQuestion() {
+  const input = document.getElementById('aiQaInput');
+  const submitBtn = document.getElementById('aiQaSubmitBtn');
+  const conversation = document.getElementById('aiQaConversation');
+  
+  const question = input?.value?.trim();
+  if (!question) return;
+  
+  // Disable input while processing
+  input.disabled = true;
+  submitBtn.disabled = true;
+  submitBtn.querySelector('.btn-text').textContent = '...';
+  
+  // Show conversation container
+  conversation.classList.remove('hidden');
+  
+  // Add user message
+  const userMsg = document.createElement('div');
+  userMsg.className = 'ai-qa-message user';
+  userMsg.innerHTML = `<div class="message-content">${escapeHtml(question)}</div>`;
+  conversation.appendChild(userMsg);
+  
+  // Add loading message
+  const loadingMsg = document.createElement('div');
+  loadingMsg.className = 'ai-qa-message assistant loading';
+  loadingMsg.innerHTML = `
+    <div class="message-content">
+      <div class="ai-qa-loading-dots">
+        <span></span><span></span><span></span>
+      </div>
+      Thinking...
+    </div>
+  `;
+  conversation.appendChild(loadingMsg);
+  
+  // Scroll to bottom
+  conversation.scrollTop = conversation.scrollHeight;
+  
+  // Clear input
+  input.value = '';
+  
+  try {
+    const response = await fetch('/api/nlq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question })
+    });
+    
+    const result = await response.json();
+    
+    // Remove loading message
+    loadingMsg.remove();
+    
+    // Add assistant response
+    const assistantMsg = document.createElement('div');
+    assistantMsg.className = 'ai-qa-message assistant';
+    
+    if (result.success) {
+      assistantMsg.innerHTML = `<div class="message-content">${formatAiQaResponse(result.answer)}</div>`;
+    } else {
+      assistantMsg.innerHTML = `<div class="message-content" style="color: var(--error-color);">Sorry, I couldn't process that question. ${result.error || 'Please try again.'}</div>`;
+    }
+    
+    conversation.appendChild(assistantMsg);
+    conversation.scrollTop = conversation.scrollHeight;
+    
+  } catch (err) {
+    console.error('AI Q&A error:', err);
+    loadingMsg.remove();
+    
+    const errorMsg = document.createElement('div');
+    errorMsg.className = 'ai-qa-message assistant';
+    errorMsg.innerHTML = `<div class="message-content" style="color: var(--error-color);">Sorry, there was an error processing your question. Please try again.</div>`;
+    conversation.appendChild(errorMsg);
+  } finally {
+    // Re-enable input
+    input.disabled = false;
+    submitBtn.disabled = false;
+    submitBtn.querySelector('.btn-text').textContent = 'Ask';
+    input.focus();
+  }
+}
+
+function formatAiQaResponse(text) {
+  // Convert markdown-style formatting to HTML
+  let html = escapeHtml(text);
+  
+  // Bold text
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+  
+  // Format currency values for emphasis
+  html = html.replace(/\$[\d,]+(?:\.\d{1,2})?[MKB]?/g, '<strong>$&</strong>');
+  
+  return html;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 async function runFullAiAnalysis() {

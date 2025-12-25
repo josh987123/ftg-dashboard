@@ -3172,6 +3172,28 @@
             </div>
           </div>
 
+          <!-- AI Q&A Chat Panel -->
+          <div class="ai-qa-panel">
+            <h3>Ask a Question</h3>
+            <p>Get instant answers about your financial data - jobs, AR/AP, vendors, PMs, and more.</p>
+            <div class="ai-qa-input-row">
+              <input type="text" id="aiQaInput" class="ai-qa-input" placeholder="e.g., How many active jobs does Pedro have?" />
+              <button type="button" id="aiQaSubmitBtn" class="ai-qa-submit-btn">
+                <span class="btn-text">Ask</span>
+              </button>
+            </div>
+            <div class="ai-qa-examples">
+              <span class="examples-label">Try:</span>
+              <button type="button" class="ai-qa-example-btn" data-question="How many active jobs does Pedro have?">Pedro's jobs</button>
+              <button type="button" class="ai-qa-example-btn" data-question="What are the top 5 vendors by spend this year?">Top vendors</button>
+              <button type="button" class="ai-qa-example-btn" data-question="What is Rodney's profit margin on his jobs?">Rodney's margins</button>
+              <button type="button" class="ai-qa-example-btn" data-question="Show me the AR aging breakdown">AR aging</button>
+            </div>
+            <div id="aiQaConversation" class="ai-qa-conversation hidden">
+              <!-- Chat messages will be appended here -->
+            </div>
+          </div>
+
           <!-- Results Container - Single unified section -->
           <div id="aiInsightsResults" class="ai-insights-results hidden">
             <div class="ai-insights-section">
@@ -3734,11 +3756,11 @@
   <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script defer src="dashboard.js?v=20251225af"></script>
+  <script defer src="dashboard.js?v=20251225ag"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251225af';
+    const APP_VERSION = '20251225ag';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {

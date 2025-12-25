@@ -4561,6 +4561,504 @@ def api_get_customer_invoices():
         traceback.print_exc()
         return jsonify({'success': False, 'invoices': [], 'error': str(e)}), 500
 
+# =============================================================================
+# NATURAL LANGUAGE QUERY ENDPOINT FOR AI INSIGHTS
+# =============================================================================
+
+# Data schema for Claude to understand available data
+NLQ_DATA_SCHEMA = """
+Available data sources and their key fields:
+
+1. JOBS DATA (financials_jobs.json):
+   - job_budgets[]: job_no, job_description, project_manager_name, customer_name, job_status (A=Active, C=Closed, I=Inactive), 
+     original_contract, revised_contract, original_cost, revised_cost, percent_complete
+   - job_actuals[]: job_no, cost_type, actual_cost, actual_hours
+   - job_billed_revenue[]: job_no, billed_revenue (total billed to date)
+
+2. AR DATA (ar_invoices.json):
+   - invoices[]: customer_name, invoice_no, calculated_amount_due (actual balance), retainage_amount, 
+     days_outstanding, project_manager_name, job_no, job_description
+
+3. AP DATA (ap_invoices.json):
+   - invoices[]: vendor, invoice_no, remaining_balance, days_outstanding, job_no, description
+
+4. GL DATA (financials_gl.json):
+   - gl_history_all[]: Account_Num (4xxx=Revenue, 5xxx=Direct Cost, 6xxx=Indirect, 7xxx=SG&A),
+     Description, monthly columns like "2024-01", "2024-02", ... "2025-12"
+
+5. CASH DATA (from Google Sheets via API):
+   - accounts[]: name, balance (current balance)
+   - FTG Builders accounts contain "1883", "2469", or "7554" in name
+
+PM_EXCLUSION: Always exclude "Josh Angelo" from PM analysis.
+"""
+
+def load_nlq_data():
+    """Load all data sources for NLQ queries"""
+    data = {}
+    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    
+    try:
+        with open(os.path.join(data_dir, 'financials_jobs.json'), 'r', encoding='utf-8-sig') as f:
+            data['jobs'] = json.load(f)
+    except Exception as e:
+        print(f"[NLQ] Jobs data load error: {e}")
+        data['jobs'] = {}
+    
+    try:
+        with open(os.path.join(data_dir, 'ar_invoices.json'), 'r', encoding='utf-8-sig') as f:
+            data['ar'] = json.load(f)
+    except Exception as e:
+        print(f"[NLQ] AR data load error: {e}")
+        data['ar'] = {}
+    
+    try:
+        with open(os.path.join(data_dir, 'ap_invoices.json'), 'r', encoding='utf-8-sig') as f:
+            data['ap'] = json.load(f)
+    except Exception as e:
+        print(f"[NLQ] AP data load error: {e}")
+        data['ap'] = {}
+    
+    try:
+        with open(os.path.join(data_dir, 'financials_gl.json'), 'r', encoding='utf-8-sig') as f:
+            data['gl'] = json.load(f)
+    except Exception as e:
+        print(f"[NLQ] GL data load error: {e}")
+        data['gl'] = {}
+    
+    return data
+
+def execute_nlq_query(query_plan, data):
+    """Execute a structured query plan against the data"""
+    results = {}
+    
+    try:
+        target = query_plan.get('target_data', '')
+        filters = query_plan.get('filters', {})
+        aggregation = query_plan.get('aggregation', 'list')
+        fields = query_plan.get('fields', [])
+        limit = query_plan.get('limit', 10)
+        
+        # PM name matching helper
+        def pm_matches(pm_name, filter_pm):
+            if not filter_pm:
+                return True
+            pm_lower = (pm_name or '').lower()
+            filter_lower = filter_pm.lower()
+            # Match first name or full name
+            return filter_lower in pm_lower or pm_lower.startswith(filter_lower)
+        
+        # JOBS queries
+        if target == 'jobs':
+            budgets = data.get('jobs', {}).get('job_budgets', [])
+            actuals = data.get('jobs', {}).get('job_actuals', [])
+            billed = data.get('jobs', {}).get('job_billed_revenue', [])
+            
+            # Build actual cost by job
+            actual_cost_by_job = {}
+            for a in actuals:
+                job_no = str(a.get('job_no', ''))
+                actual_cost_by_job[job_no] = actual_cost_by_job.get(job_no, 0) + (float(a.get('actual_cost') or 0))
+            
+            # Build billed by job
+            billed_by_job = {str(b.get('job_no', '')): float(b.get('billed_revenue') or 0) for b in billed}
+            
+            # Filter jobs
+            filtered = []
+            for job in budgets:
+                pm = job.get('project_manager_name', '')
+                # Exclude Josh Angelo
+                if 'josh angelo' in pm.lower():
+                    continue
+                
+                # Apply filters
+                if filters.get('pm') and not pm_matches(pm, filters['pm']):
+                    continue
+                if filters.get('status') and job.get('job_status') != filters['status']:
+                    continue
+                if filters.get('customer'):
+                    cust = (job.get('customer_name') or '').lower()
+                    if filters['customer'].lower() not in cust:
+                        continue
+                
+                job_no = str(job.get('job_no', ''))
+                job_data = {
+                    'job_no': job_no,
+                    'description': job.get('job_description', ''),
+                    'pm': pm,
+                    'customer': job.get('customer_name', ''),
+                    'status': job.get('job_status', ''),
+                    'contract': float(job.get('revised_contract') or 0),
+                    'budget_cost': float(job.get('revised_cost') or 0),
+                    'actual_cost': actual_cost_by_job.get(job_no, 0),
+                    'billed': billed_by_job.get(job_no, 0),
+                    'percent_complete': float(job.get('percent_complete') or 0)
+                }
+                # Calculate margin
+                if job_data['contract'] > 0:
+                    job_data['margin'] = (job_data['contract'] - job_data['budget_cost']) / job_data['contract'] * 100
+                else:
+                    job_data['margin'] = 0
+                
+                filtered.append(job_data)
+            
+            # Aggregations
+            if aggregation == 'count':
+                results = {'count': len(filtered)}
+            elif aggregation == 'sum':
+                field = fields[0] if fields else 'contract'
+                results = {'total': sum(j.get(field, 0) for j in filtered), 'field': field, 'count': len(filtered)}
+            elif aggregation == 'average':
+                field = fields[0] if fields else 'margin'
+                values = [j.get(field, 0) for j in filtered]
+                results = {'average': sum(values) / len(values) if values else 0, 'field': field, 'count': len(filtered)}
+            elif aggregation == 'top':
+                sort_field = fields[0] if fields else 'contract'
+                filtered.sort(key=lambda x: x.get(sort_field, 0), reverse=True)
+                results = {'items': filtered[:limit], 'sort_by': sort_field}
+            else:
+                results = {'items': filtered[:limit], 'total_count': len(filtered)}
+        
+        # AR queries
+        elif target == 'ar':
+            invoices = data.get('ar', {}).get('invoices', [])
+            filtered = []
+            
+            for inv in invoices:
+                calc_due = float(inv.get('calculated_amount_due') or 0)
+                retainage = float(inv.get('retainage_amount') or 0)
+                collectible = max(0, calc_due - retainage)
+                
+                if collectible <= 0 and retainage <= 0:
+                    continue
+                
+                pm = inv.get('project_manager_name', '')
+                if 'josh angelo' in pm.lower():
+                    continue
+                
+                if filters.get('pm') and not pm_matches(pm, filters['pm']):
+                    continue
+                if filters.get('customer'):
+                    cust = (inv.get('customer_name') or '').lower()
+                    if filters['customer'].lower() not in cust:
+                        continue
+                if filters.get('min_days'):
+                    if int(inv.get('days_outstanding') or 0) < filters['min_days']:
+                        continue
+                
+                filtered.append({
+                    'customer': inv.get('customer_name', ''),
+                    'invoice_no': inv.get('invoice_no', ''),
+                    'collectible': collectible,
+                    'retainage': retainage,
+                    'days_outstanding': int(inv.get('days_outstanding') or 0),
+                    'job_no': inv.get('job_no', ''),
+                    'pm': pm
+                })
+            
+            if aggregation == 'sum':
+                results = {'total': sum(i['collectible'] for i in filtered), 'count': len(filtered)}
+            elif aggregation == 'by_customer':
+                by_cust = {}
+                for inv in filtered:
+                    c = inv['customer']
+                    by_cust[c] = by_cust.get(c, 0) + inv['collectible']
+                sorted_custs = sorted(by_cust.items(), key=lambda x: x[1], reverse=True)[:limit]
+                results = {'items': [{'customer': c, 'amount': a} for c, a in sorted_custs]}
+            elif aggregation == 'aging':
+                buckets = {'current': 0, 'days_31_60': 0, 'days_61_90': 0, 'days_90_plus': 0}
+                for inv in filtered:
+                    d = inv['days_outstanding']
+                    if d <= 30:
+                        buckets['current'] += inv['collectible']
+                    elif d <= 60:
+                        buckets['days_31_60'] += inv['collectible']
+                    elif d <= 90:
+                        buckets['days_61_90'] += inv['collectible']
+                    else:
+                        buckets['days_90_plus'] += inv['collectible']
+                results = buckets
+            else:
+                filtered.sort(key=lambda x: x['collectible'], reverse=True)
+                results = {'items': filtered[:limit], 'total_count': len(filtered)}
+        
+        # AP queries
+        elif target == 'ap':
+            invoices = data.get('ap', {}).get('invoices', [])
+            filtered = []
+            
+            for inv in invoices:
+                remaining = float(inv.get('remaining_balance') or 0)
+                if remaining <= 0:
+                    continue
+                
+                # Use vendor_name field (correct field from AP data)
+                vendor_name = inv.get('vendor_name') or inv.get('vendor') or ''
+                
+                if filters.get('vendor'):
+                    if filters['vendor'].lower() not in vendor_name.lower():
+                        continue
+                if filters.get('min_days'):
+                    if int(inv.get('days_outstanding') or 0) < filters['min_days']:
+                        continue
+                
+                filtered.append({
+                    'vendor': vendor_name,
+                    'invoice_no': inv.get('invoice_no', ''),
+                    'amount': remaining,
+                    'days_outstanding': int(inv.get('days_outstanding') or 0),
+                    'job_no': inv.get('job_no', ''),
+                    'description': inv.get('job_description') or inv.get('description', '')
+                })
+            
+            if aggregation == 'sum':
+                results = {'total': sum(i['amount'] for i in filtered), 'count': len(filtered)}
+            elif aggregation == 'by_vendor':
+                by_vendor = {}
+                for inv in filtered:
+                    v = inv['vendor']
+                    by_vendor[v] = by_vendor.get(v, 0) + inv['amount']
+                sorted_vendors = sorted(by_vendor.items(), key=lambda x: x[1], reverse=True)[:limit]
+                results = {'items': [{'vendor': v, 'amount': a} for v, a in sorted_vendors]}
+            elif aggregation == 'aging':
+                buckets = {'current': 0, 'days_31_60': 0, 'days_61_90': 0, 'days_90_plus': 0}
+                for inv in filtered:
+                    d = inv['days_outstanding']
+                    if d <= 30:
+                        buckets['current'] += inv['amount']
+                    elif d <= 60:
+                        buckets['days_31_60'] += inv['amount']
+                    elif d <= 90:
+                        buckets['days_61_90'] += inv['amount']
+                    else:
+                        buckets['days_90_plus'] += inv['amount']
+                results = buckets
+            else:
+                filtered.sort(key=lambda x: x['amount'], reverse=True)
+                results = {'items': filtered[:limit], 'total_count': len(filtered)}
+        
+        # GL queries
+        elif target == 'gl':
+            gl_all = data.get('gl', {}).get('gl_history_all', [])
+            year = filters.get('year', 2025)
+            months = [f"{year}-{str(m).zfill(2)}" for m in range(1, 13)]
+            
+            account_range = filters.get('account_range', [4000, 5000])  # Default revenue
+            
+            filtered = []
+            for entry in gl_all:
+                acct = int(entry.get('Account_Num') or 0)
+                if acct < account_range[0] or acct >= account_range[1]:
+                    continue
+                
+                total = sum(float(entry.get(m) or 0) for m in months)
+                if total == 0:
+                    continue
+                
+                filtered.append({
+                    'account': acct,
+                    'description': entry.get('Description', ''),
+                    'total': abs(total),
+                    'monthly': {m: float(entry.get(m) or 0) for m in months}
+                })
+            
+            if aggregation == 'sum':
+                results = {'total': sum(e['total'] for e in filtered), 'year': year}
+            elif aggregation == 'by_month':
+                monthly_totals = {}
+                for m in months:
+                    monthly_totals[m] = sum(abs(float(e['monthly'].get(m, 0))) for e in filtered)
+                results = {'monthly': monthly_totals, 'year': year}
+            else:
+                filtered.sort(key=lambda x: x['total'], reverse=True)
+                results = {'items': filtered[:limit], 'total': sum(e['total'] for e in filtered)}
+        
+        # PM summary queries
+        elif target == 'pm_summary':
+            budgets = data.get('jobs', {}).get('job_budgets', [])
+            actuals = data.get('jobs', {}).get('job_actuals', [])
+            
+            # Build actual cost by job
+            actual_cost_by_job = {}
+            for a in actuals:
+                job_no = str(a.get('job_no', ''))
+                actual_cost_by_job[job_no] = actual_cost_by_job.get(job_no, 0) + (float(a.get('actual_cost') or 0))
+            
+            pm_stats = {}
+            for job in budgets:
+                pm = job.get('project_manager_name', '')
+                if 'josh angelo' in pm.lower():
+                    continue
+                status = job.get('job_status', '')
+                
+                if filters.get('status') and status != filters['status']:
+                    continue
+                
+                if pm not in pm_stats:
+                    pm_stats[pm] = {'jobs': 0, 'active_jobs': 0, 'contract': 0, 'budget_cost': 0, 'actual_cost': 0}
+                
+                pm_stats[pm]['jobs'] += 1
+                if status == 'A':
+                    pm_stats[pm]['active_jobs'] += 1
+                pm_stats[pm]['contract'] += float(job.get('revised_contract') or 0)
+                pm_stats[pm]['budget_cost'] += float(job.get('revised_cost') or 0)
+                pm_stats[pm]['actual_cost'] += actual_cost_by_job.get(str(job.get('job_no', '')), 0)
+            
+            # Calculate margins
+            for pm, stats in pm_stats.items():
+                if stats['contract'] > 0:
+                    stats['margin'] = (stats['contract'] - stats['budget_cost']) / stats['contract'] * 100
+                else:
+                    stats['margin'] = 0
+            
+            pm_list = [{'pm': pm, **stats} for pm, stats in pm_stats.items()]
+            
+            if filters.get('pm'):
+                pm_list = [p for p in pm_list if pm_matches(p['pm'], filters['pm'])]
+            
+            sort_field = fields[0] if fields else 'active_jobs'
+            pm_list.sort(key=lambda x: x.get(sort_field, 0), reverse=True)
+            results = {'items': pm_list[:limit]}
+        
+        else:
+            results = {'error': f'Unknown target: {target}'}
+        
+    except Exception as e:
+        print(f"[NLQ] Query execution error: {e}")
+        import traceback
+        traceback.print_exc()
+        results = {'error': str(e)}
+    
+    return results
+
+
+@app.route('/api/nlq', methods=['POST', 'OPTIONS'])
+def api_natural_language_query():
+    """Natural language query endpoint for AI Insights"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        req_data = request.get_json()
+        if not req_data:
+            return jsonify({'error': 'No data received', 'success': False}), 400
+        
+        question = req_data.get('question', '').strip()
+        if not question:
+            return jsonify({'error': 'No question provided', 'success': False}), 400
+        
+        print(f"[NLQ] Question received: {question}")
+        
+        # Step 1: Load all data
+        data = load_nlq_data()
+        
+        # Step 2: Use Claude to interpret the question and create a query plan
+        client = get_anthropic_client()
+        
+        intent_prompt = f"""You are a data analyst assistant. Analyze this question about a construction company's financial data and create a structured query plan.
+
+{NLQ_DATA_SCHEMA}
+
+User Question: "{question}"
+
+Respond with ONLY a valid JSON object containing:
+{{
+  "target_data": "jobs|ar|ap|gl|pm_summary",
+  "filters": {{
+    "pm": "PM first or full name if filtering by PM, null otherwise",
+    "status": "A|C|I if filtering job status, null otherwise",
+    "customer": "customer name if filtering, null otherwise",
+    "vendor": "vendor name if filtering, null otherwise",
+    "year": 2025,
+    "min_days": "minimum days outstanding if filtering aged items, null otherwise",
+    "account_range": [start, end] for GL accounts
+  }},
+  "aggregation": "count|sum|average|top|list|by_customer|by_vendor|aging|by_month",
+  "fields": ["field names for aggregation like contract, margin, collectible"],
+  "limit": 10,
+  "explanation": "Brief explanation of what data will be retrieved"
+}}
+
+Examples:
+- "How many active jobs does Pedro have?" -> target_data: "jobs", filters: {{pm: "Pedro", status: "A"}}, aggregation: "count"
+- "Top 5 vendors by spend" -> target_data: "ap", aggregation: "by_vendor", limit: 5
+- "What is Rodney's profit margin?" -> target_data: "pm_summary", filters: {{pm: "Rodney"}}, fields: ["margin"]
+- "AR aging breakdown" -> target_data: "ar", aggregation: "aging"
+
+Respond with ONLY the JSON object, no markdown or explanation."""
+        
+        intent_response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=1000,
+            messages=[{"role": "user", "content": intent_prompt}]
+        )
+        
+        intent_text = intent_response.content[0].text.strip()
+        print(f"[NLQ] Intent response: {intent_text}")
+        
+        # Parse the query plan
+        try:
+            # Clean up response if it has markdown
+            if intent_text.startswith('```'):
+                intent_text = intent_text.split('```')[1]
+                if intent_text.startswith('json'):
+                    intent_text = intent_text[4:]
+            intent_text = intent_text.strip()
+            query_plan = json.loads(intent_text)
+        except json.JSONDecodeError as e:
+            print(f"[NLQ] JSON parse error: {e}, text: {intent_text}")
+            return jsonify({
+                'success': False,
+                'error': 'Could not parse query intent',
+                'answer': "I'm sorry, I couldn't understand that question. Could you try rephrasing it?"
+            })
+        
+        # Step 3: Execute the query
+        query_results = execute_nlq_query(query_plan, data)
+        print(f"[NLQ] Query results: {json.dumps(query_results)[:500]}")
+        
+        # Step 4: Generate natural language answer
+        answer_prompt = f"""Based on the following query results, provide a clear, conversational answer to the user's question.
+
+User Question: "{question}"
+
+Query Explanation: {query_plan.get('explanation', '')}
+
+Query Results:
+{json.dumps(query_results, indent=2)}
+
+Provide a direct, helpful answer. Use specific numbers and format currency as $X.XM or $XXK. 
+Keep the response concise (2-4 sentences for simple questions, more for complex breakdowns).
+If the results show items, list the top ones with their values.
+Never mention Josh Angelo in your response."""
+
+        answer_response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=500,
+            messages=[{"role": "user", "content": answer_prompt}]
+        )
+        
+        answer = answer_response.content[0].text.strip()
+        print(f"[NLQ] Answer: {answer}")
+        
+        return jsonify({
+            'success': True,
+            'answer': answer,
+            'query_plan': query_plan,
+            'raw_results': query_results
+        })
+        
+    except Exception as e:
+        print(f"[NLQ] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'answer': f"Sorry, I encountered an error processing your question. Please try again."
+        }), 500
+
+
 scheduler_thread = None
 
 def start_scheduler():
