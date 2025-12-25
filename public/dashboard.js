@@ -17242,21 +17242,32 @@ function renderDcrTransactionList(txns, type) {
     if (match) {
       const entityName = match.customer || match.vendor || '';
       const jobInfo = match.job_no ? `Job ${match.job_no}` : '';
-      const jobDesc = match.job_desc ? ` - ${match.job_desc.substring(0, 25)}${match.job_desc.length > 25 ? '...' : ''}` : '';
+      const jobDesc = match.job_desc ? ` - ${match.job_desc.substring(0, 20)}${match.job_desc.length > 20 ? '...' : ''}` : '';
       const pmInfo = match.pm ? ` (${match.pm.split(' ')[0]})` : '';
       const confidenceIcon = match.confidence === 'high' ? '●' : '○';
       const confidenceClass = match.confidence === 'high' ? 'match-high' : 'match-medium';
       
-      // Show either job info or entity name, prioritize job
-      const displayInfo = jobInfo 
-        ? `${jobInfo}${jobDesc}${pmInfo}`
-        : entityName.substring(0, 35) + (entityName.length > 35 ? '...' : '');
+      // For withdrawals with vendor, show vendor name + job info
+      // For deposits with customer, show customer or job info
+      let displayInfo;
+      if (type === 'withdrawal' && match.vendor) {
+        const vendorShort = match.vendor.length > 20 ? match.vendor.substring(0, 17) + '...' : match.vendor;
+        displayInfo = jobInfo 
+          ? `${vendorShort} | ${jobInfo}${pmInfo}`
+          : vendorShort;
+      } else {
+        displayInfo = jobInfo 
+          ? `${jobInfo}${jobDesc}${pmInfo}`
+          : entityName.substring(0, 35) + (entityName.length > 35 ? '...' : '');
+      }
+      
+      const tooltipText = `${entityName}${jobInfo ? ' | ' + jobInfo + (match.job_desc || '') : ''}`;
       
       matchRow = `
         <tr class="dcr-match-row ${confidenceClass}">
           <td colspan="3">
             <span class="match-indicator" title="${match.confidence === 'high' ? 'Exact match' : 'Close match'}">${confidenceIcon}</span>
-            <span class="match-info" title="${entityName}${jobInfo ? ' | ' + jobInfo + jobDesc : ''}">${displayInfo}</span>
+            <span class="match-info" title="${tooltipText}">${displayInfo}</span>
           </td>
         </tr>`;
     }
