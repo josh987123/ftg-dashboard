@@ -5815,7 +5815,7 @@ async function deleteScheduledReport(id) {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "overUnderBilling", "costCodes", "missingBudgets", "pmReport", "aiInsights", "payments", "apAging", "arAging", "jobAnalytics", "admin"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "overUnderBilling", "costCodes", "missingBudgets", "pmReport", "aiInsights", "payments", "apAging", "arAging", "jobAnalytics", "deptHeadMeeting", "monthEndReporting", "admin"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -5940,6 +5940,46 @@ function getReportData() {
       subtitle: getPaymentsSubtitle(),
       tableHtml: getPaymentsTableHtml(),
       csvData: getPaymentsCsvData(),
+      isWide: true
+    };
+  } else if (view === "apAging") {
+    return {
+      title: "AP Aging Report",
+      subtitle: getApAgingSubtitle(),
+      tableHtml: getApAgingTableHtml(),
+      csvData: getApAgingCsvData(),
+      isWide: true
+    };
+  } else if (view === "arAging") {
+    return {
+      title: "AR Aging Report",
+      subtitle: getArAgingSubtitle(),
+      tableHtml: getArAgingTableHtml(),
+      csvData: getArAgingCsvData(),
+      isWide: true
+    };
+  } else if (view === "aiInsights") {
+    return {
+      title: "AI Financial Insights",
+      subtitle: getAiInsightsSubtitle(),
+      tableHtml: getAiInsightsTableHtml(),
+      csvData: getAiInsightsCsvData(),
+      isWide: true
+    };
+  } else if (view === "deptHeadMeeting") {
+    return {
+      title: "Dept Head Meeting Report",
+      subtitle: getDeptHeadMeetingSubtitle(),
+      tableHtml: getDeptHeadMeetingTableHtml(),
+      csvData: getDeptHeadMeetingCsvData(),
+      isWide: true
+    };
+  } else if (view === "monthEndReporting") {
+    return {
+      title: "Month End Report",
+      subtitle: getMonthEndReportSubtitle(),
+      tableHtml: getMonthEndReportTableHtml(),
+      csvData: getMonthEndReportCsvData(),
       isWide: true
     };
   }
@@ -7017,6 +7057,208 @@ function getPaymentsCsvData() {
   return csv;
 }
 
+// AP Aging Export Helpers
+function getApAgingSubtitle() {
+  const selectedPm = pmTabsState?.apa || 'All Project Managers';
+  const asOfDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return selectedPm === 'All Project Managers' ? `As of ${asOfDate}` : `${selectedPm} - As of ${asOfDate}`;
+}
+
+function getApAgingTableHtml() {
+  const tbody = document.querySelector('#apAging .aging-table tbody');
+  if (!tbody || tbody.children.length === 0) {
+    return "<p>No AP aging data available</p>";
+  }
+  
+  const thead = document.querySelector('#apAging .aging-table thead');
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:10pt;">`;
+  
+  if (thead) {
+    html += `<thead><tr style="background:#1e3a5f;color:#fff;">`;
+    thead.querySelectorAll('th').forEach(th => {
+      html += `<th style="padding:8px;text-align:left;">${th.textContent.trim()}</th>`;
+    });
+    html += `</tr></thead>`;
+  }
+  
+  html += `<tbody>`;
+  Array.from(tbody.children).slice(0, 30).forEach(tr => {
+    html += `<tr>`;
+    tr.querySelectorAll('td').forEach(td => {
+      html += `<td style="padding:6px;border-bottom:1px solid #e5e7eb;">${td.textContent.trim()}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+  
+  if (tbody.children.length > 30) {
+    html += `<p style="margin-top:12px;font-size:11px;color:#6b7280;font-style:italic;">Showing top 30 of ${tbody.children.length} vendors. Use CSV or Excel export for complete data.</p>`;
+  }
+  
+  return html;
+}
+
+function getApAgingCsvData() {
+  const table = document.querySelector('#apAging .aging-table');
+  if (!table) return "";
+  
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  if (!tbody || tbody.children.length === 0) return "";
+  
+  let csv = "";
+  
+  if (thead) {
+    const headers = [];
+    thead.querySelectorAll('th').forEach(th => {
+      headers.push(`"${th.textContent.trim().replace(/"/g, '""')}"`);
+    });
+    csv += headers.join(',') + '\n';
+  }
+  
+  Array.from(tbody.children).forEach(tr => {
+    const cells = [];
+    tr.querySelectorAll('td').forEach(td => {
+      cells.push(`"${td.textContent.trim().replace(/"/g, '""')}"`);
+    });
+    csv += cells.join(',') + '\n';
+  });
+  
+  return csv;
+}
+
+// AR Aging Export Helpers
+function getArAgingSubtitle() {
+  const selectedPm = pmTabsState?.ara || 'All Project Managers';
+  const asOfDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return selectedPm === 'All Project Managers' ? `As of ${asOfDate}` : `${selectedPm} - As of ${asOfDate}`;
+}
+
+function getArAgingTableHtml() {
+  const tbody = document.querySelector('#arAging .aging-table tbody');
+  if (!tbody || tbody.children.length === 0) {
+    return "<p>No AR aging data available</p>";
+  }
+  
+  const thead = document.querySelector('#arAging .aging-table thead');
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:10pt;">`;
+  
+  if (thead) {
+    html += `<thead><tr style="background:#1e3a5f;color:#fff;">`;
+    thead.querySelectorAll('th').forEach(th => {
+      html += `<th style="padding:8px;text-align:left;">${th.textContent.trim()}</th>`;
+    });
+    html += `</tr></thead>`;
+  }
+  
+  html += `<tbody>`;
+  Array.from(tbody.children).slice(0, 30).forEach(tr => {
+    html += `<tr>`;
+    tr.querySelectorAll('td').forEach(td => {
+      html += `<td style="padding:6px;border-bottom:1px solid #e5e7eb;">${td.textContent.trim()}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+  
+  if (tbody.children.length > 30) {
+    html += `<p style="margin-top:12px;font-size:11px;color:#6b7280;font-style:italic;">Showing top 30 of ${tbody.children.length} customers. Use CSV or Excel export for complete data.</p>`;
+  }
+  
+  return html;
+}
+
+function getArAgingCsvData() {
+  const table = document.querySelector('#arAging .aging-table');
+  if (!table) return "";
+  
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  if (!tbody || tbody.children.length === 0) return "";
+  
+  let csv = "";
+  
+  if (thead) {
+    const headers = [];
+    thead.querySelectorAll('th').forEach(th => {
+      headers.push(`"${th.textContent.trim().replace(/"/g, '""')}"`);
+    });
+    csv += headers.join(',') + '\n';
+  }
+  
+  Array.from(tbody.children).forEach(tr => {
+    const cells = [];
+    tr.querySelectorAll('td').forEach(td => {
+      cells.push(`"${td.textContent.trim().replace(/"/g, '""')}"`);
+    });
+    csv += cells.join(',') + '\n';
+  });
+  
+  return csv;
+}
+
+// AI Insights Export Helpers
+function getAiInsightsSubtitle() {
+  const asOfDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return `Generated ${asOfDate}`;
+}
+
+function getAiInsightsTableHtml() {
+  const contentEl = document.querySelector('#aiInsights .ai-insights-content');
+  if (!contentEl || contentEl.textContent.trim() === '') {
+    return "<p>No AI insights available. Please generate insights first.</p>";
+  }
+  return `<div class="ai-insights-export">${contentEl.innerHTML}</div>`;
+}
+
+function getAiInsightsCsvData() {
+  const contentEl = document.querySelector('#aiInsights .ai-insights-content');
+  if (!contentEl) return "";
+  return contentEl.textContent.trim();
+}
+
+// Dept Head Meeting Export Helpers
+function getDeptHeadMeetingSubtitle() {
+  const asOfDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return `As of ${asOfDate}`;
+}
+
+function getDeptHeadMeetingTableHtml() {
+  const section = document.getElementById('deptHeadMeeting');
+  if (!section) return "<p>No data available</p>";
+  
+  const content = section.querySelector('.section-content');
+  if (content) {
+    return content.innerHTML || "<p>Report content not yet available</p>";
+  }
+  return "<p>Report content not yet available</p>";
+}
+
+function getDeptHeadMeetingCsvData() {
+  return "Dept Head Meeting Report - Export from page for full data";
+}
+
+// Month End Report Export Helpers
+function getMonthEndReportSubtitle() {
+  const asOfDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return `As of ${asOfDate}`;
+}
+
+function getMonthEndReportTableHtml() {
+  const section = document.getElementById('monthEndReporting');
+  if (!section) return "<p>No data available</p>";
+  
+  const content = section.querySelector('.section-content');
+  if (content) {
+    return content.innerHTML || "<p>Report content not yet available</p>";
+  }
+  return "<p>Report content not yet available</p>";
+}
+
+function getMonthEndReportCsvData() {
+  return "Month End Report - Export from page for full data";
+}
+
 function generateReportHtml(data, forEmail = false) {
   const orientation = data.isWide ? "landscape" : "portrait";
   const pageSize = data.isWide ? "11in 8.5in" : "8.5in 11in";
@@ -7412,7 +7654,9 @@ async function universalExportToExcel() {
     "overUnderBilling": "#oubTable",
     "costCodes": "#costCodesTable",
     "missingBudgets": "#missingBudgetsTable",
-    "payments": "#paymentsTable"
+    "payments": "#paymentsTable",
+    "apAging": "#apAging .aging-table",
+    "arAging": "#arAging .aging-table"
   };
   
   let rows = [];
