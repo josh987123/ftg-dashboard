@@ -3381,6 +3381,11 @@
                 <span class="dcr-safety-label">Net Over/Under Bill</span>
                 <span class="dcr-safety-value" id="dcrSafetyOUB">--</span>
               </div>
+              <div class="dcr-safety-operator">−</div>
+              <div class="dcr-safety-item">
+                <span class="dcr-safety-label">Operating Reserve (3-mo SG&A)</span>
+                <span class="dcr-safety-value negative" id="dcrSafetyOpExp">--</span>
+              </div>
               <div class="dcr-safety-equals">=</div>
               <div class="dcr-safety-result">
                 <span class="dcr-safety-label">Safety Check</span>
@@ -3728,11 +3733,11 @@
   <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script defer src="dashboard.js?v=20251225b"></script>
+  <script defer src="dashboard.js?v=20251225c"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251225b';
+    const APP_VERSION = '20251225c';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {

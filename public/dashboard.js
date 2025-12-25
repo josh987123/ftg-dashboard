@@ -16272,6 +16272,8 @@ let dcrData = null;
 let dcrArData = null;
 let dcrApData = null;
 let dcrJobsData = null;
+let dcrGLData = null;
+let dcrAccountGroups = null;
 let dcrInitialized = false;
 let dcrViewMode = 'weekly'; // 'daily' or 'weekly' - weekly is default
 
@@ -16322,12 +16324,14 @@ async function loadCashReportData() {
     
     console.log('[DCR] Fetching cash data from:', apiUrl);
     
-    // Fetch all data in parallel
-    const [cashResponse, arData, apData, jobsData] = await Promise.all([
+    // Fetch all data in parallel (including GL data for operating expenses calculation)
+    const [cashResponse, arData, apData, jobsData, glData, accountGroups] = await Promise.all([
       fetch(apiUrl).then(r => r.json()),
       DataCache.getARData().catch(() => ({ invoices: [] })),
       DataCache.getAPData().catch(() => ({ invoices: [] })),
-      DataCache.getJobsData().catch(() => ({ job_budgets: [] }))
+      DataCache.getJobsData().catch(() => ({ job_budgets: [] })),
+      DataCache.getGLData().catch(() => ({ gl_history_all: [] })),
+      DataCache.getAccountGroups().catch(() => ({ income_statement: { groups: [] } }))
     ]);
     
     console.log('[DCR] Received data:', { 
@@ -16335,7 +16339,8 @@ async function loadCashReportData() {
       transactions: cashResponse.transactions?.length,
       arInvoices: arData?.invoices?.length,
       apInvoices: apData?.invoices?.length,
-      jobs: jobsData?.job_budgets?.length
+      jobs: jobsData?.job_budgets?.length,
+      glRecords: glData?.gl_history_all?.length
     });
     
     if (!cashResponse.success) {
@@ -16346,6 +16351,8 @@ async function loadCashReportData() {
     dcrArData = arData;
     dcrApData = apData;
     dcrJobsData = jobsData;
+    dcrGLData = glData;
+    dcrAccountGroups = accountGroups;
     
   } catch (error) {
     console.error('[DCR] Error loading cash report data:', error);
@@ -16856,18 +16863,22 @@ function renderDcrSafetyCheck() {
     console.log('[DCR] Built oubData for Net OUB:', netOUB);
   }
   
-  // Calculate safety check: Cash + AR - AP - Net OUB
+  // Calculate 3-month operating expense reserve (SG&A)
+  const opExpenseReserve = calculateDcr3MonthOpExpense();
+  
+  // Calculate safety check: Cash + AR - AP - Net OUB - Operating Reserve
   // If Net OUB is positive (over-billed), it reduces safety
   // If Net OUB is negative (under-billed), it increases safety
-  const safetyTotal = cashBalance + totalAR - totalAP - netOUB;
+  const safetyTotal = cashBalance + totalAR - totalAP - netOUB - opExpenseReserve;
   
-  console.log('[DCR] Safety Check values:', { cashBalance, totalAR, totalAP, netOUB, safetyTotal });
+  console.log('[DCR] Safety Check values:', { cashBalance, totalAR, totalAP, netOUB, opExpenseReserve, safetyTotal });
   
   // Update DOM
   const cashEl = document.getElementById('dcrSafetyCash');
   const arEl = document.getElementById('dcrSafetyAR');
   const apEl = document.getElementById('dcrSafetyAP');
   const oubEl = document.getElementById('dcrSafetyOUB');
+  const opExpEl = document.getElementById('dcrSafetyOpExp');
   const totalEl = document.getElementById('dcrSafetyTotal');
   
   if (cashEl) cashEl.textContent = formatCurrency(cashBalance);
@@ -16885,10 +16896,71 @@ function renderDcrSafetyCheck() {
     }
   }
   
+  if (opExpEl) {
+    opExpEl.textContent = formatCurrency(opExpenseReserve);
+    opExpEl.className = 'dcr-safety-value negative';
+  }
+  
   if (totalEl) {
     totalEl.textContent = formatCurrency(safetyTotal);
     totalEl.className = 'dcr-safety-total ' + (safetyTotal >= 0 ? 'positive' : 'negative');
   }
+}
+
+// Calculate trailing 3-month operating expenses (SG&A)
+function calculateDcr3MonthOpExpense() {
+  if (!dcrGLData?.gl_history_all || !dcrAccountGroups?.income_statement?.groups) {
+    console.log('[DCR] Missing GL or account groups data for op expense calc');
+    return 0;
+  }
+  
+  // Build GL lookup for this calculation
+  const glLookup = {};
+  dcrGLData.gl_history_all.forEach(row => {
+    const acctNum = row.Account_Num || row.account_no;
+    if (acctNum) {
+      glLookup[acctNum] = row;
+    }
+  });
+  
+  // Get the last 3 completed months
+  const today = new Date();
+  const trailingMonths = [];
+  for (let i = 1; i <= 3; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    trailingMonths.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  
+  console.log('[DCR] Calculating op expense for months:', trailingMonths);
+  
+  // Operating expense account ranges (7000-7299 based on account_groups.json)
+  // This includes: Salaries & Benefits (7010-7200), Advertising (7040), Facility (7085-7180),
+  // Travel & Entertainment (7080-7190), Insurance (7140-7145), Professional Services (7100-7120),
+  // Amortization (7599), Administrative & Other (7050-7230)
+  const opExpenseAccounts = [];
+  
+  // Collect all accounts from 7000-7599 range (Operating Expenses)
+  Object.keys(glLookup).forEach(acct => {
+    const num = parseInt(acct);
+    if (num >= 7000 && num < 7600) {
+      opExpenseAccounts.push(num);
+    }
+  });
+  
+  // Sum operating expenses for the trailing 3 months
+  let totalOpExp = 0;
+  opExpenseAccounts.forEach(acctNum => {
+    const acctData = glLookup[acctNum];
+    if (acctData) {
+      trailingMonths.forEach(month => {
+        const value = parseFloat(acctData[month]) || 0;
+        totalOpExp += Math.abs(value); // Expenses are typically negative, take absolute value
+      });
+    }
+  });
+  
+  console.log('[DCR] 3-month operating expense total:', totalOpExp);
+  return totalOpExp;
 }
 
 function isDcrTransfer(txn, allTxns) {
