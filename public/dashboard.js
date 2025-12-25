@@ -23875,26 +23875,30 @@ async function extractAiInsightsData() {
     }
     
     // CASH POSITION - use API endpoint (same as Cash Report page)
-    if (cashData && cashData.accounts) {
+    // Cash data from API has: accounts[] with {name, balance, lastUpdate}
+    if (cashData && cashData.success && cashData.accounts) {
       text += "=== CASH POSITION ===\n";
       const accounts = cashData.accounts;
-      const ftgAccounts = accounts.filter(a => ['1883', '2469', '7554'].some(suffix => String(a.account_number || '').endsWith(suffix)));
-      const totalCash = ftgAccounts.reduce((sum, a) => {
-        const balances = a.daily_balances || [];
-        const latestBalance = balances.length > 0 ? parseFloat(balances[balances.length - 1]?.balance) || 0 : 0;
-        return sum + latestBalance;
-      }, 0);
       
-      const weekAgoBalance = ftgAccounts.reduce((sum, a) => {
-        const balances = a.daily_balances || [];
-        const weekAgo = balances.length > 7 ? parseFloat(balances[balances.length - 8]?.balance) || 0 : 0;
-        return sum + weekAgo;
-      }, 0);
+      // Filter FTG Builders accounts by name containing account suffixes
+      const FTG_SUFFIXES = ['1883', '2469', '7554'];
+      const ftgAccounts = accounts.filter(a => FTG_SUFFIXES.some(suffix => (a.name || '').includes(suffix)));
+      const totalCash = ftgAccounts.reduce((sum, a) => sum + (parseFloat(a.balance) || 0), 0);
       
-      const weekChange = totalCash - weekAgoBalance;
+      // Also show all accounts for context
+      const allAccountsTotal = accounts.reduce((sum, a) => sum + (parseFloat(a.balance) || 0), 0);
       
       text += `Current Cash Balance (FTG Builders): $${totalCash.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
-      text += `7-Day Change: $${weekChange.toLocaleString('en-US', {maximumFractionDigits: 0})} (${weekChange >= 0 ? '+' : ''}${weekAgoBalance > 0 ? (weekChange / weekAgoBalance * 100).toFixed(1) : 0}%)\n\n`;
+      text += `Total Cash (All Accounts): $${allAccountsTotal.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+      
+      // List individual FTG accounts
+      if (ftgAccounts.length > 0) {
+        text += "FTG Builders Account Breakdown:\n";
+        ftgAccounts.forEach(a => {
+          text += `  - ${a.name}: $${(parseFloat(a.balance) || 0).toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+        });
+      }
+      text += "\n";
     }
     
     // Jobs Summary
