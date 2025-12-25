@@ -4588,7 +4588,9 @@ Available data sources and their key fields:
 
 5. CASH DATA (from Google Sheets via API):
    - accounts[]: name, balance (current balance)
+   - transactions[]: date (YYYY-MM-DD format), account, amount (positive=deposit, negative=withdrawal), description, payee
    - FTG Builders accounts contain "1883", "2469", or "7554" in name
+   - For transaction queries: use aggregation="transactions" and set date_range filter (e.g., "last 7 days", "last 2 weeks", "this month")
 
 PM_EXCLUSION: Always exclude "Josh Angelo" from PM analysis.
 """
@@ -4962,14 +4964,50 @@ def execute_nlq_query(query_plan, data):
                             'accounts': [{'name': a.get('name', ''), 'balance': float(a.get('balance', 0) or 0)} for a in ftg_accounts]
                         }
                     elif aggregation == 'transactions':
-                        # Get recent deposits and withdrawals
-                        deposits = [t for t in transactions if float(t.get('amount', 0) or 0) > 0]
-                        withdrawals = [t for t in transactions if float(t.get('amount', 0) or 0) < 0]
+                        from datetime import datetime, timedelta
+                        
+                        # Parse date_range filter
+                        date_range = filters.get('date_range', 'last 30 days')
+                        today = datetime.now().date()
+                        
+                        if 'week' in str(date_range).lower() and '2' in str(date_range):
+                            start_date = today - timedelta(days=14)
+                        elif 'week' in str(date_range).lower():
+                            start_date = today - timedelta(days=7)
+                        elif '30' in str(date_range) or 'month' in str(date_range).lower():
+                            start_date = today - timedelta(days=30)
+                        elif '7' in str(date_range):
+                            start_date = today - timedelta(days=7)
+                        else:
+                            start_date = today - timedelta(days=14)  # Default to 2 weeks
+                        
+                        # Filter transactions by date and FTG accounts
+                        ftg_account_names = [a.get('name', '') for a in ftg_accounts]
+                        filtered_txns = []
+                        for t in transactions:
+                            txn_date_str = t.get('date', '')
+                            txn_account = t.get('account', '')
+                            if any(x in txn_account for x in ['1883', '2469', '7554']):
+                                try:
+                                    txn_date = datetime.strptime(txn_date_str, '%Y-%m-%d').date()
+                                    if txn_date >= start_date:
+                                        filtered_txns.append(t)
+                                except:
+                                    pass
+                        
+                        # Separate deposits and withdrawals
+                        deposits = [t for t in filtered_txns if float(t.get('amount', 0) or 0) > 0]
+                        withdrawals = [t for t in filtered_txns if float(t.get('amount', 0) or 0) < 0]
+                        
                         results = {
-                            'deposits': deposits[:limit],
-                            'withdrawals': withdrawals[:limit],
+                            'date_range': f'{start_date} to {today}',
+                            'deposit_count': len(deposits),
+                            'withdrawal_count': len(withdrawals),
                             'deposit_total': sum(float(t.get('amount', 0) or 0) for t in deposits),
-                            'withdrawal_total': sum(float(t.get('amount', 0) or 0) for t in withdrawals)
+                            'withdrawal_total': abs(sum(float(t.get('amount', 0) or 0) for t in withdrawals)),
+                            'net_change': sum(float(t.get('amount', 0) or 0) for t in filtered_txns),
+                            'top_deposits': sorted(deposits, key=lambda x: float(x.get('amount', 0) or 0), reverse=True)[:5],
+                            'top_withdrawals': sorted(withdrawals, key=lambda x: float(x.get('amount', 0) or 0))[:5]
                         }
                     else:
                         total_balance = sum(float(a.get('balance', 0) or 0) for a in ftg_accounts)
@@ -5027,7 +5065,7 @@ User Question: "{question}"
 
 Respond with ONLY a valid JSON object containing:
 {{
-  "target_data": "jobs|ar|ap|gl|pm_summary",
+  "target_data": "jobs|ar|ap|gl|pm_summary|cash",
   "filters": {{
     "pm": "PM first or full name if filtering by PM, null otherwise",
     "status": "A|C|I if filtering job status, null otherwise",
@@ -5035,9 +5073,10 @@ Respond with ONLY a valid JSON object containing:
     "vendor": "vendor name if filtering, null otherwise",
     "year": 2025,
     "min_days": "minimum days outstanding if filtering aged items, null otherwise",
-    "account_range": [start, end] for GL accounts
+    "account_range": [start, end] for GL accounts,
+    "date_range": "last 7 days|last 2 weeks|last 30 days|this month|this week for cash transactions"
   }},
-  "aggregation": "count|sum|average|top|list|by_customer|by_vendor|aging|by_month",
+  "aggregation": "count|sum|average|top|list|by_customer|by_vendor|aging|by_month|balance|transactions",
   "fields": ["field names for aggregation like contract, margin, collectible"],
   "limit": 10,
   "explanation": "Brief explanation of what data will be retrieved"
@@ -5048,6 +5087,8 @@ Examples:
 - "Top 5 vendors by spend" -> target_data: "ap", aggregation: "by_vendor", limit: 5
 - "What is Rodney's profit margin?" -> target_data: "pm_summary", filters: {{pm: "Rodney"}}, fields: ["margin"]
 - "AR aging breakdown" -> target_data: "ar", aggregation: "aging"
+- "What is our current cash balance?" -> target_data: "cash", aggregation: "balance"
+- "How many deposits in the last 2 weeks?" -> target_data: "cash", aggregation: "transactions", filters: {{date_range: "last 2 weeks"}}
 
 Respond with ONLY the JSON object, no markdown or explanation."""
         
