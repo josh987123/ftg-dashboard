@@ -4580,13 +4580,19 @@ ENTITY: Job
     - original_contract (number): Initial contract value
     - revised_contract (number): Current contract value after change orders
     - original_cost (number): Initial budget cost
-    - revised_cost (number): Current budget cost
-  Computed:
+    - revised_cost (number): Current budget cost (aka budget_cost)
+  Computed (matches Job Overview/Actuals page):
     - actual_cost: Sum of Value from job_actuals where Job_No matches
-    - billed_revenue: From job_billed_revenue.Billed_Revenue
-    - percent_complete: actual_cost / revised_cost * 100
-    - gross_margin: (revised_contract - revised_cost) / revised_contract * 100
-    - over_under_billing: billed_revenue - (percent_complete * revised_contract)
+    - billed: From job_billed_revenue.Billed_Revenue
+    - has_budget (boolean): True if revised_cost > 0 (CRITICAL for completion calc)
+    - percent_complete: actual_cost / budget_cost * 100 (0% when no budget!)
+    - earned_revenue: (actual_cost / budget_cost) * contract (only if has_budget)
+    - backlog: contract - earned_revenue (remaining work value)
+    - estimated_profit: contract - budget_cost
+    - margin (profit_margin): (contract - budget_cost) / contract * 100
+    - over_under_billing: billed - earned_revenue (positive=overbilled)
+  IMPORTANT: Jobs WITHOUT budgets (has_budget=false) show 0% completion but may have actual_cost!
+  When asked about completion, check has_budget and report actual_cost for jobs missing budgets.
   Relationships:
     - Links to AR invoices via job_no
     - Links to AP invoices via job_no
@@ -4801,21 +4807,36 @@ def execute_nlq_query(query_plan, data):
                         continue
                 actual_cost = actual_cost_by_job.get(job_no, 0)
                 budget_cost = float(job.get('revised_cost') or 0)
-                # Calculate percent complete as actual cost / budget cost
-                percent_complete = (actual_cost / budget_cost * 100) if budget_cost > 0 else 0
-                
                 contract_val = float(job.get('revised_contract') or 0)
                 billed_val = billed_by_job.get(job_no, 0)
                 
-                # Calculate gross margin (based on estimated cost vs contract)
-                if contract_val > 0:
-                    gross_margin = (contract_val - budget_cost) / contract_val * 100
-                else:
-                    gross_margin = 0
+                # Flag whether job has budget setup (critical for completion calculation)
+                has_budget = budget_cost > 0
                 
-                # Calculate over/under billing: billed - (percent_complete/100 * contract)
+                # Calculate percent complete as actual cost / budget cost (matches Job Actuals page)
+                # When no budget, percent_complete is 0 but we track actual costs
+                percent_complete = (actual_cost / budget_cost * 100) if has_budget else 0
+                
+                # Earned revenue (matches Job Overview/Actuals page calculation)
+                # Only calculated when budget AND contract AND actual cost exist
+                if has_budget and contract_val > 0 and actual_cost > 0:
+                    earned_revenue = (actual_cost / budget_cost) * contract_val
+                else:
+                    earned_revenue = 0
+                
+                # Calculate gross/profit margin (based on estimated cost vs contract)
+                if contract_val > 0:
+                    estimated_profit = contract_val - budget_cost
+                    profit_margin = (estimated_profit / contract_val) * 100
+                else:
+                    estimated_profit = 0
+                    profit_margin = 0
+                
+                # Backlog = contract - earned_revenue (remaining work)
+                backlog = contract_val - earned_revenue if contract_val > 0 else 0
+                
+                # Over/under billing: billed - earned_revenue (matches page calculation)
                 # Positive = overbilled, Negative = underbilled
-                earned_revenue = (percent_complete / 100) * contract_val if percent_complete > 0 else 0
                 over_under_billing = billed_val - earned_revenue
                 
                 job_data = {
@@ -4828,8 +4849,12 @@ def execute_nlq_query(query_plan, data):
                     'budget_cost': budget_cost,
                     'actual_cost': actual_cost,
                     'billed': billed_val,
+                    'has_budget': has_budget,  # Critical flag for completion analysis
                     'percent_complete': round(percent_complete, 1),
-                    'margin': round(gross_margin, 1),
+                    'earned_revenue': round(earned_revenue, 2),
+                    'backlog': round(backlog, 2),
+                    'estimated_profit': round(estimated_profit, 2),
+                    'margin': round(profit_margin, 1),
                     'over_under_billing': round(over_under_billing, 2)
                 }
                 
@@ -4869,24 +4894,41 @@ def execute_nlq_query(query_plan, data):
                 with_budgets.sort(key=lambda x: x['percent_complete'], reverse=True)
                 results = {'items': with_budgets[:limit or 10], 'total_with_budgets': len(with_budgets)}
             elif aggregation == 'by_pm':
-                # Group jobs by PM
+                # Group jobs by PM with comprehensive metrics
                 by_pm = {}
                 for j in filtered:
                     pm = j['pm']
                     if pm not in by_pm:
-                        by_pm[pm] = {'pm': pm, 'job_count': 0, 'active_jobs': 0, 'contract': 0, 'budget_cost': 0, 'actual_cost': 0}
+                        by_pm[pm] = {
+                            'pm': pm, 'job_count': 0, 'active_jobs': 0, 'jobs_with_budget': 0,
+                            'contract': 0, 'budget_cost': 0, 'actual_cost': 0, 'billed': 0,
+                            'earned_revenue': 0, 'backlog': 0
+                        }
                     by_pm[pm]['job_count'] += 1
                     if j['status'] == 'A':
                         by_pm[pm]['active_jobs'] += 1
+                    if j['has_budget']:
+                        by_pm[pm]['jobs_with_budget'] += 1
                     by_pm[pm]['contract'] += j['contract']
                     by_pm[pm]['budget_cost'] += j['budget_cost']
                     by_pm[pm]['actual_cost'] += j['actual_cost']
+                    by_pm[pm]['billed'] += j['billed']
+                    by_pm[pm]['earned_revenue'] += j['earned_revenue']
+                    by_pm[pm]['backlog'] += j['backlog']
                 
                 for pm_data in by_pm.values():
+                    # Calculate overall margin for PM
                     if pm_data['contract'] > 0:
                         pm_data['margin'] = round((pm_data['contract'] - pm_data['budget_cost']) / pm_data['contract'] * 100, 1)
                     else:
                         pm_data['margin'] = 0
+                    # Over/under billing
+                    pm_data['over_under_billing'] = round(pm_data['billed'] - pm_data['earned_revenue'], 2)
+                    # Weighted avg completion (only for jobs with budgets)
+                    if pm_data['budget_cost'] > 0:
+                        pm_data['avg_completion'] = round(pm_data['actual_cost'] / pm_data['budget_cost'] * 100, 1)
+                    else:
+                        pm_data['avg_completion'] = 0
                 
                 # Use sort_by from query plan
                 sort_field = query_plan.get('sort_by') or 'contract'
@@ -4912,7 +4954,17 @@ def execute_nlq_query(query_plan, data):
                 filtered.sort(key=lambda x: x.get(sort_field, 0), reverse=False)
                 results = {'items': filtered[:limit], 'sort_by': sort_field}
             else:
-                results = {'items': filtered[:limit], 'total_count': len(filtered)}
+                # Default list with summary stats about budget coverage
+                jobs_with_budget = [j for j in filtered if j['has_budget']]
+                jobs_without_budget = [j for j in filtered if not j['has_budget']]
+                results = {
+                    'items': filtered[:limit or 20],
+                    'total_count': len(filtered),
+                    'jobs_with_budget': len(jobs_with_budget),
+                    'jobs_without_budget': len(jobs_without_budget),
+                    'total_actual_cost': sum(j['actual_cost'] for j in filtered),
+                    'note': 'Jobs without budgets show 0% completion but may have actual costs'
+                }
         
         # AR queries - matches AR Aging page logic exactly
         elif target == 'ar':
