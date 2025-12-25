@@ -17050,23 +17050,30 @@ function renderDcrTopTransactions() {
 }
 
 // Match deposit amount against AR invoices to find potential customer/job
+// Only matches invoices with outstanding balances or recent activity
 function matchDepositToAR(amount) {
   if (!dcrArData?.invoices) return null;
   
   const absAmount = Math.abs(amount);
   const matches = [];
   
-  // Look for AR invoices where total_cash_applied matches the deposit amount
-  // or invoice_amount matches (for full payment scenarios)
-  dcrArData.invoices.forEach(inv => {
-    const cashApplied = parseFloat(inv.total_cash_applied) || 0;
+  // Filter to invoices with outstanding balances (more likely to be paid recently)
+  const activeInvoices = dcrArData.invoices.filter(inv => {
+    const calcDue = parseFloat(inv.calculated_amount_due) || 0;
+    const daysOut = parseInt(inv.days_outstanding) || 0;
+    // Only consider invoices that are open (have balance) or recently paid (within 90 days)
+    return calcDue > 0 || daysOut <= 90;
+  });
+  
+  // Look for exact matches against invoice amounts or net payments
+  activeInvoices.forEach(inv => {
     const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
     const calcDue = parseFloat(inv.calculated_amount_due) || 0;
+    const netPayment = invoiceAmt - calcDue; // Amount that would have been paid
     
-    // Check for exact or near-exact matches (within $0.01)
-    if (Math.abs(cashApplied - absAmount) < 0.01 || 
-        Math.abs(invoiceAmt - absAmount) < 0.01 ||
-        Math.abs(invoiceAmt - calcDue - absAmount) < 0.01) {
+    // Check for exact match (within $0.01) against full invoice or net payment
+    if (Math.abs(invoiceAmt - absAmount) < 0.01 || 
+        (netPayment > 0 && Math.abs(netPayment - absAmount) < 0.01)) {
       matches.push({
         type: 'exact',
         customer: inv.customer_name,
@@ -17074,16 +17081,24 @@ function matchDepositToAR(amount) {
         job_desc: inv.job_description,
         pm: inv.project_manager_name,
         invoice_no: inv.invoice_no,
+        daysOut: parseInt(inv.days_outstanding) || 0,
         confidence: 'high'
       });
     }
   });
   
-  // If no exact matches, look for close matches (within 5%)
+  // If no exact matches, look for close matches but only on open invoices
   if (matches.length === 0) {
-    dcrArData.invoices.forEach(inv => {
+    const openInvoices = activeInvoices.filter(inv => 
+      (parseFloat(inv.calculated_amount_due) || 0) > 0
+    );
+    
+    openInvoices.forEach(inv => {
       const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
-      if (invoiceAmt > 0 && Math.abs(invoiceAmt - absAmount) / invoiceAmt < 0.05) {
+      const calcDue = parseFloat(inv.calculated_amount_due) || 0;
+      
+      // Close match (within 5%) on outstanding amount
+      if (calcDue > 0 && Math.abs(calcDue - absAmount) / calcDue < 0.05) {
         matches.push({
           type: 'close',
           customer: inv.customer_name,
@@ -17091,38 +17106,52 @@ function matchDepositToAR(amount) {
           job_desc: inv.job_description,
           pm: inv.project_manager_name,
           invoice_no: inv.invoice_no,
+          daysOut: parseInt(inv.days_outstanding) || 0,
           confidence: 'medium'
         });
       }
     });
   }
   
-  // Return the best match (prefer exact, then by job number presence)
+  // Sort by confidence, then by recency (lower days outstanding = more recent)
   matches.sort((a, b) => {
     if (a.type !== b.type) return a.type === 'exact' ? -1 : 1;
     if (a.job_no && !b.job_no) return -1;
     if (!a.job_no && b.job_no) return 1;
-    return 0;
+    return (a.daysOut || 999) - (b.daysOut || 999);
   });
   
-  return matches.length > 0 ? matches[0] : null;
+  // Only return if we have a single strong match or multiple exact matches
+  if (matches.length === 1) return matches[0];
+  if (matches.length > 1 && matches[0].type === 'exact') return matches[0];
+  return null;
 }
 
 // Match withdrawal amount against AP invoices to find potential vendor/job
+// Only matches invoices with recent payment activity or outstanding balances
 function matchWithdrawalToAP(amount) {
   if (!dcrApData?.invoices) return null;
   
   const absAmount = Math.abs(amount);
   const matches = [];
   
-  // Look for AP invoices where invoice_amount or amount_paid_to_date matches
-  dcrApData.invoices.forEach(inv => {
+  // Filter to invoices with outstanding balances or recent activity
+  const activeInvoices = dcrApData.invoices.filter(inv => {
+    const remaining = parseFloat(inv.remaining_balance) || 0;
+    const daysOut = parseInt(inv.days_outstanding) || 0;
+    const status = (inv.payment_status || '').toLowerCase();
+    // Only consider invoices with balance or recently paid (within 90 days)
+    return remaining > 0 || (status === 'paid' && daysOut <= 90);
+  });
+  
+  // Look for exact matches against invoice amounts or paid amounts
+  activeInvoices.forEach(inv => {
     const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
     const paidAmt = parseFloat(inv.amount_paid_to_date) || 0;
     
-    // Check for exact or near-exact matches (within $0.01)
+    // Check for exact match (within $0.01)
     if (Math.abs(invoiceAmt - absAmount) < 0.01 || 
-        Math.abs(paidAmt - absAmount) < 0.01) {
+        (paidAmt > 0 && Math.abs(paidAmt - absAmount) < 0.01)) {
       matches.push({
         type: 'exact',
         vendor: inv.vendor_name,
@@ -17130,16 +17159,23 @@ function matchWithdrawalToAP(amount) {
         job_desc: inv.job_description,
         pm: inv.project_manager_name,
         invoice_no: inv.invoice_no,
+        daysOut: parseInt(inv.days_outstanding) || 0,
         confidence: 'high'
       });
     }
   });
   
-  // If no exact matches, look for close matches (within 5%)
+  // If no exact matches, look for close matches but only on open invoices
   if (matches.length === 0) {
-    dcrApData.invoices.forEach(inv => {
-      const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
-      if (invoiceAmt > 0 && Math.abs(invoiceAmt - absAmount) / invoiceAmt < 0.05) {
+    const openInvoices = activeInvoices.filter(inv => 
+      (parseFloat(inv.remaining_balance) || 0) > 0
+    );
+    
+    openInvoices.forEach(inv => {
+      const remaining = parseFloat(inv.remaining_balance) || 0;
+      
+      // Close match (within 5%) on outstanding balance
+      if (remaining > 0 && Math.abs(remaining - absAmount) / remaining < 0.05) {
         matches.push({
           type: 'close',
           vendor: inv.vendor_name,
@@ -17147,21 +17183,25 @@ function matchWithdrawalToAP(amount) {
           job_desc: inv.job_description,
           pm: inv.project_manager_name,
           invoice_no: inv.invoice_no,
+          daysOut: parseInt(inv.days_outstanding) || 0,
           confidence: 'medium'
         });
       }
     });
   }
   
-  // Return the best match (prefer exact, then by job number presence)
+  // Sort by confidence, then by recency (lower days outstanding = more recent)
   matches.sort((a, b) => {
     if (a.type !== b.type) return a.type === 'exact' ? -1 : 1;
     if (a.job_no && !b.job_no) return -1;
     if (!a.job_no && b.job_no) return 1;
-    return 0;
+    return (a.daysOut || 999) - (b.daysOut || 999);
   });
   
-  return matches.length > 0 ? matches[0] : null;
+  // Only return if we have a single strong match or multiple exact matches
+  if (matches.length === 1) return matches[0];
+  if (matches.length > 1 && matches[0].type === 'exact') return matches[0];
+  return null;
 }
 
 function renderDcrTransactionList(txns, type) {

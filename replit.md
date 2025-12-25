@@ -40,7 +40,7 @@ The dashboard provides several key views for financial analysis:
     - **Weekly View** (default): 10-week trailing balance chart, past 7 days deposits/withdrawals
     - Metric tiles: Current Balance, Deposits, Withdrawals, Percent Change
     - **Cash Balance Safety Check**: Formula breakdown showing Cash Balance + AR - AP - Net Over/Under Bill - Operating Reserve (3-mo SG&A) = Safety Check total. Operating Reserve is the sum of all operating expenses (accounts 7000-7599) for the trailing 3 completed months.
-    - Top 5 Deposits and Top 5 Withdrawals sections (replacing full transaction table)
+    - Top 5 Deposits and Top 5 Withdrawals with **Transaction Enrichment**: Cross-references bank transactions with AR/AP invoice data to show potential job/customer/vendor matches. High-confidence matches (exact amount) shown in green, medium-confidence (within 5%) in amber.
     - Transfer detection logic excludes internal transfers from calculations
     - FTG Builders accounts identified by suffixes 1883, 2469, 7554
     - US Federal Holidays recognized: New Year, MLK Day, Presidents Day, Memorial Day, July 4th, Labor Day, Thanksgiving, Christmas
