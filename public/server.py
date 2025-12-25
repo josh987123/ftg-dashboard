@@ -4580,7 +4580,12 @@ Available data sources and their key fields:
      days_outstanding, project_manager_name, job_no, job_description
 
 3. AP DATA (ap_invoices.json):
-   - invoices[]: vendor_name, invoice_no, remaining_balance, days_outstanding, job_no, job_description
+   - invoices[]: vendor_name, invoice_no, invoice_amount, remaining_balance, days_outstanding, job_no, job_description
+   - Can filter by job_no to get vendor spend for a specific job
+
+6. JOB_DETAIL (combines job budget + AP vendor spend):
+   - Use target_data="job_detail" with filters.job_no to get comprehensive job info
+   - Returns: job budget info (revised_cost, revised_contract) + top vendors by spend from AP
 
 4. GL DATA (financials_gl.json):
    - gl_history_all[]: Account_Num (4xxx=Revenue, 5xxx=Direct Cost, 6xxx=Indirect, 7xxx=SG&A),
@@ -5022,6 +5027,51 @@ def execute_nlq_query(query_plan, data):
                 print(f"[NLQ] Cash data error: {cash_err}")
                 results = {'error': f'Cash data unavailable: {str(cash_err)}'}
         
+        # Job detail queries (combines budget + vendor spend)
+        elif target == 'job_detail':
+            job_no = str(filters.get('job_no', '')).strip()
+            if not job_no:
+                results = {'error': 'job_no filter required for job_detail queries'}
+            else:
+                # Get job budget info
+                budgets = data.get('jobs', {}).get('job_budgets', [])
+                job_budget = None
+                for j in budgets:
+                    if str(j.get('job_no', '')) == job_no:
+                        job_budget = j
+                        break
+                
+                # Get job actuals
+                actuals = data.get('jobs', {}).get('job_actuals', [])
+                job_actual_cost = sum(float(a.get('Value') or a.get('actual_cost') or 0) 
+                                     for a in actuals if str(a.get('Job_No') or a.get('job_no', '')) == job_no)
+                
+                # Get AP vendor spend for this job
+                ap_invoices = data.get('ap', {}).get('invoices', [])
+                job_ap = [inv for inv in ap_invoices if str(inv.get('job_no', '')) == job_no]
+                
+                vendor_spend = {}
+                for inv in job_ap:
+                    vendor = inv.get('vendor_name', 'Unknown')
+                    amount = float(inv.get('invoice_amount', 0) or 0)
+                    vendor_spend[vendor] = vendor_spend.get(vendor, 0) + amount
+                
+                top_vendors = sorted(vendor_spend.items(), key=lambda x: x[1], reverse=True)[:limit or 10]
+                
+                results = {
+                    'job_no': job_no,
+                    'job_description': job_budget.get('job_description', 'Unknown') if job_budget else 'Job not found',
+                    'project_manager': job_budget.get('project_manager_name', '') if job_budget else '',
+                    'customer': job_budget.get('customer_name', '') if job_budget else '',
+                    'status': job_budget.get('job_status', '') if job_budget else '',
+                    'revised_contract': float(job_budget.get('revised_contract', 0) or 0) if job_budget else 0,
+                    'revised_cost_budget': float(job_budget.get('revised_cost', 0) or 0) if job_budget else 0,
+                    'actual_cost': job_actual_cost,
+                    'total_ap_spend': sum(vendor_spend.values()),
+                    'ap_invoice_count': len(job_ap),
+                    'top_vendors': [{'vendor': v, 'spend': s} for v, s in top_vendors]
+                }
+        
         else:
             results = {'error': f'Unknown target: {target}'}
         
@@ -5065,12 +5115,13 @@ User Question: "{question}"
 
 Respond with ONLY a valid JSON object containing:
 {{
-  "target_data": "jobs|ar|ap|gl|pm_summary|cash",
+  "target_data": "jobs|ar|ap|gl|pm_summary|cash|job_detail",
   "filters": {{
     "pm": "PM first or full name if filtering by PM, null otherwise",
     "status": "A|C|I if filtering job status, null otherwise",
     "customer": "customer name if filtering, null otherwise",
     "vendor": "vendor name if filtering, null otherwise",
+    "job_no": "specific job number if asking about a particular job, null otherwise",
     "year": 2025,
     "min_days": "minimum days outstanding if filtering aged items, null otherwise",
     "account_range": [start, end] for GL accounts,
@@ -5089,6 +5140,7 @@ Examples:
 - "AR aging breakdown" -> target_data: "ar", aggregation: "aging"
 - "What is our current cash balance?" -> target_data: "cash", aggregation: "balance"
 - "How many deposits in the last 2 weeks?" -> target_data: "cash", aggregation: "transactions", filters: {{date_range: "last 2 weeks"}}
+- "For job 4484, show top vendors and budget" -> target_data: "job_detail", filters: {{job_no: "4484"}}
 
 Respond with ONLY the JSON object, no markdown or explanation."""
         
