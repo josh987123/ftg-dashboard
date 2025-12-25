@@ -17559,8 +17559,35 @@ function renderDcrSafetyCheck() {
       });
     }
     
-    // Build oubData using existing function
-    buildOubData();
+    // Build oubData inline from job data (replaces removed buildOubData function)
+    oubData = (jobBudgetsData || []).filter(job => {
+      const status = job.Job_Status || job.job_status || "";
+      const contract = parseFloat(job.Revised_Contract || job.revised_contract) || 0;
+      return status === "A" && contract > 0;
+    }).map(job => {
+      const jobNo = String(job.Job_No || job.job_no || "");
+      const contract = parseFloat(job.Revised_Contract || job.revised_contract) || 0;
+      const estCost = parseFloat(job.Revised_Cost || job.revised_cost) || 0;
+      const estProfit = contract - estCost;
+      const actualCost = (jobActualsData.find(a => a.job_no === jobNo) || {}).actual_cost || 0;
+      const billedRev = oubBilledRevenueMap.get(jobNo) || 0;
+      const pctComplete = estCost > 0 ? (actualCost / estCost) * 100 : 0;
+      const earnedRev = estCost > 0 ? (actualCost / estCost) * contract : 0;
+      const overUnder = billedRev - earnedRev;
+      return {
+        job_no: jobNo,
+        job_description: job.Job_Description || job.job_description || "",
+        project_manager_name: job.Project_Manager || job.project_manager || "",
+        contract_value: contract,
+        est_cost: estCost,
+        est_profit: estProfit,
+        actual_cost: actualCost,
+        pct_complete: pctComplete,
+        billed_revenue: billedRev,
+        earned_revenue: earnedRev,
+        over_under: overUnder
+      };
+    });
     
     // Now sum the over_under values
     oubData.forEach(job => {
