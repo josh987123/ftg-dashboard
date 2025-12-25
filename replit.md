@@ -52,6 +52,14 @@ The dashboard provides several key views for financial analysis:
 ### AI Insights
 A dedicated AI-powered analysis page aggregates data from all sources to provide strategic business intelligence, including executive summaries, financial health, job performance, cash flow, AR/AP, PM performance, and strategic recommendations.
 
+### Natural Language Q&A (December 2024)
+The AI Insights page includes a chat interface for asking natural language questions about financial data:
+- **Backend**: `/api/nlq` endpoint uses Claude to classify intent and generate structured query plans
+- **Data Resolvers**: Python functions query cached JSON data (jobs, AR, AP, GL) based on the query plan
+- **Field Mappings**: AR uses `calculated_amount_due - retainage_amount` for collectible amounts; AP uses `vendor_name` field and `remaining_balance`
+- **Query Types**: Supports PM-specific questions, AR/AP aging, vendor/customer summaries, GL account analysis
+- **Example Questions**: Pre-built buttons for common queries like "How many active jobs?" and "Show AR aging breakdown"
+
 ### Responsive Design
 The application uses a mobile-first approach with a responsive sidebar, hamburger menu, and CSS flexbox layouts. A dedicated "LANDSCAPE MOBILE/TABLET COMPATIBILITY" section in `style.css` provides orientation-aware media queries (`@media (orientation: landscape)`) to ensure proper display on phones and tablets in landscape mode. This includes horizontal metric tile layouts, readable font sizes (14px minimum for values, 9px for labels), and appropriate chart sizing.
 
