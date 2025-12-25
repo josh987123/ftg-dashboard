@@ -28215,9 +28215,12 @@ function renderApAgingTable(vendors, totals) {
   
   totals = totals || {};
   
+  // Filter out vendors with total_due under $1,000
+  const filteredVendors = (vendors || []).filter(v => Math.abs(v.total_due || 0) >= 1000);
+  
   // Totals row at top (after header)
   const totalsRow = `<tr class="totals-row">
-    <td><strong>Totals (${vendors.length} vendors)</strong></td>
+    <td><strong>Totals (${filteredVendors.length} vendors)</strong></td>
     <td class="text-right"><strong>${formatCurrency(totals.total_due || 0)}</strong></td>
     <td class="text-right"><strong>${formatCurrency(totals.current || 0)}</strong></td>
     <td class="text-right"><strong>${formatCurrency(totals.days_31_60 || 0)}</strong></td>
@@ -28226,12 +28229,12 @@ function renderApAgingTable(vendors, totals) {
     <td class="text-right"><strong>${formatCurrency(totals.retainage || 0)}</strong></td>
   </tr>`;
   
-  if (!vendors || vendors.length === 0) {
+  if (!filteredVendors || filteredVendors.length === 0) {
     tbody.innerHTML = totalsRow + '<tr><td colspan="7" class="empty-cell">No outstanding AP balances found</td></tr>';
     return;
   }
   
-  const dataRows = vendors.map((v, idx) => `
+  const dataRows = filteredVendors.map((v, idx) => `
     <tr class="ap-vendor-row" data-vendor="${escapeHtml(v.vendor_name)}" data-idx="${idx}">
       <td>
         <span class="ap-expand-toggle" title="Click to expand">
