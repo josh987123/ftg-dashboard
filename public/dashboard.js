@@ -23812,33 +23812,50 @@ async function extractAiInsightsData() {
       DataCache.getARData().catch(e => { console.warn('AR data load failed:', e); return null; }),
       DataCache.getAPData().catch(e => { console.warn('AP data load failed:', e); return null; }),
       DataCache.getGLData().catch(e => { console.warn('GL data load failed:', e); return null; }),
-      fetch('/data/cash_balances.json').then(r => r.ok ? r.json() : null).catch(e => { console.warn('Cash data load failed:', e); return null; })
+      fetch('/api/cash-data').then(r => r.ok ? r.json() : null).catch(e => { console.warn('Cash data load failed:', e); return null; })
     ]);
     
     // FINANCIAL PERFORMANCE from GL Data
-    if (glData && glData.gl_history) {
+    if (glData && glData.gl_history_all) {
       text += "=== FINANCIAL PERFORMANCE ===\n";
-      const glHistory = glData.gl_history;
+      const glHistoryAll = glData.gl_history_all;
       const currentYear = new Date().getFullYear();
       const lastYear = currentYear - 1;
+      const currentMonth = new Date().getMonth() + 1;
+      
+      // Build list of months for current year and prior year
+      const currentYearMonths = [];
+      const lastYearMonths = [];
+      for (let m = 1; m <= 12; m++) {
+        const monthStr = String(m).padStart(2, '0');
+        if (m <= currentMonth) {
+          currentYearMonths.push(`${currentYear}-${monthStr}`);
+        }
+        lastYearMonths.push(`${lastYear}-${monthStr}`);
+      }
       
       let revenueCurrentYear = 0, revenueLastYear = 0;
       let directCostsCurrent = 0, indirectCostsCurrent = 0, sgaCurrent = 0;
       
-      glHistory.forEach(entry => {
-        const acct = parseInt(entry.gl_account) || 0;
-        const amt = parseFloat(entry.amount) || 0;
-        const year = parseInt(entry.fiscal_year);
+      glHistoryAll.forEach(entry => {
+        const acct = parseInt(entry.Account_Num) || 0;
+        
+        // Sum amounts for each month
+        const sumMonths = (months) => {
+          return months.reduce((sum, month) => {
+            return sum + (parseFloat(entry[month]) || 0);
+          }, 0);
+        };
         
         if (acct >= 4000 && acct < 5000) {
-          if (year === currentYear) revenueCurrentYear += amt;
-          if (year === lastYear) revenueLastYear += amt;
-        } else if (acct >= 5000 && acct < 6000 && year === currentYear) {
-          directCostsCurrent += amt;
-        } else if (acct >= 6000 && acct < 7000 && year === currentYear) {
-          indirectCostsCurrent += amt;
-        } else if (acct >= 7000 && acct < 8000 && year === currentYear) {
-          sgaCurrent += amt;
+          revenueCurrentYear += sumMonths(currentYearMonths);
+          revenueLastYear += sumMonths(lastYearMonths);
+        } else if (acct >= 5000 && acct < 6000) {
+          directCostsCurrent += sumMonths(currentYearMonths);
+        } else if (acct >= 6000 && acct < 7000) {
+          indirectCostsCurrent += sumMonths(currentYearMonths);
+        } else if (acct >= 7000 && acct < 8000) {
+          sgaCurrent += sumMonths(currentYearMonths);
         }
       });
       
@@ -23857,10 +23874,10 @@ async function extractAiInsightsData() {
       text += `Operating Margin: ${normalizedRevCurrent > 0 ? (operatingIncome / normalizedRevCurrent * 100).toFixed(1) : 0}%\n\n`;
     }
     
-    // CASH POSITION
-    if (cashData && cashData.bank_accounts) {
+    // CASH POSITION - use API endpoint (same as Cash Report page)
+    if (cashData && cashData.accounts) {
       text += "=== CASH POSITION ===\n";
-      const accounts = cashData.bank_accounts;
+      const accounts = cashData.accounts;
       const ftgAccounts = accounts.filter(a => ['1883', '2469', '7554'].some(suffix => String(a.account_number || '').endsWith(suffix)));
       const totalCash = ftgAccounts.reduce((sum, a) => {
         const balances = a.daily_balances || [];
@@ -23988,15 +24005,15 @@ async function extractAiInsightsData() {
       text += "\n";
     }
     
-    // AR Summary
-    if (arData && arData.ar_invoices) {
+    // AR Summary - use correct field names (invoices, amount_due)
+    if (arData && arData.invoices) {
       text += "=== ACCOUNTS RECEIVABLE ===\n";
-      const invoices = arData.ar_invoices;
-      const totalAR = invoices.reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
-      const current = invoices.filter(i => (i.days_outstanding || 0) <= 30).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
-      const over30 = invoices.filter(i => (i.days_outstanding || 0) > 30 && (i.days_outstanding || 0) <= 60).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
-      const over60 = invoices.filter(i => (i.days_outstanding || 0) > 60 && (i.days_outstanding || 0) <= 90).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
-      const over90 = invoices.filter(i => (i.days_outstanding || 0) > 90).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
+      const invoices = arData.invoices;
+      const totalAR = invoices.reduce((s, i) => s + (parseFloat(i.amount_due || i.calculated_amount_due) || 0), 0);
+      const current = invoices.filter(i => (i.days_outstanding || 0) <= 30).reduce((s, i) => s + (parseFloat(i.amount_due || i.calculated_amount_due) || 0), 0);
+      const over30 = invoices.filter(i => (i.days_outstanding || 0) > 30 && (i.days_outstanding || 0) <= 60).reduce((s, i) => s + (parseFloat(i.amount_due || i.calculated_amount_due) || 0), 0);
+      const over60 = invoices.filter(i => (i.days_outstanding || 0) > 60 && (i.days_outstanding || 0) <= 90).reduce((s, i) => s + (parseFloat(i.amount_due || i.calculated_amount_due) || 0), 0);
+      const over90 = invoices.filter(i => (i.days_outstanding || 0) > 90).reduce((s, i) => s + (parseFloat(i.amount_due || i.calculated_amount_due) || 0), 0);
       
       text += `Total AR Outstanding: $${totalAR.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
       text += `Current (0-30 days): $${current.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
@@ -24005,13 +24022,13 @@ async function extractAiInsightsData() {
       text += `Over 90 Days: $${over90.toLocaleString('en-US', {maximumFractionDigits: 0})}\n\n`;
     }
     
-    // AP Summary
-    if (apData && apData.ap_invoices) {
+    // AP Summary - use correct field names (invoices, remaining_balance)
+    if (apData && apData.invoices) {
       text += "=== ACCOUNTS PAYABLE ===\n";
-      const invoices = apData.ap_invoices;
-      const totalAP = invoices.reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
-      const current = invoices.filter(i => (i.days_outstanding || 0) <= 30).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
-      const over30 = invoices.filter(i => (i.days_outstanding || 0) > 30).reduce((s, i) => s + (parseFloat(i.balance) || 0), 0);
+      const invoices = apData.invoices;
+      const totalAP = invoices.reduce((s, i) => s + (parseFloat(i.remaining_balance) || 0), 0);
+      const current = invoices.filter(i => (i.days_outstanding || 0) <= 30).reduce((s, i) => s + (parseFloat(i.remaining_balance) || 0), 0);
+      const over30 = invoices.filter(i => (i.days_outstanding || 0) > 30).reduce((s, i) => s + (parseFloat(i.remaining_balance) || 0), 0);
       
       text += `Total AP Outstanding: $${totalAP.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
       text += `Current (0-30 days): $${current.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
@@ -24046,26 +24063,43 @@ async function aggregateAllBusinessData() {
     DataCache.getAPData().catch(e => { data.loadErrors.push('AP Data'); return null; })
   ]);
   
-  // Aggregate Financial Data
-  if (glData && glData.gl_history) {
-    const glHistory = glData.gl_history;
+  // Aggregate Financial Data - use gl_history_all with monthly columns
+  if (glData && glData.gl_history_all) {
+    const glHistoryAll = glData.gl_history_all;
     const currentYear = new Date().getFullYear();
     const lastYear = currentYear - 1;
+    const currentMonth = new Date().getMonth() + 1;
+    
+    // Build list of months for current year and prior year
+    const currentYearMonths = [];
+    const lastYearMonths = [];
+    for (let m = 1; m <= 12; m++) {
+      const monthStr = String(m).padStart(2, '0');
+      if (m <= currentMonth) {
+        currentYearMonths.push(`${currentYear}-${monthStr}`);
+      }
+      lastYearMonths.push(`${lastYear}-${monthStr}`);
+    }
     
     let revenueCurrentYear = 0, revenueLastYear = 0;
     let expenseCurrentYear = 0, expenseLastYear = 0;
     
-    glHistory.forEach(entry => {
-      const acct = parseInt(entry.gl_account) || 0;
-      const amt = parseFloat(entry.amount) || 0;
-      const year = parseInt(entry.fiscal_year);
+    glHistoryAll.forEach(entry => {
+      const acct = parseInt(entry.Account_Num) || 0;
+      
+      // Sum amounts for each month
+      const sumMonths = (months) => {
+        return months.reduce((sum, month) => {
+          return sum + (parseFloat(entry[month]) || 0);
+        }, 0);
+      };
       
       if (acct >= 4000 && acct < 5000) {
-        if (year === currentYear) revenueCurrentYear += amt;
-        if (year === lastYear) revenueLastYear += amt;
+        revenueCurrentYear += sumMonths(currentYearMonths);
+        revenueLastYear += sumMonths(lastYearMonths);
       } else if (acct >= 5000 && acct < 9000) {
-        if (year === currentYear) expenseCurrentYear += amt;
-        if (year === lastYear) expenseLastYear += amt;
+        expenseCurrentYear += sumMonths(currentYearMonths);
+        expenseLastYear += sumMonths(lastYearMonths);
       }
     });
     
@@ -24191,15 +24225,15 @@ async function aggregateAllBusinessData() {
       .slice(0, 5);
   }
   
-  // Aggregate AR Data
-  if (arData && arData.ar_invoices) {
-    const invoices = arData.ar_invoices;
+  // Aggregate AR Data - use correct field names (invoices, amount_due, days_outstanding)
+  if (arData && arData.invoices) {
+    const invoices = arData.invoices;
     let totalAR = 0, current = 0, over30 = 0, over60 = 0, over90 = 0;
     const customerAR = new Map();
     
     invoices.forEach(inv => {
-      const amtDue = parseFloat(inv.amount_due) || 0;
-      const daysOut = parseInt(inv.days_out) || 0;
+      const amtDue = parseFloat(inv.amount_due || inv.calculated_amount_due) || 0;
+      const daysOut = parseInt(inv.days_outstanding) || 0;
       const customer = inv.customer_name || 'Unknown';
       
       totalAR += amtDue;
@@ -24224,15 +24258,15 @@ async function aggregateAllBusinessData() {
     };
   }
   
-  // Aggregate AP Data
-  if (apData && apData.ap_invoices) {
-    const invoices = apData.ap_invoices;
+  // Aggregate AP Data - use correct field names (invoices, remaining_balance, days_outstanding)
+  if (apData && apData.invoices) {
+    const invoices = apData.invoices;
     let totalAP = 0, current = 0, over30 = 0, over60 = 0, over90 = 0;
     const vendorAP = new Map();
     
     invoices.forEach(inv => {
-      const amtDue = parseFloat(inv.amount_due) || 0;
-      const daysOut = parseInt(inv.days_out) || 0;
+      const amtDue = parseFloat(inv.remaining_balance) || 0;
+      const daysOut = parseInt(inv.days_outstanding) || 0;
       const vendor = inv.vendor_name || 'Unknown';
       
       totalAP += amtDue;
