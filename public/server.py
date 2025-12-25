@@ -4590,6 +4590,12 @@ Available data sources and their key fields:
 4. GL DATA (financials_gl.json):
    - gl_history_all[]: Account_Num (4xxx=Revenue, 5xxx=Direct Cost, 6xxx=Indirect, 7xxx=SG&A),
      Account_Description, monthly columns like "2024-01", "2024-02", ... "2025-12"
+   - For multi-year trends: set year filter to null and use aggregation="by_year"
+   - For gross margin: query revenue (4000-4999) and direct costs (5000-5999) separately
+
+7. PM_COMPARISON (side-by-side PM metrics):
+   - Use target_data="pm_comparison" with filters.pm containing comma-separated PM names
+   - Returns key metrics for each PM for direct comparison
 
 5. CASH DATA (from Google Sheets via API):
    - accounts[]: name, balance (current balance)
@@ -4868,10 +4874,21 @@ def execute_nlq_query(query_plan, data):
         # GL queries
         elif target == 'gl':
             gl_all = data.get('gl', {}).get('gl_history_all', [])
-            year = filters.get('year', 2025)
-            months = [f"{year}-{str(m).zfill(2)}" for m in range(1, 13)]
-            
+            year = filters.get('year')
             account_range = filters.get('account_range', [4000, 5000])  # Default revenue
+            
+            # Support multi-year queries
+            if year is None:
+                # Get all available years from column names
+                years = list(range(2020, 2026))  # 2020-2025
+            else:
+                years = [year]
+            
+            # Generate all month columns for requested years
+            all_months = []
+            for y in years:
+                for m in range(1, 13):
+                    all_months.append(f"{y}-{str(m).zfill(2)}")
             
             filtered = []
             for entry in gl_all:
@@ -4879,38 +4896,45 @@ def execute_nlq_query(query_plan, data):
                 if acct < account_range[0] or acct >= account_range[1]:
                     continue
                 
-                total = sum(float(entry.get(m) or 0) for m in months)
+                total = sum(float(entry.get(m) or 0) for m in all_months)
                 if total == 0:
                     continue
                 
                 filtered.append({
                     'account': acct,
-                    'description': entry.get('Description', ''),
+                    'description': entry.get('Account_Description') or entry.get('Description', ''),
                     'total': abs(total),
-                    'monthly': {m: float(entry.get(m) or 0) for m in months}
+                    'monthly': {m: float(entry.get(m) or 0) for m in all_months}
                 })
             
             if aggregation == 'sum':
-                results = {'total': sum(e['total'] for e in filtered), 'year': year}
+                results = {'total': sum(e['total'] for e in filtered), 'years': years}
             elif aggregation == 'by_month':
                 monthly_totals = {}
-                for m in months:
+                for m in all_months:
                     monthly_totals[m] = sum(abs(float(e['monthly'].get(m, 0))) for e in filtered)
-                results = {'monthly': monthly_totals, 'year': year}
+                results = {'monthly': monthly_totals, 'years': years}
+            elif aggregation == 'by_year':
+                # Aggregate by year for multi-year comparisons
+                yearly_totals = {}
+                for y in years:
+                    year_months = [f"{y}-{str(m).zfill(2)}" for m in range(1, 13)]
+                    yearly_totals[y] = sum(abs(float(e['monthly'].get(m, 0))) for e in filtered for m in year_months)
+                results = {'yearly': yearly_totals, 'years': years}
             else:
                 filtered.sort(key=lambda x: x['total'], reverse=True)
-                results = {'items': filtered[:limit], 'total': sum(e['total'] for e in filtered)}
+                results = {'items': filtered[:limit], 'total': sum(e['total'] for e in filtered), 'years': years}
         
         # PM summary queries
         elif target == 'pm_summary':
             budgets = data.get('jobs', {}).get('job_budgets', [])
             actuals = data.get('jobs', {}).get('job_actuals', [])
             
-            # Build actual cost by job
+            # Build actual cost by job (job_actuals uses Job_No and Value with capital letters)
             actual_cost_by_job = {}
             for a in actuals:
-                job_no = str(a.get('job_no', ''))
-                actual_cost_by_job[job_no] = actual_cost_by_job.get(job_no, 0) + (float(a.get('actual_cost') or 0))
+                job_no = str(a.get('Job_No') or a.get('job_no', ''))
+                actual_cost_by_job[job_no] = actual_cost_by_job.get(job_no, 0) + float(a.get('Value') or a.get('actual_cost') or 0)
             
             pm_stats = {}
             for job in budgets:
@@ -4947,6 +4971,68 @@ def execute_nlq_query(query_plan, data):
             sort_field = fields[0] if fields else 'active_jobs'
             pm_list.sort(key=lambda x: x.get(sort_field, 0), reverse=True)
             results = {'items': pm_list[:limit]}
+        
+        # PM comparison (side-by-side)
+        elif target == 'pm_comparison':
+            pm_filter = filters.get('pm', '')
+            pm_names = [p.strip() for p in str(pm_filter).split(',') if p.strip()]
+            
+            if len(pm_names) < 2:
+                results = {'error': 'pm_comparison requires at least 2 PM names separated by commas'}
+            else:
+                budgets = data.get('jobs', {}).get('job_budgets', [])
+                actuals = data.get('jobs', {}).get('job_actuals', [])
+                billed_data = data.get('jobs', {}).get('job_billed_revenue', [])
+                ar_invoices = data.get('ar', {}).get('invoices', [])
+                
+                # Build actual cost by job
+                actual_cost_by_job = {}
+                for a in actuals:
+                    job_no = str(a.get('Job_No') or a.get('job_no', ''))
+                    actual_cost_by_job[job_no] = actual_cost_by_job.get(job_no, 0) + float(a.get('Value') or a.get('actual_cost') or 0)
+                
+                # Build billed by job
+                billed_by_job = {}
+                for b in billed_data:
+                    job_no = str(b.get('Job_No') or b.get('job_no', ''))
+                    billed_by_job[job_no] = float(b.get('Billed_Revenue') or b.get('billed_revenue') or 0)
+                
+                # Build AR by job
+                ar_by_job = {}
+                for inv in ar_invoices:
+                    job_no = str(inv.get('job_no', ''))
+                    collectible = float(inv.get('calculated_amount_due', 0) or 0) - float(inv.get('retainage_amount', 0) or 0)
+                    ar_by_job[job_no] = ar_by_job.get(job_no, 0) + collectible
+                
+                comparison = {}
+                for pm_name in pm_names:
+                    pm_lower = pm_name.lower()
+                    stats = {'active_jobs': 0, 'total_jobs': 0, 'contract': 0, 'budget_cost': 0, 'actual_cost': 0, 'billed': 0, 'ar_balance': 0, 'margin': 0}
+                    
+                    for job in budgets:
+                        pm = job.get('project_manager_name', '')
+                        if pm_lower not in pm.lower():
+                            continue
+                        
+                        job_no = str(job.get('job_no', ''))
+                        status = job.get('job_status', '')
+                        
+                        # Only count active jobs for most metrics
+                        if status == 'A':
+                            stats['active_jobs'] += 1
+                            stats['contract'] += float(job.get('revised_contract', 0) or 0)
+                            stats['budget_cost'] += float(job.get('revised_cost', 0) or 0)
+                            stats['actual_cost'] += actual_cost_by_job.get(job_no, 0)
+                            stats['billed'] += billed_by_job.get(job_no, 0)
+                            stats['ar_balance'] += ar_by_job.get(job_no, 0)
+                        stats['total_jobs'] += 1
+                    
+                    if stats['contract'] > 0:
+                        stats['margin'] = round((stats['contract'] - stats['budget_cost']) / stats['contract'] * 100, 1)
+                    
+                    comparison[pm_name] = stats
+                
+                results = {'comparison': comparison, 'pm_names': pm_names}
         
         # Cash queries (from Google Sheets)
         elif target == 'cash':
@@ -5115,7 +5201,7 @@ User Question: "{question}"
 
 Respond with ONLY a valid JSON object containing:
 {{
-  "target_data": "jobs|ar|ap|gl|pm_summary|cash|job_detail",
+  "target_data": "jobs|ar|ap|gl|pm_summary|cash|job_detail|pm_comparison",
   "filters": {{
     "pm": "PM first or full name if filtering by PM, null otherwise",
     "status": "A|C|I if filtering job status, null otherwise",
@@ -5141,6 +5227,8 @@ Examples:
 - "What is our current cash balance?" -> target_data: "cash", aggregation: "balance"
 - "How many deposits in the last 2 weeks?" -> target_data: "cash", aggregation: "transactions", filters: {{date_range: "last 2 weeks"}}
 - "For job 4484, show top vendors and budget" -> target_data: "job_detail", filters: {{job_no: "4484"}}
+- "Revenue over the past 5 years" -> target_data: "gl", aggregation: "by_year", filters: {{year: null, account_range: [4000, 5000]}}
+- "Compare Rodney and Pedro metrics side by side" -> target_data: "pm_comparison", filters: {{pm: "Rodney,Pedro"}}
 
 Respond with ONLY the JSON object, no markdown or explanation."""
         
