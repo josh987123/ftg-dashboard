@@ -4786,7 +4786,11 @@ def execute_nlq_query(query_plan, data):
                 if 'josh angelo' in pm.lower():
                     continue
                 
+                job_no = str(job.get('job_no', ''))
+                
                 # Apply filters
+                if filters.get('job_no') and str(filters['job_no']) != job_no:
+                    continue
                 if filters.get('pm') and not pm_matches(pm, filters['pm']):
                     continue
                 if filters.get('status') and job.get('job_status') != filters['status']:
@@ -4795,8 +4799,6 @@ def execute_nlq_query(query_plan, data):
                     cust = (job.get('customer_name') or '').lower()
                     if filters['customer'].lower() not in cust:
                         continue
-                
-                job_no = str(job.get('job_no', ''))
                 actual_cost = actual_cost_by_job.get(job_no, 0)
                 budget_cost = float(job.get('revised_cost') or 0)
                 # Calculate percent complete as actual cost / budget cost
@@ -5587,6 +5589,16 @@ Respond with ONLY the JSON object, no markdown."""
         print(f"[NLQ] Query results: {json.dumps(query_results)[:500]}")
         
         # Step 4: Generate natural language answer
+        # Limit results size to prevent prompt overflow (max ~50KB of JSON)
+        results_json = json.dumps(query_results, indent=2)
+        if len(results_json) > 50000:
+            # Truncate large result sets for the answer prompt
+            if 'items' in query_results and isinstance(query_results['items'], list):
+                truncated = {**query_results, 'items': query_results['items'][:20], 'truncated_from': len(query_results['items'])}
+                results_json = json.dumps(truncated, indent=2)
+            else:
+                results_json = results_json[:50000] + "... [truncated for brevity]"
+        
         answer_prompt = f"""Based on the following query results, provide a clear, conversational answer to the user's question.
 
 User Question: "{question}"
@@ -5594,7 +5606,7 @@ User Question: "{question}"
 Query Explanation: {query_plan.get('explanation', '')}
 
 Query Results:
-{json.dumps(query_results, indent=2)}
+{results_json}
 
 Provide a direct, helpful answer. Use specific numbers and format currency as $X.XM or $XXK. 
 Keep the response concise (2-4 sentences for simple questions, more for complex breakdowns).

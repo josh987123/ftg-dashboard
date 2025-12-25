@@ -32,6 +32,12 @@ The dashboard provides several key views for financial analysis:
 ### AI Insights & Natural Language Q&A
 A dedicated AI-powered analysis page aggregates data to provide strategic business intelligence. It includes a chat interface for natural language questions about financial data using a **Semantic Data Catalog** architecture. This two-stage AI process (intent classification, structured query plan generation, Python resolvers, natural language answer generation) allows flexible querying across various entities (jobs, AR, AP, GL, cash, PM summaries, cost codes, customers) with comprehensive filtering capabilities. Josh Angelo is excluded from all PM analysis.
 
+#### NLQ Calculation Consistency (Dec 2025)
+Critical alignment between page-level calculations and NLQ resolvers:
+- **AR Aging**: Only includes invoices with `calculated_amount_due > 0`; collectible = calc_due - retainage; aging buckets use collectible amounts; retainage tracked separately; total_due = collectible + retainage
+- **Income Statement**: Revenue = accounts 4000 + 4090; Direct Expenses = 5000-5025 + 5200 + 5300 + 5410 + 5500; Indirect = 6xxx; Operating Expenses = 7000-7599; formulas match account_groups.json
+- **Jobs**: percent_complete = actual_cost / budget_cost * 100; margin = (contract - budget_cost) / contract * 100; over_under_billing = billed - (percent_complete/100 * contract)
+
 ### Responsive Design
 The application uses a mobile-first approach with a responsive sidebar, hamburger menu, CSS flexbox layouts, and orientation-aware media queries for landscape mobile/tablet compatibility.
 
