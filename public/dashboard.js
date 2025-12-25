@@ -5457,10 +5457,8 @@ function setupTableExportButtons() {
     const container = table.closest('.job-table-container, .table-wrapper, .is-table-box, .rev-table-box');
     if (!container) return;
     
-    // Check if export buttons already exist
     if (container.querySelector('.table-export-btns')) return;
     
-    // Create export button row
     const btnRow = document.createElement('div');
     btnRow.className = 'table-export-row';
     btnRow.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:8px;';
@@ -5480,11 +5478,44 @@ function setupTableExportButtons() {
     excelBtn.title = 'Export to Excel';
     excelBtn.onclick = () => exportTableToExcel(id, name);
     
+    const dropdownBtn = document.createElement('button');
+    dropdownBtn.className = 'table-export-dropdown-btn';
+    dropdownBtn.innerHTML = '⬇';
+    dropdownBtn.title = 'Export options';
+    
+    const dropdownMenu = document.createElement('div');
+    dropdownMenu.className = 'table-export-dropdown-menu hidden';
+    
+    const csvOption = document.createElement('button');
+    csvOption.textContent = 'CSV';
+    csvOption.onclick = (e) => { e.stopPropagation(); exportTableToCsv(id, name); dropdownMenu.classList.add('hidden'); };
+    
+    const excelOption = document.createElement('button');
+    excelOption.textContent = 'Excel';
+    excelOption.onclick = (e) => { e.stopPropagation(); exportTableToExcel(id, name); dropdownMenu.classList.add('hidden'); };
+    
+    dropdownMenu.appendChild(csvOption);
+    dropdownMenu.appendChild(excelOption);
+    
+    dropdownBtn.onclick = (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.table-export-dropdown-menu').forEach(m => {
+        if (m !== dropdownMenu) m.classList.add('hidden');
+      });
+      dropdownMenu.classList.toggle('hidden');
+    };
+    
     btnGroup.appendChild(csvBtn);
     btnGroup.appendChild(excelBtn);
+    btnGroup.appendChild(dropdownBtn);
+    btnGroup.appendChild(dropdownMenu);
     btnRow.appendChild(btnGroup);
     
     container.insertBefore(btnRow, table);
+  });
+  
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.table-export-dropdown-menu').forEach(m => m.classList.add('hidden'));
   });
 }
 
@@ -17687,17 +17718,14 @@ function addCashReportTableExportButtons() {
     const table = document.getElementById(id);
     if (!table) return;
     
-    // Try multiple possible container classes
     let container = table.closest('.dcr-table-container') || 
                     table.closest('.dcr-transaction-card') ||
                     table.closest('.dcr-table-section') ||
                     table.parentElement;
     if (!container) return;
     
-    // Check if export buttons already exist in parent hierarchy
     if (container.querySelector('.table-export-btns')) return;
     
-    // Create export button row
     const btnRow = document.createElement('div');
     btnRow.className = 'table-export-row';
     btnRow.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:8px;';
@@ -17717,11 +17745,39 @@ function addCashReportTableExportButtons() {
     excelBtn.title = 'Export to Excel';
     excelBtn.onclick = () => exportTableToExcel(id, name);
     
+    const dropdownBtn = document.createElement('button');
+    dropdownBtn.className = 'table-export-dropdown-btn';
+    dropdownBtn.innerHTML = '⬇';
+    dropdownBtn.title = 'Export options';
+    
+    const dropdownMenu = document.createElement('div');
+    dropdownMenu.className = 'table-export-dropdown-menu hidden';
+    
+    const csvOption = document.createElement('button');
+    csvOption.textContent = 'CSV';
+    csvOption.onclick = (e) => { e.stopPropagation(); exportTableToCsv(id, name); dropdownMenu.classList.add('hidden'); };
+    
+    const excelOption = document.createElement('button');
+    excelOption.textContent = 'Excel';
+    excelOption.onclick = (e) => { e.stopPropagation(); exportTableToExcel(id, name); dropdownMenu.classList.add('hidden'); };
+    
+    dropdownMenu.appendChild(csvOption);
+    dropdownMenu.appendChild(excelOption);
+    
+    dropdownBtn.onclick = (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.table-export-dropdown-menu').forEach(m => {
+        if (m !== dropdownMenu) m.classList.add('hidden');
+      });
+      dropdownMenu.classList.toggle('hidden');
+    };
+    
     btnGroup.appendChild(csvBtn);
     btnGroup.appendChild(excelBtn);
+    btnGroup.appendChild(dropdownBtn);
+    btnGroup.appendChild(dropdownMenu);
     btnRow.appendChild(btnGroup);
     
-    // Insert before the table
     table.parentNode.insertBefore(btnRow, table);
   });
 }
