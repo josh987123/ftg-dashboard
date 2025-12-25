@@ -410,9 +410,45 @@ const DataCache = {
     }
   },
   
+  async getJobsMetrics() {
+    return this.get('jobs_metrics', async () => {
+      const resp = await fetch('/api/metrics/jobs');
+      return resp.json();
+    });
+  },
+  
+  async getARMetrics() {
+    return this.get('ar_metrics', async () => {
+      const resp = await fetch('/api/metrics/ar');
+      return resp.json();
+    });
+  },
+  
+  async getAPMetrics() {
+    return this.get('ap_metrics', async () => {
+      const resp = await fetch('/api/metrics/ap');
+      return resp.json();
+    });
+  },
+  
+  async getPMMetrics() {
+    return this.get('pm_metrics', async () => {
+      const resp = await fetch('/api/metrics/pm');
+      return resp.json();
+    });
+  },
+  
+  async getMetricsSummary() {
+    return this.get('metrics_summary', async () => {
+      const resp = await fetch('/api/metrics/summary');
+      return resp.json();
+    });
+  },
+  
   preload() {
     this.getGLData().catch(() => {});
     this.getJobsData().catch(() => {});
+    this.getJobsMetrics().catch(() => {});
   }
 };
 
@@ -18082,9 +18118,11 @@ function setupJobOverviewEventListeners() {
 
 async function loadJobOverviewData() {
   try {
-    const data = await DataCache.getJobsData();
+    // Fetch pre-computed job metrics from the canonical metrics API
+    const metricsData = await DataCache.getJobsMetrics();
+    const jobs = metricsData.jobs || [];
     
-    // Also load AR invoices for metrics calculation
+    // Also load AR invoices for additional analysis
     try {
       const arData = await DataCache.getARData();
       joArInvoices = arData?.invoices || [];
@@ -18093,73 +18131,35 @@ async function loadJobOverviewData() {
       joArInvoices = [];
     }
     
-    const jobBudgets = data.job_budgets || [];
-    const jobActualsRaw = data.job_actuals || [];
-    const jobBilledRevenueRaw = data.job_billed_revenue || [];
-    
-    const actualCostMap = new Map();
-    jobActualsRaw.forEach(row => {
-      const jobNo = row.Job_No || row.job_no;
-      if (!jobNo) return;
-      if (!actualCostMap.has(jobNo)) actualCostMap.set(jobNo, 0);
-      actualCostMap.set(jobNo, actualCostMap.get(jobNo) + (parseFloat(row.Value || row.actual_cost) || 0));
-    });
-    
-    const billedRevenueMap = new Map();
-    jobBilledRevenueRaw.forEach(row => {
-      const jobNo = row.Job_No || row.job_no;
-      if (jobNo) {
-        if (!billedRevenueMap.has(jobNo)) billedRevenueMap.set(jobNo, 0);
-        billedRevenueMap.set(jobNo, billedRevenueMap.get(jobNo) + (parseFloat(row.Billed_Revenue || row.billed_revenue) || 0));
-      }
-    });
-    
-    joData = jobBudgets.map(job => {
-      const revisedContract = parseFloat(job.revised_contract) || 0;
-      const revisedCost = parseFloat(job.revised_cost) || 0;
-      const actualCost = actualCostMap.get(job.job_no) || 0;
-      const billedRevenue = billedRevenueMap.get(job.job_no) || 0;
-      
-      let earnedRevenue = 0;
-      if (revisedCost > 0 && revisedContract > 0 && actualCost > 0) {
-        earnedRevenue = (actualCost / revisedCost) * revisedContract;
-      }
-      if (!isFinite(earnedRevenue)) earnedRevenue = 0;
-      
-      let percentComplete = 0;
-      if (revisedCost > 0 && actualCost > 0) {
-        percentComplete = (actualCost / revisedCost) * 100;
-      }
-      if (!isFinite(percentComplete)) percentComplete = 0;
-      
-      const backlog = revisedContract - earnedRevenue;
-      const overUnder = billedRevenue - earnedRevenue;
-      const estimatedProfit = revisedContract - revisedCost;
-      let profitMargin = 0;
-      if (revisedContract > 0) {
-        profitMargin = (estimatedProfit / revisedContract) * 100;
-      }
-      
-      return {
-        ...job,
-        revised_contract: revisedContract,
-        revised_cost: revisedCost,
-        actual_cost: actualCost,
-        billed_revenue: billedRevenue,
-        earned_revenue: earnedRevenue,
-        percent_complete: percentComplete,
-        backlog: backlog,
-        over_under: overUnder,
-        estimated_profit: estimatedProfit,
-        profit_margin: profitMargin
-      };
-    });
+    // Map metrics API response to expected format for the page
+    joData = jobs.map(job => ({
+      job_no: job.job_no,
+      job_description: job.job_description,
+      customer_name: job.customer_name,
+      project_manager_name: job.project_manager,
+      job_status: job.job_status,
+      original_contract: job.original_contract || 0,
+      tot_income_adj: job.tot_income_adj || 0,
+      revised_contract: job.contract,
+      original_cost: job.original_cost || 0,
+      tot_cost_adj: job.tot_cost_adj || 0,
+      revised_cost: job.budget_cost,
+      actual_cost: job.actual_cost,
+      billed_revenue: job.billed,
+      earned_revenue: job.earned_revenue,
+      percent_complete: job.percent_complete,
+      backlog: job.backlog,
+      over_under: job.over_under_billing,
+      estimated_profit: job.estimated_profit,
+      profit_margin: job.margin,
+      has_budget: job.has_budget
+    }));
     
     populateJobOverviewFilters();
     
     const dataAsOf = document.getElementById('jobOverviewDataAsOf');
-    if (dataAsOf && data.generated_at) {
-      dataAsOf.textContent = new Date(data.generated_at).toLocaleDateString();
+    if (dataAsOf && metricsData.generated_at) {
+      dataAsOf.textContent = new Date(metricsData.generated_at).toLocaleDateString();
     }
     
     filterJobOverview();
@@ -18167,7 +18167,6 @@ async function loadJobOverviewData() {
     console.error('Error loading job overview:', err);
   }
 }
-
 async function populateJobOverviewFilters() {
   // Build PM tabs using async loader to ensure PMs are available
   await loadAndBuildPmTabs('joPmTabs', 'jo', () => {
