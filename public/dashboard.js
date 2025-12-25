@@ -21763,7 +21763,6 @@ function filterCostCodes() {
   jcCurrentPage = 1;
   sortJobCosts();
   renderJobCostsTable();
-  renderCostCodesChart();
 }
 
 function sortJobCosts() {
