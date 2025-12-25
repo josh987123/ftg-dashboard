@@ -19,6 +19,7 @@ import qrcode
 import io
 import secrets
 from cryptography.fernet import Fernet
+from metrics_etl import metrics_cache, init_metrics
 
 app = Flask(__name__, static_folder=None)
 
@@ -374,6 +375,9 @@ def init_database():
 
 # Initialize database on startup
 init_database()
+
+# Initialize metrics cache on startup
+init_metrics()
 
 # Using Anthropic Claude for AI analysis
 # The newest Anthropic model is "claude-sonnet-4-20250514"
@@ -4269,6 +4273,142 @@ def api_get_ar_ap_summary():
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ============== CANONICAL METRICS API ==============
+# These endpoints serve pre-computed metrics from the metrics_etl module
+# Providing a single source of truth for both pages and NLQ queries
+
+@app.route('/api/metrics/refresh', methods=['POST'])
+def api_refresh_metrics():
+    """Manually refresh the metrics cache"""
+    try:
+        init_metrics()
+        return jsonify({
+            'success': True,
+            'message': 'Metrics refreshed successfully',
+            'last_refresh': metrics_cache.last_refresh.isoformat() if metrics_cache.last_refresh else None,
+            'counts': {
+                'jobs': len(metrics_cache.jobs),
+                'ar': len(metrics_cache.ar),
+                'ap': len(metrics_cache.ap),
+                'pm': len(metrics_cache.pm)
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/metrics/jobs', methods=['GET'])
+def api_metrics_jobs():
+    """Get pre-computed job metrics"""
+    try:
+        pm = request.args.get('pm', '').strip()
+        status = request.args.get('status', '').strip()
+        customer = request.args.get('customer', '').strip()
+        has_budget = request.args.get('has_budget', '').strip()
+        sort_by = request.args.get('sort_by', 'contract')
+        limit = int(request.args.get('limit', 100))
+        
+        has_budget_filter = None
+        if has_budget == 'true':
+            has_budget_filter = True
+        elif has_budget == 'false':
+            has_budget_filter = False
+        
+        jobs = metrics_cache.filter_jobs(
+            pm=pm if pm else None,
+            status=status if status else None,
+            customer=customer if customer else None,
+            has_budget=has_budget_filter
+        )
+        
+        if sort_by == 'contract':
+            jobs = sorted(jobs, key=lambda x: x['contract'], reverse=True)
+        elif sort_by == 'backlog':
+            jobs = sorted(jobs, key=lambda x: x['backlog'], reverse=True)
+        elif sort_by == 'margin':
+            jobs = sorted(jobs, key=lambda x: x['margin'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'jobs': jobs[:limit],
+            'total_count': len(jobs),
+            'summary': metrics_cache.get_jobs_summary(active_only=(status == 'A'))
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/metrics/ar', methods=['GET'])
+def api_metrics_ar():
+    """Get pre-computed AR metrics"""
+    try:
+        customer = request.args.get('customer', '').strip()
+        pm = request.args.get('pm', '').strip()
+        
+        invoices = metrics_cache.filter_ar(
+            customer=customer if customer else None,
+            pm=pm if pm else None
+        )
+        
+        return jsonify({
+            'success': True,
+            'invoices': invoices,
+            'by_customer': metrics_cache.ar_by_customer,
+            'summary': metrics_cache.get_ar_summary()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/metrics/ap', methods=['GET'])
+def api_metrics_ap():
+    """Get pre-computed AP metrics"""
+    try:
+        vendor = request.args.get('vendor', '').strip()
+        pm = request.args.get('pm', '').strip()
+        
+        invoices = metrics_cache.filter_ap(
+            vendor=vendor if vendor else None,
+            pm=pm if pm else None
+        )
+        
+        return jsonify({
+            'success': True,
+            'invoices': invoices,
+            'by_vendor': metrics_cache.ap_by_vendor,
+            'summary': metrics_cache.get_ap_summary()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/metrics/pm', methods=['GET'])
+def api_metrics_pm():
+    """Get pre-computed PM metrics"""
+    try:
+        pm = request.args.get('pm', '').strip()
+        
+        pm_data = metrics_cache.pm
+        if pm:
+            pm_data = [p for p in pm_data if pm.lower() in p['project_manager'].lower()]
+        
+        return jsonify({
+            'success': True,
+            'pm_metrics': pm_data
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/metrics/summary', methods=['GET'])
+def api_metrics_summary():
+    """Get all summary metrics at once"""
+    try:
+        return jsonify({
+            'success': True,
+            'jobs': metrics_cache.get_jobs_summary(active_only=True),
+            'ar': metrics_cache.get_ar_summary(),
+            'ap': metrics_cache.get_ap_summary(),
+            'last_refresh': metrics_cache.last_refresh.isoformat() if metrics_cache.last_refresh else None
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # ============== AR AGING API ==============
 
 @app.route('/api/ar-aging', methods=['GET', 'OPTIONS'])
@@ -4749,7 +4889,11 @@ def load_nlq_data():
     return data
 
 def execute_nlq_query(query_plan, data):
-    """Execute a structured query plan against the data"""
+    """Execute a structured query plan against the data.
+    
+    Uses the pre-computed metrics from metrics_cache for jobs, AR, and AP
+    to ensure consistency with page-level calculations.
+    """
     results = {}
     
     try:
@@ -4765,31 +4909,17 @@ def execute_nlq_query(query_plan, data):
                 return True
             pm_lower = (pm_name or '').lower()
             filter_lower = filter_pm.lower()
-            # Match first name or full name
             return filter_lower in pm_lower or pm_lower.startswith(filter_lower)
         
-        # JOBS queries
+        # JOBS queries - use pre-computed metrics from cache
         if target == 'jobs':
-            budgets = data.get('jobs', {}).get('job_budgets', [])
-            actuals = data.get('jobs', {}).get('job_actuals', [])
-            billed = data.get('jobs', {}).get('job_billed_revenue', [])
+            # Get pre-computed job metrics from cache
+            all_jobs = metrics_cache.jobs
             
-            # Build actual cost by job (job_actuals uses Job_No and Value fields)
-            actual_cost_by_job = {}
-            for a in actuals:
-                job_no = str(a.get('Job_No') or a.get('job_no') or '')
-                actual_cost_by_job[job_no] = actual_cost_by_job.get(job_no, 0) + float(a.get('Value') or a.get('actual_cost') or 0)
-            
-            # Build billed by job (job_billed_revenue uses Job_No and Billed_Revenue fields)
-            billed_by_job = {}
-            for b in billed:
-                job_no = str(b.get('Job_No') or b.get('job_no') or '')
-                billed_by_job[job_no] = float(b.get('Billed_Revenue') or b.get('billed_revenue') or 0)
-            
-            # Filter jobs
+            # Apply filters
             filtered = []
-            for job in budgets:
-                pm = job.get('project_manager_name', '')
+            for job in all_jobs:
+                pm = job.get('project_manager', '')
                 # Exclude Josh Angelo
                 if 'josh angelo' in pm.lower():
                     continue
@@ -4807,57 +4937,25 @@ def execute_nlq_query(query_plan, data):
                     cust = (job.get('customer_name') or '').lower()
                     if filters['customer'].lower() not in cust:
                         continue
-                actual_cost = actual_cost_by_job.get(job_no, 0)
-                budget_cost = float(job.get('revised_cost') or 0)
-                contract_val = float(job.get('revised_contract') or 0)
-                billed_val = billed_by_job.get(job_no, 0)
                 
-                # Flag whether job has budget setup (critical for completion calculation)
-                has_budget = budget_cost > 0
-                
-                # Calculate percent complete as actual cost / budget cost (matches Job Actuals page)
-                # When no budget, percent_complete is 0 but we track actual costs
-                percent_complete = (actual_cost / budget_cost * 100) if has_budget else 0
-                
-                # Earned revenue (matches Job Overview/Actuals page calculation)
-                # Only calculated when budget AND contract AND actual cost exist
-                if has_budget and contract_val > 0 and actual_cost > 0:
-                    earned_revenue = (actual_cost / budget_cost) * contract_val
-                else:
-                    earned_revenue = 0
-                
-                # Calculate gross/profit margin (based on estimated cost vs contract)
-                if contract_val > 0:
-                    estimated_profit = contract_val - budget_cost
-                    profit_margin = (estimated_profit / contract_val) * 100
-                else:
-                    estimated_profit = 0
-                    profit_margin = 0
-                
-                # Backlog = contract - earned_revenue (remaining work)
-                backlog = contract_val - earned_revenue if contract_val > 0 else 0
-                
-                # Over/under billing: billed - earned_revenue (matches page calculation)
-                # Positive = overbilled, Negative = underbilled
-                over_under_billing = billed_val - earned_revenue
-                
+                # Map metrics cache field names to NLQ expected field names
                 job_data = {
                     'job_no': job_no,
                     'description': job.get('job_description', ''),
                     'pm': pm,
                     'customer': job.get('customer_name', ''),
                     'status': job.get('job_status', ''),
-                    'contract': contract_val,
-                    'budget_cost': budget_cost,
-                    'actual_cost': actual_cost,
-                    'billed': billed_val,
-                    'has_budget': has_budget,  # Critical flag for completion analysis
-                    'percent_complete': round(percent_complete, 1),
-                    'earned_revenue': round(earned_revenue, 2),
-                    'backlog': round(backlog, 2),
-                    'estimated_profit': round(estimated_profit, 2),
-                    'margin': round(profit_margin, 1),
-                    'over_under_billing': round(over_under_billing, 2)
+                    'contract': job.get('contract', 0),
+                    'budget_cost': job.get('budget_cost', 0),
+                    'actual_cost': job.get('actual_cost', 0),
+                    'billed': job.get('billed', 0),
+                    'has_budget': job.get('has_budget', False),
+                    'percent_complete': job.get('percent_complete', 0),
+                    'earned_revenue': job.get('earned_revenue', 0),
+                    'backlog': job.get('backlog', 0),
+                    'estimated_profit': job.get('estimated_profit', 0),
+                    'margin': job.get('margin', 0),
+                    'over_under_billing': job.get('over_under_billing', 0)
                 }
                 
                 filtered.append(job_data)
@@ -5010,22 +5108,14 @@ def execute_nlq_query(query_plan, data):
                     'note': f'Showing top {min(limit or 20, len(filtered))} jobs by {sort_field}. {len(jobs_without_budget)} jobs have no budget.'
                 }
         
-        # AR queries - matches AR Aging page logic exactly
+        # AR queries - use pre-computed metrics from cache
         elif target == 'ar':
-            invoices = data.get('ar', {}).get('invoices', [])
+            # Get pre-computed AR metrics from cache
+            all_ar = metrics_cache.ar
             filtered = []
             
-            for inv in invoices:
-                calc_due = float(inv.get('calculated_amount_due') or 0)
-                
-                # AR Aging page only includes invoices with calc_due > 0
-                if calc_due <= 0:
-                    continue
-                
-                retainage = float(inv.get('retainage_amount') or 0)
-                collectible = max(0, calc_due - retainage)
-                
-                pm = inv.get('project_manager_name', '')
+            for inv in all_ar:
+                pm = inv.get('project_manager', '')
                 # Note: AR Aging page does NOT exclude Josh Angelo - only PM analysis does
                 # But for NLQ queries involving PM metrics, we exclude Josh Angelo
                 if filters.get('pm'):
@@ -5039,19 +5129,19 @@ def execute_nlq_query(query_plan, data):
                     if filters['customer'].lower() not in cust:
                         continue
                 if filters.get('min_days'):
-                    if int(inv.get('days_outstanding') or 0) < filters['min_days']:
+                    if inv.get('days_outstanding', 0) < filters['min_days']:
                         continue
                 if filters.get('max_days'):
-                    if int(inv.get('days_outstanding') or 0) > filters['max_days']:
+                    if inv.get('days_outstanding', 0) > filters['max_days']:
                         continue
                 
                 filtered.append({
                     'customer': inv.get('customer_name', ''),
                     'invoice_no': inv.get('invoice_no', ''),
-                    'calc_due': calc_due,
-                    'collectible': collectible,
-                    'retainage': retainage,
-                    'days_outstanding': int(inv.get('days_outstanding') or 0),
+                    'calc_due': inv.get('calculated_amount_due', 0),
+                    'collectible': inv.get('collectible', 0),
+                    'retainage': inv.get('retainage', 0),
+                    'days_outstanding': inv.get('days_outstanding', 0),
                     'job_no': inv.get('job_no', ''),
                     'pm': pm
                 })
@@ -5138,33 +5228,29 @@ def execute_nlq_query(query_plan, data):
                 filtered.sort(key=lambda x: x['collectible'], reverse=True)
                 results = {'items': filtered[:limit], 'total_count': len(filtered)}
         
-        # AP queries
+        # AP queries - use pre-computed metrics from cache
         elif target == 'ap':
-            invoices = data.get('ap', {}).get('invoices', [])
+            # Get pre-computed AP metrics from cache
+            all_ap = metrics_cache.ap
             filtered = []
             
-            for inv in invoices:
-                remaining = float(inv.get('remaining_balance') or 0)
-                if remaining <= 0:
-                    continue
-                
-                # Use vendor_name field (correct field from AP data)
-                vendor_name = inv.get('vendor_name') or inv.get('vendor') or ''
+            for inv in all_ap:
+                vendor_name = inv.get('vendor_name', '')
                 
                 if filters.get('vendor'):
                     if filters['vendor'].lower() not in vendor_name.lower():
                         continue
                 if filters.get('min_days'):
-                    if int(inv.get('days_outstanding') or 0) < filters['min_days']:
+                    if inv.get('days_outstanding', 0) < filters['min_days']:
                         continue
                 
                 filtered.append({
                     'vendor': vendor_name,
                     'invoice_no': inv.get('invoice_no', ''),
-                    'amount': remaining,
-                    'days_outstanding': int(inv.get('days_outstanding') or 0),
+                    'amount': inv.get('remaining_balance', 0),
+                    'days_outstanding': inv.get('days_outstanding', 0),
                     'job_no': inv.get('job_no', ''),
-                    'description': inv.get('job_description') or inv.get('description', '')
+                    'description': ''
                 })
             
             if aggregation == 'sum':
