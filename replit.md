@@ -79,11 +79,12 @@ A centralized architecture allows for theme-adaptive Chart.js charts using CSS v
 - **Flask Server**: A Python Flask application (`public/server.py`) is used for serving static files during local development.
 
 ### Export & Email Features
-- **Universal Export Ribbon**: All pages have access to Print, PDF, Email, and Schedule Email options via a unified export ribbon (desktop) or dropdown (mobile). PDF and Email capture the entire visible page including all charts, tables, and AI analysis content.
+- **Universal Export Ribbon**: All pages have access to Print, PDF, Email, and Schedule Email options via a unified export ribbon (desktop, >1024px) or dropdown (tablet/mobile, <=1024px). PDF and Email capture the entire visible page including all charts, tables, and AI analysis content.
 - **Table-Specific CSV/Excel Exports**: Individual data tables have dedicated CSV and Excel export buttons in the top-right corner. Tables with export buttons include:
   - Income Statement, Balance Sheet, Statement of Cash Flows
   - Job Budgets, Job Actuals, Over/Under Billing, Cost Codes
   - Payments, AP Aging, AR Aging
+  - Cash Report (Top Deposits, Top Withdrawals - dynamically added after table render)
 - **PDF Export**: Captures the entire visible dashboard section as an image, including all charts, tables, and AI analysis content (excludes configuration panels).
 - **Email Export**: Sends page-specific content with automatic screenshot attachment. Subject line and content match the current view being exported.
 - **CSV/Excel Export**: Extracts tabular data from individual tables with proper formatting, headers, and currency handling.

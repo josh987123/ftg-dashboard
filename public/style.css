@@ -1849,7 +1849,7 @@ body.dark-mode .nav-item.nav-parent.expanded {
   position: absolute;
   top: 40px;
   right: 30px;
-  z-index: 100;
+  z-index: 500;
 }
 
 /* Desktop Export Ribbon */
@@ -1928,14 +1928,25 @@ body.dark-mode .nav-item.nav-parent.expanded {
   margin-top: 4px;
 }
 
+/* Tablet breakpoint - show dropdown instead of ribbon */
+@media (max-width:1024px) {
+  .export-ribbon {
+    display: none;
+  }
+  
+  .export-dropdown.mobile-only {
+    display: block;
+  }
+}
+
 @media (max-width:768px) {
   .content {
     padding: 20px 16px;
   }
   
   .content-export-area {
-    top: 20px;
-    right: 16px;
+    top: 12px;
+    right: 12px;
   }
   
   /* Hide ribbon on mobile, show dropdown */
@@ -1945,6 +1956,24 @@ body.dark-mode .nav-item.nav-parent.expanded {
   
   .export-dropdown.mobile-only {
     display: block;
+  }
+  
+  /* Larger touch target on mobile */
+  .content-export-area .export-dropdown-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+  
+  /* Table export buttons - stack on mobile */
+  .table-export-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .table-export-btns .export-table-btn {
+    padding: 8px 12px;
+    font-size: 12px;
   }
 }
 

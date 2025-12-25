@@ -5445,7 +5445,9 @@ function setupTableExportButtons() {
     { id: 'costCodesTable', name: 'cost-codes', section: 'costCodes' },
     { id: 'paymentsTable', name: 'payments', section: 'payments' },
     { id: 'apAgingTable', name: 'ap-aging', section: 'apAging' },
-    { id: 'arAgingTable', name: 'ar-aging', section: 'arAging' }
+    { id: 'arAgingTable', name: 'ar-aging', section: 'arAging' },
+    { id: 'dcrDepositsTable', name: 'cash-deposits', section: 'cashReport' },
+    { id: 'dcrWithdrawalsTable', name: 'cash-withdrawals', section: 'cashReport' }
   ];
   
   tables.forEach(({ id, name, section }) => {
@@ -17668,6 +17670,60 @@ function renderDcrTopTransactions() {
   
   // Render withdrawals
   withdrawalsContainer.innerHTML = renderDcrTransactionList(topWithdrawals, 'withdrawal');
+  
+  // Add export buttons to Cash Report tables after rendering
+  setTimeout(() => {
+    addCashReportTableExportButtons();
+  }, 50);
+}
+
+function addCashReportTableExportButtons() {
+  const cashTables = [
+    { id: 'dcrDepositsTable', name: 'cash-deposits' },
+    { id: 'dcrWithdrawalsTable', name: 'cash-withdrawals' }
+  ];
+  
+  cashTables.forEach(({ id, name }) => {
+    const table = document.getElementById(id);
+    if (!table) return;
+    
+    // Try multiple possible container classes
+    let container = table.closest('.dcr-table-container') || 
+                    table.closest('.dcr-transaction-card') ||
+                    table.closest('.dcr-table-section') ||
+                    table.parentElement;
+    if (!container) return;
+    
+    // Check if export buttons already exist in parent hierarchy
+    if (container.querySelector('.table-export-btns')) return;
+    
+    // Create export button row
+    const btnRow = document.createElement('div');
+    btnRow.className = 'table-export-row';
+    btnRow.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:8px;';
+    
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'table-export-btns';
+    
+    const csvBtn = document.createElement('button');
+    csvBtn.className = 'export-table-btn csv-btn';
+    csvBtn.textContent = 'CSV';
+    csvBtn.title = 'Export to CSV';
+    csvBtn.onclick = () => exportTableToCsv(id, name);
+    
+    const excelBtn = document.createElement('button');
+    excelBtn.className = 'export-table-btn excel-btn';
+    excelBtn.textContent = 'Excel';
+    excelBtn.title = 'Export to Excel';
+    excelBtn.onclick = () => exportTableToExcel(id, name);
+    
+    btnGroup.appendChild(csvBtn);
+    btnGroup.appendChild(excelBtn);
+    btnRow.appendChild(btnGroup);
+    
+    // Insert before the table
+    table.parentNode.insertBefore(btnRow, table);
+  });
 }
 
 // Match deposit amount against AR invoices to find potential customer/job
@@ -17831,7 +17887,8 @@ function renderDcrTransactionList(txns, type) {
     return `<div class="dcr-no-data">No ${type}s found for the ${periodLabel}</div>`;
   }
   
-  let html = `<table class="dcr-transaction-table dcr-top-transactions">
+  const tableId = type === 'deposit' ? 'dcrDepositsTable' : 'dcrWithdrawalsTable';
+  let html = `<table id="${tableId}" class="dcr-transaction-table dcr-top-transactions">
     <thead>
       <tr>
         <th>Date</th>
