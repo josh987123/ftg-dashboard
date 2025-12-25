@@ -20402,6 +20402,32 @@ body.dark-mode .ai-insights-error .error-message {
   }
 }
 
+/* Tablet Responsive (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .ai-chat-container {
+    height: calc(100vh - 180px);
+    min-height: 500px;
+  }
+  
+  .ai-chat-welcome h3 {
+    font-size: 22px;
+  }
+  
+  .ai-chat-suggestions {
+    max-width: 550px;
+    gap: 10px;
+  }
+  
+  .ai-suggestion-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  
+  .ai-chat-message {
+    max-width: 80%;
+  }
+}
+
 /* Dark Mode */
 [data-theme="dark"] .ai-chat-container,
 body.dark-mode .ai-chat-container {

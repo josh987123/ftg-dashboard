@@ -30,7 +30,14 @@ The dashboard provides several key views for financial analysis:
 - **Distribution Reports (Admin Only)**: Dedicated section for specialized reports like the Cash Report.
 
 ### AI Insights & Natural Language Q&A
-A dedicated AI-powered analysis page aggregates data to provide strategic business intelligence. It includes a chat interface for natural language questions about financial data using a **Semantic Data Catalog** architecture. This two-stage AI process (intent classification, structured query plan generation, Python resolvers, natural language answer generation) allows flexible querying across various entities (jobs, AR, AP, GL, cash, PM summaries, cost codes, customers) with comprehensive filtering capabilities. Josh Angelo is excluded from all PM analysis.
+A dedicated AI-powered analysis page with a ChatGPT-style chat interface provides strategic business intelligence. Features include:
+- **Welcome Screen**: Centered AI icon with greeting and 6 quick-start suggestion buttons
+- **Chat Messages**: Avatar-based conversation (blue for user, green for assistant) with smooth animations
+- **Fixed Input Area**: "Run Full Analysis" button on left, text input with send button on right
+- **Responsive Design**: Optimized layouts for mobile (768px), tablet (769-1024px), and desktop
+- **Dark Mode**: Full dark theme support
+
+The system uses a **Semantic Data Catalog** architecture with a two-stage AI process (intent classification, structured query plan generation, Python resolvers, natural language answer generation) for flexible querying across entities (jobs, AR, AP, GL, cash, PM summaries, cost codes, customers). Josh Angelo is excluded from all PM analysis.
 
 #### NLQ Calculation Consistency (Dec 2025)
 Critical alignment between page-level calculations and NLQ resolvers:
