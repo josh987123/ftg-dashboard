@@ -7059,9 +7059,10 @@ function getPaymentsCsvData() {
 
 // AP Aging Export Helpers
 function getApAgingSubtitle() {
-  const selectedPm = pmTabsState?.apa || 'All Project Managers';
+  const selectedPm = pmTabsState?.apa || '__ALL__';
+  const pmLabel = (selectedPm === '__ALL__' || selectedPm === 'All Project Managers') ? 'All Project Managers' : selectedPm;
   const asOfDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  return selectedPm === 'All Project Managers' ? `As of ${asOfDate}` : `${selectedPm} - As of ${asOfDate}`;
+  return pmLabel === 'All Project Managers' ? `As of ${asOfDate}` : `${pmLabel} - As of ${asOfDate}`;
 }
 
 function getApAgingTableHtml() {
@@ -7129,9 +7130,10 @@ function getApAgingCsvData() {
 
 // AR Aging Export Helpers
 function getArAgingSubtitle() {
-  const selectedPm = pmTabsState?.ara || 'All Project Managers';
+  const selectedPm = pmTabsState?.ara || '__ALL__';
+  const pmLabel = (selectedPm === '__ALL__' || selectedPm === 'All Project Managers') ? 'All Project Managers' : selectedPm;
   const asOfDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  return selectedPm === 'All Project Managers' ? `As of ${asOfDate}` : `${selectedPm} - As of ${asOfDate}`;
+  return pmLabel === 'All Project Managers' ? `As of ${asOfDate}` : `${pmLabel} - As of ${asOfDate}`;
 }
 
 function getArAgingTableHtml() {
