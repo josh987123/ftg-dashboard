@@ -412,7 +412,7 @@ const DataCache = {
   
   async getJobsMetrics() {
     return this.get('jobs_metrics', async () => {
-      const resp = await fetch('/api/metrics/jobs');
+      const resp = await fetch('/api/metrics/jobs?limit=10000');
       return resp.json();
     });
   },
