@@ -26,7 +26,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20251225s" />
+  <link rel="stylesheet" href="style.css?v=20251225t" />
 
   <!-- PERFORMANCE: Export libraries (EmailJS, html2canvas, jsPDF, XLSX, ExcelJS) are now lazy-loaded in dashboard.js when needed -->
 </head>
@@ -3302,11 +3302,11 @@
           <div>
             <h2>Cash Report</h2>
             <p class="section-description" id="dcrDescription">FTG Builders cash position and activity - trailing 10 weeks</p>
-          </div>
-          <!-- Daily/Weekly Toggle -->
-          <div class="dcr-view-toggle">
-            <button class="dcr-toggle-btn" data-view="daily">Daily</button>
-            <button class="dcr-toggle-btn active" data-view="weekly">Weekly</button>
+            <!-- Daily/Weekly Toggle - moved under header -->
+            <div class="dcr-view-toggle" style="margin-top: 12px;">
+              <button class="dcr-toggle-btn" data-view="daily">Daily</button>
+              <button class="dcr-toggle-btn active" data-view="weekly">Weekly</button>
+            </div>
           </div>
         </div>
         
@@ -3734,11 +3734,11 @@
   <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script defer src="dashboard.js?v=20251225s"></script>
+  <script defer src="dashboard.js?v=20251225t"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251225s';
+    const APP_VERSION = '20251225t';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {
