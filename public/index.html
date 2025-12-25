@@ -3307,7 +3307,7 @@
         </div>
       </section>
 
-      <section id="cashReport" class="dashboard-section">
+      <section id="cashReport" class="dashboard-section dcr-executive-layout">
         <div class="page-header-row">
           <div>
             <h2>Cash Report</h2>
@@ -3317,6 +3317,13 @@
           <div class="dcr-view-toggle">
             <button class="dcr-toggle-btn" data-view="daily">Daily</button>
             <button class="dcr-toggle-btn active" data-view="weekly">Weekly</button>
+          </div>
+        </div>
+        
+        <!-- Executive Summary -->
+        <div class="dcr-executive-summary" id="dcrExecutiveSummary">
+          <div class="dcr-summary-content">
+            <span class="dcr-summary-text" id="dcrSummaryText">Loading executive summary...</span>
           </div>
         </div>
         
@@ -3336,21 +3343,25 @@
           <div class="dcr-metric-tile">
             <div class="dcr-metric-label">Current Balance</div>
             <div class="dcr-metric-value" id="dcrCurrentBalance">--</div>
+            <div class="dcr-metric-delta" id="dcrBalanceDelta"></div>
             <div class="dcr-metric-sublabel">Morning balance</div>
           </div>
           <div class="dcr-metric-tile">
             <div class="dcr-metric-label" id="dcrDepositsLabel">Deposits</div>
             <div class="dcr-metric-value positive" id="dcrDeposits">--</div>
+            <div class="dcr-metric-delta" id="dcrDepositsDelta"></div>
             <div class="dcr-metric-sublabel" id="dcrDepositsSublabel">Past 7 days (excl. transfers)</div>
           </div>
           <div class="dcr-metric-tile">
             <div class="dcr-metric-label" id="dcrWithdrawalsLabel">Withdrawals</div>
             <div class="dcr-metric-value negative" id="dcrWithdrawals">--</div>
+            <div class="dcr-metric-delta" id="dcrWithdrawalsDelta"></div>
             <div class="dcr-metric-sublabel" id="dcrWithdrawalsSublabel">Past 7 days (excl. transfers)</div>
           </div>
           <div class="dcr-metric-tile">
-            <div class="dcr-metric-label">Change</div>
+            <div class="dcr-metric-label">Net Change</div>
             <div class="dcr-metric-value" id="dcrPercentChange">--</div>
+            <div class="dcr-metric-delta" id="dcrNetDelta"></div>
             <div class="dcr-metric-sublabel" id="dcrChangeSublabel">vs. prior week balance</div>
           </div>
         </div>
@@ -3733,11 +3744,11 @@
   <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
   <!-- MAIN SCRIPT -->
-  <script defer src="dashboard.js?v=20251225f"></script>
+  <script defer src="dashboard.js?v=20251225h"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
-    const APP_VERSION = '20251225f';
+    const APP_VERSION = '20251225h';
     
     // Force unregister old service workers and clear caches on every load
     (async function() {

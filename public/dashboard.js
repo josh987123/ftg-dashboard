@@ -16385,6 +16385,7 @@ function renderCashReport() {
   renderDcrMetrics();
   renderDcrSafetyCheck();
   renderDcrTopTransactions();
+  renderExecutiveSummary();
 }
 
 function updateDcrLabels() {
@@ -16766,6 +16767,93 @@ function renderDcrMetrics() {
     }
   }
   
+  // Calculate prior period values for comparison
+  let priorDeposits = 0;
+  let priorWithdrawals = 0;
+  let priorBalance = currentBalance;
+  let balanceChange = 0;
+  
+  if (dcrViewMode === 'weekly') {
+    // Current period: days 1-7 ago (txnStartDate to txnEndDate already set above)
+    // Prior period: days 8-14 ago (7 days immediately preceding the current window)
+    const priorEndDate = new Date(today);
+    priorEndDate.setDate(priorEndDate.getDate() - 8); // Day after current period ends
+    const priorStartDate = new Date(today);
+    priorStartDate.setDate(priorStartDate.getDate() - 14); // 7 days before prior end
+    
+    const priorStartStr = priorStartDate.toISOString().split('T')[0];
+    const priorEndStr = priorEndDate.toISOString().split('T')[0];
+    
+    const priorTxns = dcrData.transactions.filter(txn => {
+      if (!ftgAccountNames.includes(txn.account)) return false;
+      try {
+        const txnDate = new Date(txn.date);
+        const dateStr = txnDate.toISOString().split('T')[0];
+        return dateStr >= priorStartStr && dateStr <= priorEndStr;
+      } catch (e) { return false; }
+    });
+    
+    priorTxns.forEach(txn => {
+      if (isDcrTransfer(txn, priorTxns)) return;
+      if (txn.amount > 0) {
+        priorDeposits += txn.amount;
+      } else {
+        priorWithdrawals += Math.abs(txn.amount);
+      }
+    });
+    
+    // Get prior week balance
+    const weeklyResult = getWeeklyDataPoints(dates, dailyBalances);
+    priorBalance = weeklyResult.data[weeklyResult.data.length - 2] || currentBalance;
+    balanceChange = currentBalance - priorBalance;
+  } else {
+    // Daily mode: Current period is yesterday (1 day ago)
+    // Prior period is the day before yesterday (2 days ago)
+    const priorDayDate = new Date(today);
+    priorDayDate.setDate(priorDayDate.getDate() - 2);
+    const priorDayStr = priorDayDate.toISOString().split('T')[0];
+    
+    const priorTxns = dcrData.transactions.filter(txn => {
+      if (!ftgAccountNames.includes(txn.account)) return false;
+      try {
+        const txnDate = new Date(txn.date);
+        const dateStr = txnDate.toISOString().split('T')[0];
+        return dateStr === priorDayStr;
+      } catch (e) { return false; }
+    });
+    
+    priorTxns.forEach(txn => {
+      if (isDcrTransfer(txn, priorTxns)) return;
+      if (txn.amount > 0) {
+        priorDeposits += txn.amount;
+      } else {
+        priorWithdrawals += Math.abs(txn.amount);
+      }
+    });
+    
+    priorBalance = dailyBalances[dailyBalances.length - 2] || currentBalance;
+    balanceChange = currentBalance - priorBalance;
+  }
+  
+  // Calculate deltas
+  const depositsDelta = deposits - priorDeposits;
+  const withdrawalsDelta = withdrawals - priorWithdrawals;
+  const netChange = deposits - withdrawals;
+  const priorNetChange = priorDeposits - priorWithdrawals;
+  const netDelta = netChange - priorNetChange;
+  
+  // Store metrics for executive summary
+  window.dcrMetrics = {
+    currentBalance,
+    balanceChange,
+    deposits,
+    withdrawals,
+    depositsDelta,
+    withdrawalsDelta,
+    netChange,
+    percentChange
+  };
+  
   // Update DOM
   const currentBalanceEl = document.getElementById('dcrCurrentBalance');
   const depositsEl = document.getElementById('dcrDeposits');
@@ -16781,6 +16869,71 @@ function renderDcrMetrics() {
     percentChangeEl.textContent = sign + percentChange.toFixed(2) + '%';
     percentChangeEl.className = 'dcr-metric-value ' + (percentChange >= 0 ? 'positive' : 'negative');
   }
+  
+  // Update delta badges
+  updateDeltaBadge('dcrBalanceDelta', balanceChange, true);
+  updateDeltaBadge('dcrDepositsDelta', depositsDelta, true);
+  updateDeltaBadge('dcrWithdrawalsDelta', withdrawalsDelta, false); // For withdrawals, lower is better
+  updateDeltaBadge('dcrNetDelta', netDelta, true);
+}
+
+function updateDeltaBadge(elementId, delta, positiveIsGood) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  
+  if (Math.abs(delta) < 0.01) {
+    el.textContent = 'No change';
+    el.className = 'dcr-metric-delta delta-neutral';
+    return;
+  }
+  
+  const sign = delta >= 0 ? '+' : '';
+  const arrow = delta >= 0 ? '↑' : '↓';
+  el.textContent = `${arrow} ${sign}${formatCurrency(Math.abs(delta))}`;
+  
+  // Determine if this is good or bad
+  const isPositive = positiveIsGood ? delta > 0 : delta < 0;
+  el.className = 'dcr-metric-delta ' + (isPositive ? 'delta-positive' : 'delta-negative');
+}
+
+function renderExecutiveSummary() {
+  const summaryEl = document.getElementById('dcrSummaryText');
+  if (!summaryEl || !window.dcrMetrics) return;
+  
+  const m = window.dcrMetrics;
+  const periodLabel = dcrViewMode === 'weekly' ? 'this week' : 'yesterday';
+  const comparisonLabel = dcrViewMode === 'weekly' ? 'vs. prior week' : 'vs. prior day';
+  
+  // Build executive summary text
+  let summary = '';
+  
+  // Balance change
+  if (Math.abs(m.balanceChange) < 100) {
+    summary += `Cash balance is <span class="highlight-neutral">${formatCurrency(m.currentBalance)}</span>, essentially unchanged ${comparisonLabel}. `;
+  } else if (m.balanceChange > 0) {
+    summary += `Cash <span class="highlight-positive">increased ${formatCurrency(m.balanceChange)}</span> ${periodLabel} to <span class="highlight-neutral">${formatCurrency(m.currentBalance)}</span>. `;
+  } else {
+    summary += `Cash <span class="highlight-negative">decreased ${formatCurrency(Math.abs(m.balanceChange))}</span> ${periodLabel} to <span class="highlight-neutral">${formatCurrency(m.currentBalance)}</span>. `;
+  }
+  
+  // Activity summary
+  if (m.deposits > 0 || m.withdrawals > 0) {
+    summary += `Received <span class="highlight-positive">${formatCurrency(m.deposits)}</span> in deposits, paid out <span class="highlight-negative">${formatCurrency(m.withdrawals)}</span>. `;
+  }
+  
+  // Safety check status (if available)
+  const safetyEl = document.getElementById('dcrSafetyTotal');
+  if (safetyEl && safetyEl.textContent !== '--') {
+    const safetyValue = safetyEl.textContent;
+    const isPositive = safetyEl.classList.contains('positive');
+    if (isPositive) {
+      summary += `Safety check remains <span class="highlight-positive">healthy at ${safetyValue}</span>.`;
+    } else {
+      summary += `<span class="highlight-negative">Safety check is ${safetyValue}</span> - monitor closely.`;
+    }
+  }
+  
+  summaryEl.innerHTML = summary;
 }
 
 function renderDcrSafetyCheck() {

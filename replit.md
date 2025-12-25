@@ -36,9 +36,10 @@ The dashboard provides several key views for financial analysis:
 - **Distribution Reports (Admin Only)**: A dedicated section visible only to admin users, containing specialized reports:
   - Dept Head Meeting (placeholder)
   - **Cash Report**: Displays FTG Builders cash position with Daily/Weekly view toggle (Weekly is default):
+    - **Executive Summary**: Auto-generated narrative at top summarizing cash position, changes, and safety check status in plain language with color-coded highlights.
     - **Daily View**: 14-day trailing balance chart, prior day deposits/withdrawals. Business day logic: weekends and US federal holidays carry forward prior business day's balance.
     - **Weekly View** (default): 10-week trailing balance chart, past 7 days deposits/withdrawals
-    - Metric tiles: Current Balance, Deposits, Withdrawals, Percent Change
+    - **Metric Tiles with Delta Badges**: Current Balance, Deposits, Withdrawals, Net Change - each showing week-over-week comparison badges (green up arrow = good, red down arrow = concerning).
     - **Cash Balance Safety Check**: Formula breakdown showing Cash Balance + AR - AP - Net Over/Under Bill - Operating Reserve (3-mo SG&A) = Safety Check total. Operating Reserve is the sum of all operating expenses (accounts 7000-7599) for the trailing 3 completed months.
     - Top 5 Deposits and Top 5 Withdrawals with **Transaction Enrichment**: Cross-references bank transactions with AR/AP invoice data to show potential job/customer/vendor matches. High-confidence matches (exact amount) shown in green, medium-confidence (within 5%) in amber.
     - Transfer detection logic excludes internal transfers from calculations
