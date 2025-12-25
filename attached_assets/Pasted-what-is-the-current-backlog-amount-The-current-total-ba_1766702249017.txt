@@ -1,0 +1,31 @@
+what is the current backlog amount?
+The current total backlog amount is -$1.85M across 4,000 jobs.
+
+This negative backlog indicates that your company has earned more revenue than the original contract values across all projects, suggesting you've either completed work beyond the initial scope or have favorable contract modifications that have increased earned revenue above the baseline contract amounts.
+what is the current AR over 30 days?
+Your current accounts receivable over 30 days totals $3.31M, broken down as follows:
+
+Collectible AR (over 30 days): $547.5K
+- 31-60 days: $172.6K
+- 61-90 days: $0
+- 90+ days: $374.8K
+
+Retainage: $2.76M
+
+The majority of your aging AR is in retainage ($2.76M), while your standard collectible AR over 30 days is $547.5K, with most of that amount ($374.8K) being over 90 days old and requiring immediate attention.
+what is the average completion rate for all jobs that have budgets?
+Based on the data from 4,000 jobs that have budgets, the average completion rate is 226.4%.
+
+This indicates that jobs with budgets are, on average, significantly over their planned scope - completing more than double what was originally budgeted for. This could suggest either scope creep, underestimation during the budgeting process, or that these jobs are delivering additional value beyond their initial requirements.
+list for me all of Rodney's jobs and their margin
+Here are all of Rodney's jobs with their margins:
+
+All 20 jobs have 0% margin. This appears to be because these are completed projects (status "C") for El Camino Hospital that don't have established budgets or contract values, even though they have actual costs ranging from $48 to $842.
+
+The jobs with the highest actual costs are:
+• Job 1476 - Dialysis Storage Rm Acrovyn ($842)
+• Job 1297 - Front Doctor's Parking Lot ($402)
+• Job 1414 - ECH MV Building 1 ($340)
+• Job 1269 - Willow Pavilion Tomo Computer ($304)
+
+Since there are no contract values or budgets set up for these jobs, no meaningful profit margins can be calculated despite having actual project costs.

@@ -4593,6 +4593,8 @@ ENTITY: Job
     - over_under_billing: billed - earned_revenue (positive=overbilled)
   IMPORTANT: Jobs WITHOUT budgets (has_budget=false) show 0% completion but may have actual_cost!
   When asked about completion, check has_budget and report actual_cost for jobs missing budgets.
+  IMPORTANT: For "current" backlog or completion questions, use job_status='A' (active jobs only).
+  Completed jobs may show negative backlog (earned > contract) which distorts totals.
   Relationships:
     - Links to AR invoices via job_no
     - Links to AP invoices via job_no
@@ -4876,12 +4878,46 @@ def execute_nlq_query(query_plan, data):
             elif aggregation == 'sum':
                 field = fields[0] if fields else 'contract'
                 field = field_aliases.get(field, field)  # Apply alias
-                results = {'total': sum(j.get(field, 0) for j in filtered), 'field': field, 'count': len(filtered)}
+                
+                # For metrics that require budgets, only sum jobs with budgets
+                jobs_with_budget = [j for j in filtered if j['has_budget']]
+                jobs_without_budget = [j for j in filtered if not j['has_budget']]
+                
+                # Backlog and earned_revenue only make sense for jobs with budgets
+                if field in ['backlog', 'earned_revenue', 'percent_complete']:
+                    total = sum(j.get(field, 0) for j in jobs_with_budget)
+                    results = {
+                        'total': round(total, 2), 
+                        'field': field, 
+                        'jobs_counted': len(jobs_with_budget),
+                        'jobs_with_budget': len(jobs_with_budget),
+                        'jobs_without_budget': len(jobs_without_budget),
+                        'note': f'Only jobs with budgets included. {len(jobs_without_budget)} jobs have no budget set.'
+                    }
+                else:
+                    results = {'total': sum(j.get(field, 0) for j in filtered), 'field': field, 'count': len(filtered)}
             elif aggregation == 'average':
                 field = fields[0] if fields else 'margin'
                 field = field_aliases.get(field, field)  # Apply alias
-                values = [j.get(field, 0) for j in filtered]
-                results = {'average': sum(values) / len(values) if values else 0, 'field': field, 'count': len(filtered)}
+                
+                # For completion and margin, only average jobs with budgets
+                jobs_with_budget = [j for j in filtered if j['has_budget']]
+                jobs_without_budget = [j for j in filtered if not j['has_budget']]
+                
+                if field in ['percent_complete', 'margin', 'earned_revenue', 'backlog']:
+                    values = [j.get(field, 0) for j in jobs_with_budget]
+                    avg = sum(values) / len(values) if values else 0
+                    results = {
+                        'average': round(avg, 1), 
+                        'field': field, 
+                        'jobs_counted': len(jobs_with_budget),
+                        'jobs_with_budget': len(jobs_with_budget),
+                        'jobs_without_budget': len(jobs_without_budget),
+                        'note': f'Average is calculated only for jobs with budgets. {len(jobs_without_budget)} jobs excluded (no budget).'
+                    }
+                else:
+                    values = [j.get(field, 0) for j in filtered]
+                    results = {'average': round(sum(values) / len(values) if values else 0, 1), 'field': field, 'count': len(filtered)}
             elif aggregation == 'top':
                 # Use sort_by from query plan, fallback to contract
                 sort_field = query_plan.get('sort_by') or 'contract'

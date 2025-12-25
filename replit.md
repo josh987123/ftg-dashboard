@@ -41,7 +41,13 @@ Critical alignment between page-level calculations and NLQ resolvers:
 
 #### Important Data Flags
 - **has_budget**: Critical flag on jobs - many jobs show 0% completion because they have no budget (revised_cost = 0). NLQ explains this and shows actual_cost instead.
+- **Active vs All Jobs**: For "current" metrics like backlog, filter to job_status='A'. Completed jobs may have negative backlog (earned > contract).
 - Josh Angelo is excluded from all PM analysis but NOT from AR Aging page totals (only when PM filter is applied)
+
+#### NLQ Aggregation Rules (Dec 2025)
+- Sum/Average of backlog, earned_revenue, percent_complete, margin only includes jobs WITH budgets
+- Jobs without budgets are excluded from these aggregations and counted separately
+- For "current backlog" queries, semantic catalog instructs AI to filter to active jobs only
 
 ### Responsive Design
 The application uses a mobile-first approach with a responsive sidebar, hamburger menu, CSS flexbox layouts, and orientation-aware media queries for landscape mobile/tablet compatibility.
