@@ -172,18 +172,18 @@ async function getActivePmsList() {
     }
     
     // Fallback to jobs data
-    const data = await DataCache.getJobsData();
-    const budgets = data.job_budgets || [];
+    // Fallback to metrics API
+    const metricsData = await DataCache.getJobsMetrics();
+    const jobs = metricsData.jobs || [];
     
     // Get unique PMs with active jobs only
     const activePms = [...new Set(
-      budgets
-        .filter(j => j.job_status === 'A' && j.project_manager_name)
-        .map(j => j.project_manager_name)
+      jobs
+        .filter(j => j.job_status === "A" && j.project_manager)
+        .map(j => j.project_manager)
     )].sort();
     
     _cachedActivePms = activePms;
-    _activePmsCacheTime = Date.now();
     return activePms;
   } catch (e) {
     console.warn('Failed to load active PMs list:', e);
@@ -1910,13 +1910,15 @@ let dataTimestamps = {
 
 async function loadDataTimestamps() {
   try {
-    const [glResp, jobsResp, arResp, apResp] = await Promise.all([
+    const [glResp, metricsResp] = await Promise.all([
       DataCache.getGLData().catch(() => null),
-      DataCache.getJobsData().catch(() => null),
-      DataCache.getARData().catch(() => null),
-      DataCache.getAPData().catch(() => null)
+      DataCache.getMetricsSummary().catch(() => null)
     ]);
     
+    dataTimestamps.gl = glResp?.generated_at || null;
+    dataTimestamps.jobs = metricsResp?.last_refresh || null;
+    dataTimestamps.ar = metricsResp?.last_refresh || null;
+    dataTimestamps.ap = metricsResp?.last_refresh || null;
     dataTimestamps.gl = glResp?.generated_at || null;
     dataTimestamps.jobs = jobsResp?.generated_at || null;
     dataTimestamps.ar = arResp?.generated_at || null;
@@ -15933,19 +15935,25 @@ async function loadJobBudgetsData() {
   if (loadingOverlay) loadingOverlay.classList.remove('hidden');
   
   try {
-    const data = await DataCache.getJobsData();
+    // Fetch pre-computed job metrics from the canonical metrics API
+    const metricsData = await DataCache.getJobsMetrics();
+    const jobs = metricsData.jobs || [];
     
-    jobBudgetsData = (data.job_budgets || []).map(job => ({
-      ...job,
-      original_contract: parseFloat(job.original_contract) || 0,
-      tot_income_adj: parseFloat(job.tot_income_adj) || 0,
-      revised_contract: parseFloat(job.revised_contract) || 0,
-      original_cost: parseFloat(job.original_cost) || 0,
-      tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
-      revised_cost: parseFloat(job.revised_cost) || 0,
-      estimated_profit: (parseFloat(job.revised_contract) || 0) - (parseFloat(job.revised_cost) || 0)
+    // Map metrics API response to expected format for Job Budgets page
+    jobBudgetsData = jobs.map(job => ({
+      job_no: job.job_no,
+      job_description: job.job_description,
+      customer_name: job.customer_name,
+      project_manager_name: job.project_manager,
+      job_status: job.job_status,
+      original_contract: job.original_contract || 0,
+      tot_income_adj: job.tot_income_adj || 0,
+      revised_contract: job.contract,
+      original_cost: job.original_cost || 0,
+      tot_cost_adj: job.tot_cost_adj || 0,
+      revised_cost: job.budget_cost,
+      estimated_profit: job.estimated_profit
     }));
-    
     // Initialize column filter dropdowns
     initJobBudgetsColumnFilters();
     updateJobBudgetsSortIndicators();
@@ -18151,7 +18159,7 @@ async function loadJobOverviewData() {
     
     // Also load AR invoices for additional analysis
     try {
-      const arData = await DataCache.getARData();
+      const arData = await DataCache.getARMetrics();
       joArInvoices = arData?.invoices || [];
     } catch (arErr) {
       console.warn('Could not load AR invoices for job overview:', arErr);
@@ -21847,20 +21855,34 @@ async function loadMissingBudgetsData() {
   if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">Loading job data...</td></tr>';
   
   try {
-    const data = await DataCache.getJobsData();
+    // Fetch pre-computed job metrics from the canonical metrics API
+    const metricsData = await DataCache.getJobsMetrics();
+    const jobs = metricsData.jobs || [];
     
-    jobBudgetsData = (data.job_budgets || []).map(job => ({
-      ...job,
-      original_contract: parseFloat(job.original_contract) || 0,
-      tot_income_adj: parseFloat(job.tot_income_adj) || 0,
-      revised_contract: parseFloat(job.revised_contract) || 0,
-      original_cost: parseFloat(job.original_cost) || 0,
-      tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
-      revised_cost: parseFloat(job.revised_cost) || 0,
-      estimated_profit: (parseFloat(job.revised_contract) || 0) - (parseFloat(job.revised_cost) || 0)
+    // Map metrics API response to expected format
+    jobBudgetsData = jobs.map(job => ({
+      job_no: job.job_no,
+      job_description: job.job_description,
+      customer_name: job.customer_name,
+      project_manager_name: job.project_manager,
+      job_status: job.job_status,
+      original_contract: job.original_contract || 0,
+      tot_income_adj: job.tot_income_adj || 0,
+      revised_contract: job.contract,
+      original_cost: job.original_cost || 0,
+      tot_cost_adj: job.tot_cost_adj || 0,
+      revised_cost: job.budget_cost,
+      estimated_profit: job.estimated_profit
     }));
     
     populateMbFilters();
+    
+    const dateEl = document.getElementById("missingBudgetsDataAsOf");
+    if (dateEl && metricsData.generated_at) {
+      dateEl.textContent = new Date(metricsData.generated_at).toLocaleDateString();
+    }
+    
+    filterMissingBudgets();
     
     const dateEl = document.getElementById('missingBudgetsDataAsOf');
     if (dateEl && data.generated_at) {
@@ -22217,18 +22239,26 @@ async function loadPmrTabsFromFullData() {
   // Fallback: load from full jobs data
   if (!jobBudgetsData || jobBudgetsData.length === 0) {
     try {
-      const data = await DataCache.getJobsData();
-      jobBudgetsData = (data.job_budgets || []).map(job => ({
-        ...job,
-        original_contract: parseFloat(job.original_contract) || 0,
-        tot_income_adj: parseFloat(job.tot_income_adj) || 0,
-        revised_contract: parseFloat(job.revised_contract) || 0,
-        original_cost: parseFloat(job.original_cost) || 0,
-        tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
-        revised_cost: parseFloat(job.revised_cost) || 0
+      const metricsData = await DataCache.getJobsMetrics();
+      const jobs = metricsData.jobs || [];
+      jobBudgetsData = jobs.map(job => ({
+        job_no: job.job_no,
+        job_description: job.job_description,
+        customer_name: job.customer_name,
+        project_manager_name: job.project_manager,
+        job_status: job.job_status,
+        original_contract: job.original_contract || 0,
+        tot_income_adj: job.tot_income_adj || 0,
+        revised_contract: job.contract,
+        original_cost: job.original_cost || 0,
+        tot_cost_adj: job.tot_cost_adj || 0,
+        revised_cost: job.budget_cost
       }));
-      if (data.generated_at) jobsDataAsOf = data.generated_at;
+      if (metricsData.generated_at) jobsDataAsOf = metricsData.generated_at;
     } catch (e) {
+      console.error("Failed to load job budgets:", e);
+    }
+  }
       console.error('Failed to load job budgets:', e);
     }
   }
@@ -22279,28 +22309,35 @@ async function ensurePmrDataLoaded() {
   // Load job budgets if not already loaded
   if (!jobBudgetsData || jobBudgetsData.length === 0) {
     try {
-      const data = await DataCache.getJobsData();
-      jobBudgetsData = (data.job_budgets || []).map(job => ({
-        ...job,
-        original_contract: parseFloat(job.original_contract) || 0,
-        tot_income_adj: parseFloat(job.tot_income_adj) || 0,
-        revised_contract: parseFloat(job.revised_contract) || 0,
-        original_cost: parseFloat(job.original_contract) || 0,
-        tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
-        revised_cost: parseFloat(job.revised_cost) || 0
+      const metricsData = await DataCache.getJobsMetrics();
+      const jobs = metricsData.jobs || [];
+      jobBudgetsData = jobs.map(job => ({
+        job_no: job.job_no,
+        job_description: job.job_description,
+        customer_name: job.customer_name,
+        project_manager_name: job.project_manager,
+        job_status: job.job_status,
+        original_contract: job.original_contract || 0,
+        tot_income_adj: job.tot_income_adj || 0,
+        revised_contract: job.contract,
+        original_cost: job.original_cost || 0,
+        tot_cost_adj: job.tot_cost_adj || 0,
+        revised_cost: job.budget_cost
       }));
     } catch (e) {
-      console.error('Failed to load job budgets for PM Report:', e);
+      console.error("Failed to load job budgets for PM Report:", e);
+    }
+  }
     }
   }
   
   // Load AR invoices
   if (pmrArInvoices.length === 0) {
     try {
-      const data = await DataCache.getARData();
-      pmrArInvoices = data.invoices || [];
+      const arData = await DataCache.getARMetrics();
+      pmrArInvoices = arData.invoices || [];
     } catch (e) {
-      console.error('Failed to load AR invoices for PM Report:', e);
+      console.error("Failed to load AR invoices for PM Report:", e);
     }
   }
   
@@ -23928,12 +23965,19 @@ async function extractAiInsightsData() {
   
   try {
     // Load ALL data sources for comprehensive analysis
-    const [jobsData, arData, apData, glData, cashData] = await Promise.all([
-      DataCache.getJobsData().catch(e => { console.warn('Jobs data load failed:', e); return null; }),
-      DataCache.getARData().catch(e => { console.warn('AR data load failed:', e); return null; }),
-      DataCache.getAPData().catch(e => { console.warn('AP data load failed:', e); return null; }),
-      DataCache.getGLData().catch(e => { console.warn('GL data load failed:', e); return null; }),
-      fetch('/api/cash-data').then(r => r.ok ? r.json() : null).catch(e => { console.warn('Cash data load failed:', e); return null; })
+    // Load ALL data sources for comprehensive analysis - use metrics API where available
+    const [metricsData, arMetrics, apMetrics, glData, cashData] = await Promise.all([
+      DataCache.getJobsMetrics().catch(e => { console.warn("Jobs metrics load failed:", e); return null; }),
+      DataCache.getARMetrics().catch(e => { console.warn("AR metrics load failed:", e); return null; }),
+      DataCache.getAPMetrics().catch(e => { console.warn("AP metrics load failed:", e); return null; }),
+      DataCache.getGLData().catch(e => { console.warn("GL data load failed:", e); return null; }),
+      fetch("/api/cash-data").then(r => r.ok ? r.json() : null).catch(e => { console.warn("Cash data load failed:", e); return null; })
+    ]);
+    
+    // Map metrics to expected format for backward compatibility
+    const jobsData = metricsData ? { job_budgets: metricsData.jobs } : null;
+    const arData = arMetrics ? { invoices: arMetrics.invoices } : null;
+    const apData = apMetrics ? { invoices: apMetrics.invoices } : null;
     ]);
     
     // FINANCIAL PERFORMANCE from GL Data
@@ -24194,12 +24238,18 @@ async function aggregateAllBusinessData() {
   };
   
   // Load all data sources in parallel using cache
-  const [glData, jobsData, arData, apData] = await Promise.all([
-    DataCache.getGLData().catch(e => { data.loadErrors.push('GL Data'); return null; }),
-    DataCache.getJobsData().catch(e => { data.loadErrors.push('Jobs Data'); return null; }),
-    DataCache.getARData().catch(e => { data.loadErrors.push('AR Data'); return null; }),
-    DataCache.getAPData().catch(e => { data.loadErrors.push('AP Data'); return null; })
+  // Load all data sources in parallel using cache - use metrics API where available
+  const [glData, metricsData, arMetrics, apMetrics] = await Promise.all([
+    DataCache.getGLData().catch(e => { data.loadErrors.push("GL Data"); return null; }),
+    DataCache.getJobsMetrics().catch(e => { data.loadErrors.push("Jobs Data"); return null; }),
+    DataCache.getARMetrics().catch(e => { data.loadErrors.push("AR Data"); return null; }),
+    DataCache.getAPMetrics().catch(e => { data.loadErrors.push("AP Data"); return null; })
   ]);
+  
+  // Map metrics to expected format for backward compatibility
+  const jobsData = metricsData ? { job_budgets: metricsData.jobs } : null;
+  const arData = arMetrics ? { invoices: arMetrics.invoices } : null;
+  const apData = apMetrics ? { invoices: apMetrics.invoices } : null;
   
   // Aggregate Financial Data - use gl_history_all with monthly columns
   if (glData && glData.gl_history_all) {
