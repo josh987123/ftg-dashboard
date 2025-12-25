@@ -6070,7 +6070,7 @@ async function deleteScheduledReport(id) {
 }
 
 function getCurrentView() {
-  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "jobOverview", "jobBudgets", "jobActuals", "overUnderBilling", "costCodes", "missingBudgets", "pmReport", "aiInsights", "payments", "apAging", "arAging", "jobAnalytics", "deptHeadMeeting", "monthEndReporting", "admin"];
+  const sections = ["overview", "revenue", "accounts", "incomeStatement", "balanceSheet", "cashFlows", "cashReports", "cashReport", "jobOverview", "jobBudgets", "jobActuals", "overUnderBilling", "costCodes", "missingBudgets", "pmReport", "aiInsights", "payments", "apAging", "arAging", "jobAnalytics", "deptHeadMeeting", "monthEndReporting", "admin"];
   for (const s of sections) {
     const el = document.getElementById(s);
     if (el && el.classList.contains("visible")) return s;
@@ -6138,6 +6138,14 @@ function getReportData() {
       subtitle: getCashBalancesSubtitle(),
       tableHtml: getCashBalancesTableHtml(),
       csvData: getCashBalancesCsvData(),
+      isWide: true
+    };
+  } else if (view === "cashReport") {
+    return {
+      title: "Cash Report",
+      subtitle: "FTG Builders Cash Position",
+      tableHtml: "",
+      csvData: null,
       isWide: true
     };
   } else if (view === "jobOverview") {
