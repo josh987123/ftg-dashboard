@@ -56,6 +56,22 @@ Critical alignment between page-level calculations and NLQ resolvers:
 - Jobs without budgets are excluded from these aggregations and counted separately
 - For "current backlog" queries, semantic catalog instructs AI to filter to active jobs only
 
+
+#### Canonical Metrics Layer (Dec 2025)
+All dashboard pages use a pre-computed metrics layer via `/api/metrics/*` endpoints as the single source of truth:
+- **Jobs Metrics**: `/api/metrics/jobs` - 4259 jobs with pre-computed percent_complete, earned_revenue, over_under_billing, backlog, margin, has_budget flag
+- **AR Metrics**: `/api/metrics/ar` - 324 invoices with aging buckets, summary totals (total_due, collectible, retainage)
+- **AP Metrics**: `/api/metrics/ap` - 967 invoices with aging buckets, summary totals
+- **PM Metrics**: `/api/metrics/pm` - 15 project managers with aggregated metrics
+- **Summary**: `/api/metrics/summary` - Quick access to counts and totals
+
+This ensures complete consistency between page-level displays and NLQ responses - all use the same pre-computed values from `metrics_etl.py`.
+
+#### Legitimate Raw Data Exceptions
+Three modules require raw detail-level data that isn't in the metrics cache:
+1. **Cost Codes Module** (`initCostCodes`): Needs individual `job_actuals` line items with cost code breakdown to display per-cost-code analysis
+2. **Job Costs Table** (`loadJobCostsData`): Needs individual `job_actuals` line items with cost code detail for cost breakdown display
+3. **Cash Report Safety Details** (`loadCashReportData`): Uses metrics for totals (AR, AP, OUB), but keeps raw AR/AP invoices for detailed safety breakdown sections showing individual invoices
 ### Responsive Design
 The application uses a mobile-first approach with a responsive sidebar, hamburger menu, CSS flexbox layouts, and orientation-aware media queries for landscape mobile/tablet compatibility.
 

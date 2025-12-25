@@ -6811,7 +6811,7 @@ function getJobBudgetsTableHtml() {
   // Calculate totals first
   let totalContract = 0, totalCost = 0, totalProfit = 0;
   jobBudgetsFiltered.forEach(job => {
-    totalContract += job.revised_contract || 0;
+    totalContract += job.contract || 0;
     totalCost += job.revised_cost || 0;
     totalProfit += job.estimated_profit || 0;
   });
@@ -6864,7 +6864,7 @@ function getJobBudgetsTableHtml() {
     <tbody>`;
   
   topJobs.forEach(job => {
-    const margin = job.revised_contract ? (job.estimated_profit / job.revised_contract) * 100 : 0;
+    const margin = job.contract ? (job.estimated_profit / job.contract) * 100 : 0;
     const profitColor = job.estimated_profit >= 0 ? '#059669' : '#dc2626';
     const desc = (job.job_description || '').substring(0, 40) + ((job.job_description || '').length > 40 ? '...' : '');
     
@@ -6872,7 +6872,7 @@ function getJobBudgetsTableHtml() {
       <td>${job.job_no}</td>
       <td>${desc}</td>
       <td>${(job.customer_name || '').substring(0, 25)}</td>
-      <td style="text-align:right;">${formatCurrency(job.revised_contract)}</td>
+      <td style="text-align:right;">${formatCurrency(job.contract)}</td>
       <td style="text-align:right;color:${profitColor};">${formatCurrency(job.estimated_profit)}</td>
       <td style="text-align:right;">${margin.toFixed(1)}%</td>
     </tr>`;
@@ -6896,9 +6896,9 @@ function getJobBudgetsCsvData() {
   
   jobBudgetsFiltered.forEach(job => {
     const status = getJobStatusLabel(job.job_status);
-    const margin = job.revised_contract ? (job.estimated_profit / job.revised_contract) * 100 : 0;
+    const margin = job.contract ? (job.estimated_profit / job.contract) * 100 : 0;
     
-    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.original_contract || 0},${job.tot_income_adj || 0},${job.revised_contract || 0},${job.original_cost || 0},${job.tot_cost_adj || 0},${job.revised_cost || 0},${job.estimated_profit || 0},${margin.toFixed(1)}\n`;
+    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.original_contract || 0},${job.tot_income_adj || 0},${job.contract || 0},${job.original_cost || 0},${job.tot_cost_adj || 0},${job.revised_cost || 0},${job.estimated_profit || 0},${margin.toFixed(1)}\n`;
   });
   
   return csv;
@@ -7243,7 +7243,7 @@ function getMissingBudgetsTableHtml() {
       <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${(job.customer_name || '').substring(0, 20)}</td>
       <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${status.label}</td>
       <td style="padding:6px;border-bottom:1px solid #e5e7eb;">${job.project_manager_name || ''}</td>
-      <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(job.revised_contract || 0)}</td>
+      <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(job.contract || 0)}</td>
       <td style="padding:6px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(job.revised_cost || 0)}</td>
     </tr>`;
   });
@@ -7267,7 +7267,7 @@ function getMissingBudgetsCsvData() {
   missingBudgetsFiltered.forEach(job => {
     const status = getJobStatusLabel(job.job_status);
     
-    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.revised_contract || 0},${job.revised_cost || 0}\n`;
+    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.contract || 0},${job.revised_cost || 0}\n`;
   });
   
   return csv;
@@ -16375,7 +16375,7 @@ function renderPmDonutChart() {
     if (!pmMap.has(pm)) {
       pmMap.set(pm, 0);
     }
-    pmMap.set(pm, pmMap.get(pm) + job.revised_contract);
+    pmMap.set(pm, pmMap.get(pm) + job.contract);
   });
   
   // Sort by contract value and get top 10
@@ -16450,7 +16450,7 @@ function renderCustomerDonutChart() {
     if (!custMap.has(cust)) {
       custMap.set(cust, 0);
     }
-    custMap.set(cust, custMap.get(cust) + job.revised_contract);
+    custMap.set(cust, custMap.get(cust) + job.contract);
   });
   
   // Sort by contract value and get top 10
@@ -16527,7 +16527,7 @@ function renderJobBreakdownByPm() {
     }
     const data = pmMap.get(pm);
     data.jobs++;
-    data.contract += job.revised_contract;
+    data.contract += job.contract;
     data.cost += job.revised_cost;
     data.profit += job.estimated_profit;
   });
@@ -16617,7 +16617,7 @@ function renderJobBreakdownByCustomer() {
     }
     const data = custMap.get(cust);
     data.jobs++;
-    data.contract += job.revised_contract;
+    data.contract += job.contract;
     data.cost += job.revised_cost;
     data.profit += job.estimated_profit;
   });
@@ -16775,8 +16775,8 @@ function renderJobBudgetsTable() {
     const profitClass = job.estimated_profit >= 0 ? 'positive' : 'negative';
     
     // Only calculate margin if both revised_contract AND revised_cost are non-zero
-    const hasValidMargin = job.revised_contract > 0 && job.revised_cost > 0;
-    const margin = hasValidMargin ? (job.estimated_profit / job.revised_contract) * 100 : null;
+    const hasValidMargin = job.contract > 0 && job.revised_cost > 0;
+    const margin = hasValidMargin ? (job.estimated_profit / job.contract) * 100 : null;
     const marginColor = hasValidMargin ? getMarginColor(margin) : 'transparent';
     const marginDisplay = hasValidMargin ? `${margin.toFixed(1)}%` : '-';
     
@@ -16788,7 +16788,7 @@ function renderJobBudgetsTable() {
       <td>${job.project_manager_name || ''}</td>
       <td class="number-col contract-detail-col ${contractHidden}">${formatCurrency(job.original_contract)}</td>
       <td class="number-col contract-detail-col ${contractHidden}">${formatCurrency(job.tot_income_adj)}</td>
-      <td class="number-col revised-contract-col">${formatCurrency(job.revised_contract)}</td>
+      <td class="number-col revised-contract-col">${formatCurrency(job.contract)}</td>
       <td class="number-col cost-detail-col ${costHidden}">${formatCurrency(job.original_cost)}</td>
       <td class="number-col cost-detail-col ${costHidden}">${formatCurrency(job.tot_cost_adj)}</td>
       <td class="number-col revised-cost-col">${formatCurrency(job.revised_cost)}</td>
@@ -16831,6 +16831,9 @@ let dcrJobsData = null;
 let dcrGLData = null;
 let dcrAccountGroups = null;
 let dcrInitialized = false;
+let dcrArMetrics = null;
+let dcrApMetrics = null;
+let dcrJobsMetrics = null;
 let dcrViewMode = 'weekly'; // 'daily' or 'weekly' - weekly is default
 
 async function initCashReport() {
@@ -16880,9 +16883,12 @@ async function loadCashReportData() {
     
     console.log('[DCR] Fetching cash data from:', apiUrl);
     
-    // Fetch all data in parallel (including GL data for operating expenses calculation)
-    const [cashResponse, arData, apData, jobsData, glData, accountGroups] = await Promise.all([
+    // Fetch all data in parallel - use metrics API for totals, raw data for detail breakdowns
+    const [cashResponse, arMetrics, apMetrics, jobsMetrics, arData, apData, jobsData, glData, accountGroups] = await Promise.all([
       fetch(apiUrl).then(r => r.json()),
+      DataCache.getARMetrics().catch(() => ({ summary: {} })),
+      DataCache.getAPMetrics().catch(() => ({ summary: {} })),
+      DataCache.getJobsMetrics().catch(() => ({ jobs: [] })),
       DataCache.getARData().catch(() => ({ invoices: [] })),
       DataCache.getAPData().catch(() => ({ invoices: [] })),
       DataCache.getJobsData().catch(() => ({ job_budgets: [] })),
@@ -16893,6 +16899,9 @@ async function loadCashReportData() {
     console.log('[DCR] Received data:', { 
       accounts: cashResponse.accounts?.length, 
       transactions: cashResponse.transactions?.length,
+      arTotal: arMetrics?.summary?.total_due,
+      apTotal: apMetrics?.summary?.total,
+      jobsMetrics: jobsMetrics?.jobs?.length,
       arInvoices: arData?.invoices?.length,
       apInvoices: apData?.invoices?.length,
       jobs: jobsData?.job_budgets?.length,
@@ -16904,6 +16913,9 @@ async function loadCashReportData() {
     }
     
     dcrData = cashResponse;
+    dcrArMetrics = arMetrics;
+    dcrApMetrics = apMetrics;
+    dcrJobsMetrics = jobsMetrics;
     dcrArData = arData;
     dcrApData = apData;
     dcrJobsData = jobsData;
@@ -16914,6 +16926,7 @@ async function loadCashReportData() {
     console.error('[DCR] Error loading cash report data:', error);
     showDcrError(error.message);
   }
+}
 }
 
 function showDcrError(message) {
@@ -17504,104 +17517,46 @@ function renderDcrSafetyCheck() {
   const ftgAccounts = dcrData.accounts.filter(a => isFTGBuildersAccount(a.name));
   const cashBalance = ftgAccounts.reduce((sum, a) => sum + a.balance, 0);
   
-  // Get total AR (receivables) - use calculated_amount_due or amount_due field
+  // Get total AR from metrics API (canonical source)
   let totalAR = 0;
-  if (dcrArData?.invoices) {
+  if (dcrArMetrics?.summary?.total_due) {
+    totalAR = dcrArMetrics.summary.total_due;
+  } else if (dcrArData?.invoices) {
+    // Fallback to raw data if metrics unavailable
     totalAR = dcrArData.invoices.reduce((sum, inv) => {
       const amount = parseFloat(inv.calculated_amount_due) || parseFloat(inv.amount_due) || 0;
       return sum + amount;
     }, 0);
   }
   
-  // Get total AP (payables) - use remaining_balance field
+  // Get total AP from metrics API (canonical source)
   let totalAP = 0;
-  if (dcrApData?.invoices) {
+  if (dcrApMetrics?.summary?.total) {
+    totalAP = dcrApMetrics.summary.total_due;
+  } else if (dcrApData?.invoices) {
+    // Fallback to raw data if metrics unavailable
     totalAP = dcrApData.invoices.reduce((sum, inv) => {
       const amount = parseFloat(inv.remaining_balance) || 0;
       return sum + amount;
     }, 0);
   }
   
-  // Get Net Over/Under Bill from oubData (same calculation used on Over/Under Billing page)
-  // If oubData is already populated, use it directly
+  // Get Net Over/Under Bill from metrics API (canonical source)
   let netOUB = 0;
-  if (typeof oubData !== 'undefined' && oubData.length > 0) {
-    // Use pre-calculated oubData from Over/Under Billing page
+  if (dcrJobsMetrics?.jobs && dcrJobsMetrics.jobs.length > 0) {
+    // Use pre-computed over_under_billing from jobs metrics for active jobs with contracts
+    dcrJobsMetrics.jobs.forEach(job => {
+      if (job.job_status === 'A' && (job.contract > 0 || job.over_under_billing !== 0)) {
+        netOUB += job.over_under_billing || 0;
+      }
+    });
+    console.log('[DCR] Using jobs metrics for Net OUB:', netOUB);
+  } else if (typeof oubData !== 'undefined' && oubData.length > 0) {
+    // Fallback to pre-calculated oubData from Over/Under Billing page
     oubData.forEach(job => {
       netOUB += job.over_under || 0;
     });
-    console.log('[DCR] Using oubData for Net OUB:', netOUB);
-  } else if (dcrJobsData?.job_budgets) {
-    // oubData not yet built - build it using the same logic as Over/Under Billing page
-    // Set up jobBudgetsData
-    if (!jobBudgetsData || jobBudgetsData.length === 0) {
-      jobBudgetsData = dcrJobsData.job_budgets;
-    }
-    
-    // Build aggregated actuals by job (same as loadJobActualsData)
-    if (!jobActualsData || jobActualsData.length === 0) {
-      const jobActualsRaw = dcrJobsData.job_actuals || [];
-      const jobMap = new Map();
-      jobActualsRaw.forEach(row => {
-        const jobNo = String(row.Job_No || row.job_no || '');
-        const actualCost = parseFloat(row.Value || row.actual_cost) || 0;
-        if (!jobNo || jobNo === 'undefined') return;
-        
-        if (!jobMap.has(jobNo)) {
-          jobMap.set(jobNo, { job_no: jobNo, actual_cost: 0 });
-        }
-        jobMap.get(jobNo).actual_cost += actualCost;
-      });
-      jobActualsData = Array.from(jobMap.values());
-    }
-    
-    // Build billed revenue map
-    if (!oubBilledRevenueMap || oubBilledRevenueMap.size === 0) {
-      oubBilledRevenueMap = new Map();
-      (dcrJobsData.job_billed_revenue || []).forEach(row => {
-        const jobNo = String(row.Job_No || row.job_no || '');
-        if (jobNo) {
-          const billedRev = parseFloat(row.Billed_Revenue || row.billed_revenue) || 0;
-          oubBilledRevenueMap.set(jobNo, billedRev);
-        }
-      });
-    }
-    
-    // Build oubData inline from job data (replaces removed buildOubData function)
-    oubData = (jobBudgetsData || []).filter(job => {
-      const status = job.Job_Status || job.job_status || "";
-      const contract = parseFloat(job.Revised_Contract || job.revised_contract) || 0;
-      return status === "A" && contract > 0;
-    }).map(job => {
-      const jobNo = String(job.Job_No || job.job_no || "");
-      const contract = parseFloat(job.Revised_Contract || job.revised_contract) || 0;
-      const estCost = parseFloat(job.Revised_Cost || job.revised_cost) || 0;
-      const estProfit = contract - estCost;
-      const actualCost = (jobActualsData.find(a => a.job_no === jobNo) || {}).actual_cost || 0;
-      const billedRev = oubBilledRevenueMap.get(jobNo) || 0;
-      const pctComplete = estCost > 0 ? (actualCost / estCost) * 100 : 0;
-      const earnedRev = estCost > 0 ? (actualCost / estCost) * contract : 0;
-      const overUnder = billedRev - earnedRev;
-      return {
-        job_no: jobNo,
-        job_description: job.Job_Description || job.job_description || "",
-        project_manager_name: job.Project_Manager || job.project_manager || "",
-        contract_value: contract,
-        est_cost: estCost,
-        est_profit: estProfit,
-        actual_cost: actualCost,
-        pct_complete: pctComplete,
-        billed_revenue: billedRev,
-        earned_revenue: earnedRev,
-        over_under: overUnder
-      };
-    });
-    
-    // Now sum the over_under values
-    oubData.forEach(job => {
-      netOUB += job.over_under || 0;
-    });
-    console.log('[DCR] Built oubData for Net OUB:', netOUB);
+    console.log('[DCR] Using oubData fallback for Net OUB:', netOUB);
   }
   
   // Calculate 3-month operating expense reserve (SG&A)
@@ -18338,7 +18293,7 @@ function renderProfitabilityHeatmap() {
     // For closed jobs, use actual billed revenue and actual cost
     // For active jobs, use revised contract and revised cost (budget)
     const isClosed = job.job_status === 'C';
-    const contract = isClosed ? (job.billed_revenue || 0) : (job.revised_contract || 0);
+    const contract = isClosed ? (job.billed_revenue || 0) : (job.contract || 0);
     const cost = isClosed ? (job.actual_cost || 0) : (job.revised_cost || 0);
     
     // Find size range based on contract/revenue value
@@ -18584,7 +18539,7 @@ function renderSinglePmHeatmap(container, pmName) {
     
     // For closed jobs, use actual billed revenue and actual cost
     // For active jobs, use revised contract and revised cost (budget/estimated)
-    const contract = isClosed ? (job.billed_revenue || 0) : (job.revised_contract || 0);
+    const contract = isClosed ? (job.billed_revenue || 0) : (job.contract || 0);
     const cost = isClosed ? (job.actual_cost || 0) : (job.revised_cost || 0);
     
     // Find size range based on contract/revenue value
@@ -19041,12 +18996,12 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
     if (!pmStats[pm]) pmStats[pm] = { jobs: 0, jobsWithBudget: 0, contract: 0, contractWithBudget: 0, cost: 0, billed: 0, earned: 0 };
     pmStats[pm].jobs++;
     // Track jobs with valid budgets and their contract values separately
-    const hasBudget = (job.revised_contract || 0) > 0 && (job.revised_cost || 0) > 0;
+    const hasBudget = (job.contract || 0) > 0 && (job.revised_cost || 0) > 0;
     if (hasBudget) {
       pmStats[pm].jobsWithBudget++;
-      pmStats[pm].contractWithBudget += job.revised_contract || 0;
+      pmStats[pm].contractWithBudget += job.contract || 0;
     }
-    pmStats[pm].contract += job.revised_contract || 0;
+    pmStats[pm].contract += job.contract || 0;
     pmStats[pm].cost += job.revised_cost || 0;
     pmStats[pm].billed += job.billed_revenue || 0;
     pmStats[pm].earned += job.earned_revenue || 0;
@@ -19233,9 +19188,9 @@ function renderJoClientSummaryTable(jobs) {
     if (!clientMap[client]) {
       clientMap[client] = { contract: 0, cost: 0, profit: 0, billedLastMonth: 0, billedToDate: 0, costToDate: 0 };
     }
-    clientMap[client].contract += job.revised_contract || 0;
+    clientMap[client].contract += job.contract || 0;
     clientMap[client].cost += job.revised_cost || 0;
-    clientMap[client].profit += (job.revised_contract || 0) - (job.revised_cost || 0);
+    clientMap[client].profit += (job.contract || 0) - (job.revised_cost || 0);
     clientMap[client].billedToDate += job.billed_revenue || 0;
     clientMap[client].costToDate += job.actual_cost || 0;
   });
@@ -19476,7 +19431,7 @@ function calculatePmRadarData() {
       };
     }
     pmStats[pm].jobCount++;
-    const contract = parseFloat(budget.revised_contract) || job.revised_contract || 0;
+    const contract = parseFloat(budget.revised_contract) || job.contract || 0;
     const cost = parseFloat(budget.revised_cost) || job.revised_cost || 0;
     // Track jobs with valid budgets and their contract values separately for avgJobSize
     if (contract > 0 && cost > 0) {
@@ -20066,7 +20021,7 @@ function renderWaterfallChart() {
   if (groupBy === 'portfolio') {
     // Single waterfall for entire portfolio
     const totals = activeJobs.reduce((acc, job) => {
-      acc.contract += job.revised_contract || 0;
+      acc.contract += job.contract || 0;
       acc.cost += job.revised_cost || 0;
       return acc;
     }, { contract: 0, cost: 0 });
@@ -20086,7 +20041,7 @@ function renderWaterfallChart() {
       if (!pmStats[pm]) {
         pmStats[pm] = { contract: 0, cost: 0 };
       }
-      pmStats[pm].contract += job.revised_contract || 0;
+      pmStats[pm].contract += job.contract || 0;
       pmStats[pm].cost += job.revised_cost || 0;
     });
     
@@ -20113,7 +20068,7 @@ function renderWaterfallChart() {
       if (!clientStats[client]) {
         clientStats[client] = { contract: 0, cost: 0 };
       }
-      clientStats[client].contract += job.revised_contract || 0;
+      clientStats[client].contract += job.contract || 0;
       clientStats[client].cost += job.revised_cost || 0;
     });
     
@@ -20142,7 +20097,7 @@ function renderWaterfallChart() {
   if (groupBy === 'portfolio') {
     // Special waterfall visualization for portfolio
     const totals = activeJobs.reduce((acc, job) => {
-      acc.contract += job.revised_contract || 0;
+      acc.contract += job.contract || 0;
       acc.cost += job.revised_cost || 0;
       return acc;
     }, { contract: 0, cost: 0 });
@@ -20372,11 +20327,11 @@ function getJobOverviewCsvData() {
   joFiltered.forEach(job => {
     const status = getJobStatusLabel(job.job_status);
     const overUnder = (job.billed_revenue || 0) - (job.earned_revenue || 0);
-    const margin = job.revised_contract > 0 && job.revised_cost > 0 
-      ? ((job.revised_contract - job.revised_cost) / job.revised_contract) * 100 
+    const margin = job.contract > 0 && job.revised_cost > 0 
+      ? ((job.contract - job.revised_cost) / job.contract) * 100 
       : 0;
     
-    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.revised_contract || 0},${job.billed_revenue || 0},${job.earned_revenue || 0},${overUnder},${margin.toFixed(1)}\n`;
+    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.contract || 0},${job.billed_revenue || 0},${job.earned_revenue || 0},${overUnder},${margin.toFixed(1)}\n`;
   });
   
   return csv;
@@ -20552,7 +20507,7 @@ function aggregateJobsByField(jobs, field) {
       };
     }
     groups[key].jobCount++;
-    groups[key].contractValue += job.revised_contract || 0;
+    groups[key].contractValue += job.contract || 0;
     groups[key].revisedCost += job.revised_cost || 0;
     groups[key].estimatedProfit += job.estimated_profit || 0;
   });
@@ -21672,6 +21627,8 @@ function setupJobCostsEventListeners() {
   });
 }
 
+// EXCEPTION: Uses raw DataCache.getJobsData() - needs job_actuals line items with cost code detail
+// Cannot use metrics API as it only provides job-level aggregates, not individual cost code breakdown
 async function loadJobCostsData() {
   const loadingOverlay = document.getElementById('jobCostsLoadingOverlay');
   if (loadingOverlay) loadingOverlay.classList.remove('hidden');
@@ -22106,7 +22063,7 @@ function renderMissingBudgetsTable() {
       <td>${job.project_manager_name || ''}</td>
       <td class="number-col contract-detail-col hidden">${formatCurrency(job.original_contract)}</td>
       <td class="number-col contract-detail-col hidden">${formatCurrency(job.tot_income_adj)}</td>
-      <td class="number-col revised-contract-col">${formatCurrency(job.revised_contract)}</td>
+      <td class="number-col revised-contract-col">${formatCurrency(job.contract)}</td>
       <td class="number-col cost-detail-col hidden">${formatCurrency(job.original_cost)}</td>
       <td class="number-col cost-detail-col hidden">${formatCurrency(job.tot_cost_adj)}</td>
       <td class="number-col revised-cost-col">${formatCurrency(job.revised_cost)}</td>
@@ -22428,7 +22385,7 @@ function updatePmReport() {
   let allJobs = pmJobs.map(job => {
     const jobNo = String(job.job_no);
     const budget = budgetMap.get(jobNo) || {};
-    const revisedContract = parseFloat(budget.revised_contract) || job.revised_contract || 0;
+    const revisedContract = parseFloat(budget.revised_contract) || job.contract || 0;
     const revisedCost = parseFloat(budget.revised_cost) || job.revised_cost || 0;
     const actualCost = job.actual_cost || 0;
     const earnedRevenue = job.earned_revenue || 0;
@@ -23229,7 +23186,7 @@ function renderPmrOverUnderTable() {
       <td>${job.job_no || ''}</td>
       <td>${job.job_description || ''}</td>
       <td>${job.customer_name || ''}</td>
-      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(job.revised_contract)}</td>
+      <td class="text-right pmr-expandable-col">${formatCurrencyCompact(job.contract)}</td>
       <td class="text-right pmr-expandable-col">${formatCurrencyCompact(job.actual_cost)}</td>
       <td class="text-right pmr-expandable-col">${pctComplete.toFixed(1)}%</td>
       <td class="text-right pmr-expandable-col">${formatCurrencyCompact(job.earned_revenue)}</td>
@@ -23425,7 +23382,7 @@ function renderPmrMissingBudgetsTable() {
       <td class="pmr-mb-expandable-col">${job.customer_name || ''}</td>
       <td class="pmr-mb-expandable-col"><span class="job-status-badge ${status.class}">${status.label}</span></td>
       <td class="text-right">${formatCurrency(job.actual_cost)}</td>
-      <td class="text-right">${formatCurrency(job.revised_contract)}</td>
+      <td class="text-right">${formatCurrency(job.contract)}</td>
       <td class="text-right">${formatCurrency(job.revised_cost)}</td>
       <td><span class="pmr-issue-badge ${job.issueClass}">${job.issue}</span></td>
     </tr>`;
@@ -23497,7 +23454,7 @@ function renderPmrClientSummaryTable() {
     }
     
     const c = clientMap.get(client);
-    c.est_contract += job.revised_contract || 0;
+    c.est_contract += job.contract || 0;
     c.est_cost += job.revised_cost || 0;
     c.billed_to_date += job.billed_revenue || 0;
     c.cost_to_date += job.actual_cost || 0;
@@ -24342,7 +24299,7 @@ async function aggregateAllBusinessData() {
     
     activeJobsList.forEach(job => {
       const jobNo = String(job.job_no);
-      const contract = parseFloat(job.revised_contract) || 0;
+      const contract = parseFloat(job.contract) || 0;
       const cost = parseFloat(job.revised_cost) || 0;
       const actualCost = actualsMap.get(jobNo) || 0;
       const billed = billedMap.get(jobNo) || 0;
@@ -25091,6 +25048,8 @@ async function initCostCodes() {
     // Clear budget lookup cache to ensure fresh data
     ccBudgetLookupCache = null;
     
+    // EXCEPTION: Uses raw DataCache.getJobsData() - needs job_actuals line items for cost code breakdown
+    // Cannot use metrics API as it only provides job-level aggregates, not cost code detail
     // Always load fresh job data to avoid stale/incomplete data issues
     const data = await DataCache.getJobsData();
     console.log('[CostCodes] Data loaded:', data.job_budgets?.length || 0, 'budgets,', data.job_actuals?.length || 0, 'actuals');
@@ -25100,11 +25059,11 @@ async function initCostCodes() {
         ...job,
         original_contract: parseFloat(job.original_contract) || 0,
         tot_income_adj: parseFloat(job.tot_income_adj) || 0,
-        revised_contract: parseFloat(job.revised_contract) || 0,
+        revised_contract: parseFloat(job.contract) || 0,
         original_cost: parseFloat(job.original_cost) || 0,
         tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
         revised_cost: parseFloat(job.revised_cost) || 0,
-        estimated_profit: (parseFloat(job.revised_contract) || 0) - (parseFloat(job.revised_cost) || 0)
+        estimated_profit: (parseFloat(job.contract) || 0) - (parseFloat(job.revised_cost) || 0)
       }));
     }
     
