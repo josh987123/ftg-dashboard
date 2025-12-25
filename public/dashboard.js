@@ -17543,12 +17543,16 @@ function renderDcrSafetyCheck() {
   const opExpEl = document.getElementById('dcrSafetyOpExp');
   const totalEl = document.getElementById('dcrSafetyTotal');
   
-  if (cashEl) cashEl.textContent = formatCurrency(cashBalance);
-  if (arEl) arEl.textContent = formatCurrency(totalAR);
-  if (apEl) apEl.textContent = formatCurrency(totalAP);
+  const formatM = (val) => {
+    const m = val / 1000000;
+    return (val < 0 ? '-' : '') + '$' + Math.abs(m).toFixed(1) + 'M';
+  };
+  if (cashEl) cashEl.textContent = formatM(cashBalance);
+  if (arEl) arEl.textContent = formatM(totalAR);
+  if (apEl) apEl.textContent = formatM(totalAP);
   
   if (oubEl) {
-    oubEl.textContent = formatCurrency(Math.abs(netOUB));
+    oubEl.textContent = formatM(Math.abs(netOUB));
     // Add class based on whether it's over or under billed
     oubEl.className = 'dcr-safety-value ' + (netOUB >= 0 ? 'negative' : 'positive');
     // Update label to show over vs under
@@ -17559,12 +17563,12 @@ function renderDcrSafetyCheck() {
   }
   
   if (opExpEl) {
-    opExpEl.textContent = formatCurrency(opExpenseReserve);
+    opExpEl.textContent = formatM(opExpenseReserve);
     opExpEl.className = 'dcr-safety-value negative';
   }
   
   if (totalEl) {
-    totalEl.textContent = formatCurrency(safetyTotal);
+    totalEl.textContent = formatM(safetyTotal);
     totalEl.className = 'dcr-safety-total ' + (safetyTotal >= 0 ? 'positive' : 'negative');
   }
 }
