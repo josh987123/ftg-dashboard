@@ -44,7 +44,8 @@ Critical alignment between page-level calculations and NLQ resolvers:
 - **AR Aging**: Only includes invoices with `calculated_amount_due > 0`; collectible = calc_due - retainage; aging buckets use collectible amounts; retainage tracked separately; total_due = collectible + retainage; includes weighted avg days outstanding and top5 customer concentration
 - **AP Aging**: Uses remaining_balance > 0; includes weighted avg days outstanding and top5 vendor concentration
 - **Income Statement**: Revenue = accounts 4000 + 4090; Direct Expenses = 5000-5025 + 5200 + 5300 + 5410 + 5500; Indirect = 6xxx; Operating Expenses = 7000-7599; formulas match account_groups.json
-- **Jobs**: percent_complete = actual_cost / budget_cost * 100 (0% when no budget!); earned_revenue = (actual_cost/budget_cost) * contract; margin = (contract - budget_cost) / contract * 100; over_under_billing = billed - earned_revenue; backlog = contract - earned_revenue; has_budget flag tracks jobs without budgets
+- **Jobs**: percent_complete = actual_cost / budget_cost * 100 (0% when no budget!); earned_revenue = (actual_cost/budget_cost) * contract; over_under_billing = billed - earned_revenue; backlog = contract - earned_revenue; has_budget flag tracks jobs without budgets
+- **Job Profit/Margin (Dec 2025)**: Closed jobs (status='C') use actual: profit = billed - actual_cost, margin = profit/billed. Active jobs use projected: profit = contract - budget_cost, margin = profit/contract. Jobs missing revenue/cost data excluded from profit aggregations via valid_for_profit flag.
 
 #### Important Data Flags
 - **has_budget**: Critical flag on jobs - many jobs show 0% completion because they have no budget (revised_cost = 0). NLQ explains this and shows actual_cost instead.

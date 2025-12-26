@@ -37,6 +37,18 @@ def calculate_job_metrics(job: dict, actual_cost: float, billed: float) -> dict:
     Calculate canonical job metrics.
     This is THE definition for how job metrics are computed.
     
+    PROFIT/MARGIN CALCULATION RULES:
+    - Closed Jobs (status='C'): 
+        profit = billed - actual_cost
+        margin = profit / billed * 100
+        Valid only if billed > 0 AND actual_cost > 0
+    - Active Jobs (status='A', 'O', 'I'):
+        profit = contract - budget_cost (projected)
+        margin = profit / contract * 100
+        Valid only if contract > 0 AND budget_cost > 0
+    
+    Jobs with missing revenue/cost data are excluded from profit aggregations.
+    
     Args:
         job: Raw job budget record
         actual_cost: Sum of actuals for this job
@@ -50,8 +62,10 @@ def calculate_job_metrics(job: dict, actual_cost: float, billed: float) -> dict:
     contract = float(job.get('revised_contract') or 0)
     original_contract = float(job.get('original_contract') or 0)
     original_cost = float(job.get('original_cost') or 0)
+    job_status = job.get('job_status', '')
     
     has_budget = budget_cost > 0
+    is_closed = job_status == 'C'
     
     if has_budget:
         percent_complete = min((actual_cost / budget_cost) * 100, 100) if budget_cost > 0 else 0
@@ -61,16 +75,29 @@ def calculate_job_metrics(job: dict, actual_cost: float, billed: float) -> dict:
         earned_revenue = 0
     
     backlog = contract - earned_revenue
-    estimated_profit = contract - budget_cost
-    margin = (estimated_profit / contract * 100) if contract > 0 else 0
     over_under_billing = billed - earned_revenue
+    
+    if is_closed:
+        actual_profit = billed - actual_cost
+        actual_margin = (actual_profit / billed * 100) if billed > 0 else 0
+        valid_for_profit = billed > 0 and actual_cost > 0
+        profit = actual_profit
+        margin = actual_margin
+        profit_basis = 'actual'
+    else:
+        projected_profit = contract - budget_cost
+        projected_margin = (projected_profit / contract * 100) if contract > 0 else 0
+        valid_for_profit = contract > 0 and budget_cost > 0
+        profit = projected_profit
+        margin = projected_margin
+        profit_basis = 'projected'
     
     return {
         'job_no': job_no,
         'job_description': job.get('job_description', ''),
         'project_manager': job.get('project_manager_name', ''),
         'customer_name': job.get('customer_name', ''),
-        'job_status': job.get('job_status', ''),
+        'job_status': job_status,
         'original_contract': original_contract,
         'contract': contract,
         'original_cost': original_cost,
@@ -81,8 +108,10 @@ def calculate_job_metrics(job: dict, actual_cost: float, billed: float) -> dict:
         'percent_complete': round(percent_complete, 2),
         'earned_revenue': round(earned_revenue, 2),
         'backlog': round(backlog, 2),
-        'estimated_profit': round(estimated_profit, 2),
+        'profit': round(profit, 2),
         'margin': round(margin, 2),
+        'valid_for_profit': valid_for_profit,
+        'profit_basis': profit_basis,
         'over_under_billing': round(over_under_billing, 2)
     }
 
@@ -261,6 +290,12 @@ def aggregate_pm_metrics(job_metrics: List[dict], exclude_josh: bool = True) -> 
     """
     Aggregate job metrics by project manager.
     
+    PROFIT AGGREGATION RULES:
+    - Only jobs with valid_for_profit=True are included in profit/margin calculations
+    - For closed jobs: profit = billed - actual_cost, margin = profit/billed
+    - For active jobs: profit = contract - budget_cost, margin = profit/contract
+    - Jobs missing cost/revenue data are excluded from profit aggregations
+    
     Args:
         job_metrics: List of computed job metrics
         exclude_josh: Whether to exclude Josh Angelo from analysis
@@ -284,13 +319,14 @@ def aggregate_pm_metrics(job_metrics: List[dict], exclude_josh: bool = True) -> 
                 'total_jobs': 0,
                 'active_jobs': 0,
                 'jobs_with_budget': 0,
+                'jobs_valid_for_profit': 0,
                 'total_contract': 0,
                 'total_budget': 0,
                 'total_actual': 0,
                 'total_billed': 0,
                 'total_earned_revenue': 0,
                 'total_backlog': 0,
-                'total_estimated_profit': 0,
+                'total_profit': 0,
                 'margin_sum': 0,
                 'completion_sum': 0
             }
@@ -308,32 +344,35 @@ def aggregate_pm_metrics(job_metrics: List[dict], exclude_josh: bool = True) -> 
             pm_data[pm]['jobs_with_budget'] += 1
             pm_data[pm]['total_earned_revenue'] += job['earned_revenue']
             pm_data[pm]['total_backlog'] += job['backlog']
-            pm_data[pm]['total_estimated_profit'] += job['estimated_profit']
-            pm_data[pm]['margin_sum'] += job['margin']
             pm_data[pm]['completion_sum'] += job['percent_complete']
+        
+        if job.get('valid_for_profit', False):
+            pm_data[pm]['jobs_valid_for_profit'] += 1
+            pm_data[pm]['total_profit'] += job['profit']
+            pm_data[pm]['margin_sum'] += job['margin']
     
     results = []
     for pm, data in pm_data.items():
         jobs_with_budget = data['jobs_with_budget']
-        avg_margin = (data['margin_sum'] / jobs_with_budget) if jobs_with_budget > 0 else 0
+        jobs_valid_for_profit = data['jobs_valid_for_profit']
+        avg_margin = (data['margin_sum'] / jobs_valid_for_profit) if jobs_valid_for_profit > 0 else 0
         avg_completion = (data['completion_sum'] / jobs_with_budget) if jobs_with_budget > 0 else 0
-        overall_margin = ((data['total_contract'] - data['total_budget']) / data['total_contract'] * 100) if data['total_contract'] > 0 else 0
         
         results.append({
             'project_manager': pm,
             'total_jobs': data['total_jobs'],
             'active_jobs': data['active_jobs'],
             'jobs_with_budget': jobs_with_budget,
+            'jobs_valid_for_profit': jobs_valid_for_profit,
             'total_contract': round(data['total_contract'], 2),
             'total_budget': round(data['total_budget'], 2),
             'total_actual': round(data['total_actual'], 2),
             'total_billed': round(data['total_billed'], 2),
             'total_earned_revenue': round(data['total_earned_revenue'], 2),
             'total_backlog': round(data['total_backlog'], 2),
-            'total_estimated_profit': round(data['total_estimated_profit'], 2),
+            'total_profit': round(data['total_profit'], 2),
             'avg_margin': round(avg_margin, 2),
-            'avg_completion': round(avg_completion, 2),
-            'overall_margin': round(overall_margin, 2)
+            'avg_completion': round(avg_completion, 2)
         })
     
     return sorted(results, key=lambda x: x['total_contract'], reverse=True)
@@ -501,9 +540,18 @@ def get_ap_summary(ap_metrics: List[dict]) -> dict:
 
 
 def get_jobs_summary(job_metrics: List[dict], active_only: bool = False) -> dict:
-    """Get overall jobs summary totals."""
+    """
+    Get overall jobs summary totals.
+    
+    PROFIT AGGREGATION RULES:
+    - Only jobs with valid_for_profit=True are included in profit/margin calculations
+    - For closed jobs: profit = billed - actual_cost
+    - For active jobs: profit = contract - budget_cost (projected)
+    - Jobs missing cost/revenue data are excluded from profit aggregations
+    """
     jobs = [j for j in job_metrics if j['job_status'] == 'A'] if active_only else job_metrics
     jobs_with_budget = [j for j in jobs if j['has_budget']]
+    jobs_valid_for_profit = [j for j in jobs if j.get('valid_for_profit', False)]
     
     total_contract = sum(j['contract'] for j in jobs)
     total_budget = sum(j['budget_cost'] for j in jobs)
@@ -512,26 +560,25 @@ def get_jobs_summary(job_metrics: List[dict], active_only: bool = False) -> dict
     
     total_earned = sum(j['earned_revenue'] for j in jobs_with_budget)
     total_backlog = sum(j['backlog'] for j in jobs_with_budget)
-    total_profit = sum(j['estimated_profit'] for j in jobs_with_budget)
+    total_profit = sum(j['profit'] for j in jobs_valid_for_profit)
     
-    avg_margin = (sum(j['margin'] for j in jobs_with_budget) / len(jobs_with_budget)) if jobs_with_budget else 0
+    avg_margin = (sum(j['margin'] for j in jobs_valid_for_profit) / len(jobs_valid_for_profit)) if jobs_valid_for_profit else 0
     avg_completion = (sum(j['percent_complete'] for j in jobs_with_budget) / len(jobs_with_budget)) if jobs_with_budget else 0
-    overall_margin = ((total_contract - total_budget) / total_contract * 100) if total_contract > 0 else 0
     
     return {
         'total_jobs': len(jobs),
         'jobs_with_budget': len(jobs_with_budget),
         'jobs_without_budget': len(jobs) - len(jobs_with_budget),
+        'jobs_valid_for_profit': len(jobs_valid_for_profit),
         'total_contract': round(total_contract, 2),
         'total_budget': round(total_budget, 2),
         'total_actual': round(total_actual, 2),
         'total_billed': round(total_billed, 2),
         'total_earned_revenue': round(total_earned, 2),
         'total_backlog': round(total_backlog, 2),
-        'total_estimated_profit': round(total_profit, 2),
+        'total_profit': round(total_profit, 2),
         'avg_margin': round(avg_margin, 2),
-        'avg_completion': round(avg_completion, 2),
-        'overall_margin': round(overall_margin, 2)
+        'avg_completion': round(avg_completion, 2)
     }
 
 
