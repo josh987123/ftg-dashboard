@@ -752,7 +752,7 @@ def api_email_cash_report():
         return jsonify({'error': str(e)}), 500
 
 def generate_cash_report_html_email(report_data, ai_analysis=''):
-    """Generate HTML email content for Cash Report with embedded styling"""
+    """Generate HTML email content for Cash Report with Outlook-compatible styling"""
     import re
     from datetime import datetime
     
@@ -782,24 +782,19 @@ def generate_cash_report_html_email(report_data, ai_analysis=''):
     
     # Handle net change formatting with proper sign and color
     if net_change_numeric is not None and net_change_numeric != 0:
-        # Non-zero numeric value - use sign and color
         sign = '+' if net_change_numeric > 0 else '-'
         net_change_color = '#16a34a' if net_change_numeric > 0 else '#dc2626'
         abs_val = abs(net_change_numeric)
-        # Format with full precision like dashboard
         net_change_raw = sign + '${:,.0f}'.format(abs_val)
     elif net_change_numeric == 0:
-        # Zero - neutral display, no sign
         net_change_color = '#1e293b'
         net_change_raw = '$0'
     elif net_change_raw and net_change_raw != '--':
-        # Fallback to string parsing if no numeric value provided
         if net_change_raw.startswith('-'):
             net_change_color = '#dc2626'
         elif net_change_raw.startswith('+'):
             net_change_color = '#16a34a'
         else:
-            # Parse the string to determine if positive (no sign means positive)
             net_change_color = '#16a34a'
             if not net_change_raw.startswith('$'):
                 net_change_raw = '+' + net_change_raw
@@ -808,90 +803,101 @@ def generate_cash_report_html_email(report_data, ai_analysis=''):
     else:
         net_change_color = '#1e293b'
     
-    # Build deposits table rows
+    # Build deposits table rows with Outlook-compatible styling
     deposits_rows = ''
     for d in deposits[:5]:
-        deposits_rows += '<tr style="border-bottom:1px solid #e2e8f0;">'
-        deposits_rows += '<td style="padding:12px 8px;font-size:14px;color:#64748b;">' + d.get("date", "") + '</td>'
+        deposits_rows += '<tr>'
+        deposits_rows += '<td style="padding:12px 8px;font-size:14px;color:#64748b;border-bottom:1px solid #e2e8f0;">' + d.get("date", "") + '</td>'
         desc = d.get("description", "")[:40]
-        deposits_rows += '<td style="padding:12px 8px;font-size:14px;color:#1e293b;">' + desc + '</td>'
-        deposits_rows += '<td style="padding:12px 8px;font-size:14px;color:#16a34a;font-weight:600;text-align:right;">' + d.get("amount", "") + '</td>'
+        deposits_rows += '<td style="padding:12px 8px;font-size:14px;color:#1e293b;border-bottom:1px solid #e2e8f0;">' + desc + '</td>'
+        deposits_rows += '<td style="padding:12px 8px;font-size:14px;color:#16a34a;font-weight:600;text-align:right;border-bottom:1px solid #e2e8f0;">' + d.get("amount", "") + '</td>'
         deposits_rows += '</tr>'
         if d.get('attribution'):
-            deposits_rows += '<tr style="background:#f8fafc;"><td colspan="3" style="padding:4px 8px 12px 24px;font-size:12px;color:#3b82f6;">\u25cf ' + d.get("attribution", "") + '</td></tr>'
+            deposits_rows += '<tr><td colspan="3" bgcolor="#f8fafc" style="background-color:#f8fafc;padding:4px 8px 12px 24px;font-size:12px;color:#3b82f6;">&#8226; ' + d.get("attribution", "") + '</td></tr>'
     
-    # Build withdrawals table rows
+    # Build withdrawals table rows with Outlook-compatible styling
     withdrawals_rows = ''
     for w in withdrawals[:5]:
-        withdrawals_rows += '<tr style="border-bottom:1px solid #e2e8f0;">'
-        withdrawals_rows += '<td style="padding:12px 8px;font-size:14px;color:#64748b;">' + w.get("date", "") + '</td>'
+        withdrawals_rows += '<tr>'
+        withdrawals_rows += '<td style="padding:12px 8px;font-size:14px;color:#64748b;border-bottom:1px solid #e2e8f0;">' + w.get("date", "") + '</td>'
         desc = w.get("description", "")[:40]
-        withdrawals_rows += '<td style="padding:12px 8px;font-size:14px;color:#1e293b;">' + desc + '</td>'
-        withdrawals_rows += '<td style="padding:12px 8px;font-size:14px;color:#dc2626;font-weight:600;text-align:right;">' + w.get("amount", "") + '</td>'
+        withdrawals_rows += '<td style="padding:12px 8px;font-size:14px;color:#1e293b;border-bottom:1px solid #e2e8f0;">' + desc + '</td>'
+        withdrawals_rows += '<td style="padding:12px 8px;font-size:14px;color:#dc2626;font-weight:600;text-align:right;border-bottom:1px solid #e2e8f0;">' + w.get("amount", "") + '</td>'
         withdrawals_rows += '</tr>'
         if w.get('attribution'):
-            withdrawals_rows += '<tr style="background:#f8fafc;"><td colspan="3" style="padding:4px 8px 12px 24px;font-size:12px;color:#3b82f6;">\u25cf ' + w.get("attribution", "") + '</td></tr>'
+            withdrawals_rows += '<tr><td colspan="3" bgcolor="#f8fafc" style="background-color:#f8fafc;padding:4px 8px 12px 24px;font-size:12px;color:#3b82f6;">&#8226; ' + w.get("attribution", "") + '</td></tr>'
     
-    # Build weekly balances vertical bar chart
+    # Build weekly balances vertical bar chart with Outlook-compatible table cells
     daily_chart_html = ''
     if daily_balances and len(daily_balances) > 0:
         balances = [b.get('balance', 0) for b in daily_balances]
         max_balance = max(balances) if balances else 1
         min_balance = min(balances) if balances else 0
         
-        # Calculate Y-axis range to show differences (don't start at zero)
         range_buffer = (max_balance - min_balance) * 0.15
         y_min = min_balance - range_buffer
         y_max = max_balance + range_buffer
         y_range = y_max - y_min if y_max > y_min else 1
         
-        chart_height = 150
+        chart_height = 120
         bar_color = '#3b82f6'
         
-        # Build vertical bars using flexbox
+        # Build vertical bars using nested tables for Outlook compatibility
         bars_html = ''
         for db in daily_balances:
             bal = db.get('balance', 0)
             bar_height_pct = max(5, ((bal - y_min) / y_range) * 100)
             bar_px = int((bar_height_pct / 100) * chart_height)
+            spacer_px = chart_height - bar_px
             
-            bars_html += '<td style="vertical-align:bottom;text-align:center;padding:0 2px;">'
-            bars_html += '<div style="font-size:9px;color:#64748b;margin-bottom:4px;">' + db.get('formatted', '') + '</div>'
-            bars_html += '<div style="background:linear-gradient(180deg,' + bar_color + ',#1d4ed8);width:100%;height:' + str(bar_px) + 'px;border-radius:4px 4px 0 0;min-width:35px;"></div>'
+            bars_html += '<td style="vertical-align:bottom;text-align:center;padding:0 3px;width:' + str(100 // len(daily_balances)) + '%;">'
+            bars_html += '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="text-align:center;font-size:10px;color:#475569;padding-bottom:4px;font-weight:600;">' + db.get('formatted', '') + '</td></tr>'
+            if spacer_px > 0:
+                bars_html += '<tr><td height="' + str(spacer_px) + '" style="font-size:1px;line-height:' + str(spacer_px) + 'px;">&nbsp;</td></tr>'
+            bars_html += '<tr><td height="' + str(bar_px) + '" bgcolor="' + bar_color + '" style="background-color:' + bar_color + ';font-size:1px;line-height:' + str(bar_px) + 'px;">&nbsp;</td></tr></table>'
             bars_html += '</td>'
         
         # Build date labels row
         dates_html = ''
         for db in daily_balances:
-            dates_html += '<td style="text-align:center;padding:6px 2px 0;font-size:10px;color:#64748b;">' + db.get('date', '') + '</td>'
+            dates_html += '<td style="text-align:center;padding:8px 2px 0;font-size:11px;color:#64748b;">' + db.get('date', '') + '</td>'
         
-        daily_chart_html = '<div style="background:white;padding:24px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">'
-        daily_chart_html += '<div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:16px;">Weekly Cash Balance</div>'
-        daily_chart_html += '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">'
-        daily_chart_html += '<tr style="height:' + str(chart_height + 20) + 'px;">' + bars_html + '</tr>'
-        daily_chart_html += '<tr>' + dates_html + '</tr>'
-        daily_chart_html += '</table></div>'
+        daily_chart_html = '''<table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:20px 24px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr><td style="font-size:14px;font-weight:600;color:#1e293b;padding-bottom:16px;">Weekly Cash Balance</td></tr>
+                    <tr><td>
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>''' + bars_html + '''</tr>
+                            <tr>''' + dates_html + '''</tr>
+                        </table>
+                    </td></tr>
+                </table>
+            </td></tr>
+        </table>'''
     
-    # AI summary section
+    # AI summary section with Outlook-compatible styling
     ai_section = ''
     if formatted_analysis:
-        # Split into first sentence (paragraph) and remaining sentences (bullet points)
         sentences = re.split(r'(?<=[.!?])\s+', formatted_analysis.strip())
         first_sentence = sentences[0] if sentences else ''
         remaining_sentences = sentences[1:] if len(sentences) > 1 else []
         
-        ai_section = '<div style="background:#f0f9ff;border:1px solid #bae6fd;padding:20px 24px;">'
-        ai_section += '<div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:8px;">AI Summary</div>'
-        ai_section += '<p style="margin:0 0 12px 0;font-size:15px;line-height:1.6;color:#1e293b;">' + first_sentence + '</p>'
-        
+        bullets_html = ''
         if remaining_sentences:
-            ai_section += '<ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#1e293b;">'
             for sentence in remaining_sentences:
                 if sentence.strip():
-                    ai_section += '<li style="margin-bottom:6px;">' + sentence.strip() + '</li>'
-            ai_section += '</ul>'
+                    bullets_html += '<tr><td style="padding:0 0 6px 0;font-size:14px;line-height:1.6;color:#1e293b;">&#8226; ' + sentence.strip() + '</td></tr>'
         
-        ai_section += '</div>'
+        ai_section = '''<table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr><td bgcolor="#f0f9ff" style="background-color:#f0f9ff;padding:20px 24px;border:1px solid #bae6fd;border-top:none;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr><td style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:8px;">AI SUMMARY</td></tr>
+                    <tr><td style="font-size:15px;line-height:1.6;color:#1e293b;padding-bottom:12px;">''' + first_sentence + '''</td></tr>
+                    ''' + bullets_html + '''
+                </table>
+            </td></tr>
+        </table>'''
     
     deposits_content = deposits_rows if deposits_rows else '<tr><td colspan="3" style="padding:16px;text-align:center;color:#64748b;">No deposits</td></tr>'
     withdrawals_content = withdrawals_rows if withdrawals_rows else '<tr><td colspan="3" style="padding:16px;text-align:center;color:#64748b;">No withdrawals</td></tr>'
@@ -912,88 +918,193 @@ def generate_cash_report_html_email(report_data, ai_analysis=''):
     safety_opexp = safety.get('opExp', '--')
     gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
     
+    # Outlook-compatible HTML email with VML support for backgrounds
     html = '''<!DOCTYPE html>
-<html>
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--[if gte mso 9]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+    </xml>
+    <![endif]-->
 </head>
-<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;">
-    <div style="max-width:700px;margin:0 auto;padding:24px;">
-        <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:12px 12px 0 0;padding:24px;text-align:center;">
-            <h1 style="margin:0;color:white;font-size:24px;font-weight:700;">FTG Builders Cash Report</h1>
-            <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">''' + period_label + '''</p>
-            <p style="margin:4px 0 0;color:rgba(255,255,255,0.7);font-size:13px;">''' + report_date + '''</p>
-        </div>
-        ''' + ai_section + '''
-        ''' + daily_chart_html + '''
-        <div style="background:white;padding:24px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                <tr>
-                    <td width="25%" style="text-align:center;padding:16px;border-right:1px solid #e2e8f0;">
-                        <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Current Balance</div>
-                        <div style="font-size:24px;font-weight:700;color:#1e293b;">''' + current_balance + '''</div>
-                    </td>
-                    <td width="25%" style="text-align:center;padding:16px;border-right:1px solid #e2e8f0;">
-                        <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Deposits</div>
-                        <div style="font-size:24px;font-weight:700;color:#16a34a;">''' + deposits_val + '''</div>
-                    </td>
-                    <td width="25%" style="text-align:center;padding:16px;border-right:1px solid #e2e8f0;">
-                        <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Withdrawals</div>
-                        <div style="font-size:24px;font-weight:700;color:#dc2626;">''' + withdrawals_val + '''</div>
-                    </td>
-                    <td width="25%" style="text-align:center;padding:16px;">
-                        <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Net Change</div>
-                        <div style="font-size:24px;font-weight:700;color:''' + net_change_color + ''';">''' + net_change_raw + '''</div>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        <div style="background:#f8fafc;padding:20px 24px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-            <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:16px;">Cash Safety Buffer</div>
-            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                <tr>
-                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">CASH</div><div style="font-size:14px;font-weight:700;">''' + safety_cash + '''</div></td>
-                    <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">+</td>
-                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">AR</div><div style="font-size:14px;font-weight:700;color:#16a34a;">''' + safety_ar + '''</div></td>
-                    <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">-</td>
-                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">AP</div><div style="font-size:14px;font-weight:700;color:#dc2626;">''' + safety_ap + '''</div></td>
-                    <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">-</td>
-                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">Over/Under Bill</div><div style="font-size:14px;font-weight:700;">''' + safety_oub + '''</div></td>
-                    <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">-</td>
-                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">RESERVE</div><div style="font-size:14px;font-weight:700;color:#dc2626;">''' + safety_opexp + '''</div></td>
-                    <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">=</td>
-                    <td style="text-align:center;padding:12px;background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(16,185,129,0.1));border-radius:8px;"><div style="font-size:10px;color:#64748b;">BUFFER</div><div style="font-size:16px;font-weight:700;color:''' + safety_color + ''';">''' + safety_total + '''</div></td>
-                </tr>
-            </table>
-        </div>
-        <div style="background:white;padding:24px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-            <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Top 5 Deposits</div>
-            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
-                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:left;">Date</th>
-                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:left;">Description</th>
-                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:right;">Amount</th>
-                </tr>
-                ''' + deposits_content + '''
-            </table>
-        </div>
-        <div style="background:white;padding:24px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;border-radius:0 0 12px 12px;">
-            <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Top 5 Withdrawals</div>
-            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
-                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:left;">Date</th>
-                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:left;">Description</th>
-                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:right;">Amount</th>
-                </tr>
-                ''' + withdrawals_content + '''
-            </table>
-        </div>
-        <div style="text-align:center;padding:24px;color:#64748b;font-size:12px;">
-            <p style="margin:0 0 8px 0;">Generated by FTG Dashboard on ''' + gen_date + '''</p>
-            <p style="margin:0;"><a href="https://ftg-dashboard.replit.app/" style="color:#3b82f6;text-decoration:none;">Visit FTG Dashboard for additional detail</a></p>
-        </div>
-    </div>
+<body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background-color:#f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9" style="background-color:#f1f5f9;">
+        <tr>
+            <td align="center" style="padding:24px;">
+                <table width="700" cellpadding="0" cellspacing="0" border="0">
+                    <!-- Header with VML background for Outlook -->
+                    <tr>
+                        <td align="center">
+                            <!--[if gte mso 9]>
+                            <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:700px;height:100px;">
+                                <v:fill type="solid" color="#1e40af"/>
+                                <v:textbox inset="0,0,0,0">
+                            <![endif]-->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#1e40af" style="background-color:#1e40af;">
+                                <tr>
+                                    <td align="center" style="padding:24px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:24px;font-weight:bold;color:#ffffff;font-family:Arial,Helvetica,sans-serif;">FTG Builders Cash Report</td></tr>
+                                            <tr><td align="center" style="font-size:14px;color:#d1d5db;padding-top:8px;font-family:Arial,Helvetica,sans-serif;">''' + period_label + '''</td></tr>
+                                            <tr><td align="center" style="font-size:13px;color:#9ca3af;padding-top:4px;font-family:Arial,Helvetica,sans-serif;">''' + report_date + '''</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--[if gte mso 9]>
+                                </v:textbox>
+                            </v:rect>
+                            <![endif]-->
+                        </td>
+                    </tr>
+                    
+                    <!-- AI Summary -->
+                    ''' + ai_section + '''
+                    
+                    <!-- Weekly Chart -->
+                    ''' + daily_chart_html + '''
+                    
+                    <!-- Key Metrics -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+                                <tr>
+                                    <td width="25%" align="center" style="padding:20px 10px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:8px;">CURRENT BALANCE</td></tr>
+                                            <tr><td align="center" style="font-size:22px;font-weight:bold;color:#1e293b;">''' + current_balance + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="25%" align="center" style="padding:20px 10px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:8px;">DEPOSITS</td></tr>
+                                            <tr><td align="center" style="font-size:22px;font-weight:bold;color:#16a34a;">''' + deposits_val + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="25%" align="center" style="padding:20px 10px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:8px;">WITHDRAWALS</td></tr>
+                                            <tr><td align="center" style="font-size:22px;font-weight:bold;color:#dc2626;">''' + withdrawals_val + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="25%" align="center" style="padding:20px 10px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:8px;">NET CHANGE</td></tr>
+                                            <tr><td align="center" style="font-size:22px;font-weight:bold;color:''' + net_change_color + ''';">''' + net_change_raw + '''</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Cash Safety Buffer -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8fafc" style="background-color:#f8fafc;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+                                <tr>
+                                    <td style="padding:20px 24px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td style="font-size:13px;font-weight:600;color:#1e293b;padding-bottom:16px;">Cash Safety Buffer</td></tr>
+                                            <tr>
+                                                <td>
+                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                        <tr>
+                                                            <td align="center" style="padding:8px;"><span style="font-size:10px;color:#64748b;">CASH</span><br/><span style="font-size:14px;font-weight:bold;">''' + safety_cash + '''</span></td>
+                                                            <td align="center" style="padding:8px;font-size:16px;color:#64748b;">+</td>
+                                                            <td align="center" style="padding:8px;"><span style="font-size:10px;color:#64748b;">AR</span><br/><span style="font-size:14px;font-weight:bold;color:#16a34a;">''' + safety_ar + '''</span></td>
+                                                            <td align="center" style="padding:8px;font-size:16px;color:#64748b;">-</td>
+                                                            <td align="center" style="padding:8px;"><span style="font-size:10px;color:#64748b;">AP</span><br/><span style="font-size:14px;font-weight:bold;color:#dc2626;">''' + safety_ap + '''</span></td>
+                                                            <td align="center" style="padding:8px;font-size:16px;color:#64748b;">-</td>
+                                                            <td align="center" style="padding:8px;"><span style="font-size:10px;color:#64748b;">O/U Bill</span><br/><span style="font-size:14px;font-weight:bold;">''' + safety_oub + '''</span></td>
+                                                            <td align="center" style="padding:8px;font-size:16px;color:#64748b;">-</td>
+                                                            <td align="center" style="padding:8px;"><span style="font-size:10px;color:#64748b;">RESERVE</span><br/><span style="font-size:14px;font-weight:bold;color:#dc2626;">''' + safety_opexp + '''</span></td>
+                                                            <td align="center" style="padding:8px;font-size:16px;color:#64748b;">=</td>
+                                                            <td align="center" bgcolor="#e0f2fe" style="background-color:#e0f2fe;padding:12px;"><span style="font-size:10px;color:#64748b;">BUFFER</span><br/><span style="font-size:16px;font-weight:bold;color:''' + safety_color + ''';">''' + safety_total + '''</span></td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Top 5 Deposits -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+                                <tr>
+                                    <td style="padding:24px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td style="font-size:14px;font-weight:600;color:#1e293b;padding-bottom:12px;">Top 5 Deposits</td></tr>
+                                            <tr>
+                                                <td>
+                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                        <tr bgcolor="#f8fafc" style="background-color:#f8fafc;">
+                                                            <th align="left" style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Date</th>
+                                                            <th align="left" style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Description</th>
+                                                            <th align="right" style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Amount</th>
+                                                        </tr>
+                                                        ''' + deposits_content + '''
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Top 5 Withdrawals -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">
+                                <tr>
+                                    <td style="padding:24px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td style="font-size:14px;font-weight:600;color:#1e293b;padding-bottom:12px;">Top 5 Withdrawals</td></tr>
+                                            <tr>
+                                                <td>
+                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                        <tr bgcolor="#f8fafc" style="background-color:#f8fafc;">
+                                                            <th align="left" style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Date</th>
+                                                            <th align="left" style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Description</th>
+                                                            <th align="right" style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Amount</th>
+                                                        </tr>
+                                                        ''' + withdrawals_content + '''
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="padding:24px;">
+                            <table cellpadding="0" cellspacing="0" border="0">
+                                <tr><td align="center" style="font-size:12px;color:#64748b;padding-bottom:8px;">Generated by FTG Dashboard on ''' + gen_date + '''</td></tr>
+                                <tr><td align="center"><a href="https://ftg-dashboard.replit.app/" style="font-size:12px;color:#3b82f6;text-decoration:none;">Visit FTG Dashboard for additional detail</a></td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>'''
     
