@@ -17970,8 +17970,9 @@ function gatherCashReportDataForEmail() {
   // Also get daily balance chart data for email
   const dailyBalances = getDailyBalancesForEmail();
   
-  // Get raw numeric netChange from window.dcrMetrics if available
-  const numericNetChange = window.dcrMetrics?.netChange ?? null;
+  // Use balanceChange (actual cash balance movement) instead of netChange (deposits - withdrawals)
+  // This ensures consistency between the AI analysis and the displayed values
+  const numericNetChange = window.dcrMetrics?.balanceChange ?? null;
   
   return {
     summary: {
@@ -18083,7 +18084,16 @@ function extractCashReportData() {
   const currentBalance = document.getElementById('dcrCurrentBalance')?.textContent || '--';
   const deposits = document.getElementById('dcrDeposits')?.textContent || '--';
   const withdrawals = document.getElementById('dcrWithdrawals')?.textContent || '--';
-  const netChange = document.getElementById('dcrPercentChange')?.textContent || '--';
+  // Use actual balance change (current - prior balance) not deposits - withdrawals
+  // This is more accurate as it reflects actual bank balance movement
+  const balanceChange = window.dcrMetrics?.balanceChange;
+  let netChange;
+  if (balanceChange !== undefined && balanceChange !== null) {
+    const sign = balanceChange >= 0 ? '+' : '-';
+    netChange = sign + '$' + Math.abs(balanceChange).toLocaleString('en-US', {maximumFractionDigits: 0});
+  } else {
+    netChange = document.getElementById('dcrPercentChange')?.textContent || '--';
+  }
   
   // Get safety check values
   const safetyCash = document.getElementById('dcrSafetyCash')?.textContent || '--';

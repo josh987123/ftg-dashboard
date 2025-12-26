@@ -1167,13 +1167,18 @@ EXAMPLE FORMAT:
 
 Return ONLY the summary paragraph, no other text."""
 
+        # Log what we're receiving for debugging
+        net_change_value = summary.get('netChange', '--')
+        print(f"[Cash Report AI] Net Change received: {net_change_value}")
+        print(f"[Cash Report AI] Full summary: {summary}")
+        
         user_prompt = f"""Analyze this cash report data:
 
 SUMMARY ({summary.get('periodLabel', 'this week')}):
 - Current Balance: {summary.get('currentBalance', '--')}
 - Deposits: {summary.get('deposits', '--')}
 - Withdrawals: {summary.get('withdrawals', '--')}
-- Net Change: {summary.get('netChange', '--')}
+- Net Change: {net_change_value}
 
 SAFETY CHECK:
 - Cash Balance: {safety.get('cash', '--')}
