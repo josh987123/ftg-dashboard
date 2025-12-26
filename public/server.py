@@ -5008,7 +5008,17 @@ def execute_nlq_query(query_plan, data):
                 sort_field = query_plan.get('sort_by') or 'contract'
                 sort_field = field_aliases.get(sort_field, sort_field)  # Apply alias
                 filtered.sort(key=lambda x: x.get(sort_field, 0), reverse=True)
-                results = {'items': filtered[:limit], 'sort_by': sort_field}
+                # Include aggregate totals from FULL dataset
+                valid_for_profit = [j for j in filtered if j.get('valid_for_profit', False)]
+                results = {
+                    'items': filtered[:limit], 
+                    'sort_by': sort_field,
+                    'total_count': len(filtered),
+                    'total_contract': sum(j['contract'] for j in filtered),
+                    'total_profit': round(sum(j['profit'] for j in valid_for_profit), 2),
+                    'avg_margin': round(sum(j['margin'] for j in valid_for_profit) / len(valid_for_profit), 2) if valid_for_profit else 0,
+                    'note': f'Showing top {min(limit, len(filtered))} of {len(filtered)} jobs. Totals from ALL {len(filtered)} jobs.'
+                }
             elif aggregation == 'closest_to_completion':
                 # Filter for jobs with budgets and sort by percent_complete descending
                 with_budgets = [j for j in filtered if j['budget_cost'] > 0 and j['percent_complete'] > 0 and j['percent_complete'] < 100]
@@ -5073,7 +5083,17 @@ def execute_nlq_query(query_plan, data):
                 sort_field = query_plan.get('sort_by') or 'margin'
                 sort_field = field_aliases.get(sort_field, sort_field)
                 filtered.sort(key=lambda x: x.get(sort_field, 0), reverse=False)
-                results = {'items': filtered[:limit], 'sort_by': sort_field}
+                # Include aggregate totals from FULL dataset
+                valid_for_profit = [j for j in filtered if j.get('valid_for_profit', False)]
+                results = {
+                    'items': filtered[:limit], 
+                    'sort_by': sort_field,
+                    'total_count': len(filtered),
+                    'total_contract': sum(j['contract'] for j in filtered),
+                    'total_profit': round(sum(j['profit'] for j in valid_for_profit), 2),
+                    'avg_margin': round(sum(j['margin'] for j in valid_for_profit) / len(valid_for_profit), 2) if valid_for_profit else 0,
+                    'note': f'Showing bottom {min(limit, len(filtered))} of {len(filtered)} jobs. Totals from ALL {len(filtered)} jobs.'
+                }
             else:
                 # Default list with summary stats about budget coverage
                 jobs_with_budget = [j for j in filtered if j['has_budget']]
@@ -5175,8 +5195,15 @@ def execute_nlq_query(query_plan, data):
                 for inv in filtered:
                     c = inv['customer']
                     by_cust[c] = by_cust.get(c, 0) + inv['collectible']
-                sorted_custs = sorted(by_cust.items(), key=lambda x: x[1], reverse=True)[:limit]
-                results = {'items': [{'customer': c, 'amount': a} for c, a in sorted_custs]}
+                sorted_custs = sorted(by_cust.items(), key=lambda x: x[1], reverse=True)
+                # Calculate totals from FULL dataset before limiting
+                total_collectible = sum(amt for _, amt in sorted_custs)
+                results = {
+                    'items': [{'customer': c, 'amount': a} for c, a in sorted_custs[:limit]],
+                    'total_customers': len(sorted_custs),
+                    'total_collectible': round(total_collectible, 2),
+                    'note': f'Showing top {min(limit, len(sorted_custs))} of {len(sorted_custs)} customers. Total from ALL customers.'
+                }
             elif aggregation == 'aging':
                 # Matches AR Aging page: aging buckets for collectible, retainage tracked separately
                 buckets = {'current': 0, 'days_31_60': 0, 'days_61_90': 0, 'days_90_plus': 0, 'retainage': 0}
@@ -5292,8 +5319,15 @@ def execute_nlq_query(query_plan, data):
                 for inv in filtered:
                     v = inv['vendor']
                     by_vendor[v] = by_vendor.get(v, 0) + inv['amount']
-                sorted_vendors = sorted(by_vendor.items(), key=lambda x: x[1], reverse=True)[:limit]
-                results = {'items': [{'vendor': v, 'amount': a} for v, a in sorted_vendors]}
+                sorted_vendors = sorted(by_vendor.items(), key=lambda x: x[1], reverse=True)
+                # Calculate totals from FULL dataset before limiting
+                total_amount = sum(amt for _, amt in sorted_vendors)
+                results = {
+                    'items': [{'vendor': v, 'amount': a} for v, a in sorted_vendors[:limit]],
+                    'total_vendors': len(sorted_vendors),
+                    'total_amount': round(total_amount, 2),
+                    'note': f'Showing top {min(limit, len(sorted_vendors))} of {len(sorted_vendors)} vendors. Total from ALL vendors.'
+                }
             elif aggregation == 'aging':
                 buckets = {'current': 0, 'days_31_60': 0, 'days_61_90': 0, 'days_90_plus': 0}
                 for inv in filtered:
@@ -5425,7 +5459,21 @@ def execute_nlq_query(query_plan, data):
             else:
                 pm_list.sort(key=lambda x: x.get(sort_by_field, 0), reverse=(sort_order == 'desc'))
             
-            results = {'items': pm_list[:limit], 'total_pms': len(pm_list)}
+            # Calculate grand totals from FULL dataset before limiting
+            grand_total_profit = sum(p.get('profit', 0) for p in pm_list)
+            grand_total_contract = sum(p.get('contract', 0) for p in pm_list)
+            grand_total_jobs = sum(p.get('jobs', 0) for p in pm_list)
+            grand_avg_margin = sum(p.get('margin', 0) for p in pm_list) / len(pm_list) if pm_list else 0
+            
+            results = {
+                'items': pm_list[:limit], 
+                'total_pms': len(pm_list),
+                'grand_total_profit': round(grand_total_profit, 2),
+                'grand_total_contract': round(grand_total_contract, 2),
+                'grand_total_jobs': grand_total_jobs,
+                'grand_avg_margin': round(grand_avg_margin, 2),
+                'note': f'Showing {min(limit, len(pm_list))} of {len(pm_list)} PMs. Grand totals from ALL {len(pm_list)} PMs.'
+            }
         
         # PM comparison (side-by-side) - use pre-computed metrics from cache
         elif target == 'pm_comparison':
@@ -5647,7 +5695,14 @@ def execute_nlq_query(query_plan, data):
                     by_cc[cc]['total'] += item['value']
                     by_cc[cc]['job_count'] += 1
                 sorted_cc = sorted(by_cc.values(), key=lambda x: x['total'], reverse=True)
-                results = {'items': sorted_cc[:limit or 20], 'total_cost_codes': len(by_cc)}
+                # Calculate grand total from FULL dataset before limiting
+                grand_total = sum(cc['total'] for cc in sorted_cc)
+                results = {
+                    'items': sorted_cc[:limit or 20], 
+                    'total_cost_codes': len(by_cc),
+                    'grand_total': round(grand_total, 2),
+                    'note': f'Showing top {min(limit or 20, len(sorted_cc))} of {len(sorted_cc)} cost codes. Grand total from ALL cost codes.'
+                }
             else:
                 total = sum(item['value'] for item in filtered)
                 results = {'total_cost': total, 'record_count': len(filtered)}
@@ -5701,7 +5756,20 @@ def execute_nlq_query(query_plan, data):
             sort_field = query_plan.get('sort_by', 'contract')
             sort_order = query_plan.get('sort_order', 'desc')
             sorted_customers = sorted(customer_data.values(), key=lambda x: x.get(sort_field, 0), reverse=(sort_order == 'desc'))
-            results = {'items': sorted_customers[:limit or 20], 'total_customers': len(customer_data)}
+            
+            # Calculate grand totals from FULL dataset before limiting
+            grand_total_contract = sum(c.get('contract', 0) for c in sorted_customers)
+            grand_total_ar = sum(c.get('ar_balance', 0) for c in sorted_customers)
+            grand_total_jobs = sum(c.get('job_count', 0) for c in sorted_customers)
+            
+            results = {
+                'items': sorted_customers[:limit or 20], 
+                'total_customers': len(customer_data),
+                'grand_total_contract': round(grand_total_contract, 2),
+                'grand_total_ar': round(grand_total_ar, 2),
+                'grand_total_jobs': grand_total_jobs,
+                'note': f'Showing top {min(limit or 20, len(sorted_customers))} of {len(sorted_customers)} customers. Totals from ALL customers.'
+            }
         
         else:
             results = {'error': f'Unknown target: {target}'}
