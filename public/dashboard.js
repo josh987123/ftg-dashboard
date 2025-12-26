@@ -1919,10 +1919,6 @@ async function loadDataTimestamps() {
     dataTimestamps.jobs = metricsResp?.last_refresh || null;
     dataTimestamps.ar = metricsResp?.last_refresh || null;
     dataTimestamps.ap = metricsResp?.last_refresh || null;
-    dataTimestamps.gl = glResp?.generated_at || null;
-    dataTimestamps.jobs = jobsResp?.generated_at || null;
-    dataTimestamps.ar = arResp?.generated_at || null;
-    dataTimestamps.ap = apResp?.generated_at || null;
     
     // Find the most recent timestamp
     const timestamps = [dataTimestamps.gl, dataTimestamps.jobs, dataTimestamps.ar, dataTimestamps.ap]
@@ -5722,12 +5718,11 @@ function exportTableToCSV(tableId, filename) {
 }
 
 /* ------------------------------------------------------------
-   SCHEDULE EMAIL FUNCTIONS
+   AUTH HELPER FUNCTIONS
 ------------------------------------------------------------ */
 
 function getAuthToken() {
   return localStorage.getItem("ftg_session_token") || "";
-}
 }
 
 function getCurrentView() {
@@ -16547,7 +16542,6 @@ async function loadCashReportData() {
     showDcrError(error.message);
   }
 }
-}
 
 function showDcrError(message) {
   const currentBalanceEl = document.getElementById('dcrCurrentBalance');
@@ -21461,12 +21455,6 @@ async function loadMissingBudgetsData() {
     
     filterMissingBudgets();
     
-    const dateEl = document.getElementById('missingBudgetsDataAsOf');
-    if (dateEl && data.generated_at) {
-      dateEl.textContent = new Date(data.generated_at).toLocaleDateString();
-    }
-    
-    filterMissingBudgets();
   } catch (err) {
     console.error('Error loading missing budgets:', err);
     if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="loading-cell">Error loading data</td></tr>';
@@ -21836,10 +21824,6 @@ async function loadPmrTabsFromFullData() {
       console.error("Failed to load job budgets:", e);
     }
   }
-      console.error('Failed to load job budgets:', e);
-    }
-  }
-  
   // Extract PMs from data and build tabs
   const pms = getActivePmsFromData(jobBudgetsData);
   buildPmrTabs(pms);
@@ -21903,8 +21887,6 @@ async function ensurePmrDataLoaded() {
       }));
     } catch (e) {
       console.error("Failed to load job budgets for PM Report:", e);
-    }
-  }
     }
   }
   
@@ -23555,7 +23537,6 @@ async function extractAiInsightsData() {
     const jobsData = metricsData ? { job_budgets: metricsData.jobs } : null;
     const arData = arMetrics ? { invoices: arMetrics.invoices } : null;
     const apData = apMetrics ? { invoices: apMetrics.invoices } : null;
-    ]);
     
     // FINANCIAL PERFORMANCE from GL Data
     if (glData && glData.gl_history_all) {
