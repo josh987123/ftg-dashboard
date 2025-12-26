@@ -2762,7 +2762,6 @@ const metricTileMapping = {
   opMargin: "overviewOpMarginChart",
   cash: "overviewCashChart",
   arApRatio: "overviewArApRatioChart",
-  currentRatio: "overviewCurrentRatioChart",
   overUnder: "overviewOverUnderChart"
 };
 
@@ -4513,7 +4512,6 @@ function updateOverviewCharts() {
     { id: "overviewGrossMarginChart", data: metrics.grossMargin },
     { id: "overviewOpMarginChart", data: metrics.opMargin },
     { id: "overviewCashChart", data: metrics.cash },
-    { id: "overviewCurrentRatioChart", data: metrics.currentRatio },
     { id: "overviewArApRatioChart", data: metrics.arApRatio }
   ];
   
@@ -4533,7 +4531,6 @@ function updateOverviewCharts() {
     { tableId: 'overviewOpMarginTable', data: metrics.opMargin, isPercent: true, isRatio: false },
     { tableId: 'overviewCashTable', data: metrics.cash, isPercent: false, isRatio: false },
     { tableId: 'overviewArApRatioTable', data: metrics.arApRatio, isPercent: false, isRatio: true },
-    { tableId: 'overviewCurrentRatioTable', data: metrics.currentRatio, isPercent: false, isRatio: true },
     { tableId: 'overviewOverUnderTable', data: metrics.overUnder, isPercent: false, isRatio: false }
   ];
   
@@ -4554,7 +4551,6 @@ function updateOverviewStats(metrics, labels, excludeCurrent, currentMonthIndice
     { key: "grossMargin", avgId: "grossMarginAvg", highId: "grossMarginHigh", lowId: "grossMarginLow", cagrId: "grossMarginCagr", highPeriodId: "grossMarginHighPeriod", lowPeriodId: "grossMarginLowPeriod", growthLabelId: "grossMarginGrowthLabel", isPercent: true },
     { key: "opMargin", avgId: "opMarginAvg", highId: "opMarginHigh", lowId: "opMarginLow", cagrId: "opMarginCagr", highPeriodId: "opMarginHighPeriod", lowPeriodId: "opMarginLowPeriod", growthLabelId: "opMarginGrowthLabel", isPercent: true },
     { key: "cash", avgId: "cashAvg", highId: "cashHigh", lowId: "cashLow", cagrId: "cashCagr", highPeriodId: "cashHighPeriod", lowPeriodId: "cashLowPeriod", growthLabelId: "cashGrowthLabel", isPercent: false },
-    { key: "currentRatio", avgId: "currentRatioAvg", highId: "currentRatioHigh", lowId: "currentRatioLow", cagrId: "currentRatioCagr", highPeriodId: "currentRatioHighPeriod", lowPeriodId: "currentRatioLowPeriod", growthLabelId: "currentRatioGrowthLabel", isPercent: false, isRatio: true },
     { key: "arApRatio", avgId: "arApRatioAvg", highId: "arApRatioHigh", lowId: "arApRatioLow", cagrId: "arApRatioCagr", highPeriodId: "arApRatioHighPeriod", lowPeriodId: "arApRatioLowPeriod", growthLabelId: "arApRatioGrowthLabel", isPercent: false, isRatio: true }
   ];
   
@@ -8013,7 +8009,6 @@ async function captureOverviewAsImage() {
       { id: "overviewCashChart", title: "Cash", metric: "cash" },
       { id: "overviewReceivablesChart", title: "Receivables", metric: "receivables" },
       { id: "overviewPayablesChart", title: "Payables", metric: "payables" },
-      { id: "overviewCurrentRatioChart", title: "Current Ratio", metric: "currentRatio" }
     ];
     
     // Filter to only visible metrics based on checkbox state
