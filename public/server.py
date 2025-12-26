@@ -5829,18 +5829,17 @@ Never mention Josh Angelo in your response."""
             'error': str(e),
             'answer': f"Sorry, I encountered an error processing your question. Please try again."
         }), 500
-
-
-scheduler_thread = None
-
-def start_scheduler():
-    """Start the background scheduler thread"""
-    global scheduler_thread
-    if scheduler_thread is None or not scheduler_thread.is_alive():
-        scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
-        scheduler_thread.start()
-
-start_scheduler()
+# Email scheduling feature disabled - scheduler removed from UI
+# scheduler_thread = None
+#
+# def start_scheduler():
+#     """Start the background scheduler thread"""
+#     global scheduler_thread
+#     if scheduler_thread is None or not scheduler_thread.is_alive():
+#         scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+#         scheduler_thread.start()
+#
+# start_scheduler()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
