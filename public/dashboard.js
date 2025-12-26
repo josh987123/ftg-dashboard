@@ -7729,6 +7729,54 @@ function closeEmailModal() {
   const modal = getEl("emailModal");
   if (modal) modal.classList.add("hidden");
 }
+// Add email recipient from quick button
+function addEmailRecipient(email) {
+  const emailInput = document.getElementById('emailTo');
+  if (!emailInput) return;
+  
+  const currentValue = emailInput.value.trim();
+  const existingEmails = currentValue ? currentValue.split(',').map(e => e.trim().toLowerCase()) : [];
+  
+  // Check if email already exists
+  if (existingEmails.includes(email.toLowerCase())) {
+    // Remove it (toggle behavior)
+    const newEmails = existingEmails.filter(e => e !== email.toLowerCase());
+    emailInput.value = newEmails.join(', ');
+    // Update button state
+    updateQuickRecipientButtons();
+    return;
+  }
+  
+  // Add the email
+  if (currentValue) {
+    emailInput.value = currentValue + ', ' + email;
+  } else {
+    emailInput.value = email;
+  }
+  
+  // Update button state
+  updateQuickRecipientButtons();
+}
+
+// Update quick recipient button active states
+function updateQuickRecipientButtons() {
+  const emailInput = document.getElementById('emailTo');
+  if (!emailInput) return;
+  
+  const currentEmails = emailInput.value.split(',').map(e => e.trim().toLowerCase());
+  const buttons = document.querySelectorAll('.quick-recipient-btn');
+  
+  buttons.forEach(btn => {
+    const btnEmail = btn.getAttribute('onclick').match(/'([^']+)'/)?.[1]?.toLowerCase();
+    if (btnEmail && currentEmails.includes(btnEmail)) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+}
+
+
 
 // EmailJS Configuration
 const EMAILJS_CONFIG = {

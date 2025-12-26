@@ -22693,3 +22693,29 @@ body.dark-mode .dashboard-section > h2 {
     display: none !important;
   }
 }
+
+/* Quick recipient buttons for email modal */
+.quick-recipient-btn {
+  background: #e2e8f0;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+  margin-right: 6px;
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
+}
+
+.quick-recipient-btn:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.quick-recipient-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
