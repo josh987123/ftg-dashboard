@@ -4923,9 +4923,11 @@ def execute_nlq_query(query_plan, data):
                     'percent_complete': job.get('percent_complete', 0),
                     'earned_revenue': job.get('earned_revenue', 0),
                     'backlog': job.get('backlog', 0),
-                    'estimated_profit': job.get('estimated_profit', 0),
+                    'profit': job.get('profit', 0),
                     'margin': job.get('margin', 0),
-                    'over_under_billing': job.get('over_under_billing', 0)
+                    'over_under_billing': job.get('over_under_billing', 0),
+                    'valid_for_profit': job.get('valid_for_profit', False),
+                    'profit_basis': job.get('profit_basis', '')
                 }
                 
                 filtered.append(job_data)
