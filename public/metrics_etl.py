@@ -77,7 +77,8 @@ def calculate_job_metrics(job: dict, actual_cost: float, billed: float) -> dict:
         earned_revenue = 0
     
     backlog = contract - earned_revenue
-    over_under_billing = billed - earned_revenue
+    # Over/under billing only applies to active jobs (closed jobs = 0)
+    over_under_billing = 0 if is_closed else (billed - earned_revenue)
     
     if is_closed:
         actual_profit = billed - actual_cost
