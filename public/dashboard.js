@@ -6424,7 +6424,7 @@ function getJobBudgetsTableHtml() {
   jobBudgetsFiltered.forEach(job => {
     totalContract += job.contract || 0;
     totalCost += job.revised_cost || 0;
-    totalProfit += job.estimated_profit || 0;
+    totalProfit += job.profit || 0;
   });
   const totalMargin = totalContract ? (totalProfit / totalContract) * 100 : 0;
   const totalProfitColor = totalProfit >= 0 ? '#10b981' : '#dc2626';
@@ -6475,8 +6475,8 @@ function getJobBudgetsTableHtml() {
     <tbody>`;
   
   topJobs.forEach(job => {
-    const margin = job.contract ? (job.estimated_profit / job.contract) * 100 : 0;
-    const profitColor = job.estimated_profit >= 0 ? '#059669' : '#dc2626';
+    const margin = job.contract ? (job.profit / job.contract) * 100 : 0;
+    const profitColor = job.profit >= 0 ? '#059669' : '#dc2626';
     const desc = (job.job_description || '').substring(0, 40) + ((job.job_description || '').length > 40 ? '...' : '');
     
     html += `<tr>
@@ -6484,7 +6484,7 @@ function getJobBudgetsTableHtml() {
       <td>${desc}</td>
       <td>${(job.customer_name || '').substring(0, 25)}</td>
       <td style="text-align:right;">${formatCurrency(job.contract)}</td>
-      <td style="text-align:right;color:${profitColor};">${formatCurrency(job.estimated_profit)}</td>
+      <td style="text-align:right;color:${profitColor};">${formatCurrency(job.profit)}</td>
       <td style="text-align:right;">${margin.toFixed(1)}%</td>
     </tr>`;
   });
@@ -6507,9 +6507,9 @@ function getJobBudgetsCsvData() {
   
   jobBudgetsFiltered.forEach(job => {
     const status = getJobStatusLabel(job.job_status);
-    const margin = job.contract ? (job.estimated_profit / job.contract) * 100 : 0;
+    const margin = job.contract ? (job.profit / job.contract) * 100 : 0;
     
-    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.original_contract || 0},${job.tot_income_adj || 0},${job.contract || 0},${job.original_cost || 0},${job.tot_cost_adj || 0},${job.revised_cost || 0},${job.estimated_profit || 0},${margin.toFixed(1)}\n`;
+    csv += `"${job.job_no}","${(job.job_description || '').replace(/"/g, '""')}","${(job.customer_name || '').replace(/"/g, '""')}","${status.label}","${(job.project_manager_name || '').replace(/"/g, '""')}",${job.original_contract || 0},${job.tot_income_adj || 0},${job.contract || 0},${job.original_cost || 0},${job.tot_cost_adj || 0},${job.revised_cost || 0},${job.profit || 0},${margin.toFixed(1)}\n`;
   });
   
   return csv;
@@ -15558,11 +15558,13 @@ async function loadJobBudgetsData() {
       job_status: job.job_status,
       original_contract: job.original_contract || 0,
       tot_income_adj: job.tot_income_adj || 0,
+      contract: job.contract,
       revised_contract: job.contract,
       original_cost: job.original_cost || 0,
       tot_cost_adj: job.tot_cost_adj || 0,
       revised_cost: job.budget_cost,
-      estimated_profit: job.estimated_profit
+      profit: job.profit
+      margin: job.margin,
     }));
     // Initialize column filter dropdowns
     initJobBudgetsColumnFilters();
@@ -15682,14 +15684,14 @@ function sortJobBudgets() {
       if (aHasData && !bHasData) return -1;
       if (!aHasData && !bHasData) return 0;
       
-      const aMargin = (a.estimated_profit / a.revised_contract) * 100;
-      const bMargin = (b.estimated_profit / b.revised_contract) * 100;
+      const aMargin = (a.profit / a.revised_contract) * 100;
+      const bMargin = (b.profit / b.revised_contract) * 100;
       return (aMargin - bMargin) * dir;
     }
     
     // Numeric columns
     if (['original_contract', 'tot_income_adj', 'revised_contract', 'original_cost', 
-         'tot_cost_adj', 'revised_cost', 'estimated_profit'].includes(col)) {
+         'tot_cost_adj', 'revised_cost', 'profit'].includes(col)) {
       return (aVal - bVal) * dir;
     }
     
@@ -15907,7 +15909,7 @@ function updateJobSummaryMetrics() {
   const totalJobs = jobs.length;
   const totalContract = jobs.reduce((sum, j) => sum + j.revised_contract, 0);
   const totalCost = jobs.reduce((sum, j) => sum + j.revised_cost, 0);
-  const totalProfit = jobs.reduce((sum, j) => sum + j.estimated_profit, 0);
+  const totalProfit = jobs.reduce((sum, j) => sum + j.profit, 0);
   
   // Calculate avg margin excluding jobs with zero revised_contract OR zero revised_cost
   // Use weighted average (total profit / total contract) to match Job Overview calculation
@@ -16139,7 +16141,7 @@ function renderJobBreakdownByPm() {
     data.jobs++;
     data.contract += job.contract;
     data.cost += job.revised_cost;
-    data.profit += job.estimated_profit;
+    data.profit += job.profit;
   });
   
   // Sort by contract value descending
@@ -16229,7 +16231,7 @@ function renderJobBreakdownByCustomer() {
     data.jobs++;
     data.contract += job.contract;
     data.cost += job.revised_cost;
-    data.profit += job.estimated_profit;
+    data.profit += job.profit;
   });
   
   // Sort by contract value descending
@@ -16351,7 +16353,7 @@ function renderJobBudgetsTable() {
     originalCost: jobBudgetsFiltered.reduce((sum, j) => sum + (parseFloat(j.original_cost) || 0), 0),
     costAdj: jobBudgetsFiltered.reduce((sum, j) => sum + (parseFloat(j.tot_cost_adj) || 0), 0),
     revisedCost: jobBudgetsFiltered.reduce((sum, j) => sum + (parseFloat(j.revised_cost) || 0), 0),
-    estimatedProfit: jobBudgetsFiltered.reduce((sum, j) => sum + (parseFloat(j.estimated_profit) || 0), 0)
+    estimatedProfit: jobBudgetsFiltered.reduce((sum, j) => sum + (parseFloat(j.profit) || 0), 0)
   };
   // Calculate average margin using weighted average (total profit / total contract)
   // Exclude jobs with zero revised_contract OR zero revised_cost
@@ -16382,11 +16384,11 @@ function renderJobBudgetsTable() {
   
   const dataRowsHtml = pageData.map(job => {
     const status = getJobStatusLabel(job.job_status);
-    const profitClass = job.estimated_profit >= 0 ? 'positive' : 'negative';
+    const profitClass = job.profit >= 0 ? 'positive' : 'negative';
     
     // Only calculate margin if both revised_contract AND revised_cost are non-zero
     const hasValidMargin = job.contract > 0 && job.revised_cost > 0;
-    const margin = hasValidMargin ? (job.estimated_profit / job.contract) * 100 : null;
+    const margin = hasValidMargin ? (job.profit / job.contract) * 100 : null;
     const marginColor = hasValidMargin ? getMarginColor(margin) : 'transparent';
     const marginDisplay = hasValidMargin ? `${margin.toFixed(1)}%` : '-';
     
@@ -16402,7 +16404,7 @@ function renderJobBudgetsTable() {
       <td class="number-col cost-detail-col ${costHidden}">${formatCurrency(job.original_cost)}</td>
       <td class="number-col cost-detail-col ${costHidden}">${formatCurrency(job.tot_cost_adj)}</td>
       <td class="number-col revised-cost-col">${formatCurrency(job.revised_cost)}</td>
-      <td class="number-col ${profitClass}">${formatCurrency(job.estimated_profit)}</td>
+      <td class="number-col ${profitClass}">${formatCurrency(job.profit)}</td>
       <td class="number-col" style="background-color: ${marginColor}">${marginDisplay}</td>
     </tr>`;
   }).join('');
@@ -17739,19 +17741,25 @@ async function loadJobOverviewData() {
       job_status: job.job_status,
       original_contract: job.original_contract || 0,
       tot_income_adj: job.tot_income_adj || 0,
+      contract: job.contract,
       revised_contract: job.contract,
       original_cost: job.original_cost || 0,
       tot_cost_adj: job.tot_cost_adj || 0,
       revised_cost: job.budget_cost,
       actual_cost: job.actual_cost,
+      billed: job.billed,
       billed_revenue: job.billed,
       earned_revenue: job.earned_revenue,
       percent_complete: job.percent_complete,
       backlog: job.backlog,
       over_under: job.over_under_billing,
-      estimated_profit: job.estimated_profit,
+      over_under_billing: job.over_under_billing,
+      profit: job.profit,
+      margin: job.margin,
       profit_margin: job.margin,
-      has_budget: job.has_budget
+      has_budget: job.has_budget,
+      valid_for_profit: job.valid_for_profit,
+      profit_basis: job.profit_basis
     }));
     
     populateJobOverviewFilters();
@@ -20118,7 +20126,7 @@ function aggregateJobsByField(jobs, field) {
     groups[key].jobCount++;
     groups[key].contractValue += job.contract || 0;
     groups[key].revisedCost += job.revised_cost || 0;
-    groups[key].estimatedProfit += job.estimated_profit || 0;
+    groups[key].estimatedProfit += job.profit || 0;
   });
   
   return Object.values(groups)
@@ -20589,17 +20597,23 @@ async function loadJobActualsData() {
       customer_name: job.customer_name,
       project_manager_name: job.project_manager,
       job_status: job.job_status,
+      contract: job.contract,
       revised_contract: job.contract,
       revised_cost: job.budget_cost,
       actual_cost: job.actual_cost,
+      billed: job.billed,
       billed_revenue: job.billed,
       earned_revenue: job.earned_revenue,
       percent_complete: job.percent_complete,
       backlog: job.backlog,
       over_under: job.over_under_billing,
-      estimated_profit: job.estimated_profit,
+      over_under_billing: job.over_under_billing,
+      profit: job.profit,
+      margin: job.margin,
       profit_margin: job.margin,
-      has_budget: job.has_budget
+      has_budget: job.has_budget,
+      valid_for_profit: job.valid_for_profit,
+      profit_basis: job.profit_basis
     }));
     
     // Initialize column filter dropdowns
@@ -21434,11 +21448,13 @@ async function loadMissingBudgetsData() {
       job_status: job.job_status,
       original_contract: job.original_contract || 0,
       tot_income_adj: job.tot_income_adj || 0,
+      contract: job.contract,
       revised_contract: job.contract,
       original_cost: job.original_cost || 0,
       tot_cost_adj: job.tot_cost_adj || 0,
       revised_cost: job.budget_cost,
-      estimated_profit: job.estimated_profit
+      profit: job.profit
+      margin: job.margin,
     }));
     
     populateMbFilters();
@@ -21809,7 +21825,8 @@ async function loadPmrTabsFromFullData() {
         job_status: job.job_status,
         original_contract: job.original_contract || 0,
         tot_income_adj: job.tot_income_adj || 0,
-        revised_contract: job.contract,
+        contract: job.contract,
+      revised_contract: job.contract,
         original_cost: job.original_cost || 0,
         tot_cost_adj: job.tot_cost_adj || 0,
         revised_cost: job.budget_cost
@@ -21875,7 +21892,8 @@ async function ensurePmrDataLoaded() {
         job_status: job.job_status,
         original_contract: job.original_contract || 0,
         tot_income_adj: job.tot_income_adj || 0,
-        revised_contract: job.contract,
+        contract: job.contract,
+      revised_contract: job.contract,
         original_cost: job.original_cost || 0,
         tot_cost_adj: job.tot_cost_adj || 0,
         revised_cost: job.budget_cost
@@ -24093,13 +24111,17 @@ async function initOverUnderBilling() {
         job_status: job.job_status || '',
         contract_value: job.contract,
         est_cost: job.budget_cost,
-        est_profit: job.estimated_profit,
+        est_profit: job.profit,
         actual_cost: job.actual_cost,
         pct_complete: job.percent_complete,
-        billed_revenue: job.billed,
+        billed: job.billed,
+      billed_revenue: job.billed,
         earned_revenue: job.earned_revenue,
         over_under: job.over_under_billing,
-        has_budget: job.has_budget
+      over_under_billing: job.over_under_billing,
+        has_budget: job.has_budget,
+      valid_for_profit: job.valid_for_profit,
+      profit_basis: job.profit_basis
       }));
     
     if (metricsData.generated_at) {
@@ -24588,7 +24610,7 @@ async function initCostCodes() {
         original_cost: parseFloat(job.original_cost) || 0,
         tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
         revised_cost: parseFloat(job.revised_cost) || 0,
-        estimated_profit: (parseFloat(job.contract) || 0) - (parseFloat(job.revised_cost) || 0)
+        profit: (parseFloat(job.contract) || 0) - (parseFloat(job.revised_cost) || 0)
       }));
     }
     
@@ -27394,7 +27416,7 @@ const budgetsColumnConfig = [
   { id: 'original_cost', label: 'Original Cost', required: false },
   { id: 'cost_adjustments', label: 'Cost Adjustments', required: false },
   { id: 'revised_cost', label: 'Revised Cost', required: false },
-  { id: 'estimated_profit', label: 'Estimated Profit', required: false }
+  { id: 'profit', label: 'Estimated Profit', required: false }
 ];
 
 let budgetsVisibleColumns = null;

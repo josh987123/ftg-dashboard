@@ -62,6 +62,8 @@ def calculate_job_metrics(job: dict, actual_cost: float, billed: float) -> dict:
     contract = float(job.get('revised_contract') or 0)
     original_contract = float(job.get('original_contract') or 0)
     original_cost = float(job.get('original_cost') or 0)
+    tot_income_adj = float(job.get('tot_income_adj') or 0)
+    tot_cost_adj = float(job.get('tot_cost_adj') or 0)
     job_status = job.get('job_status', '')
     
     has_budget = budget_cost > 0
@@ -99,8 +101,10 @@ def calculate_job_metrics(job: dict, actual_cost: float, billed: float) -> dict:
         'customer_name': job.get('customer_name', ''),
         'job_status': job_status,
         'original_contract': original_contract,
+        'tot_income_adj': tot_income_adj,
         'contract': contract,
         'original_cost': original_cost,
+        'tot_cost_adj': tot_cost_adj,
         'budget_cost': budget_cost,
         'actual_cost': actual_cost,
         'billed': billed,
