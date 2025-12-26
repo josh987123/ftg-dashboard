@@ -7717,7 +7717,7 @@ function openEmailModal() {
   const view = getCurrentView();
   
   // Special handling for Cash Report
-  if (view === 'cashBalances') {
+  if (view === 'cashReport') {
     const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     setElValue("emailSubject", `FTG Builders Weekly Cash Report: ${dateStr}`);
     setElValue("emailTo", "");
@@ -8307,7 +8307,7 @@ async function sendCashReportViaRibbon(toEmail, statusEl, sendBtn) {
   const view = getCurrentView();
   
   // Special handling for Cash Report - use new HTML email
-  if (view === 'cashBalances') {
+  if (view === 'cashReport') {
     await sendCashReportViaRibbon(toEmail, statusEl, sendBtn);
     return;
   }
