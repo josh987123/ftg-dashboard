@@ -875,9 +875,22 @@ def generate_cash_report_html_email(report_data, ai_analysis=''):
     # AI summary section
     ai_section = ''
     if formatted_analysis:
+        # Split into first sentence (paragraph) and remaining sentences (bullet points)
+        sentences = re.split(r'(?<=[.!?])\s+', formatted_analysis.strip())
+        first_sentence = sentences[0] if sentences else ''
+        remaining_sentences = sentences[1:] if len(sentences) > 1 else []
+        
         ai_section = '<div style="background:#f0f9ff;border:1px solid #bae6fd;padding:20px 24px;">'
         ai_section += '<div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:8px;">AI Summary</div>'
-        ai_section += '<p style="margin:0;font-size:15px;line-height:1.6;color:#1e293b;">' + formatted_analysis + '</p>'
+        ai_section += '<p style="margin:0 0 12px 0;font-size:15px;line-height:1.6;color:#1e293b;">' + first_sentence + '</p>'
+        
+        if remaining_sentences:
+            ai_section += '<ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#1e293b;">'
+            for sentence in remaining_sentences:
+                if sentence.strip():
+                    ai_section += '<li style="margin-bottom:6px;">' + sentence.strip() + '</li>'
+            ai_section += '</ul>'
+        
         ai_section += '</div>'
     
     deposits_content = deposits_rows if deposits_rows else '<tr><td colspan="3" style="padding:16px;text-align:center;color:#64748b;">No deposits</td></tr>'
