@@ -5017,7 +5017,7 @@ def execute_nlq_query(query_plan, data):
                     'total_contract': sum(j['contract'] for j in filtered),
                     'total_profit': round(sum(j['profit'] for j in valid_for_profit), 2),
                     'avg_margin': round(sum(j['margin'] for j in valid_for_profit) / len(valid_for_profit), 2) if valid_for_profit else 0,
-                    'note': f'Showing top {min(limit, len(filtered))} of {len(filtered)} jobs. Totals from ALL {len(filtered)} jobs.'
+                    'note': f'Showing top {min(limit or 50, len(filtered))} of {len(filtered)} jobs. Totals from ALL {len(filtered)} jobs.'
                 }
             elif aggregation == 'closest_to_completion':
                 # Filter for jobs with budgets and sort by percent_complete descending
@@ -5092,7 +5092,7 @@ def execute_nlq_query(query_plan, data):
                     'total_contract': sum(j['contract'] for j in filtered),
                     'total_profit': round(sum(j['profit'] for j in valid_for_profit), 2),
                     'avg_margin': round(sum(j['margin'] for j in valid_for_profit) / len(valid_for_profit), 2) if valid_for_profit else 0,
-                    'note': f'Showing bottom {min(limit, len(filtered))} of {len(filtered)} jobs. Totals from ALL {len(filtered)} jobs.'
+                    'note': f'Showing bottom {min(limit or 50, len(filtered))} of {len(filtered)} jobs. Totals from ALL {len(filtered)} jobs.'
                 }
             else:
                 # Default list with summary stats about budget coverage
@@ -5202,7 +5202,7 @@ def execute_nlq_query(query_plan, data):
                     'items': [{'customer': c, 'amount': a} for c, a in sorted_custs[:limit]],
                     'total_customers': len(sorted_custs),
                     'total_collectible': round(total_collectible, 2),
-                    'note': f'Showing top {min(limit, len(sorted_custs))} of {len(sorted_custs)} customers. Total from ALL customers.'
+                    'note': f'Showing top {min(limit or 50, len(sorted_custs))} of {len(sorted_custs)} customers. Total from ALL customers.'
                 }
             elif aggregation == 'aging':
                 # Matches AR Aging page: aging buckets for collectible, retainage tracked separately
@@ -5263,7 +5263,7 @@ def execute_nlq_query(query_plan, data):
                     'total_retainage': round(total_retainage, 2),
                     'total_due': round(total_due, 2),
                     'avg_days_outstanding': round(avg_days, 1),
-                    'note': f'Showing top {min(limit, len(filtered))} of {len(filtered)} invoices. Totals calculated from ALL {len(filtered)} invoices.'
+                    'note': f'Showing top {min(limit or 50, len(filtered))} of {len(filtered)} invoices. Totals calculated from ALL {len(filtered)} invoices.'
                 }
         
         # AP queries - use pre-computed metrics from cache
@@ -5326,7 +5326,7 @@ def execute_nlq_query(query_plan, data):
                     'items': [{'vendor': v, 'amount': a} for v, a in sorted_vendors[:limit]],
                     'total_vendors': len(sorted_vendors),
                     'total_amount': round(total_amount, 2),
-                    'note': f'Showing top {min(limit, len(sorted_vendors))} of {len(sorted_vendors)} vendors. Total from ALL vendors.'
+                    'note': f'Showing top {min(limit or 50, len(sorted_vendors))} of {len(sorted_vendors)} vendors. Total from ALL vendors.'
                 }
             elif aggregation == 'aging':
                 buckets = {'current': 0, 'days_31_60': 0, 'days_61_90': 0, 'days_90_plus': 0}
@@ -5355,7 +5355,7 @@ def execute_nlq_query(query_plan, data):
                     'total_amount': round(total_amount, 2),
                     'total_retainage': round(total_retainage, 2),
                     'avg_days_outstanding': round(avg_days, 1),
-                    'note': f'Showing top {min(limit, len(filtered))} of {len(filtered)} invoices. Totals calculated from ALL {len(filtered)} invoices.'
+                    'note': f'Showing top {min(limit or 50, len(filtered))} of {len(filtered)} invoices. Totals calculated from ALL {len(filtered)} invoices.'
                 }
         
         # GL queries
@@ -5472,7 +5472,7 @@ def execute_nlq_query(query_plan, data):
                 'grand_total_contract': round(grand_total_contract, 2),
                 'grand_total_jobs': grand_total_jobs,
                 'grand_avg_margin': round(grand_avg_margin, 2),
-                'note': f'Showing {min(limit, len(pm_list))} of {len(pm_list)} PMs. Grand totals from ALL {len(pm_list)} PMs.'
+                'note': f'Showing {min(limit or 50, len(pm_list))} of {len(pm_list)} PMs. Grand totals from ALL {len(pm_list)} PMs.'
             }
         
         # PM comparison (side-by-side) - use pre-computed metrics from cache
