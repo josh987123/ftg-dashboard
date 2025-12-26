@@ -17472,22 +17472,21 @@ function matchDepositToAR(amount) {
   const absAmount = Math.abs(amount);
   const matches = [];
   
-  // Group allocations by receipt_amount to handle multi-job receipts
+  // Group allocations by receipt_document_no (unique receipt identifier) to handle multi-job receipts
   const receiptGroups = {};
   dcrArAllocations.forEach(alloc => {
-    const receiptAmt = parseFloat(alloc.receipt_amount) || 0;
-    if (!receiptGroups[receiptAmt]) {
-      receiptGroups[receiptAmt] = [];
+    const receiptDocNo = alloc.receipt_document_no;
+    if (!receiptGroups[receiptDocNo]) {
+      receiptGroups[receiptDocNo] = [];
     }
-    receiptGroups[receiptAmt].push(alloc);
+    receiptGroups[receiptDocNo].push(alloc);
   });
   
-  // Look for exact matches on receipt_amount
-  Object.entries(receiptGroups).forEach(([receiptAmt, allocs]) => {
-    const amt = parseFloat(receiptAmt);
-    if (Math.abs(amt - absAmount) < 0.01) {
-      // Found a match - get the first allocation for main info
-      // but aggregate job info if multiple jobs
+  // Look for receipts where receipt_amount matches the transaction amount
+  Object.entries(receiptGroups).forEach(([receiptDocNo, allocs]) => {
+    const receiptAmt = parseFloat(allocs[0].receipt_amount) || 0;
+    if (Math.abs(receiptAmt - absAmount) < 0.01) {
+      // Found a match - get allocation info and aggregate for multi-job receipts
       const firstAlloc = allocs[0];
       const customerNo = firstAlloc.customer_no;
       const customerName = dcrCustomerLookup[customerNo] || `Customer #${customerNo}`;
@@ -17504,6 +17503,7 @@ function matchDepositToAR(amount) {
         job_desc: jobDescriptions.length === 1 ? jobDescriptions[0] : (jobDescriptions.length > 1 ? 'Multiple jobs' : ''),
         invoice_no: firstAlloc.invoice_no,
         receipt_no: firstAlloc.receipt_no,
+        receipt_doc_no: receiptDocNo,
         confidence: 'high',
         allocationCount: allocs.length
       });
@@ -17526,22 +17526,23 @@ function matchDepositToAR(amount) {
           job_desc: alloc.job_description || '',
           invoice_no: alloc.invoice_no,
           receipt_no: alloc.receipt_no,
+          receipt_doc_no: alloc.receipt_document_no,
           confidence: 'high'
         });
       }
     });
   }
   
-  // Dedupe matches by job_no
+  // Dedupe matches by receipt_doc_no (each unique receipt should appear once)
   const seen = new Set();
   const uniqueMatches = matches.filter(m => {
-    const key = `${m.customer_no}-${m.job_no}`;
+    const key = m.receipt_doc_no || `${m.customer_no}-${m.job_no}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
   
-  // Return best match
+  // Return best match (first one found)
   if (uniqueMatches.length >= 1) return uniqueMatches[0];
   return null;
 }
