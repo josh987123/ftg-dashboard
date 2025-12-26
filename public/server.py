@@ -5326,45 +5326,32 @@ def execute_nlq_query(query_plan, data):
                 filtered.sort(key=lambda x: x['total'], reverse=True)
                 results = {'items': filtered[:limit], 'total': sum(e['total'] for e in filtered), 'years': years}
         
-        # PM summary queries
+        # PM summary queries - use pre-computed metrics from cache
         elif target == 'pm_summary':
-            budgets = data.get('jobs', {}).get('job_budgets', [])
-            actuals = data.get('jobs', {}).get('job_actuals', [])
+            # Get pre-computed PM metrics from cache (properly handles closed vs active profit/margin)
+            all_pm = metrics_cache.pm
             
-            # Build actual cost by job (job_actuals uses Job_No and Value with capital letters)
-            actual_cost_by_job = {}
-            for a in actuals:
-                job_no = str(a.get('Job_No') or a.get('job_no', ''))
-                actual_cost_by_job[job_no] = actual_cost_by_job.get(job_no, 0) + float(a.get('Value') or a.get('actual_cost') or 0)
-            
-            pm_stats = {}
-            for job in budgets:
-                pm = job.get('project_manager_name', '')
-                if 'josh angelo' in pm.lower():
-                    continue
-                status = job.get('job_status', '')
+            pm_list = []
+            for pm_data in all_pm:
+                pm_name = pm_data.get('project_manager', '')
+                # Josh Angelo already excluded by metrics cache
                 
-                if filters.get('status') and status != filters['status']:
-                    continue
-                
-                if pm not in pm_stats:
-                    pm_stats[pm] = {'jobs': 0, 'active_jobs': 0, 'contract': 0, 'budget_cost': 0, 'actual_cost': 0}
-                
-                pm_stats[pm]['jobs'] += 1
-                if status == 'A':
-                    pm_stats[pm]['active_jobs'] += 1
-                pm_stats[pm]['contract'] += float(job.get('revised_contract') or 0)
-                pm_stats[pm]['budget_cost'] += float(job.get('revised_cost') or 0)
-                pm_stats[pm]['actual_cost'] += actual_cost_by_job.get(str(job.get('job_no', '')), 0)
-            
-            # Calculate margins
-            for pm, stats in pm_stats.items():
-                if stats['contract'] > 0:
-                    stats['margin'] = (stats['contract'] - stats['budget_cost']) / stats['contract'] * 100
-                else:
-                    stats['margin'] = 0
-            
-            pm_list = [{'pm': pm, **stats} for pm, stats in pm_stats.items()]
+                pm_list.append({
+                    'pm': pm_name,
+                    'jobs': pm_data.get('total_jobs', 0),
+                    'active_jobs': pm_data.get('active_jobs', 0),
+                    'jobs_with_budget': pm_data.get('jobs_with_budget', 0),
+                    'jobs_valid_for_profit': pm_data.get('jobs_valid_for_profit', 0),
+                    'contract': pm_data.get('total_contract', 0),
+                    'budget_cost': pm_data.get('total_budget', 0),
+                    'actual_cost': pm_data.get('total_actual', 0),
+                    'billed': pm_data.get('total_billed', 0),
+                    'earned_revenue': pm_data.get('total_earned_revenue', 0),
+                    'backlog': pm_data.get('total_backlog', 0),
+                    'profit': pm_data.get('total_profit', 0),
+                    'margin': pm_data.get('avg_margin', 0),
+                    'avg_completion': pm_data.get('avg_completion', 0)
+                })
             
             if filters.get('pm'):
                 pm_list = [p for p in pm_list if pm_matches(p['pm'], filters['pm'])]
@@ -5381,7 +5368,7 @@ def execute_nlq_query(query_plan, data):
             
             results = {'items': pm_list[:limit], 'total_pms': len(pm_list)}
         
-        # PM comparison (side-by-side)
+        # PM comparison (side-by-side) - use pre-computed metrics from cache
         elif target == 'pm_comparison':
             pm_filter = filters.get('pm', '')
             pm_names = [p.strip() for p in str(pm_filter).split(',') if p.strip()]
@@ -5389,55 +5376,41 @@ def execute_nlq_query(query_plan, data):
             if len(pm_names) < 2:
                 results = {'error': 'pm_comparison requires at least 2 PM names separated by commas'}
             else:
-                budgets = data.get('jobs', {}).get('job_budgets', [])
-                actuals = data.get('jobs', {}).get('job_actuals', [])
-                billed_data = data.get('jobs', {}).get('job_billed_revenue', [])
-                ar_invoices = data.get('ar', {}).get('invoices', [])
+                # Use pre-computed PM metrics from cache
+                all_pm = metrics_cache.pm
+                ar_invoices = metrics_cache.ar
                 
-                # Build actual cost by job
-                actual_cost_by_job = {}
-                for a in actuals:
-                    job_no = str(a.get('Job_No') or a.get('job_no', ''))
-                    actual_cost_by_job[job_no] = actual_cost_by_job.get(job_no, 0) + float(a.get('Value') or a.get('actual_cost') or 0)
-                
-                # Build billed by job
-                billed_by_job = {}
-                for b in billed_data:
-                    job_no = str(b.get('Job_No') or b.get('job_no', ''))
-                    billed_by_job[job_no] = float(b.get('Billed_Revenue') or b.get('billed_revenue') or 0)
-                
-                # Build AR by job
-                ar_by_job = {}
+                # Build AR by PM for comparison
+                ar_by_pm = {}
                 for inv in ar_invoices:
-                    job_no = str(inv.get('job_no', ''))
-                    collectible = float(inv.get('calculated_amount_due', 0) or 0) - float(inv.get('retainage_amount', 0) or 0)
-                    ar_by_job[job_no] = ar_by_job.get(job_no, 0) + collectible
+                    pm = inv.get('project_manager', '')
+                    ar_by_pm[pm] = ar_by_pm.get(pm, 0) + inv.get('collectible', 0)
                 
                 comparison = {}
                 for pm_name in pm_names:
                     pm_lower = pm_name.lower()
-                    stats = {'active_jobs': 0, 'total_jobs': 0, 'contract': 0, 'budget_cost': 0, 'actual_cost': 0, 'billed': 0, 'ar_balance': 0, 'margin': 0}
                     
-                    for job in budgets:
-                        pm = job.get('project_manager_name', '')
-                        if pm_lower not in pm.lower():
-                            continue
-                        
-                        job_no = str(job.get('job_no', ''))
-                        status = job.get('job_status', '')
-                        
-                        # Only count active jobs for most metrics
-                        if status == 'A':
-                            stats['active_jobs'] += 1
-                            stats['contract'] += float(job.get('revised_contract', 0) or 0)
-                            stats['budget_cost'] += float(job.get('revised_cost', 0) or 0)
-                            stats['actual_cost'] += actual_cost_by_job.get(job_no, 0)
-                            stats['billed'] += billed_by_job.get(job_no, 0)
-                            stats['ar_balance'] += ar_by_job.get(job_no, 0)
-                        stats['total_jobs'] += 1
+                    # Find matching PM in cache
+                    matched_pm = None
+                    for pm_data in all_pm:
+                        if pm_lower in pm_data.get('project_manager', '').lower():
+                            matched_pm = pm_data
+                            break
                     
-                    if stats['contract'] > 0:
-                        stats['margin'] = round((stats['contract'] - stats['budget_cost']) / stats['contract'] * 100, 1)
+                    if matched_pm:
+                        stats = {
+                            'active_jobs': matched_pm.get('active_jobs', 0),
+                            'total_jobs': matched_pm.get('total_jobs', 0),
+                            'contract': matched_pm.get('total_contract', 0),
+                            'budget_cost': matched_pm.get('total_budget', 0),
+                            'actual_cost': matched_pm.get('total_actual', 0),
+                            'billed': matched_pm.get('total_billed', 0),
+                            'ar_balance': ar_by_pm.get(matched_pm.get('project_manager', ''), 0),
+                            'profit': matched_pm.get('total_profit', 0),
+                            'margin': matched_pm.get('avg_margin', 0)
+                        }
+                    else:
+                        stats = {'active_jobs': 0, 'total_jobs': 0, 'contract': 0, 'budget_cost': 0, 'actual_cost': 0, 'billed': 0, 'ar_balance': 0, 'profit': 0, 'margin': 0}
                     
                     comparison[pm_name] = stats
                 
