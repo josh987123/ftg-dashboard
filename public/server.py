@@ -4797,14 +4797,26 @@ ENTITY: CashTransaction
 
 === QUERY TARGET SELECTION GUIDE ===
 
-pm_summary: Use for analyzing ALL PMs or finding highest/lowest PM metrics (margin, jobs, contract)
+pm_summary: ALWAYS use for PM metrics queries (margin, profit, jobs, contract, performance)
+  - "What is [PM name]'s margin/profit?" -> pm_summary with filters.pm="[PM name]"
   - "Which PM has the lowest margin?" -> pm_summary with aggregation=margin_analysis or bottom
   - "Top PMs by contract value" -> pm_summary with aggregation=top
+  - "[PM name]'s active/closed projects" -> pm_summary with filters.pm="[PM name]" (includes active_jobs count)
+  CRITICAL: pm_summary has pre-computed profit/margin from ALL jobs with proper closed vs active logic:
+    - Closed jobs: profit = billed - actual_cost, margin = profit/billed
+    - Active jobs: profit = contract - budget_cost, margin = profit/contract
+  Fields available: pm, jobs, active_jobs, closed_jobs, jobs_with_budget, jobs_valid_for_profit, contract, budget_cost, actual_cost, billed, earned_revenue, backlog, profit, margin, avg_completion
+  Status-specific fields: active_profit, active_margin, active_valid_for_profit, closed_profit, closed_margin, closed_valid_for_profit
+  Use these for questions like "what is [PM]'s active project margin vs closed project margin"
   
-pm_comparison: Use ONLY when comparing specific named PMs side by side
+pm_comparison: Use ONLY when comparing 2+ specific named PMs side by side
   - "Compare Rodney and Pedro metrics" -> pm_comparison with filters.pm="Rodney,Pedro"
 
-jobs: Use for job-level queries, can aggregate by_pm, by_customer
+jobs: Use for INDIVIDUAL job-level queries or listing specific jobs. NOT for PM aggregate metrics.
+  - "List jobs for [PM name]" -> jobs with filters.pm="[PM name]" (returns individual jobs)
+  - "What are [PM name]'s lowest margin jobs?" -> jobs with filters.pm and aggregation=bottom
+  DO NOT use jobs target for questions about PM total/overall/average margin - use pm_summary instead.
+
 cost_codes: Use for cost code analysis across jobs
 customers: Use for customer-level aggregations combining jobs and AR data
 
@@ -5340,6 +5352,7 @@ def execute_nlq_query(query_plan, data):
                     'pm': pm_name,
                     'jobs': pm_data.get('total_jobs', 0),
                     'active_jobs': pm_data.get('active_jobs', 0),
+                    'closed_jobs': pm_data.get('closed_jobs', 0),
                     'jobs_with_budget': pm_data.get('jobs_with_budget', 0),
                     'jobs_valid_for_profit': pm_data.get('jobs_valid_for_profit', 0),
                     'contract': pm_data.get('total_contract', 0),
@@ -5350,7 +5363,13 @@ def execute_nlq_query(query_plan, data):
                     'backlog': pm_data.get('total_backlog', 0),
                     'profit': pm_data.get('total_profit', 0),
                     'margin': pm_data.get('avg_margin', 0),
-                    'avg_completion': pm_data.get('avg_completion', 0)
+                    'avg_completion': pm_data.get('avg_completion', 0),
+                    'active_profit': pm_data.get('active_profit', 0),
+                    'active_margin': pm_data.get('active_avg_margin', 0),
+                    'active_valid_for_profit': pm_data.get('active_valid_for_profit', 0),
+                    'closed_profit': pm_data.get('closed_profit', 0),
+                    'closed_margin': pm_data.get('closed_avg_margin', 0),
+                    'closed_valid_for_profit': pm_data.get('closed_valid_for_profit', 0)
                 })
             
             if filters.get('pm'):

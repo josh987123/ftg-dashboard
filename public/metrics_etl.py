@@ -333,6 +333,7 @@ def aggregate_pm_metrics(job_metrics: List[dict], exclude_josh: bool = True) -> 
                 'project_manager': pm,
                 'total_jobs': 0,
                 'active_jobs': 0,
+                'closed_jobs': 0,
                 'jobs_with_budget': 0,
                 'jobs_valid_for_profit': 0,
                 'total_contract': 0,
@@ -343,7 +344,13 @@ def aggregate_pm_metrics(job_metrics: List[dict], exclude_josh: bool = True) -> 
                 'total_backlog': 0,
                 'total_profit': 0,
                 'margin_sum': 0,
-                'completion_sum': 0
+                'completion_sum': 0,
+                'active_profit': 0,
+                'active_margin_sum': 0,
+                'active_valid_for_profit': 0,
+                'closed_profit': 0,
+                'closed_margin_sum': 0,
+                'closed_valid_for_profit': 0
             }
         
         pm_data[pm]['total_jobs'] += 1
@@ -352,8 +359,11 @@ def aggregate_pm_metrics(job_metrics: List[dict], exclude_josh: bool = True) -> 
         pm_data[pm]['total_actual'] += job['actual_cost']
         pm_data[pm]['total_billed'] += job['billed']
         
-        if job['job_status'] == 'A':
+        job_status = job['job_status']
+        if job_status == 'A':
             pm_data[pm]['active_jobs'] += 1
+        elif job_status == 'C':
+            pm_data[pm]['closed_jobs'] += 1
         
         if job['has_budget']:
             pm_data[pm]['jobs_with_budget'] += 1
@@ -365,18 +375,33 @@ def aggregate_pm_metrics(job_metrics: List[dict], exclude_josh: bool = True) -> 
             pm_data[pm]['jobs_valid_for_profit'] += 1
             pm_data[pm]['total_profit'] += job['profit']
             pm_data[pm]['margin_sum'] += job['margin']
+            
+            if job_status == 'A':
+                pm_data[pm]['active_profit'] += job['profit']
+                pm_data[pm]['active_margin_sum'] += job['margin']
+                pm_data[pm]['active_valid_for_profit'] += 1
+            elif job_status == 'C':
+                pm_data[pm]['closed_profit'] += job['profit']
+                pm_data[pm]['closed_margin_sum'] += job['margin']
+                pm_data[pm]['closed_valid_for_profit'] += 1
     
     results = []
     for pm, data in pm_data.items():
         jobs_with_budget = data['jobs_with_budget']
         jobs_valid_for_profit = data['jobs_valid_for_profit']
+        active_valid = data['active_valid_for_profit']
+        closed_valid = data['closed_valid_for_profit']
+        
         avg_margin = (data['margin_sum'] / jobs_valid_for_profit) if jobs_valid_for_profit > 0 else 0
         avg_completion = (data['completion_sum'] / jobs_with_budget) if jobs_with_budget > 0 else 0
+        active_avg_margin = (data['active_margin_sum'] / active_valid) if active_valid > 0 else 0
+        closed_avg_margin = (data['closed_margin_sum'] / closed_valid) if closed_valid > 0 else 0
         
         results.append({
             'project_manager': pm,
             'total_jobs': data['total_jobs'],
             'active_jobs': data['active_jobs'],
+            'closed_jobs': data['closed_jobs'],
             'jobs_with_budget': jobs_with_budget,
             'jobs_valid_for_profit': jobs_valid_for_profit,
             'total_contract': round(data['total_contract'], 2),
@@ -387,7 +412,13 @@ def aggregate_pm_metrics(job_metrics: List[dict], exclude_josh: bool = True) -> 
             'total_backlog': round(data['total_backlog'], 2),
             'total_profit': round(data['total_profit'], 2),
             'avg_margin': round(avg_margin, 2),
-            'avg_completion': round(avg_completion, 2)
+            'avg_completion': round(avg_completion, 2),
+            'active_profit': round(data['active_profit'], 2),
+            'active_avg_margin': round(active_avg_margin, 2),
+            'active_valid_for_profit': active_valid,
+            'closed_profit': round(data['closed_profit'], 2),
+            'closed_avg_margin': round(closed_avg_margin, 2),
+            'closed_valid_for_profit': closed_valid
         })
     
     return sorted(results, key=lambda x: x['total_contract'], reverse=True)
