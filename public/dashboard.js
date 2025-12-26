@@ -2222,15 +2222,6 @@ function initAllAiPanelToggles() {
   const dcrBtn = document.getElementById('dcrAiAnalyzeBtn');
   if (dcrBtn) dcrBtn.addEventListener('click', performCashReportAiAnalysis);
   
-  // Setup Cash Report AI panel toggle
-  const dcrAiHeader = document.getElementById('dcrAiAnalysisHeader');
-  const dcrAiPanel = document.getElementById('dcrAiAnalysisPanel');
-  if (dcrAiHeader && dcrAiPanel) {
-    dcrAiHeader.addEventListener('click', (e) => {
-      if (dcrBtn && (e.target === dcrBtn || dcrBtn.contains(e.target))) return;
-      dcrAiPanel.classList.toggle('collapsed');
-    });
-  }
 }
 
 async function performOverviewAiAnalysis() {
@@ -17774,13 +17765,11 @@ function renderDcrTransactionList(txns, type) {
 // Cash Report AI Analysis
 async function performCashReportAiAnalysis() {
   const btn = document.getElementById('dcrAiAnalyzeBtn');
-  const panel = document.getElementById('dcrAiAnalysisPanel');
-  const content = document.getElementById('dcrAiAnalysisContent');
+  const contentEl = document.getElementById('dcrAiAnalysisContent');
   
   btn.disabled = true;
   btn.textContent = 'Analyzing...';
-  panel.classList.remove('collapsed');
-  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing cash position...</div>';
+  contentEl.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div> Analyzing cash position...</div>';
   
   try {
     const statementData = extractCashReportData();
@@ -17796,17 +17785,65 @@ async function performCashReportAiAnalysis() {
     
     const result = await response.json();
     if (result.success) {
-      content.innerHTML = formatMarkdown(result.analysis);
-      panel.classList.add('has-analysis');
+      // Format the analysis with highlighted dollar amounts
+      const formattedAnalysis = formatCashAnalysis(result.analysis);
+      contentEl.innerHTML = formattedAnalysis;
     } else {
-      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+      contentEl.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
     }
   } catch (e) {
-    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
+    contentEl.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
   } finally {
     btn.disabled = false;
     btn.textContent = 'Run Analysis';
   }
+}
+
+// Format cash analysis with green/red highlights for dollar amounts
+function formatCashAnalysis(text) {
+  // Match dollar amounts like $243K, $12.5M, $628,321, etc.
+  // Highlight positive context (received, deposits, paid us) in green
+  // Highlight negative context (paid out, withdrawals, decreased) in red
+  
+  let formatted = text;
+  
+  // First, identify sentences about decreases/paid out - these amounts should be red
+  formatted = formatted.replace(
+    /\b(decreased|paid out|withdrawals?|paid|spent|expense|cost)\s+(\$[\d,\.]+[KMB]?)/gi,
+    (match, context, amount) => `${context} <span class="highlight-negative">${amount}</span>`
+  );
+  
+  // Sentences about increases/received - these amounts should be green  
+  formatted = formatted.replace(
+    /\b(increased|received|deposits?|paid us|income|revenue)\s+(\$[\d,\.]+[KMB]?)/gi,
+    (match, context, amount) => `${context} <span class="highlight-positive">${amount}</span>`
+  );
+  
+  // Customer payments (from X for) - green
+  formatted = formatted.replace(
+    /\bfrom\s+([A-Za-z][A-Za-z\s&]+?)\s+(\(|for)\s*(\$[\d,\.]+[KMB]?)/gi,
+    (match, customer, sep, amount) => `from ${customer} ${sep}<span class="highlight-positive">${amount}</span>`
+  );
+  
+  // Standalone amounts with "for" context (customer payments) - green
+  formatted = formatted.replace(
+    /\(\$(\d+[KMB]?)\s+(for|across)/gi,
+    (match, amount, context) => `(<span class="highlight-positive">$${amount}</span> ${context}`
+  );
+  
+  // Safety check amounts - neutral/bold
+  formatted = formatted.replace(
+    /\b(healthy|safety check)\s+at\s+(\$[\d,\.]+[KMB]?)/gi,
+    (match, context, amount) => `${context} at <span class="highlight-neutral">${amount}</span>`
+  );
+  
+  // Current balance - neutral/bold
+  formatted = formatted.replace(
+    /\bto\s+(\$[\d,\.]+[,\d]*)/gi,
+    (match, amount) => `to <span class="highlight-neutral">${amount}</span>`
+  );
+  
+  return formatted;
 }
 
 function extractCashReportData() {
