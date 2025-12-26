@@ -16451,6 +16451,9 @@ let dcrArMetrics = null;
 let dcrApMetrics = null;
 let dcrJobsMetrics = null;
 let dcrViewMode = 'weekly'; // 'daily' or 'weekly' - weekly is default
+let dcrArAllocations = null; // AR receipt job allocations
+let dcrApAllocations = null; // AP payment job allocations
+let dcrCustomerLookup = {}; // Customer name lookup by customer_no
 
 async function initCashReport() {
   console.log('[DCR] Initializing Cash Report...');
@@ -16500,7 +16503,8 @@ async function loadCashReportData() {
     console.log('[DCR] Fetching cash data from:', apiUrl);
     
     // Fetch all data in parallel - use metrics API for totals, raw data for detail breakdowns
-    const [cashResponse, arMetrics, apMetrics, jobsMetrics, arData, apData, jobsData, glData, accountGroups] = await Promise.all([
+    // Also load AR/AP allocation files for transaction matching
+    const [cashResponse, arMetrics, apMetrics, jobsMetrics, arData, apData, jobsData, glData, accountGroups, arAllocations, apAllocations] = await Promise.all([
       fetch(apiUrl).then(r => r.json()),
       DataCache.getARMetrics().catch(() => ({ summary: {} })),
       DataCache.getAPMetrics().catch(() => ({ summary: {} })),
@@ -16509,7 +16513,9 @@ async function loadCashReportData() {
       DataCache.getAPData().catch(() => ({ invoices: [] })),
       DataCache.getJobsData().catch(() => ({ job_budgets: [] })),
       DataCache.getGLData().catch(() => ({ gl_history_all: [] })),
-      DataCache.getAccountGroups().catch(() => ({ income_statement: { groups: [] } }))
+      DataCache.getAccountGroups().catch(() => ({ income_statement: { groups: [] } })),
+      fetch('/data/ar_receipt_job_allocation.json').then(r => r.json()).catch(() => ({ allocations: [] })),
+      fetch('/data/ap_payment_job_allocation.json').then(r => r.json()).catch(() => ({ allocations: [] }))
     ]);
     
     console.log('[DCR] Received data:', { 
@@ -16521,7 +16527,9 @@ async function loadCashReportData() {
       arInvoices: arData?.invoices?.length,
       apInvoices: apData?.invoices?.length,
       jobs: jobsData?.job_budgets?.length,
-      glRecords: glData?.gl_history_all?.length
+      glRecords: glData?.gl_history_all?.length,
+      arAllocations: arAllocations?.allocations?.length,
+      apAllocations: apAllocations?.allocations?.length
     });
     
     if (!cashResponse.success) {
@@ -16537,6 +16545,19 @@ async function loadCashReportData() {
     dcrJobsData = jobsData;
     dcrGLData = glData;
     dcrAccountGroups = accountGroups;
+    dcrArAllocations = arAllocations?.allocations || [];
+    dcrApAllocations = apAllocations?.allocations || [];
+    
+    // Build customer lookup from AR invoice data
+    dcrCustomerLookup = {};
+    if (arData?.invoices) {
+      arData.invoices.forEach(inv => {
+        if (inv.customer_no && inv.customer_name) {
+          dcrCustomerLookup[inv.customer_no] = inv.customer_name;
+        }
+      });
+    }
+    console.log('[DCR] Built customer lookup with', Object.keys(dcrCustomerLookup).length, 'customers');
     
   } catch (error) {
     console.error('[DCR] Error loading cash report data:', error);
@@ -17443,158 +17464,166 @@ function addCashReportTableExportButtons() {
   });
 }
 
-// Match deposit amount against AR invoices to find potential customer/job
-// Only matches invoices with outstanding balances or recent activity
+// Match deposit amount against AR receipt allocations to find customer/job
+// Uses the ar_receipt_job_allocation.json data for precise matching
 function matchDepositToAR(amount) {
-  if (!dcrArData?.invoices) return null;
+  if (!dcrArAllocations || dcrArAllocations.length === 0) return null;
   
   const absAmount = Math.abs(amount);
   const matches = [];
   
-  // Filter to invoices with outstanding balances (more likely to be paid recently)
-  const activeInvoices = dcrArData.invoices.filter(inv => {
-    const calcDue = parseFloat(inv.calculated_amount_due) || 0;
-    const daysOut = parseInt(inv.days_outstanding) || 0;
-    // Only consider invoices that are open (have balance) or recently paid (within 90 days)
-    return calcDue > 0 || daysOut <= 90;
+  // Group allocations by receipt_amount to handle multi-job receipts
+  const receiptGroups = {};
+  dcrArAllocations.forEach(alloc => {
+    const receiptAmt = parseFloat(alloc.receipt_amount) || 0;
+    if (!receiptGroups[receiptAmt]) {
+      receiptGroups[receiptAmt] = [];
+    }
+    receiptGroups[receiptAmt].push(alloc);
   });
   
-  // Look for exact matches against invoice amounts or net payments
-  activeInvoices.forEach(inv => {
-    const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
-    const calcDue = parseFloat(inv.calculated_amount_due) || 0;
-    const netPayment = invoiceAmt - calcDue; // Amount that would have been paid
-    
-    // Check for exact match (within $0.01) against full invoice or net payment
-    if (Math.abs(invoiceAmt - absAmount) < 0.01 || 
-        (netPayment > 0 && Math.abs(netPayment - absAmount) < 0.01)) {
+  // Look for exact matches on receipt_amount
+  Object.entries(receiptGroups).forEach(([receiptAmt, allocs]) => {
+    const amt = parseFloat(receiptAmt);
+    if (Math.abs(amt - absAmount) < 0.01) {
+      // Found a match - get the first allocation for main info
+      // but aggregate job info if multiple jobs
+      const firstAlloc = allocs[0];
+      const customerNo = firstAlloc.customer_no;
+      const customerName = dcrCustomerLookup[customerNo] || `Customer #${customerNo}`;
+      
+      // Get all unique jobs from this receipt
+      const jobs = [...new Set(allocs.map(a => a.job_no))].filter(j => j);
+      const jobDescriptions = [...new Set(allocs.map(a => a.job_description))].filter(j => j);
+      
       matches.push({
         type: 'exact',
-        customer: inv.customer_name,
-        job_no: inv.job_no,
-        job_desc: inv.job_description,
-        pm: inv.project_manager_name,
-        invoice_no: inv.invoice_no,
-        daysOut: parseInt(inv.days_outstanding) || 0,
-        confidence: 'high'
+        customer: customerName,
+        customer_no: customerNo,
+        job_no: jobs.length === 1 ? jobs[0] : (jobs.length > 1 ? jobs.join(', ') : ''),
+        job_desc: jobDescriptions.length === 1 ? jobDescriptions[0] : (jobDescriptions.length > 1 ? 'Multiple jobs' : ''),
+        invoice_no: firstAlloc.invoice_no,
+        receipt_no: firstAlloc.receipt_no,
+        confidence: 'high',
+        allocationCount: allocs.length
       });
     }
   });
   
-  // If no exact matches, look for close matches but only on open invoices
+  // If no exact receipt match, try matching against applied_amount (partial payments)
   if (matches.length === 0) {
-    const openInvoices = activeInvoices.filter(inv => 
-      (parseFloat(inv.calculated_amount_due) || 0) > 0
-    );
-    
-    openInvoices.forEach(inv => {
-      const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
-      const calcDue = parseFloat(inv.calculated_amount_due) || 0;
-      
-      // Close match (within 5%) on outstanding amount
-      if (calcDue > 0 && Math.abs(calcDue - absAmount) / calcDue < 0.05) {
+    dcrArAllocations.forEach(alloc => {
+      const appliedAmt = parseFloat(alloc.applied_amount) || 0;
+      if (Math.abs(appliedAmt - absAmount) < 0.01) {
+        const customerNo = alloc.customer_no;
+        const customerName = dcrCustomerLookup[customerNo] || `Customer #${customerNo}`;
+        
         matches.push({
-          type: 'close',
-          customer: inv.customer_name,
-          job_no: inv.job_no,
-          job_desc: inv.job_description,
-          pm: inv.project_manager_name,
-          invoice_no: inv.invoice_no,
-          daysOut: parseInt(inv.days_outstanding) || 0,
-          confidence: 'medium'
+          type: 'exact',
+          customer: customerName,
+          customer_no: customerNo,
+          job_no: alloc.job_no || '',
+          job_desc: alloc.job_description || '',
+          invoice_no: alloc.invoice_no,
+          receipt_no: alloc.receipt_no,
+          confidence: 'high'
         });
       }
     });
   }
   
-  // Sort by confidence, then by recency (lower days outstanding = more recent)
-  matches.sort((a, b) => {
-    if (a.type !== b.type) return a.type === 'exact' ? -1 : 1;
-    if (a.job_no && !b.job_no) return -1;
-    if (!a.job_no && b.job_no) return 1;
-    return (a.daysOut || 999) - (b.daysOut || 999);
+  // Dedupe matches by job_no
+  const seen = new Set();
+  const uniqueMatches = matches.filter(m => {
+    const key = `${m.customer_no}-${m.job_no}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
   });
   
-  // Only return if we have a single strong match or multiple exact matches
-  if (matches.length === 1) return matches[0];
-  if (matches.length > 1 && matches[0].type === 'exact') return matches[0];
+  // Return best match
+  if (uniqueMatches.length >= 1) return uniqueMatches[0];
   return null;
 }
 
-// Match withdrawal amount against AP invoices to find potential vendor/job
-// Only matches invoices with recent payment activity or outstanding balances
+// Match withdrawal amount against AP payment allocations to find vendor/job
+// Uses the ap_payment_job_allocation.json data for precise matching
 function matchWithdrawalToAP(amount) {
-  if (!dcrApData?.invoices) return null;
+  if (!dcrApAllocations || dcrApAllocations.length === 0) return null;
   
   const absAmount = Math.abs(amount);
   const matches = [];
   
-  // Filter to invoices with outstanding balances or recent activity
-  const activeInvoices = dcrApData.invoices.filter(inv => {
-    const remaining = parseFloat(inv.remaining_balance) || 0;
-    const daysOut = parseInt(inv.days_outstanding) || 0;
-    const status = (inv.payment_status || '').toLowerCase();
-    // Only consider invoices with balance or recently paid (within 90 days)
-    return remaining > 0 || (status === 'paid' && daysOut <= 90);
+  // Group allocations by payment_document_no to handle multi-voucher payments
+  const paymentGroups = {};
+  dcrApAllocations.forEach(alloc => {
+    const paymentDoc = alloc.payment_document_no;
+    if (!paymentGroups[paymentDoc]) {
+      paymentGroups[paymentDoc] = {
+        totalAmount: 0,
+        allocations: []
+      };
+    }
+    paymentGroups[paymentDoc].allocations.push(alloc);
+    // Sum the applied amounts for this payment
+    paymentGroups[paymentDoc].totalAmount += parseFloat(alloc.applied_amount) || 0;
   });
   
-  // Look for exact matches against invoice amounts or paid amounts
-  activeInvoices.forEach(inv => {
-    const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
-    const paidAmt = parseFloat(inv.amount_paid_to_date) || 0;
-    
-    // Check for exact match (within $0.01)
-    if (Math.abs(invoiceAmt - absAmount) < 0.01 || 
-        (paidAmt > 0 && Math.abs(paidAmt - absAmount) < 0.01)) {
+  // Look for exact matches on total payment amount
+  Object.entries(paymentGroups).forEach(([paymentDoc, group]) => {
+    if (Math.abs(group.totalAmount - absAmount) < 0.01) {
+      // Found a match - aggregate info from all allocations
+      const allocs = group.allocations;
+      const firstAlloc = allocs[0];
+      
+      // Get unique vendors and jobs
+      const vendors = [...new Set(allocs.map(a => a.vendor_name))].filter(v => v);
+      const jobs = [...new Set(allocs.map(a => a.job_no))].filter(j => j);
+      const jobDescriptions = [...new Set(allocs.map(a => a.job_description))].filter(j => j);
+      
       matches.push({
         type: 'exact',
-        vendor: inv.vendor_name,
-        job_no: inv.job_no,
-        job_desc: inv.job_description,
-        pm: inv.project_manager_name,
-        invoice_no: inv.invoice_no,
-        daysOut: parseInt(inv.days_outstanding) || 0,
-        confidence: 'high'
+        vendor: vendors.length === 1 ? vendors[0] : (vendors.length > 1 ? vendors.join(', ') : ''),
+        vendor_no: firstAlloc.vendor_no,
+        job_no: jobs.length === 1 ? jobs[0] : (jobs.length > 1 ? jobs.join(', ') : ''),
+        job_desc: jobDescriptions.length === 1 ? jobDescriptions[0] : (jobDescriptions.length > 1 ? 'Multiple jobs' : ''),
+        voucher_no: firstAlloc.voucher_no,
+        payment_doc: paymentDoc,
+        confidence: 'high',
+        allocationCount: allocs.length
       });
     }
   });
   
-  // If no exact matches, look for close matches but only on open invoices
+  // If no exact total match, try matching individual applied amounts
   if (matches.length === 0) {
-    const openInvoices = activeInvoices.filter(inv => 
-      (parseFloat(inv.remaining_balance) || 0) > 0
-    );
-    
-    openInvoices.forEach(inv => {
-      const remaining = parseFloat(inv.remaining_balance) || 0;
-      
-      // Close match (within 5%) on outstanding balance
-      if (remaining > 0 && Math.abs(remaining - absAmount) / remaining < 0.05) {
+    dcrApAllocations.forEach(alloc => {
+      const appliedAmt = parseFloat(alloc.applied_amount) || 0;
+      if (Math.abs(appliedAmt - absAmount) < 0.01) {
         matches.push({
-          type: 'close',
-          vendor: inv.vendor_name,
-          job_no: inv.job_no,
-          job_desc: inv.job_description,
-          pm: inv.project_manager_name,
-          invoice_no: inv.invoice_no,
-          daysOut: parseInt(inv.days_outstanding) || 0,
-          confidence: 'medium'
+          type: 'exact',
+          vendor: alloc.vendor_name || '',
+          vendor_no: alloc.vendor_no,
+          job_no: alloc.job_no || '',
+          job_desc: alloc.job_description || '',
+          voucher_no: alloc.voucher_no,
+          confidence: 'high'
         });
       }
     });
   }
   
-  // Sort by confidence, then by recency (lower days outstanding = more recent)
-  matches.sort((a, b) => {
-    if (a.type !== b.type) return a.type === 'exact' ? -1 : 1;
-    if (a.job_no && !b.job_no) return -1;
-    if (!a.job_no && b.job_no) return 1;
-    return (a.daysOut || 999) - (b.daysOut || 999);
+  // Dedupe matches by vendor + job
+  const seen = new Set();
+  const uniqueMatches = matches.filter(m => {
+    const key = `${m.vendor_no}-${m.job_no}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
   });
   
-  // Only return if we have a single strong match or multiple exact matches
-  if (matches.length === 1) return matches[0];
-  if (matches.length > 1 && matches[0].type === 'exact') return matches[0];
+  // Return best match
+  if (uniqueMatches.length >= 1) return uniqueMatches[0];
   return null;
 }
 
