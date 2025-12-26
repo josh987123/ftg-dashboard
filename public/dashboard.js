@@ -17187,13 +17187,14 @@ function renderDcrSafetyCheck() {
   // Get Net Over/Under Bill from metrics API (canonical source)
   let netOUB = 0;
   if (dcrJobsMetrics?.jobs && dcrJobsMetrics.jobs.length > 0) {
-    // Use pre-computed over_under_billing from jobs metrics for active jobs with contracts
+    // Use pre-computed over_under_billing from jobs metrics for active jobs WITH BUDGETS
+    // This matches the calculation on Job Overview, Job Actuals, and Over/Under Billing pages
     dcrJobsMetrics.jobs.forEach(job => {
-      if (job.job_status === 'A' && (job.contract > 0 || job.over_under_billing !== 0)) {
+      if (job.job_status === 'A' && job.has_budget) {
         netOUB += job.over_under_billing || 0;
       }
     });
-    console.log('[DCR] Using jobs metrics for Net OUB:', netOUB);
+    console.log('[DCR] Using jobs metrics for Net OUB (active jobs with budgets):', netOUB);
   } else if (typeof oubData !== 'undefined' && oubData.length > 0) {
     // Fallback to pre-calculated oubData from Over/Under Billing page
     oubData.forEach(job => {
