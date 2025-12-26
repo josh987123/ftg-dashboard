@@ -17384,10 +17384,7 @@ function renderDcrTopTransactions() {
   // Render withdrawals
   withdrawalsContainer.innerHTML = renderDcrTransactionList(topWithdrawals, 'withdrawal');
   
-  // Add export buttons to Cash Report tables after rendering
-  setTimeout(() => {
-    addCashReportTableExportButtons();
-  }, 50);
+  // Export buttons removed from top 5 deposits/withdrawals tables
 }
 
 function addCashReportTableExportButtons() {
@@ -17723,18 +17720,19 @@ function renderDcrTransactionList(txns, type) {
       const confidenceIcon = match.confidence === 'high' ? '●' : '○';
       const confidenceClass = match.confidence === 'high' ? 'match-high' : 'match-medium';
       
-      // For withdrawals with vendor, show vendor name + job info
-      // For deposits with customer, show customer or job info
+      // Format: "Name (Job #(s))" for both deposits (customer) and withdrawals (vendor)
       let displayInfo;
+      const jobNos = match.job_no || '';
       if (type === 'withdrawal' && match.vendor) {
-        const vendorShort = match.vendor.length > 20 ? match.vendor.substring(0, 17) + '...' : match.vendor;
-        displayInfo = jobInfo 
-          ? `${vendorShort} | ${jobInfo}${pmInfo}`
-          : vendorShort;
+        // For withdrawals: Full vendor name (no truncation) with job numbers
+        displayInfo = jobNos 
+          ? `${match.vendor} (${jobNos})`
+          : match.vendor;
       } else {
-        displayInfo = jobInfo 
-          ? `${jobInfo}${jobDesc}${pmInfo}`
-          : entityName.substring(0, 35) + (entityName.length > 35 ? '...' : '');
+        // For deposits: Customer Name (Job #(s))
+        displayInfo = jobNos 
+          ? `${entityName} (${jobNos})`
+          : entityName;
       }
       
       const tooltipText = `${entityName}${jobInfo ? ' | ' + jobInfo + (match.job_desc || '') : ''}`;
