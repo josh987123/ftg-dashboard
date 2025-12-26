@@ -8224,28 +8224,28 @@ body.dark-mode #accounts .summary-tile .tile-label {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--bg-tertiary);
-  border-radius: 6px;
-  padding: 8px 12px;
-  min-width: 80px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  padding: 16px 20px;
+  min-width: 120px;
 }
 
 .dcr-safety-label {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.2px;
-  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
   text-align: center;
   white-space: nowrap;
 }
 
 .dcr-safety-value {
-  font-size: 16px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
-  font-family: 'Menlo', 'Monaco', monospace;
   white-space: nowrap;
 }
 
@@ -8258,17 +8258,17 @@ body.dark-mode #accounts .summary-tile .tile-label {
 }
 
 .dcr-safety-operator {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-secondary);
-  padding: 0 2px;
+  padding: 0 8px;
 }
 
 .dcr-safety-equals {
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--text-secondary);
-  padding: 0 4px;
+  padding: 0 12px;
 }
 
 .dcr-safety-result {
@@ -8277,15 +8277,14 @@ body.dark-mode #accounts .summary-tile .tile-label {
   align-items: center;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
   border: 2px solid var(--border-primary);
-  border-radius: 8px;
-  padding: 10px 16px;
-  min-width: 100px;
+  border-radius: 10px;
+  padding: 16px 24px;
+  min-width: 130px;
 }
 
 .dcr-safety-total {
-  font-size: 18px;
+  font-size: 28px;
   font-weight: 700;
-  font-family: 'Menlo', 'Monaco', monospace;
   white-space: nowrap;
 }
 
@@ -8305,6 +8304,7 @@ body.dark-mode #accounts .summary-tile .tile-label {
 
 [data-theme="dark"] .dcr-safety-item {
   background: #334155;
+  border-color: #475569;
 }
 
 [data-theme="dark"] .dcr-safety-result {
