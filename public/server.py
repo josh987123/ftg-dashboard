@@ -832,28 +832,44 @@ def generate_cash_report_html_email(report_data, ai_analysis=''):
         if w.get('attribution'):
             withdrawals_rows += '<tr style="background:#f8fafc;"><td colspan="3" style="padding:4px 8px 12px 24px;font-size:12px;color:#3b82f6;">\u25cf ' + w.get("attribution", "") + '</td></tr>'
     
-    # Build daily balances chart (HTML/CSS bar chart)
+    # Build weekly balances vertical bar chart
     daily_chart_html = ''
     if daily_balances and len(daily_balances) > 0:
-        max_balance = max(abs(b.get('balance', 0)) for b in daily_balances) if daily_balances else 1
-        chart_rows = ''
+        balances = [b.get('balance', 0) for b in daily_balances]
+        max_balance = max(balances) if balances else 1
+        min_balance = min(balances) if balances else 0
+        
+        # Calculate Y-axis range to show differences (don't start at zero)
+        range_buffer = (max_balance - min_balance) * 0.15
+        y_min = min_balance - range_buffer
+        y_max = max_balance + range_buffer
+        y_range = y_max - y_min if y_max > y_min else 1
+        
+        chart_height = 150
+        bar_color = '#3b82f6'
+        
+        # Build vertical bars using flexbox
+        bars_html = ''
         for db in daily_balances:
             bal = db.get('balance', 0)
-            pct = min(100, abs(bal) / max_balance * 100) if max_balance > 0 else 0
-            bar_color = '#3b82f6'
-            chart_rows += '<tr>'
-            chart_rows += '<td style="padding:6px 8px;font-size:12px;color:#64748b;white-space:nowrap;">' + db.get('date', '') + '</td>'
-            chart_rows += '<td style="padding:6px 8px;width:60%;">'
-            chart_rows += '<div style="background:#e2e8f0;border-radius:4px;height:20px;overflow:hidden;">'
-            chart_rows += '<div style="background:' + bar_color + ';height:100%;width:' + str(int(pct)) + '%;"></div>'
-            chart_rows += '</div></td>'
-            chart_rows += '<td style="padding:6px 8px;font-size:13px;font-weight:600;color:#1e293b;text-align:right;">' + db.get('formatted', '') + '</td>'
-            chart_rows += '</tr>'
+            bar_height_pct = max(5, ((bal - y_min) / y_range) * 100)
+            bar_px = int((bar_height_pct / 100) * chart_height)
+            
+            bars_html += '<td style="vertical-align:bottom;text-align:center;padding:0 2px;">'
+            bars_html += '<div style="font-size:9px;color:#64748b;margin-bottom:4px;">' + db.get('formatted', '') + '</div>'
+            bars_html += '<div style="background:linear-gradient(180deg,' + bar_color + ',#1d4ed8);width:100%;height:' + str(bar_px) + 'px;border-radius:4px 4px 0 0;min-width:35px;"></div>'
+            bars_html += '</td>'
+        
+        # Build date labels row
+        dates_html = ''
+        for db in daily_balances:
+            dates_html += '<td style="text-align:center;padding:6px 2px 0;font-size:10px;color:#64748b;">' + db.get('date', '') + '</td>'
         
         daily_chart_html = '<div style="background:white;padding:24px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">'
-        daily_chart_html += '<div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Daily Cash Balances</div>'
+        daily_chart_html += '<div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:16px;">Weekly Cash Balance</div>'
         daily_chart_html += '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">'
-        daily_chart_html += chart_rows
+        daily_chart_html += '<tr style="height:' + str(chart_height + 20) + 'px;">' + bars_html + '</tr>'
+        daily_chart_html += '<tr>' + dates_html + '</tr>'
         daily_chart_html += '</table></div>'
     
     # AI summary section

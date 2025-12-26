@@ -17882,16 +17882,16 @@ function gatherCashReportDataForEmail() {
 }
 
 function getDailyBalancesForEmail() {
-  // Get daily balances from the chart data
+  // Get weekly balances from the chart data for email (last 10 weeks)
   if (!dcrData || !dcrData.transactions) return [];
   
   const ftgAccounts = dcrData.accounts.filter(a => isFTGBuildersAccount(a.name));
   const ftgAccountNames = ftgAccounts.map(a => a.name);
   const currentBalance = ftgAccounts.reduce((sum, a) => sum + a.balance, 0);
   
-  // Build daily balances for last 7 days
+  // Build weekly balances for last 10 weeks
   const today = new Date();
-  const dailyBalances = [];
+  const weeklyBalances = [];
   
   // Get all transactions sorted by date
   const allTxns = dcrData.transactions
@@ -17899,30 +17899,36 @@ function getDailyBalancesForEmail() {
     .map(txn => ({ ...txn, dateObj: new Date(txn.date) }))
     .sort((a, b) => b.dateObj - a.dateObj);
   
-  // Calculate balance for each of last 7 days
+  // Calculate balance for each of last 10 weeks (going back by 7 days per week)
   let runningBalance = currentBalance;
-  for (let i = 0; i < 7; i++) {
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() - i);
-    const dateStr = targetDate.toISOString().split('T')[0];
-    const dayLabel = targetDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  for (let week = 0; week < 10; week++) {
+    const weekEndDate = new Date(today);
+    weekEndDate.setDate(today.getDate() - (week * 7));
+    const weekLabel = weekEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     
-    // Find transactions for this day and earlier
-    const dayTxns = allTxns.filter(t => t.dateObj.toISOString().split('T')[0] === dateStr);
+    // Get all transactions for this week (7 days)
+    const weekTxns = [];
+    for (let day = 0; day < 7; day++) {
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() - (week * 7) - day);
+      const dateStr = targetDate.toISOString().split('T')[0];
+      const dayTxns = allTxns.filter(t => t.dateObj.toISOString().split('T')[0] === dateStr);
+      weekTxns.push(...dayTxns);
+    }
     
-    dailyBalances.unshift({
-      date: dayLabel,
+    weeklyBalances.unshift({
+      date: weekLabel,
       balance: runningBalance,
       formatted: formatCurrencyCompact(runningBalance)
     });
     
-    // Subtract this day's transactions to get prior day balance
-    dayTxns.forEach(t => {
+    // Subtract this week's transactions to get prior week balance
+    weekTxns.forEach(t => {
       runningBalance -= t.amount;
     });
   }
   
-  return dailyBalances;
+  return weeklyBalances;
 }
 
 
