@@ -776,16 +776,37 @@ def generate_cash_report_html_email(report_data, ai_analysis=''):
             formatted_analysis, flags=re.IGNORECASE
         )
     
-    # Determine net change color and sign
+    # Determine net change color and sign using numeric value when available
     net_change_raw = summary.get('netChange', '--')
-    net_change_color = '#1e293b'
-    if net_change_raw and net_change_raw != '--':
-        if net_change_raw.startswith('+') or (net_change_raw.startswith('$') and not net_change_raw.startswith('-')):
-            net_change_color = '#16a34a'
-            if not net_change_raw.startswith('+'):
-                net_change_raw = '+' + net_change_raw
-        elif net_change_raw.startswith('-'):
+    net_change_numeric = summary.get('netChangeNumeric', None)
+    
+    # Handle net change formatting with proper sign and color
+    if net_change_numeric is not None and net_change_numeric != 0:
+        # Non-zero numeric value - use sign and color
+        sign = '+' if net_change_numeric > 0 else '-'
+        net_change_color = '#16a34a' if net_change_numeric > 0 else '#dc2626'
+        abs_val = abs(net_change_numeric)
+        # Format with full precision like dashboard
+        net_change_raw = sign + '${:,.0f}'.format(abs_val)
+    elif net_change_numeric == 0:
+        # Zero - neutral display, no sign
+        net_change_color = '#1e293b'
+        net_change_raw = '$0'
+    elif net_change_raw and net_change_raw != '--':
+        # Fallback to string parsing if no numeric value provided
+        if net_change_raw.startswith('-'):
             net_change_color = '#dc2626'
+        elif net_change_raw.startswith('+'):
+            net_change_color = '#16a34a'
+        else:
+            # Parse the string to determine if positive (no sign means positive)
+            net_change_color = '#16a34a'
+            if not net_change_raw.startswith('$'):
+                net_change_raw = '+' + net_change_raw
+            else:
+                net_change_raw = '+' + net_change_raw
+    else:
+        net_change_color = '#1e293b'
     
     # Build deposits table rows
     deposits_rows = ''

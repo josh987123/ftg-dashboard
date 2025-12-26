@@ -17078,7 +17078,7 @@ function renderDcrMetrics() {
   
   if (percentChangeEl) {
     // Show net change as dollar amount (deposits - withdrawals), not percent
-    const sign = netChange >= 0 ? '+' : '';
+    const sign = netChange >= 0 ? '+' : '-';
     percentChangeEl.textContent = sign + formatCurrency(Math.abs(netChange));
     percentChangeEl.className = 'dcr-metric-value ' + (netChange >= 0 ? 'positive' : 'negative');
   }
@@ -17854,12 +17854,16 @@ function gatherCashReportDataForEmail() {
   // Also get daily balance chart data for email
   const dailyBalances = getDailyBalancesForEmail();
   
+  // Get raw numeric netChange from window.dcrMetrics if available
+  const numericNetChange = window.dcrMetrics?.netChange ?? null;
+  
   return {
     summary: {
       currentBalance: data.summary.currentBalance,
       deposits: data.summary.deposits,
       withdrawals: data.summary.withdrawals,
       netChange: data.summary.netChange,
+      netChangeNumeric: numericNetChange,
       periodLabel: data.summary.viewMode === 'weekly' ? 'Weekly Cash Report' : 'Daily Cash Report'
     },
     safetyCheck: {
