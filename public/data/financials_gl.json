@@ -1,1206 +1,5 @@
 ﻿{
-    "accounts":  [
-                     {
-                         "account_no":  "1",
-                         "description":  "Temporary Account",
-                         "debit_credit":  "D",
-                         "Account_Key":  "0001"
-                     },
-                     {
-                         "account_no":  "1000",
-                         "description":  "DO Not Use",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1000"
-                     },
-                     {
-                         "account_no":  "1001",
-                         "description":  "Checking - Bridge",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1001"
-                     },
-                     {
-                         "account_no":  "1003",
-                         "description":  "Savings - Bridge",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1003"
-                     },
-                     {
-                         "account_no":  "1004",
-                         "description":  "Brokerage - Charles Schwab",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1004"
-                     },
-                     {
-                         "account_no":  "1005",
-                         "description":  "Payroll - Bridge",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1005"
-                     },
-                     {
-                         "account_no":  "1006",
-                         "description":  "Brokerage - ETrade",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1006"
-                     },
-                     {
-                         "account_no":  "1007",
-                         "description":  "CD - Bridge",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1007"
-                     },
-                     {
-                         "account_no":  "1010",
-                         "description":  "Savings",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1010"
-                     },
-                     {
-                         "account_no":  "1020",
-                         "description":  "Petty Cash",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1020"
-                     },
-                     {
-                         "account_no":  "1030",
-                         "description":  "Employee advances",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1030"
-                     },
-                     {
-                         "account_no":  "1040",
-                         "description":  "FCP Holding account",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1040"
-                     },
-                     {
-                         "account_no":  "1050",
-                         "description":  "Underbillings",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1050"
-                     },
-                     {
-                         "account_no":  "1090",
-                         "description":  "Undeposited Funds",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1090"
-                     },
-                     {
-                         "account_no":  "1100",
-                         "description":  "Contracts receivable",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1100"
-                     },
-                     {
-                         "account_no":  "1105",
-                         "description":  "Retention receivables",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1105"
-                     },
-                     {
-                         "account_no":  "1110",
-                         "description":  "Emp dependent coverage",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1110"
-                     },
-                     {
-                         "account_no":  "1120",
-                         "description":  "Loan to GMR",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1120"
-                     },
-                     {
-                         "account_no":  "1122",
-                         "description":  "Loan to T\u0026G",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1122"
-                     },
-                     {
-                         "account_no":  "1124",
-                         "description":  "Loan to JJRR",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1124"
-                     },
-                     {
-                         "account_no":  "1126",
-                         "description":  "Loan to T\u0026G AZ",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1126"
-                     },
-                     {
-                         "account_no":  "1130",
-                         "description":  "Loan to shareholder",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1130"
-                     },
-                     {
-                         "account_no":  "1140",
-                         "description":  "Loan to T\u0026G AZ",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1140"
-                     },
-                     {
-                         "account_no":  "1200",
-                         "description":  "Inventory",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1200"
-                     },
-                     {
-                         "account_no":  "1300",
-                         "description":  "Building Improvements",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1300"
-                     },
-                     {
-                         "account_no":  "1310",
-                         "description":  "Equipment and Machinery",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1310"
-                     },
-                     {
-                         "account_no":  "1320",
-                         "description":  "Furniture and Equipment",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1320"
-                     },
-                     {
-                         "account_no":  "1400",
-                         "description":  "Field vehicles",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1400"
-                     },
-                     {
-                         "account_no":  "1500",
-                         "description":  "Prepaid insurance - W/C",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1500"
-                     },
-                     {
-                         "account_no":  "1501",
-                         "description":  "Prepaid insurance - Employment",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1501"
-                     },
-                     {
-                         "account_no":  "1502",
-                         "description":  "Prepaid insurance - CGL/Vehicl",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1502"
-                     },
-                     {
-                         "account_no":  "1503",
-                         "description":  "Prepaid insurance - Property",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1503"
-                     },
-                     {
-                         "account_no":  "1504",
-                         "description":  "Prepaid insurance - Cyber",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1504"
-                     },
-                     {
-                         "account_no":  "1505",
-                         "description":  "Prepaid insurance - PL/Umb",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1505"
-                     },
-                     {
-                         "account_no":  "1507",
-                         "description":  "Prepaid insurance - Pollution",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1507"
-                     },
-                     {
-                         "account_no":  "1510",
-                         "description":  "Prepaid insurance - Excess",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1510"
-                     },
-                     {
-                         "account_no":  "1515",
-                         "description":  "Insurance allocation",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1515"
-                     },
-                     {
-                         "account_no":  "1530",
-                         "description":  "Prepaid telephone costs",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1530"
-                     },
-                     {
-                         "account_no":  "1540",
-                         "description":  "Prepaid IT service",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1540"
-                     },
-                     {
-                         "account_no":  "1545",
-                         "description":  "Prepaid rent",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1545"
-                     },
-                     {
-                         "account_no":  "1550",
-                         "description":  "Prepaid Advertising \u0026 Marketin",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1550"
-                     },
-                     {
-                         "account_no":  "1600",
-                         "description":  "Prepaid Income taxes",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1600"
-                     },
-                     {
-                         "account_no":  "1610",
-                         "description":  "Accrued Credits",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1610"
-                     },
-                     {
-                         "account_no":  "1700",
-                         "description":  "Security deposit",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1700"
-                     },
-                     {
-                         "account_no":  "1750",
-                         "description":  "Organization costs",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1750"
-                     },
-                     {
-                         "account_no":  "1800",
-                         "description":  "Client Knowledge",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1800"
-                     },
-                     {
-                         "account_no":  "1805",
-                         "description":  "Accum amort - Client Know",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1805"
-                     },
-                     {
-                         "account_no":  "1900",
-                         "description":  "Deferred tax asset",
-                         "debit_credit":  "D",
-                         "Account_Key":  "1900"
-                     },
-                     {
-                         "account_no":  "5000",
-                         "description":  "Labor - Direct",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5000"
-                     },
-                     {
-                         "account_no":  "5005",
-                         "description":  "Payroll taxes - Direct",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5005"
-                     },
-                     {
-                         "account_no":  "5010",
-                         "description":  "Worker`s Comp - Direct",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5010"
-                     },
-                     {
-                         "account_no":  "5015",
-                         "description":  "Benefits - Direct",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5015"
-                     },
-                     {
-                         "account_no":  "5020",
-                         "description":  "401K/PSP - Direct",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5020"
-                     },
-                     {
-                         "account_no":  "5025",
-                         "description":  "Bonus Expense - Direct",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5025"
-                     },
-                     {
-                         "account_no":  "5200",
-                         "description":  "Materials",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5200"
-                     },
-                     {
-                         "account_no":  "5300",
-                         "description":  "Subcontracts",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5300"
-                     },
-                     {
-                         "account_no":  "5400",
-                         "description":  "Owned equipment",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5400"
-                     },
-                     {
-                         "account_no":  "5410",
-                         "description":  "Rented equipment",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5410"
-                     },
-                     {
-                         "account_no":  "5420",
-                         "description":  "Plans and Drawings",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5420"
-                     },
-                     {
-                         "account_no":  "5500",
-                         "description":  "Other Direct Job Costs",
-                         "debit_credit":  "D",
-                         "Account_Key":  "5500"
-                     },
-                     {
-                         "account_no":  "6010",
-                         "description":  "Labor - Indirect",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6010"
-                     },
-                     {
-                         "account_no":  "6015",
-                         "description":  "Labor - Project Mgr",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6015"
-                     },
-                     {
-                         "account_no":  "6025",
-                         "description":  "Bonus Expense - Indirect",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6025"
-                     },
-                     {
-                         "account_no":  "6030",
-                         "description":  "Payroll Taxes - Indirect",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6030"
-                     },
-                     {
-                         "account_no":  "6040",
-                         "description":  "Workers Comp - Indirect",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6040"
-                     },
-                     {
-                         "account_no":  "6045",
-                         "description":  "Benefits - Indirect",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6045"
-                     },
-                     {
-                         "account_no":  "6050",
-                         "description":  "401K/PSP - Indirect",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6050"
-                     },
-                     {
-                         "account_no":  "6060",
-                         "description":  "Depreciation",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6060"
-                     },
-                     {
-                         "account_no":  "6070",
-                         "description":  "Vehicle - JVM",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6070"
-                     },
-                     {
-                         "account_no":  "6071",
-                         "description":  "Vehicle - LV",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6071"
-                     },
-                     {
-                         "account_no":  "6072",
-                         "description":  "Vehicle - JJ",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6072"
-                     },
-                     {
-                         "account_no":  "6073",
-                         "description":  "Vehicle - AP",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6073"
-                     },
-                     {
-                         "account_no":  "6074",
-                         "description":  "Vehicle - AGM",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6074"
-                     },
-                     {
-                         "account_no":  "6075",
-                         "description":  "Vehicle - DD",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6075"
-                     },
-                     {
-                         "account_no":  "6076",
-                         "description":  "Vehicle - RR",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6076"
-                     },
-                     {
-                         "account_no":  "6080",
-                         "description":  "Vehicle - field",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6080"
-                     },
-                     {
-                         "account_no":  "6082",
-                         "description":  "Vehicle - AM",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6082"
-                     },
-                     {
-                         "account_no":  "6083",
-                         "description":  "Vehicle - AMF",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6083"
-                     },
-                     {
-                         "account_no":  "6084",
-                         "description":  "Vehicle - ADG",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6084"
-                     },
-                     {
-                         "account_no":  "6085",
-                         "description":  "Vehicle - MFF",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6085"
-                     },
-                     {
-                         "account_no":  "6086",
-                         "description":  "Vehicle - RET",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6086"
-                     },
-                     {
-                         "account_no":  "6087",
-                         "description":  "Vehicle - RJG",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6087"
-                     },
-                     {
-                         "account_no":  "6088",
-                         "description":  "Vehicle - GBB",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6088"
-                     },
-                     {
-                         "account_no":  "6089",
-                         "description":  "Vehicle - DDC",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6089"
-                     },
-                     {
-                         "account_no":  "6090",
-                         "description":  "Vehicle - JPA",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6090"
-                     },
-                     {
-                         "account_no":  "6091",
-                         "description":  "Vehicle - TR",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6091"
-                     },
-                     {
-                         "account_no":  "6092",
-                         "description":  "Vehicle - SJ",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6092"
-                     },
-                     {
-                         "account_no":  "6093",
-                         "description":  "Vehicle - JA",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6093"
-                     },
-                     {
-                         "account_no":  "6094",
-                         "description":  "Vehicle - BK",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6094"
-                     },
-                     {
-                         "account_no":  "6095",
-                         "description":  "Vehicle - RH",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6095"
-                     },
-                     {
-                         "account_no":  "6096",
-                         "description":  "Vehicle - SM",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6096"
-                     },
-                     {
-                         "account_no":  "6097",
-                         "description":  "Vehicle - JW",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6097"
-                     },
-                     {
-                         "account_no":  "6098",
-                         "description":  "Medical Fringe Benefit",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6098"
-                     },
-                     {
-                         "account_no":  "6099",
-                         "description":  "Vehicle fringe credit",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6099"
-                     },
-                     {
-                         "account_no":  "6100",
-                         "description":  "Equipment repairs",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6100"
-                     },
-                     {
-                         "account_no":  "6110",
-                         "description":  "Professional Liab Insurance",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6110"
-                     },
-                     {
-                         "account_no":  "6120",
-                         "description":  "Tools and Supplies",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6120"
-                     },
-                     {
-                         "account_no":  "6130",
-                         "description":  "Field apparel",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6130"
-                     },
-                     {
-                         "account_no":  "6140",
-                         "description":  "Safety costs",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6140"
-                     },
-                     {
-                         "account_no":  "6150",
-                         "description":  "Personal property taxes",
-                         "debit_credit":  "D",
-                         "Account_Key":  "6150"
-                     },
-                     {
-                         "account_no":  "7010",
-                         "description":  "Officer salaries",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7010"
-                     },
-                     {
-                         "account_no":  "7015",
-                         "description":  "Clerical salaries",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7015"
-                     },
-                     {
-                         "account_no":  "7020",
-                         "description":  "Payroll taxes - Office",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7020"
-                     },
-                     {
-                         "account_no":  "7022",
-                         "description":  "Workers Comp - Office",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7022"
-                     },
-                     {
-                         "account_no":  "7025",
-                         "description":  "Benefits - Office",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7025"
-                     },
-                     {
-                         "account_no":  "7028",
-                         "description":  "Bonus Expense - Office",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7028"
-                     },
-                     {
-                         "account_no":  "7030",
-                         "description":  "401K/PSP - Office",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7030"
-                     },
-                     {
-                         "account_no":  "7031",
-                         "description":  "PTO Expense",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7031"
-                     },
-                     {
-                         "account_no":  "7035",
-                         "description":  "Employee benefit expenses",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7035"
-                     },
-                     {
-                         "account_no":  "7040",
-                         "description":  "Advertising and Marketing",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7040"
-                     },
-                     {
-                         "account_no":  "7045",
-                         "description":  "Recruiting",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7045"
-                     },
-                     {
-                         "account_no":  "7050",
-                         "description":  "Postage and Mailing",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7050"
-                     },
-                     {
-                         "account_no":  "7060",
-                         "description":  "Office expenses",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7060"
-                     },
-                     {
-                         "account_no":  "7070",
-                         "description":  "Meetings expense",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7070"
-                     },
-                     {
-                         "account_no":  "7080",
-                         "description":  "Meals (50%)",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7080"
-                     },
-                     {
-                         "account_no":  "7082",
-                         "description":  "Entertainment (non-ded)",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7082"
-                     },
-                     {
-                         "account_no":  "7085",
-                         "description":  "Rent expense",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7085"
-                     },
-                     {
-                         "account_no":  "7090",
-                         "description":  "Utilities",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7090"
-                     },
-                     {
-                         "account_no":  "7092",
-                         "description":  "Security alarm",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7092"
-                     },
-                     {
-                         "account_no":  "7095",
-                         "description":  "Janitorial service",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7095"
-                     },
-                     {
-                         "account_no":  "7100",
-                         "description":  "Legal and Accounting",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7100"
-                     },
-                     {
-                         "account_no":  "7110",
-                         "description":  "Taxes and Licenses",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7110"
-                     },
-                     {
-                         "account_no":  "7120",
-                         "description":  "Information technology",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7120"
-                     },
-                     {
-                         "account_no":  "7130",
-                         "description":  "Telephone expenses",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7130"
-                     },
-                     {
-                         "account_no":  "7140",
-                         "description":  "Insurance expense",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7140"
-                     },
-                     {
-                         "account_no":  "7141",
-                         "description":  "Insurance job allocation",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7141"
-                     },
-                     {
-                         "account_no":  "7145",
-                         "description":  "Officer life insurance",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7145"
-                     },
-                     {
-                         "account_no":  "7150",
-                         "description":  "Education expense",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7150"
-                     },
-                     {
-                         "account_no":  "7160",
-                         "description":  "Interest expense",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7160"
-                     },
-                     {
-                         "account_no":  "7170",
-                         "description":  "Equipment leasing",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7170"
-                     },
-                     {
-                         "account_no":  "7180",
-                         "description":  "Repairs and maintenance",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7180"
-                     },
-                     {
-                         "account_no":  "7190",
-                         "description":  "Travel and mileage",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7190"
-                     },
-                     {
-                         "account_no":  "7200",
-                         "description":  "Payroll service fee",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7200"
-                     },
-                     {
-                         "account_no":  "7210",
-                         "description":  "Bank charges",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7210"
-                     },
-                     {
-                         "account_no":  "7220",
-                         "description":  "Amortization expense",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7220"
-                     },
-                     {
-                         "account_no":  "7230",
-                         "description":  "Bad Debt Expense",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7230"
-                     },
-                     {
-                         "account_no":  "7240",
-                         "description":  "AZ Property Costs",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7240"
-                     },
-                     {
-                         "account_no":  "7900",
-                         "description":  "Federal tax expense",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7900"
-                     },
-                     {
-                         "account_no":  "7910",
-                         "description":  "State tax expense",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7910"
-                     },
-                     {
-                         "account_no":  "7920",
-                         "description":  "Income tax penalties",
-                         "debit_credit":  "D",
-                         "Account_Key":  "7920"
-                     },
-                     {
-                         "account_no":  "1305",
-                         "description":  "Accum dep - Building Improv",
-                         "debit_credit":  "C",
-                         "Account_Key":  "1305"
-                     },
-                     {
-                         "account_no":  "1315",
-                         "description":  "Accum dep - Equip/Machinery",
-                         "debit_credit":  "C",
-                         "Account_Key":  "1315"
-                     },
-                     {
-                         "account_no":  "1325",
-                         "description":  "Accum dep - Furn and Equip",
-                         "debit_credit":  "C",
-                         "Account_Key":  "1325"
-                     },
-                     {
-                         "account_no":  "1405",
-                         "description":  "Accum dep - Field vehicles",
-                         "debit_credit":  "C",
-                         "Account_Key":  "1405"
-                     },
-                     {
-                         "account_no":  "2000",
-                         "description":  "Contracts payable",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2000"
-                     },
-                     {
-                         "account_no":  "2005",
-                         "description":  "Related Contracts Payable",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2005"
-                     },
-                     {
-                         "account_no":  "2010",
-                         "description":  "Retention payable",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2010"
-                     },
-                     {
-                         "account_no":  "2015",
-                         "description":  "Credit card - GBB",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2015"
-                     },
-                     {
-                         "account_no":  "2016",
-                         "description":  "Credit card - RET",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2016"
-                     },
-                     {
-                         "account_no":  "2017",
-                         "description":  "Credit card - RJG",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2017"
-                     },
-                     {
-                         "account_no":  "2018",
-                         "description":  "Credit card - MAF",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2018"
-                     },
-                     {
-                         "account_no":  "2019",
-                         "description":  "Credit card - SR",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2019"
-                     },
-                     {
-                         "account_no":  "2020",
-                         "description":  "Accrued Union Benefits",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2020"
-                     },
-                     {
-                         "account_no":  "2021",
-                         "description":  "Accrued 401K Contributions",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2021"
-                     },
-                     {
-                         "account_no":  "2022",
-                         "description":  "Garnishments",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2022"
-                     },
-                     {
-                         "account_no":  "2023",
-                         "description":  "Accrued Health Insurance",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2023"
-                     },
-                     {
-                         "account_no":  "2025",
-                         "description":  "Accrued PTO",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2025"
-                     },
-                     {
-                         "account_no":  "2028",
-                         "description":  "Accrued Bonus",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2028"
-                     },
-                     {
-                         "account_no":  "2030",
-                         "description":  "Accrued payroll",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2030"
-                     },
-                     {
-                         "account_no":  "2040",
-                         "description":  "Union Dues Withholding",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2040"
-                     },
-                     {
-                         "account_no":  "2050",
-                         "description":  "Federal Withholding",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2050"
-                     },
-                     {
-                         "account_no":  "2060",
-                         "description":  "State Withholding",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2060"
-                     },
-                     {
-                         "account_no":  "2070",
-                         "description":  "Training Fund Deductions",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2070"
-                     },
-                     {
-                         "account_no":  "2080",
-                         "description":  "FUTA Withholding",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2080"
-                     },
-                     {
-                         "account_no":  "2090",
-                         "description":  "SUTA Withholding",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2090"
-                     },
-                     {
-                         "account_no":  "2100",
-                         "description":  "Accrued worker`s comp",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2100"
-                     },
-                     {
-                         "account_no":  "2110",
-                         "description":  "Insurance financing",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2110"
-                     },
-                     {
-                         "account_no":  "2120",
-                         "description":  "Overbillings",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2120"
-                     },
-                     {
-                         "account_no":  "2130",
-                         "description":  "Federal taxes payable",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2130"
-                     },
-                     {
-                         "account_no":  "2135",
-                         "description":  "Accrued Sales Tax",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2135"
-                     },
-                     {
-                         "account_no":  "2140",
-                         "description":  "State taxes payable",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2140"
-                     },
-                     {
-                         "account_no":  "2150",
-                         "description":  "Deferred tax liability",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2150"
-                     },
-                     {
-                         "account_no":  "2200",
-                         "description":  "Uninvoiced Receipts",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2200"
-                     },
-                     {
-                         "account_no":  "2210",
-                         "description":  "ST Note Payable",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2210"
-                     },
-                     {
-                         "account_no":  "2250",
-                         "description":  "Shareholder advance",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2250"
-                     },
-                     {
-                         "account_no":  "2500",
-                         "description":  "Loan - Bridge Bank",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2500"
-                     },
-                     {
-                         "account_no":  "2510",
-                         "description":  "Note - Vehicles",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2510"
-                     },
-                     {
-                         "account_no":  "2515",
-                         "description":  "Note - Former S/H",
-                         "debit_credit":  "C",
-                         "Account_Key":  "2515"
-                     },
-                     {
-                         "account_no":  "3000",
-                         "description":  "Common Stock",
-                         "debit_credit":  "C",
-                         "Account_Key":  "3000"
-                     },
-                     {
-                         "account_no":  "3010",
-                         "description":  "Treasury Stock",
-                         "debit_credit":  "C",
-                         "Account_Key":  "3010"
-                     },
-                     {
-                         "account_no":  "3020",
-                         "description":  "Retained Earnings",
-                         "debit_credit":  "C",
-                         "Account_Key":  "3020"
-                     },
-                     {
-                         "account_no":  "3025",
-                         "description":  "Deferred Comp - RET",
-                         "debit_credit":  "C",
-                         "Account_Key":  "3025"
-                     },
-                     {
-                         "account_no":  "3030",
-                         "description":  "Capital",
-                         "debit_credit":  "C",
-                         "Account_Key":  "3030"
-                     },
-                     {
-                         "account_no":  "3031",
-                         "description":  "Capital - RJG",
-                         "debit_credit":  "C",
-                         "Account_Key":  "3031"
-                     },
-                     {
-                         "account_no":  "3032",
-                         "description":  "Capital - RET",
-                         "debit_credit":  "C",
-                         "Account_Key":  "3032"
-                     },
-                     {
-                         "account_no":  "3033",
-                         "description":  "Capital - MAF",
-                         "debit_credit":  "C",
-                         "Account_Key":  "3033"
-                     },
-                     {
-                         "account_no":  "3034",
-                         "description":  "Capital - GBB",
-                         "debit_credit":  "C",
-                         "Account_Key":  "3034"
-                     },
-                     {
-                         "account_no":  "3035",
-                         "description":  "Distributions - RJG",
-                         "debit_credit":  "C",
-                         "Account_Key":  "3035"
-                     },
-                     {
-                         "account_no":  "3036",
-                         "description":  "Distributions - RET",
-                         "debit_credit":  "C",
-                         "Account_Key":  "3036"
-                     },
-                     {
-                         "account_no":  "4000",
-                         "description":  "Contract revenue",
-                         "debit_credit":  "C",
-                         "Account_Key":  "4000"
-                     },
-                     {
-                         "account_no":  "4010",
-                         "description":  "Residential Income",
-                         "debit_credit":  "C",
-                         "Account_Key":  "4010"
-                     },
-                     {
-                         "account_no":  "4020",
-                         "description":  "Other income",
-                         "debit_credit":  "C",
-                         "Account_Key":  "4020"
-                     },
-                     {
-                         "account_no":  "4090",
-                         "description":  "Over Under Billing",
-                         "debit_credit":  "C",
-                         "Account_Key":  "4090"
-                     },
-                     {
-                         "account_no":  "4200",
-                         "description":  "Discount",
-                         "debit_credit":  "C",
-                         "Account_Key":  "4200"
-                     },
-                     {
-                         "account_no":  "8000",
-                         "description":  "Misc Income",
-                         "debit_credit":  "C",
-                         "Account_Key":  "8000"
-                     },
-                     {
-                         "account_no":  "8005",
-                         "description":  "Interest income",
-                         "debit_credit":  "C",
-                         "Account_Key":  "8005"
-                     },
-                     {
-                         "account_no":  "8007",
-                         "description":  "Dividend Income",
-                         "debit_credit":  "C",
-                         "Account_Key":  "8007"
-                     },
-                     {
-                         "account_no":  "8008",
-                         "description":  "Capital Gain (Loss) on Invest",
-                         "debit_credit":  "C",
-                         "Account_Key":  "8008"
-                     },
-                     {
-                         "account_no":  "8010",
-                         "description":  "Discounts Earned/Taken",
-                         "debit_credit":  "C",
-                         "Account_Key":  "8010"
-                     },
-                     {
-                         "account_no":  "8020",
-                         "description":  "Gain (Loss) on asset disposal",
-                         "debit_credit":  "C",
-                         "Account_Key":  "8020"
-                     }
-                 ],
+    "generated_at":  "2025-12-26 09:32:16",
     "gl_history":  [
                        {
                            "Account":  "1",
@@ -1782,13 +581,13 @@
                            "Account":  "2000",
                            "Account_Num":  "2000",
                            "Account_Description":  "Contracts payable",
-                           "CumToLastComplete":  "-5709912.64",
-                           "CumToPrior":  "-4871897.72",
-                           "CumToSecondPrior":  "-5555599.69",
+                           "CumToLastComplete":  "-5725429.07",
+                           "CumToPrior":  "-4879204.38",
+                           "CumToSecondPrior":  "-5561342.85",
                            "NetIncomeYTD_Prior":  "",
                            "NetIncomeYTD_LastComplete":  "",
-                           "LastCompleteMonthActivity":  "-838014.92",
-                           "PriorMonthActivity":  "683701.97"
+                           "LastCompleteMonthActivity":  "-846224.69",
+                           "PriorMonthActivity":  "682138.47"
                        },
                        {
                            "Account":  "2005",
@@ -2466,24 +1265,24 @@
                            "Account":  "5200",
                            "Account_Num":  "5200",
                            "Account_Description":  "Materials",
-                           "CumToLastComplete":  "1530629.09",
+                           "CumToLastComplete":  "1531006.8",
                            "CumToPrior":  "1434892.68",
                            "CumToSecondPrior":  "1360449.51",
                            "NetIncomeYTD_Prior":  "1434892.68",
-                           "NetIncomeYTD_LastComplete":  "1530629.09",
-                           "LastCompleteMonthActivity":  "95736.41",
+                           "NetIncomeYTD_LastComplete":  "1531006.8",
+                           "LastCompleteMonthActivity":  "96114.12",
                            "PriorMonthActivity":  "74443.17"
                        },
                        {
                            "Account":  "5300",
                            "Account_Num":  "5300",
                            "Account_Description":  "Subcontracts",
-                           "CumToLastComplete":  "29932632.3",
-                           "CumToPrior":  "27982633.9",
-                           "CumToSecondPrior":  "26183485.49",
-                           "NetIncomeYTD_Prior":  "27982633.9",
-                           "NetIncomeYTD_LastComplete":  "29932632.3",
-                           "LastCompleteMonthActivity":  "1949998.4",
+                           "CumToLastComplete":  "29942470.2",
+                           "CumToPrior":  "27985080.9",
+                           "CumToSecondPrior":  "26185932.49",
+                           "NetIncomeYTD_Prior":  "27985080.9",
+                           "NetIncomeYTD_LastComplete":  "29942470.2",
+                           "LastCompleteMonthActivity":  "1957389.3",
                            "PriorMonthActivity":  "1799148.41"
                        },
                        {
@@ -2502,11 +1301,11 @@
                            "Account":  "5500",
                            "Account_Num":  "5500",
                            "Account_Description":  "Other Direct Job Costs",
-                           "CumToLastComplete":  "664942.67",
-                           "CumToPrior":  "622057.74",
-                           "CumToSecondPrior":  "591428.83",
-                           "NetIncomeYTD_Prior":  "622057.74",
-                           "NetIncomeYTD_LastComplete":  "664942.67",
+                           "CumToLastComplete":  "668238.83",
+                           "CumToPrior":  "625353.9",
+                           "CumToSecondPrior":  "594724.99",
+                           "NetIncomeYTD_Prior":  "625353.9",
+                           "NetIncomeYTD_LastComplete":  "668238.83",
                            "LastCompleteMonthActivity":  "42884.93",
                            "PriorMonthActivity":  "30628.91"
                        },
@@ -2790,13 +1589,13 @@
                            "Account":  "6090",
                            "Account_Num":  "6090",
                            "Account_Description":  "Vehicle - JPA",
-                           "CumToLastComplete":  "36114.9",
-                           "CumToPrior":  "35091.69",
+                           "CumToLastComplete":  "37837.17",
+                           "CumToPrior":  "36655.19",
                            "CumToSecondPrior":  "31457.66",
-                           "NetIncomeYTD_Prior":  "35091.69",
-                           "NetIncomeYTD_LastComplete":  "36114.9",
-                           "LastCompleteMonthActivity":  "1023.21",
-                           "PriorMonthActivity":  "3634.03"
+                           "NetIncomeYTD_Prior":  "36655.19",
+                           "NetIncomeYTD_LastComplete":  "37837.17",
+                           "LastCompleteMonthActivity":  "1181.98",
+                           "PriorMonthActivity":  "5197.53"
                        },
                        {
                            "Account":  "6091",
@@ -2898,12 +1697,12 @@
                            "Account":  "6120",
                            "Account_Num":  "6120",
                            "Account_Description":  "Tools and Supplies",
-                           "CumToLastComplete":  "33578.33",
+                           "CumToLastComplete":  "33752.49",
                            "CumToPrior":  "30240.9",
                            "CumToSecondPrior":  "30084.93",
                            "NetIncomeYTD_Prior":  "30240.9",
-                           "NetIncomeYTD_LastComplete":  "33578.33",
-                           "LastCompleteMonthActivity":  "3337.43",
+                           "NetIncomeYTD_LastComplete":  "33752.49",
+                           "LastCompleteMonthActivity":  "3511.59",
                            "PriorMonthActivity":  "155.97"
                        },
                        {
@@ -3078,12 +1877,12 @@
                            "Account":  "7080",
                            "Account_Num":  "7080",
                            "Account_Description":  "Meals (50%)",
-                           "CumToLastComplete":  "47441.06",
+                           "CumToLastComplete":  "47549.29",
                            "CumToPrior":  "42119.63",
                            "CumToSecondPrior":  "34446.47",
                            "NetIncomeYTD_Prior":  "42119.63",
-                           "NetIncomeYTD_LastComplete":  "47441.06",
-                           "LastCompleteMonthActivity":  "5321.43",
+                           "NetIncomeYTD_LastComplete":  "47549.29",
+                           "LastCompleteMonthActivity":  "5429.66",
                            "PriorMonthActivity":  "7673.16"
                        },
                        {
@@ -3487,7 +2286,7 @@
                                "2025-09":  "",
                                "2025-10":  "",
                                "2025-11":  "",
-                               "2025-12":  ""
+                               "2025-12":  "0"
                            },
                            {
                                "Account":  "1001",
@@ -3624,7 +2423,7 @@
                                "2025-09":  "66479.64",
                                "2025-10":  "-1339549.58",
                                "2025-11":  "802733.8",
-                               "2025-12":  "-215976.02"
+                               "2025-12":  "-1694360.48"
                            },
                            {
                                "Account":  "1003",
@@ -3761,7 +2560,7 @@
                                "2025-09":  "-2501836.02",
                                "2025-10":  "3949944",
                                "2025-11":  "-584016.54",
-                               "2025-12":  "-2727754.62"
+                               "2025-12":  "-3003059.31"
                            },
                            {
                                "Account":  "1004",
@@ -4035,7 +2834,7 @@
                                "2025-09":  "-1836.13",
                                "2025-10":  "-25490.35",
                                "2025-11":  "15519.05",
-                               "2025-12":  "3137.08"
+                               "2025-12":  "3715.73"
                            },
                            {
                                "Account":  "1006",
@@ -4994,7 +3793,7 @@
                                "2025-09":  "-1274495.17",
                                "2025-10":  "99473.21",
                                "2025-11":  "-141139.95",
-                               "2025-12":  "152946.29"
+                               "2025-12":  "156613.09"
                            },
                            {
                                "Account":  "1110",
@@ -5131,7 +3930,7 @@
                                "2025-09":  "6737.14",
                                "2025-10":  "3709.55",
                                "2025-11":  "5297.23",
-                               "2025-12":  "7109.6"
+                               "2025-12":  "3761.22"
                            },
                            {
                                "Account":  "1120",
@@ -8830,7 +7629,7 @@
                                "2025-09":  "-96662.24",
                                "2025-10":  "1040.81",
                                "2025-11":  "-131805.69",
-                               "2025-12":  "1206.62"
+                               "2025-12":  "259732.03"
                            },
                            {
                                "Account":  "2018",
@@ -9926,7 +8725,7 @@
                                "2025-09":  "5634",
                                "2025-10":  "630.02",
                                "2025-11":  "6575.03",
-                               "2025-12":  "-54529.79"
+                               "2025-12":  "-57953.5"
                            },
                            {
                                "Account":  "2120",
@@ -12803,7 +11602,7 @@
                                "2025-09":  "415462.95",
                                "2025-10":  "587712.82",
                                "2025-11":  "384398.1",
-                               "2025-12":  "787039.8"
+                               "2025-12":  "887414.63"
                            },
                            {
                                "Account":  "5005",
@@ -12940,7 +11739,7 @@
                                "2025-09":  "27772.09",
                                "2025-10":  "39598.52",
                                "2025-11":  "24743.09",
-                               "2025-12":  "47571.77"
+                               "2025-12":  "52981.08"
                            },
                            {
                                "Account":  "5010",
@@ -13077,7 +11876,7 @@
                                "2025-09":  "9372.26",
                                "2025-10":  "13156.31",
                                "2025-11":  "8503.87",
-                               "2025-12":  "19083.4"
+                               "2025-12":  "21174.27"
                            },
                            {
                                "Account":  "5015",
@@ -13214,7 +12013,7 @@
                                "2025-09":  "35920.8",
                                "2025-10":  "36190.73",
                                "2025-11":  "35549.11",
-                               "2025-12":  "22370.48"
+                               "2025-12":  "23424.58"
                            },
                            {
                                "Account":  "5020",
@@ -13351,7 +12150,7 @@
                                "2025-09":  "9808.69",
                                "2025-10":  "12042.2",
                                "2025-11":  "8287.59",
-                               "2025-12":  "18276.42"
+                               "2025-12":  "20263.72"
                            },
                            {
                                "Account":  "5025",
@@ -13889,17 +12688,17 @@
                                "2024-11":  "22187.94",
                                "2024-12":  "57991.4",
                                "2025-01":  "36091.46",
-                               "2025-02":  "26539.26",
-                               "2025-03":  "150561.37",
+                               "2025-02":  "27363.3",
+                               "2025-03":  "151385.41",
                                "2025-04":  "79022.88",
-                               "2025-05":  "69571.5",
+                               "2025-05":  "70395.54",
                                "2025-06":  "43966.6",
                                "2025-07":  "88363.57",
-                               "2025-08":  "51350.46",
+                               "2025-08":  "52174.5",
                                "2025-09":  "45961.73",
                                "2025-10":  "30628.91",
                                "2025-11":  "42884.93",
-                               "2025-12":  "107432.24"
+                               "2025-12":  "107910.17"
                            },
                            {
                                "Account":  "6010",
@@ -14036,7 +12835,7 @@
                                "2025-09":  "18746.72",
                                "2025-10":  "23214.77",
                                "2025-11":  "17774.06",
-                               "2025-12":  "40440.06"
+                               "2025-12":  "43372.46"
                            },
                            {
                                "Account":  "6015",
@@ -14173,7 +12972,7 @@
                                "2025-09":  "165310.16",
                                "2025-10":  "183890.43",
                                "2025-11":  "144765.41",
-                               "2025-12":  "1187190.35"
+                               "2025-12":  "1232728.34"
                            },
                            {
                                "Account":  "6025",
@@ -14447,7 +13246,7 @@
                                "2025-09":  "11776.76",
                                "2025-10":  "14239.63",
                                "2025-11":  "11020.4",
-                               "2025-12":  "40142.54"
+                               "2025-12":  "42456.47"
                            },
                            {
                                "Account":  "6040",
@@ -14584,7 +13383,7 @@
                                "2025-09":  "3586.91",
                                "2025-10":  "4432.7",
                                "2025-11":  "3475.59",
-                               "2025-12":  "30535.65"
+                               "2025-12":  "31533.03"
                            },
                            {
                                "Account":  "6045",
@@ -14721,7 +13520,7 @@
                                "2025-09":  "16439.06",
                                "2025-10":  "20553.04",
                                "2025-11":  "16079.81",
-                               "2025-12":  "15420.15"
+                               "2025-12":  "16200.61"
                            },
                            {
                                "Account":  "6050",
@@ -14858,7 +13657,7 @@
                                "2025-09":  "4349.33",
                                "2025-10":  "5526.46",
                                "2025-11":  "4256.35",
-                               "2025-12":  "16721.48"
+                               "2025-12":  "17712.84"
                            },
                            {
                                "Account":  "6060",
@@ -16091,7 +14890,7 @@
                                "2025-09":  "15159.45",
                                "2025-10":  "8314.66",
                                "2025-11":  "6100.14",
-                               "2025-12":  "4141.5"
+                               "2025-12":  "4868.45"
                            },
                            {
                                "Account":  "6082",
@@ -16774,9 +15573,9 @@
                                "2025-07":  "1317.43",
                                "2025-08":  "2093.35",
                                "2025-09":  "1811.28",
-                               "2025-10":  "3634.03",
-                               "2025-11":  "1023.21",
-                               "2025-12":  "569.01"
+                               "2025-10":  "5197.53",
+                               "2025-11":  "1181.98",
+                               "2025-12":  "1213.59"
                            },
                            {
                                "Account":  "6091",
@@ -18009,7 +16808,7 @@
                                "2025-09":  "",
                                "2025-10":  "",
                                "2025-11":  "",
-                               "2025-12":  ""
+                               "2025-12":  "-15709"
                            },
                            {
                                "Account":  "6100",
@@ -18283,7 +17082,7 @@
                                "2025-09":  "2737.7",
                                "2025-10":  "3858.72",
                                "2025-11":  "9656.87",
-                               "2025-12":  "10286.84"
+                               "2025-12":  "10418.89"
                            },
                            {
                                "Account":  "6150",
@@ -18557,7 +17356,7 @@
                                "2025-09":  "53076.49",
                                "2025-10":  "88269.2",
                                "2025-11":  "70615.36",
-                               "2025-12":  "208247.24"
+                               "2025-12":  "230592.27"
                            },
                            {
                                "Account":  "7015",
@@ -18831,7 +17630,7 @@
                                "2025-09":  "3964.94",
                                "2025-10":  "5393.35",
                                "2025-11":  "4314.67",
-                               "2025-12":  "15913.37"
+                               "2025-12":  "17223.57"
                            },
                            {
                                "Account":  "7022",
@@ -19105,7 +17904,7 @@
                                "2025-09":  "4310.81",
                                "2025-10":  "3310.26",
                                "2025-11":  "3652.26",
-                               "2025-12":  "3310.26"
+                               "2025-12":  "3481.26"
                            },
                            {
                                "Account":  "7028",
@@ -19379,7 +18178,7 @@
                                "2025-09":  "2958.74",
                                "2025-10":  "3859.04",
                                "2025-11":  "3103.36",
-                               "2025-12":  "10821.09"
+                               "2025-12":  "11594.29"
                            },
                            {
                                "Account":  "7031",
@@ -19926,7 +18725,7 @@
                                "2025-08":  "4507.53",
                                "2025-09":  "2883.98",
                                "2025-10":  "7673.16",
-                               "2025-11":  "5321.43",
+                               "2025-11":  "5429.66",
                                "2025-12":  "1120.52"
                            },
                            {
@@ -20612,7 +19411,7 @@
                                "2025-09":  "263.11",
                                "2025-10":  "263.11",
                                "2025-11":  "263.11",
-                               "2025-12":  "33.93"
+                               "2025-12":  "263.11"
                            },
                            {
                                "Account":  "7160",
@@ -21297,7 +20096,7 @@
                                "2025-09":  "2150.08",
                                "2025-10":  "1505.25",
                                "2025-11":  "1003.17",
-                               "2025-12":  "919.67"
+                               "2025-12":  "1177.65"
                            },
                            {
                                "Account":  "7210",
@@ -21434,7 +20233,7 @@
                                "2025-09":  "556.3",
                                "2025-10":  "439.34",
                                "2025-11":  "636.38",
-                               "2025-12":  "0"
+                               "2025-12":  "509.37"
                            },
                            {
                                "Account":  "7220",
@@ -23078,7 +21877,7 @@
                                "2025-09":  "2250960.04",
                                "2025-10":  "-4254094.74",
                                "2025-11":  "1624428.03",
-                               "2025-12":  "1141872.22"
+                               "2025-12":  "1229564.92"
                            },
                            {
                                "Account":  "1310",
@@ -24300,18 +23099,18 @@
                                "2024-10":  "-502452.04",
                                "2024-11":  "286839.03",
                                "2024-12":  "745081.75",
-                               "2025-01":  "-1019039.04",
-                               "2025-02":  "-59713.12",
-                               "2025-03":  "-1553174.52",
+                               "2025-01":  "-1021486.04",
+                               "2025-02":  "-60537.16",
+                               "2025-03":  "-1553998.56",
                                "2025-04":  "710033.31",
-                               "2025-05":  "-793321.99",
+                               "2025-05":  "-794146.03",
                                "2025-06":  "-153323.85",
                                "2025-07":  "496239.57",
-                               "2025-08":  "1348891.28",
+                               "2025-08":  "1348067.24",
                                "2025-09":  "10549.08",
-                               "2025-10":  "683701.97",
-                               "2025-11":  "-838014.92",
-                               "2025-12":  "1633144.33"
+                               "2025-10":  "682138.47",
+                               "2025-11":  "-846224.69",
+                               "2025-12":  "2599542.16"
                            },
                            {
                                "Account":  "2015",
@@ -25133,7 +23932,7 @@
                                "2025-09":  "-4389854.25",
                                "2025-10":  "-2286710.95",
                                "2025-11":  "-3788155.33",
-                               "2025-12":  "-3768171.76"
+                               "2025-12":  "-3946665.37"
                            },
                            {
                                "Account":  "5200",
@@ -25269,8 +24068,8 @@
                                "2025-08":  "51238.17",
                                "2025-09":  "73524.39",
                                "2025-10":  "74443.17",
-                               "2025-11":  "95736.41",
-                               "2025-12":  "34001.73"
+                               "2025-11":  "96114.12",
+                               "2025-12":  "35815.69"
                            },
                            {
                                "Account":  "5300",
@@ -25396,7 +24195,7 @@
                                "2024-10":  "2417696.19",
                                "2024-11":  "1872559.21",
                                "2024-12":  "1725601.22",
-                               "2025-01":  "2929746.74",
+                               "2025-01":  "2932193.74",
                                "2025-02":  "1880238.47",
                                "2025-03":  "2677818.22",
                                "2025-04":  "2390953.87",
@@ -25406,8 +24205,8 @@
                                "2025-08":  "2557161.7",
                                "2025-09":  "4282662.21",
                                "2025-10":  "1799148.41",
-                               "2025-11":  "1949998.4",
-                               "2025-12":  "1205009.62"
+                               "2025-11":  "1957389.3",
+                               "2025-12":  "1648325.67"
                            },
                            {
                                "Account":  "6085",
@@ -25681,7 +24480,7 @@
                                "2025-09":  "12801.08",
                                "2025-10":  "570.14",
                                "2025-11":  "3875.14",
-                               "2025-12":  "2269.72"
+                               "2025-12":  "2415.14"
                            },
                            {
                                "Account":  "6087",
@@ -26228,8 +25027,8 @@
                                "2025-08":  "1474.86",
                                "2025-09":  "551.62",
                                "2025-10":  "155.97",
-                               "2025-11":  "3337.43",
-                               "2025-12":  "6369.16"
+                               "2025-11":  "3511.59",
+                               "2025-12":  "6513.94"
                            },
                            {
                                "Account":  "6130",
@@ -26777,7 +25576,7 @@
                                "2025-09":  "15394.81",
                                "2025-10":  "7065.03",
                                "2025-11":  "6173.84",
-                               "2025-12":  "3950.73"
+                               "2025-12":  "4204.58"
                            },
                            {
                                "Account":  "7070",
@@ -27599,7 +26398,7 @@
                                "2025-09":  "950.68",
                                "2025-10":  "1157.84",
                                "2025-11":  "1137.94",
-                               "2025-12":  "243"
+                               "2025-12":  "324"
                            },
                            {
                                "Account":  "7140",
@@ -27876,5 +26675,1206 @@
                                "2025-12":  ""
                            }
                        ],
-    "generated_at":  "2025-12-23 10:06:48"
+    "accounts":  [
+                     {
+                         "account_no":  "1",
+                         "description":  "Temporary Account",
+                         "debit_credit":  "D",
+                         "Account_Key":  "0001"
+                     },
+                     {
+                         "account_no":  "1000",
+                         "description":  "DO Not Use",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1000"
+                     },
+                     {
+                         "account_no":  "1001",
+                         "description":  "Checking - Bridge",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1001"
+                     },
+                     {
+                         "account_no":  "1003",
+                         "description":  "Savings - Bridge",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1003"
+                     },
+                     {
+                         "account_no":  "1004",
+                         "description":  "Brokerage - Charles Schwab",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1004"
+                     },
+                     {
+                         "account_no":  "1005",
+                         "description":  "Payroll - Bridge",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1005"
+                     },
+                     {
+                         "account_no":  "1006",
+                         "description":  "Brokerage - ETrade",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1006"
+                     },
+                     {
+                         "account_no":  "1007",
+                         "description":  "CD - Bridge",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1007"
+                     },
+                     {
+                         "account_no":  "1010",
+                         "description":  "Savings",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1010"
+                     },
+                     {
+                         "account_no":  "1020",
+                         "description":  "Petty Cash",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1020"
+                     },
+                     {
+                         "account_no":  "1030",
+                         "description":  "Employee advances",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1030"
+                     },
+                     {
+                         "account_no":  "1040",
+                         "description":  "FCP Holding account",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1040"
+                     },
+                     {
+                         "account_no":  "1050",
+                         "description":  "Underbillings",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1050"
+                     },
+                     {
+                         "account_no":  "1090",
+                         "description":  "Undeposited Funds",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1090"
+                     },
+                     {
+                         "account_no":  "1100",
+                         "description":  "Contracts receivable",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1100"
+                     },
+                     {
+                         "account_no":  "1105",
+                         "description":  "Retention receivables",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1105"
+                     },
+                     {
+                         "account_no":  "1110",
+                         "description":  "Emp dependent coverage",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1110"
+                     },
+                     {
+                         "account_no":  "1120",
+                         "description":  "Loan to GMR",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1120"
+                     },
+                     {
+                         "account_no":  "1122",
+                         "description":  "Loan to T\u0026G",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1122"
+                     },
+                     {
+                         "account_no":  "1124",
+                         "description":  "Loan to JJRR",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1124"
+                     },
+                     {
+                         "account_no":  "1126",
+                         "description":  "Loan to T\u0026G AZ",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1126"
+                     },
+                     {
+                         "account_no":  "1130",
+                         "description":  "Loan to shareholder",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1130"
+                     },
+                     {
+                         "account_no":  "1140",
+                         "description":  "Loan to T\u0026G AZ",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1140"
+                     },
+                     {
+                         "account_no":  "1200",
+                         "description":  "Inventory",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1200"
+                     },
+                     {
+                         "account_no":  "1300",
+                         "description":  "Building Improvements",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1300"
+                     },
+                     {
+                         "account_no":  "1310",
+                         "description":  "Equipment and Machinery",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1310"
+                     },
+                     {
+                         "account_no":  "1320",
+                         "description":  "Furniture and Equipment",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1320"
+                     },
+                     {
+                         "account_no":  "1400",
+                         "description":  "Field vehicles",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1400"
+                     },
+                     {
+                         "account_no":  "1500",
+                         "description":  "Prepaid insurance - W/C",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1500"
+                     },
+                     {
+                         "account_no":  "1501",
+                         "description":  "Prepaid insurance - Employment",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1501"
+                     },
+                     {
+                         "account_no":  "1502",
+                         "description":  "Prepaid insurance - CGL/Vehicl",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1502"
+                     },
+                     {
+                         "account_no":  "1503",
+                         "description":  "Prepaid insurance - Property",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1503"
+                     },
+                     {
+                         "account_no":  "1504",
+                         "description":  "Prepaid insurance - Cyber",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1504"
+                     },
+                     {
+                         "account_no":  "1505",
+                         "description":  "Prepaid insurance - PL/Umb",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1505"
+                     },
+                     {
+                         "account_no":  "1507",
+                         "description":  "Prepaid insurance - Pollution",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1507"
+                     },
+                     {
+                         "account_no":  "1510",
+                         "description":  "Prepaid insurance - Excess",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1510"
+                     },
+                     {
+                         "account_no":  "1515",
+                         "description":  "Insurance allocation",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1515"
+                     },
+                     {
+                         "account_no":  "1530",
+                         "description":  "Prepaid telephone costs",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1530"
+                     },
+                     {
+                         "account_no":  "1540",
+                         "description":  "Prepaid IT service",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1540"
+                     },
+                     {
+                         "account_no":  "1545",
+                         "description":  "Prepaid rent",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1545"
+                     },
+                     {
+                         "account_no":  "1550",
+                         "description":  "Prepaid Advertising \u0026 Marketin",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1550"
+                     },
+                     {
+                         "account_no":  "1600",
+                         "description":  "Prepaid Income taxes",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1600"
+                     },
+                     {
+                         "account_no":  "1610",
+                         "description":  "Accrued Credits",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1610"
+                     },
+                     {
+                         "account_no":  "1700",
+                         "description":  "Security deposit",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1700"
+                     },
+                     {
+                         "account_no":  "1750",
+                         "description":  "Organization costs",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1750"
+                     },
+                     {
+                         "account_no":  "1800",
+                         "description":  "Client Knowledge",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1800"
+                     },
+                     {
+                         "account_no":  "1805",
+                         "description":  "Accum amort - Client Know",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1805"
+                     },
+                     {
+                         "account_no":  "1900",
+                         "description":  "Deferred tax asset",
+                         "debit_credit":  "D",
+                         "Account_Key":  "1900"
+                     },
+                     {
+                         "account_no":  "5000",
+                         "description":  "Labor - Direct",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5000"
+                     },
+                     {
+                         "account_no":  "5005",
+                         "description":  "Payroll taxes - Direct",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5005"
+                     },
+                     {
+                         "account_no":  "5010",
+                         "description":  "Worker`s Comp - Direct",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5010"
+                     },
+                     {
+                         "account_no":  "5015",
+                         "description":  "Benefits - Direct",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5015"
+                     },
+                     {
+                         "account_no":  "5020",
+                         "description":  "401K/PSP - Direct",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5020"
+                     },
+                     {
+                         "account_no":  "5025",
+                         "description":  "Bonus Expense - Direct",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5025"
+                     },
+                     {
+                         "account_no":  "5200",
+                         "description":  "Materials",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5200"
+                     },
+                     {
+                         "account_no":  "5300",
+                         "description":  "Subcontracts",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5300"
+                     },
+                     {
+                         "account_no":  "5400",
+                         "description":  "Owned equipment",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5400"
+                     },
+                     {
+                         "account_no":  "5410",
+                         "description":  "Rented equipment",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5410"
+                     },
+                     {
+                         "account_no":  "5420",
+                         "description":  "Plans and Drawings",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5420"
+                     },
+                     {
+                         "account_no":  "5500",
+                         "description":  "Other Direct Job Costs",
+                         "debit_credit":  "D",
+                         "Account_Key":  "5500"
+                     },
+                     {
+                         "account_no":  "6010",
+                         "description":  "Labor - Indirect",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6010"
+                     },
+                     {
+                         "account_no":  "6015",
+                         "description":  "Labor - Project Mgr",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6015"
+                     },
+                     {
+                         "account_no":  "6025",
+                         "description":  "Bonus Expense - Indirect",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6025"
+                     },
+                     {
+                         "account_no":  "6030",
+                         "description":  "Payroll Taxes - Indirect",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6030"
+                     },
+                     {
+                         "account_no":  "6040",
+                         "description":  "Workers Comp - Indirect",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6040"
+                     },
+                     {
+                         "account_no":  "6045",
+                         "description":  "Benefits - Indirect",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6045"
+                     },
+                     {
+                         "account_no":  "6050",
+                         "description":  "401K/PSP - Indirect",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6050"
+                     },
+                     {
+                         "account_no":  "6060",
+                         "description":  "Depreciation",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6060"
+                     },
+                     {
+                         "account_no":  "6070",
+                         "description":  "Vehicle - JVM",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6070"
+                     },
+                     {
+                         "account_no":  "6071",
+                         "description":  "Vehicle - LV",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6071"
+                     },
+                     {
+                         "account_no":  "6072",
+                         "description":  "Vehicle - JJ",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6072"
+                     },
+                     {
+                         "account_no":  "6073",
+                         "description":  "Vehicle - AP",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6073"
+                     },
+                     {
+                         "account_no":  "6074",
+                         "description":  "Vehicle - AGM",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6074"
+                     },
+                     {
+                         "account_no":  "6075",
+                         "description":  "Vehicle - DD",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6075"
+                     },
+                     {
+                         "account_no":  "6076",
+                         "description":  "Vehicle - RR",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6076"
+                     },
+                     {
+                         "account_no":  "6080",
+                         "description":  "Vehicle - field",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6080"
+                     },
+                     {
+                         "account_no":  "6082",
+                         "description":  "Vehicle - AM",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6082"
+                     },
+                     {
+                         "account_no":  "6083",
+                         "description":  "Vehicle - AMF",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6083"
+                     },
+                     {
+                         "account_no":  "6084",
+                         "description":  "Vehicle - ADG",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6084"
+                     },
+                     {
+                         "account_no":  "6085",
+                         "description":  "Vehicle - MFF",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6085"
+                     },
+                     {
+                         "account_no":  "6086",
+                         "description":  "Vehicle - RET",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6086"
+                     },
+                     {
+                         "account_no":  "6087",
+                         "description":  "Vehicle - RJG",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6087"
+                     },
+                     {
+                         "account_no":  "6088",
+                         "description":  "Vehicle - GBB",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6088"
+                     },
+                     {
+                         "account_no":  "6089",
+                         "description":  "Vehicle - DDC",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6089"
+                     },
+                     {
+                         "account_no":  "6090",
+                         "description":  "Vehicle - JPA",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6090"
+                     },
+                     {
+                         "account_no":  "6091",
+                         "description":  "Vehicle - TR",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6091"
+                     },
+                     {
+                         "account_no":  "6092",
+                         "description":  "Vehicle - SJ",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6092"
+                     },
+                     {
+                         "account_no":  "6093",
+                         "description":  "Vehicle - JA",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6093"
+                     },
+                     {
+                         "account_no":  "6094",
+                         "description":  "Vehicle - BK",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6094"
+                     },
+                     {
+                         "account_no":  "6095",
+                         "description":  "Vehicle - RH",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6095"
+                     },
+                     {
+                         "account_no":  "6096",
+                         "description":  "Vehicle - SM",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6096"
+                     },
+                     {
+                         "account_no":  "6097",
+                         "description":  "Vehicle - JW",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6097"
+                     },
+                     {
+                         "account_no":  "6098",
+                         "description":  "Medical Fringe Benefit",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6098"
+                     },
+                     {
+                         "account_no":  "6099",
+                         "description":  "Vehicle fringe credit",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6099"
+                     },
+                     {
+                         "account_no":  "6100",
+                         "description":  "Equipment repairs",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6100"
+                     },
+                     {
+                         "account_no":  "6110",
+                         "description":  "Professional Liab Insurance",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6110"
+                     },
+                     {
+                         "account_no":  "6120",
+                         "description":  "Tools and Supplies",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6120"
+                     },
+                     {
+                         "account_no":  "6130",
+                         "description":  "Field apparel",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6130"
+                     },
+                     {
+                         "account_no":  "6140",
+                         "description":  "Safety costs",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6140"
+                     },
+                     {
+                         "account_no":  "6150",
+                         "description":  "Personal property taxes",
+                         "debit_credit":  "D",
+                         "Account_Key":  "6150"
+                     },
+                     {
+                         "account_no":  "7010",
+                         "description":  "Officer salaries",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7010"
+                     },
+                     {
+                         "account_no":  "7015",
+                         "description":  "Clerical salaries",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7015"
+                     },
+                     {
+                         "account_no":  "7020",
+                         "description":  "Payroll taxes - Office",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7020"
+                     },
+                     {
+                         "account_no":  "7022",
+                         "description":  "Workers Comp - Office",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7022"
+                     },
+                     {
+                         "account_no":  "7025",
+                         "description":  "Benefits - Office",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7025"
+                     },
+                     {
+                         "account_no":  "7028",
+                         "description":  "Bonus Expense - Office",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7028"
+                     },
+                     {
+                         "account_no":  "7030",
+                         "description":  "401K/PSP - Office",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7030"
+                     },
+                     {
+                         "account_no":  "7031",
+                         "description":  "PTO Expense",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7031"
+                     },
+                     {
+                         "account_no":  "7035",
+                         "description":  "Employee benefit expenses",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7035"
+                     },
+                     {
+                         "account_no":  "7040",
+                         "description":  "Advertising and Marketing",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7040"
+                     },
+                     {
+                         "account_no":  "7045",
+                         "description":  "Recruiting",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7045"
+                     },
+                     {
+                         "account_no":  "7050",
+                         "description":  "Postage and Mailing",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7050"
+                     },
+                     {
+                         "account_no":  "7060",
+                         "description":  "Office expenses",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7060"
+                     },
+                     {
+                         "account_no":  "7070",
+                         "description":  "Meetings expense",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7070"
+                     },
+                     {
+                         "account_no":  "7080",
+                         "description":  "Meals (50%)",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7080"
+                     },
+                     {
+                         "account_no":  "7082",
+                         "description":  "Entertainment (non-ded)",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7082"
+                     },
+                     {
+                         "account_no":  "7085",
+                         "description":  "Rent expense",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7085"
+                     },
+                     {
+                         "account_no":  "7090",
+                         "description":  "Utilities",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7090"
+                     },
+                     {
+                         "account_no":  "7092",
+                         "description":  "Security alarm",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7092"
+                     },
+                     {
+                         "account_no":  "7095",
+                         "description":  "Janitorial service",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7095"
+                     },
+                     {
+                         "account_no":  "7100",
+                         "description":  "Legal and Accounting",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7100"
+                     },
+                     {
+                         "account_no":  "7110",
+                         "description":  "Taxes and Licenses",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7110"
+                     },
+                     {
+                         "account_no":  "7120",
+                         "description":  "Information technology",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7120"
+                     },
+                     {
+                         "account_no":  "7130",
+                         "description":  "Telephone expenses",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7130"
+                     },
+                     {
+                         "account_no":  "7140",
+                         "description":  "Insurance expense",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7140"
+                     },
+                     {
+                         "account_no":  "7141",
+                         "description":  "Insurance job allocation",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7141"
+                     },
+                     {
+                         "account_no":  "7145",
+                         "description":  "Officer life insurance",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7145"
+                     },
+                     {
+                         "account_no":  "7150",
+                         "description":  "Education expense",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7150"
+                     },
+                     {
+                         "account_no":  "7160",
+                         "description":  "Interest expense",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7160"
+                     },
+                     {
+                         "account_no":  "7170",
+                         "description":  "Equipment leasing",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7170"
+                     },
+                     {
+                         "account_no":  "7180",
+                         "description":  "Repairs and maintenance",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7180"
+                     },
+                     {
+                         "account_no":  "7190",
+                         "description":  "Travel and mileage",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7190"
+                     },
+                     {
+                         "account_no":  "7200",
+                         "description":  "Payroll service fee",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7200"
+                     },
+                     {
+                         "account_no":  "7210",
+                         "description":  "Bank charges",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7210"
+                     },
+                     {
+                         "account_no":  "7220",
+                         "description":  "Amortization expense",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7220"
+                     },
+                     {
+                         "account_no":  "7230",
+                         "description":  "Bad Debt Expense",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7230"
+                     },
+                     {
+                         "account_no":  "7240",
+                         "description":  "AZ Property Costs",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7240"
+                     },
+                     {
+                         "account_no":  "7900",
+                         "description":  "Federal tax expense",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7900"
+                     },
+                     {
+                         "account_no":  "7910",
+                         "description":  "State tax expense",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7910"
+                     },
+                     {
+                         "account_no":  "7920",
+                         "description":  "Income tax penalties",
+                         "debit_credit":  "D",
+                         "Account_Key":  "7920"
+                     },
+                     {
+                         "account_no":  "1305",
+                         "description":  "Accum dep - Building Improv",
+                         "debit_credit":  "C",
+                         "Account_Key":  "1305"
+                     },
+                     {
+                         "account_no":  "1315",
+                         "description":  "Accum dep - Equip/Machinery",
+                         "debit_credit":  "C",
+                         "Account_Key":  "1315"
+                     },
+                     {
+                         "account_no":  "1325",
+                         "description":  "Accum dep - Furn and Equip",
+                         "debit_credit":  "C",
+                         "Account_Key":  "1325"
+                     },
+                     {
+                         "account_no":  "1405",
+                         "description":  "Accum dep - Field vehicles",
+                         "debit_credit":  "C",
+                         "Account_Key":  "1405"
+                     },
+                     {
+                         "account_no":  "2000",
+                         "description":  "Contracts payable",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2000"
+                     },
+                     {
+                         "account_no":  "2005",
+                         "description":  "Related Contracts Payable",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2005"
+                     },
+                     {
+                         "account_no":  "2010",
+                         "description":  "Retention payable",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2010"
+                     },
+                     {
+                         "account_no":  "2015",
+                         "description":  "Credit card - GBB",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2015"
+                     },
+                     {
+                         "account_no":  "2016",
+                         "description":  "Credit card - RET",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2016"
+                     },
+                     {
+                         "account_no":  "2017",
+                         "description":  "Credit card - RJG",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2017"
+                     },
+                     {
+                         "account_no":  "2018",
+                         "description":  "Credit card - MAF",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2018"
+                     },
+                     {
+                         "account_no":  "2019",
+                         "description":  "Credit card - SR",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2019"
+                     },
+                     {
+                         "account_no":  "2020",
+                         "description":  "Accrued Union Benefits",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2020"
+                     },
+                     {
+                         "account_no":  "2021",
+                         "description":  "Accrued 401K Contributions",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2021"
+                     },
+                     {
+                         "account_no":  "2022",
+                         "description":  "Garnishments",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2022"
+                     },
+                     {
+                         "account_no":  "2023",
+                         "description":  "Accrued Health Insurance",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2023"
+                     },
+                     {
+                         "account_no":  "2025",
+                         "description":  "Accrued PTO",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2025"
+                     },
+                     {
+                         "account_no":  "2028",
+                         "description":  "Accrued Bonus",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2028"
+                     },
+                     {
+                         "account_no":  "2030",
+                         "description":  "Accrued payroll",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2030"
+                     },
+                     {
+                         "account_no":  "2040",
+                         "description":  "Union Dues Withholding",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2040"
+                     },
+                     {
+                         "account_no":  "2050",
+                         "description":  "Federal Withholding",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2050"
+                     },
+                     {
+                         "account_no":  "2060",
+                         "description":  "State Withholding",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2060"
+                     },
+                     {
+                         "account_no":  "2070",
+                         "description":  "Training Fund Deductions",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2070"
+                     },
+                     {
+                         "account_no":  "2080",
+                         "description":  "FUTA Withholding",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2080"
+                     },
+                     {
+                         "account_no":  "2090",
+                         "description":  "SUTA Withholding",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2090"
+                     },
+                     {
+                         "account_no":  "2100",
+                         "description":  "Accrued worker`s comp",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2100"
+                     },
+                     {
+                         "account_no":  "2110",
+                         "description":  "Insurance financing",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2110"
+                     },
+                     {
+                         "account_no":  "2120",
+                         "description":  "Overbillings",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2120"
+                     },
+                     {
+                         "account_no":  "2130",
+                         "description":  "Federal taxes payable",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2130"
+                     },
+                     {
+                         "account_no":  "2135",
+                         "description":  "Accrued Sales Tax",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2135"
+                     },
+                     {
+                         "account_no":  "2140",
+                         "description":  "State taxes payable",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2140"
+                     },
+                     {
+                         "account_no":  "2150",
+                         "description":  "Deferred tax liability",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2150"
+                     },
+                     {
+                         "account_no":  "2200",
+                         "description":  "Uninvoiced Receipts",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2200"
+                     },
+                     {
+                         "account_no":  "2210",
+                         "description":  "ST Note Payable",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2210"
+                     },
+                     {
+                         "account_no":  "2250",
+                         "description":  "Shareholder advance",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2250"
+                     },
+                     {
+                         "account_no":  "2500",
+                         "description":  "Loan - Bridge Bank",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2500"
+                     },
+                     {
+                         "account_no":  "2510",
+                         "description":  "Note - Vehicles",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2510"
+                     },
+                     {
+                         "account_no":  "2515",
+                         "description":  "Note - Former S/H",
+                         "debit_credit":  "C",
+                         "Account_Key":  "2515"
+                     },
+                     {
+                         "account_no":  "3000",
+                         "description":  "Common Stock",
+                         "debit_credit":  "C",
+                         "Account_Key":  "3000"
+                     },
+                     {
+                         "account_no":  "3010",
+                         "description":  "Treasury Stock",
+                         "debit_credit":  "C",
+                         "Account_Key":  "3010"
+                     },
+                     {
+                         "account_no":  "3020",
+                         "description":  "Retained Earnings",
+                         "debit_credit":  "C",
+                         "Account_Key":  "3020"
+                     },
+                     {
+                         "account_no":  "3025",
+                         "description":  "Deferred Comp - RET",
+                         "debit_credit":  "C",
+                         "Account_Key":  "3025"
+                     },
+                     {
+                         "account_no":  "3030",
+                         "description":  "Capital",
+                         "debit_credit":  "C",
+                         "Account_Key":  "3030"
+                     },
+                     {
+                         "account_no":  "3031",
+                         "description":  "Capital - RJG",
+                         "debit_credit":  "C",
+                         "Account_Key":  "3031"
+                     },
+                     {
+                         "account_no":  "3032",
+                         "description":  "Capital - RET",
+                         "debit_credit":  "C",
+                         "Account_Key":  "3032"
+                     },
+                     {
+                         "account_no":  "3033",
+                         "description":  "Capital - MAF",
+                         "debit_credit":  "C",
+                         "Account_Key":  "3033"
+                     },
+                     {
+                         "account_no":  "3034",
+                         "description":  "Capital - GBB",
+                         "debit_credit":  "C",
+                         "Account_Key":  "3034"
+                     },
+                     {
+                         "account_no":  "3035",
+                         "description":  "Distributions - RJG",
+                         "debit_credit":  "C",
+                         "Account_Key":  "3035"
+                     },
+                     {
+                         "account_no":  "3036",
+                         "description":  "Distributions - RET",
+                         "debit_credit":  "C",
+                         "Account_Key":  "3036"
+                     },
+                     {
+                         "account_no":  "4000",
+                         "description":  "Contract revenue",
+                         "debit_credit":  "C",
+                         "Account_Key":  "4000"
+                     },
+                     {
+                         "account_no":  "4010",
+                         "description":  "Residential Income",
+                         "debit_credit":  "C",
+                         "Account_Key":  "4010"
+                     },
+                     {
+                         "account_no":  "4020",
+                         "description":  "Other income",
+                         "debit_credit":  "C",
+                         "Account_Key":  "4020"
+                     },
+                     {
+                         "account_no":  "4090",
+                         "description":  "Over Under Billing",
+                         "debit_credit":  "C",
+                         "Account_Key":  "4090"
+                     },
+                     {
+                         "account_no":  "4200",
+                         "description":  "Discount",
+                         "debit_credit":  "C",
+                         "Account_Key":  "4200"
+                     },
+                     {
+                         "account_no":  "8000",
+                         "description":  "Misc Income",
+                         "debit_credit":  "C",
+                         "Account_Key":  "8000"
+                     },
+                     {
+                         "account_no":  "8005",
+                         "description":  "Interest income",
+                         "debit_credit":  "C",
+                         "Account_Key":  "8005"
+                     },
+                     {
+                         "account_no":  "8007",
+                         "description":  "Dividend Income",
+                         "debit_credit":  "C",
+                         "Account_Key":  "8007"
+                     },
+                     {
+                         "account_no":  "8008",
+                         "description":  "Capital Gain (Loss) on Invest",
+                         "debit_credit":  "C",
+                         "Account_Key":  "8008"
+                     },
+                     {
+                         "account_no":  "8010",
+                         "description":  "Discounts Earned/Taken",
+                         "debit_credit":  "C",
+                         "Account_Key":  "8010"
+                     },
+                     {
+                         "account_no":  "8020",
+                         "description":  "Gain (Loss) on asset disposal",
+                         "debit_credit":  "C",
+                         "Account_Key":  "8020"
+                     }
+                 ]
 }
