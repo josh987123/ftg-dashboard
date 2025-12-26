@@ -735,9 +735,9 @@ def api_email_cash_report():
         # Generate HTML email content
         html_content = generate_cash_report_html_email(report_data, ai_analysis)
         
-        # Generate subject line with today's date
+        # Generate subject line with today's date in MM/DD/YY format
         from datetime import datetime
-        today = datetime.now().strftime('%B %d, %Y')
+        today = datetime.now().strftime('%m/%d/%y')
         subject = f"FTG Builders Weekly Cash Report: {today}"
         
         # Send via Gmail API
