@@ -711,6 +711,186 @@ Period: {period_info}
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/email-cash-report', methods=['POST', 'OPTIONS'])
+def api_email_cash_report():
+    """Send Cash Report as HTML email with content embedded in body"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        to_email = data.get('to')
+        report_data = data.get('reportData')
+        ai_analysis = data.get('aiAnalysis', '')
+        
+        if not to_email:
+            return jsonify({'error': 'Recipient email is required'}), 400
+        
+        if not report_data:
+            return jsonify({'error': 'Report data is required'}), 400
+        
+        # Generate HTML email content
+        html_content = generate_cash_report_html_email(report_data, ai_analysis)
+        
+        # Generate subject line
+        current_balance = report_data.get('summary', {}).get('currentBalance', 'N/A')
+        subject = f"FTG Cash Report - Balance: {current_balance}"
+        
+        # Send via Gmail API
+        result = send_gmail(to_email, subject, html_content)
+        
+        return jsonify({'success': True, 'messageId': result.get('id')})
+        
+    except Exception as e:
+        import traceback
+        print(f"Cash Report email error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+def generate_cash_report_html_email(report_data, ai_analysis=''):
+    """Generate HTML email content for Cash Report with embedded styling"""
+    import re
+    
+    summary = report_data.get('summary', {})
+    safety = report_data.get('safetyCheck', {})
+    deposits = report_data.get('topDeposits', [])
+    withdrawals = report_data.get('topWithdrawals', [])
+    
+    # Format AI analysis with color highlighting
+    formatted_analysis = ai_analysis
+    if ai_analysis:
+        formatted_analysis = re.sub(
+            r'\b(increased|received|deposits?|paid us)\s+(\$[\d,\.]+[KMB]?)',
+            r'\1 <span style="color:#16a34a;font-weight:700;">\2</span>',
+            formatted_analysis, flags=re.IGNORECASE
+        )
+        formatted_analysis = re.sub(
+            r'\b(decreased|paid out|withdrawals?)\s+(\$[\d,\.]+[KMB]?)',
+            r'\1 <span style="color:#dc2626;font-weight:700;">\2</span>',
+            formatted_analysis, flags=re.IGNORECASE
+        )
+    
+    # Build deposits table rows
+    deposits_rows = ''
+    for d in deposits:
+        deposits_rows += '<tr style="border-bottom:1px solid #e2e8f0;">'
+        deposits_rows += f'<td style="padding:12px 8px;font-size:14px;color:#64748b;">{d.get("date", "")}</td>'
+        deposits_rows += f'<td style="padding:12px 8px;font-size:14px;color:#1e293b;">{d.get("description", "")[:40]}</td>'
+        deposits_rows += f'<td style="padding:12px 8px;font-size:14px;color:#16a34a;font-weight:600;text-align:right;">{d.get("amount", "")}</td>'
+        deposits_rows += '</tr>'
+        if d.get('attribution'):
+            deposits_rows += f'<tr style="background:#f8fafc;"><td colspan="3" style="padding:4px 8px 12px 24px;font-size:12px;color:#3b82f6;">● {d.get("attribution", "")}</td></tr>'
+    
+    # Build withdrawals table rows
+    withdrawals_rows = ''
+    for w in withdrawals:
+        withdrawals_rows += '<tr style="border-bottom:1px solid #e2e8f0;">'
+        withdrawals_rows += f'<td style="padding:12px 8px;font-size:14px;color:#64748b;">{w.get("date", "")}</td>'
+        withdrawals_rows += f'<td style="padding:12px 8px;font-size:14px;color:#1e293b;">{w.get("description", "")[:40]}</td>'
+        withdrawals_rows += f'<td style="padding:12px 8px;font-size:14px;color:#dc2626;font-weight:600;text-align:right;">{w.get("amount", "")}</td>'
+        withdrawals_rows += '</tr>'
+        if w.get('attribution'):
+            withdrawals_rows += f'<tr style="background:#f8fafc;"><td colspan="3" style="padding:4px 8px 12px 24px;font-size:12px;color:#3b82f6;">● {w.get("attribution", "")}</td></tr>'
+    
+    # AI summary section
+    ai_section = ''
+    if ai_analysis:
+        ai_section = f'''<div style="background:#f0f9ff;border:1px solid #bae6fd;padding:20px 24px;">
+            <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:8px;">AI Summary</div>
+            <p style="margin:0;font-size:15px;line-height:1.6;color:#1e293b;">{formatted_analysis}</p>
+        </div>'''
+    
+    deposits_content = deposits_rows if deposits_rows else '<tr><td colspan="3" style="padding:16px;text-align:center;color:#64748b;">No deposits</td></tr>'
+    withdrawals_content = withdrawals_rows if withdrawals_rows else '<tr><td colspan="3" style="padding:16px;text-align:center;color:#64748b;">No withdrawals</td></tr>'
+    
+    html = f'''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;">
+    <div style="max-width:700px;margin:0 auto;padding:24px;">
+        <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:12px 12px 0 0;padding:24px;text-align:center;">
+            <h1 style="margin:0;color:white;font-size:24px;font-weight:700;">FTG Builders Cash Report</h1>
+            <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">{summary.get('periodLabel', 'Weekly Summary')}</p>
+        </div>
+        {ai_section}
+        <div style="background:white;padding:24px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                <tr>
+                    <td width="25%" style="text-align:center;padding:16px;border-right:1px solid #e2e8f0;">
+                        <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Current Balance</div>
+                        <div style="font-size:24px;font-weight:700;color:#1e293b;">{summary.get('currentBalance', '--')}</div>
+                    </td>
+                    <td width="25%" style="text-align:center;padding:16px;border-right:1px solid #e2e8f0;">
+                        <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Deposits</div>
+                        <div style="font-size:24px;font-weight:700;color:#16a34a;">{summary.get('deposits', '--')}</div>
+                    </td>
+                    <td width="25%" style="text-align:center;padding:16px;border-right:1px solid #e2e8f0;">
+                        <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Withdrawals</div>
+                        <div style="font-size:24px;font-weight:700;color:#dc2626;">{summary.get('withdrawals', '--')}</div>
+                    </td>
+                    <td width="25%" style="text-align:center;padding:16px;">
+                        <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Net Change</div>
+                        <div style="font-size:24px;font-weight:700;color:#1e293b;">{summary.get('netChange', '--')}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div style="background:#f8fafc;padding:20px 24px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+            <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:16px;">Cash Balance Safety Check</div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                <tr>
+                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">CASH</div><div style="font-size:14px;font-weight:700;">{safety.get('cash', '--')}</div></td>
+                    <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">+</td>
+                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">AR</div><div style="font-size:14px;font-weight:700;color:#16a34a;">{safety.get('ar', '--')}</div></td>
+                    <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">−</td>
+                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">AP</div><div style="font-size:14px;font-weight:700;color:#dc2626;">{safety.get('ap', '--')}</div></td>
+                    <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">−</td>
+                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">OUB</div><div style="font-size:14px;font-weight:700;">{safety.get('oub', '--')}</div></td>
+                    <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">−</td>
+                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">RESERVE</div><div style="font-size:14px;font-weight:700;color:#dc2626;">{safety.get('opExp', '--')}</div></td>
+                    <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">=</td>
+                    <td style="text-align:center;padding:12px;background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(16,185,129,0.1));border-radius:8px;"><div style="font-size:10px;color:#64748b;">SAFETY</div><div style="font-size:16px;font-weight:700;color:#16a34a;">{safety.get('total', '--')}</div></td>
+                </tr>
+            </table>
+        </div>
+        <div style="background:white;padding:24px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+            <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Top 5 Deposits</div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
+                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:left;">Date</th>
+                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:left;">Description</th>
+                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:right;">Amount</th>
+                </tr>
+                {deposits_content}
+            </table>
+        </div>
+        <div style="background:white;padding:24px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;border-radius:0 0 12px 12px;">
+            <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Top 5 Withdrawals</div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
+                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:left;">Date</th>
+                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:left;">Description</th>
+                    <th style="padding:10px 8px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;text-align:right;">Amount</th>
+                </tr>
+                {withdrawals_content}
+            </table>
+        </div>
+        <div style="text-align:center;padding:24px;color:#64748b;font-size:12px;">
+            <p style="margin:0;">Generated by FTG Dashboard on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}</p>
+        </div>
+    </div>
+</body>
+</html>'''
+    
+    return html
+
+
 @app.route('/api/analyze-cash-report', methods=['POST', 'OPTIONS'])
 def api_analyze_cash_report():
     if request.method == 'OPTIONS':

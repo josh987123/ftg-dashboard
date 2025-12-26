@@ -7931,6 +7931,45 @@ body.dark-mode #accounts .summary-tile .tile-label {
   box-shadow: none;
 }
 
+.dcr-ai-btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.dcr-ai-email-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dcr-ai-email-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.dcr-ai-email-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+[data-theme="dark"] .dcr-ai-email-btn {
+  background: rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+[data-theme="dark"] .dcr-ai-email-btn:hover {
+  background: rgba(16, 185, 129, 0.4);
+}
+
 .dcr-ai-summary-content {
   font-size: 16px;
   font-weight: 500;
