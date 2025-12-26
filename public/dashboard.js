@@ -19051,8 +19051,11 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
     if (!pm || PM_EXCLUSION_CONFIG.isExcluded(pm)) return;
     if (!pmStats[pm]) pmStats[pm] = { jobs: 0, jobsWithBudget: 0, contract: 0, contractWithBudget: 0, cost: 0, billed: 0, earned: 0 };
     pmStats[pm].jobs++;
-    // Track jobs with valid budgets and their contract values separately
-    const hasBudget = (job.contract || 0) > 0 && (job.revised_cost || 0) > 0;
+    // Track jobs with valid revenue estimates - exclude jobs without revenue
+    // For closed jobs: must have contract > 0 (actual revenue)
+    // For active jobs: must have revised_contract > 0 (revenue estimate)
+    const hasValidRevenue = (job.contract || job.revised_contract || 0) > 0;
+    const hasBudget = hasValidRevenue && (job.revised_cost || 0) > 0;
     if (hasBudget) {
       pmStats[pm].jobsWithBudget++;
       pmStats[pm].contractWithBudget += job.contract || 0;
@@ -19080,7 +19083,8 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
   const avgBilled = Object.values(pmStats).reduce((s, p) => s + p.billed, 0) / pmCount;
   const avgEarned = Object.values(pmStats).reduce((s, p) => s + p.earned, 0) / pmCount;
   const avgBillingPosition = avgEarned > 0 ? (avgBilled / avgEarned * 100) : 100;
-  // Average job size: sum contract values ONLY from jobs with budgets, divide by count of jobs with budgets
+  // Average job size: sum contract values ONLY from jobs with valid revenue
+  // Excludes: closed jobs without revenue, active jobs without revenue estimate
   const totalJobsWithBudget = Object.values(pmStats).reduce((s, p) => s + p.jobsWithBudget, 0);
   const totalContractWithBudget = Object.values(pmStats).reduce((s, p) => s + p.contractWithBudget, 0);
   const avgJobSize = totalJobsWithBudget > 0 ? (totalContractWithBudget / totalJobsWithBudget) : 0;
@@ -19121,8 +19125,11 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
       const pmBilled = pmJobs.reduce((s, j) => s + (j.billed_revenue || 0), 0);
       const pmEarned = pmJobs.reduce((s, j) => s + (j.earned_revenue || 0), 0);
       const pmBillingPosition = pmEarned > 0 ? (pmBilled / pmEarned * 100) : 100;
-      // Average job size: only sum contract values FROM jobs with budgets, divide by count
-      const pmJobsWithBudgetArr = pmJobs.filter(j => (j.revised_contract || 0) > 0 && (j.revised_cost || 0) > 0);
+      // Average job size: exclude closed jobs without revenue, active jobs without revenue estimate
+      const pmJobsWithBudgetArr = pmJobs.filter(j => {
+        const hasRevenue = (j.contract || j.revised_contract || 0) > 0;
+        return hasRevenue && (j.revised_cost || 0) > 0;
+      });
       const pmContractWithBudget = pmJobsWithBudgetArr.reduce((s, j) => s + (j.revised_contract || 0), 0);
       const pmJobSize = pmJobsWithBudgetArr.length > 0 ? (pmContractWithBudget / pmJobsWithBudgetArr.length) : 0;
       
@@ -19158,6 +19165,13 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
       datasets.push({
         label: selectedPm,
         data: pmData,
+        actualValues: {
+          jobCount: pmJobs.length,
+          contractValue: pmContract,
+          profitMargin: pmMargin,
+          avgJobSize: pmJobSize,
+          billingPosition: pmBillingPosition
+        },
         backgroundColor: 'rgba(59, 130, 246, 0.15)',
         borderColor: '#3b82f6',
         borderWidth: 2,
@@ -19195,6 +19209,13 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
   datasets.push({
     label: 'Company Avg',
     data: avgData,
+    actualValues: {
+      jobCount: Math.round(avgJobs),
+      contractValue: avgContract,
+      profitMargin: avgMargin,
+      avgJobSize: avgJobSize,
+      billingPosition: avgBillingPosition
+    },
     backgroundColor: 'rgba(156, 163, 175, 0.15)',
     borderColor: '#9ca3af',
     borderWidth: showPmOverlay ? 1 : 2,
@@ -19203,6 +19224,15 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
   });
   
   const ctx = canvas.getContext('2d');
+  // Store actual values for tooltips
+  const actualAvgValues = {
+    jobCount: Math.round(avgJobs),
+    contractValue: avgContract,
+    profitMargin: avgMargin,
+    avgJobSize: avgJobSize,
+    billingPosition: avgBillingPosition
+  };
+  
   joPmRadarChart = new Chart(ctx, {
     type: 'radar',
     data: {
@@ -19222,7 +19252,24 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
         }
       },
       plugins: {
-        legend: { display: false }
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.dataset.label || '';
+              const index = context.dataIndex;
+              const actualVals = context.dataset.actualValues || actualAvgValues;
+              const labels = ['Job Count', 'Contract Value', 'Profit Margin', 'Avg Job Size', 'Billing Position'];
+              
+              if (index === 0) return label + ': ' + actualVals.jobCount + ' jobs';
+              if (index === 1) return label + ': ' + formatCurrencyCompact(actualVals.contractValue);
+              if (index === 2) return label + ': ' + actualVals.profitMargin.toFixed(1) + '%';
+              if (index === 3) return label + ': ' + formatCurrencyCompact(actualVals.avgJobSize) + ' avg';
+              if (index === 4) return label + ': ' + actualVals.billingPosition.toFixed(0) + '% billed vs earned';
+              return label + ': ' + context.raw.toFixed(1);
+            }
+          }
+        }
       }
     }
   });
