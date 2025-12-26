@@ -7714,6 +7714,19 @@ async function universalExportToExcel() {
 }
 
 function openEmailModal() {
+  const view = getCurrentView();
+  
+  // Special handling for Cash Report
+  if (view === 'cashBalances') {
+    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    setElValue("emailSubject", `FTG Builders Weekly Cash Report: ${dateStr}`);
+    setElValue("emailTo", "");
+    setElText("emailStatus", "");
+    const modal = getEl("emailModal");
+    if (modal) modal.classList.remove("hidden");
+    return;
+  }
+  
   const data = getReportData();
   if (!data) return alert("Please navigate to a supported report view to send email.");
   
@@ -8245,6 +8258,57 @@ async function sendReportEmail() {
   if (!toEmail) {
     statusEl.textContent = "Please enter a recipient email address.";
     statusEl.className = "email-status error";
+    return;
+  }
+
+// Send Cash Report email via ribbon button using new HTML email API
+async function sendCashReportViaRibbon(toEmail, statusEl, sendBtn) {
+  sendBtn.disabled = true;
+  statusEl.textContent = "Preparing report...";
+  statusEl.className = "email-status";
+  
+  try {
+    // Gather current report data using the same function as the old Email Report button
+    const reportData = gatherCashReportDataForEmail();
+    const aiAnalysis = document.getElementById('dcrAiAnalysisContent')?.textContent || '';
+    
+    statusEl.textContent = "Sending email...";
+    
+    const response = await fetch('/api/email-cash-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: toEmail,
+        reportData: reportData,
+        aiAnalysis: aiAnalysis
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      statusEl.textContent = "Email sent successfully!";
+      statusEl.className = "email-status success";
+      setTimeout(closeEmailModal, 2000);
+    } else {
+      statusEl.textContent = "Error: " + (result.error || "Failed to send email");
+      statusEl.className = "email-status error";
+    }
+  } catch (e) {
+    console.error('Cash report email error:', e);
+    statusEl.textContent = "Error sending email: " + e.message;
+    statusEl.className = "email-status error";
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+  
+  const view = getCurrentView();
+  
+  // Special handling for Cash Report - use new HTML email
+  if (view === 'cashBalances') {
+    await sendCashReportViaRibbon(toEmail, statusEl, sendBtn);
     return;
   }
   
