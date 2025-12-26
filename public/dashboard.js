@@ -24635,18 +24635,18 @@ async function initCostCodes() {
         ...job,
         original_contract: parseFloat(job.original_contract) || 0,
         tot_income_adj: parseFloat(job.tot_income_adj) || 0,
-        revised_contract: parseFloat(job.contract) || 0,
-        contract: parseFloat(job.contract) || 0,
+        revised_contract: parseFloat(job.revised_contract) || parseFloat(job.contract) || 0,
+        contract: parseFloat(job.revised_contract) || parseFloat(job.contract) || 0,
         original_cost: parseFloat(job.original_cost) || 0,
         tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
-        revised_cost: parseFloat(job.budget_cost) || parseFloat(job.revised_cost) || 0,
-        budget_cost: parseFloat(job.budget_cost) || parseFloat(job.revised_cost) || 0,
+        revised_cost: parseFloat(job.revised_cost) || parseFloat(job.budget_cost) || 0,
+        budget_cost: parseFloat(job.revised_cost) || parseFloat(job.budget_cost) || 0,
         billed: parseFloat(job.billed) || 0,
         billed_revenue: parseFloat(job.billed) || 0,
         actual_cost: parseFloat(job.actual_cost) || 0,
         earned_revenue: parseFloat(job.earned_revenue) || 0,
-        has_budget: (parseFloat(job.budget_cost) || parseFloat(job.revised_cost) || 0) > 0,
-        profit: (parseFloat(job.contract) || 0) - (parseFloat(job.budget_cost) || parseFloat(job.revised_cost) || 0)
+        has_budget: (parseFloat(job.revised_cost) || parseFloat(job.budget_cost) || 0) > 0,
+        profit: (parseFloat(job.revised_contract) || parseFloat(job.contract) || 0) - (parseFloat(job.revised_cost) || parseFloat(job.budget_cost) || 0)
       }));
     }
     

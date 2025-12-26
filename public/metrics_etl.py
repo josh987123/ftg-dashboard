@@ -153,6 +153,7 @@ def calculate_ar_invoice_metrics(invoice: dict) -> Optional[dict]:
         'invoice_no': invoice.get('invoice_no', ''),
         'customer_name': (invoice.get('customer_name', '') or '').strip(),
         'project_manager': (invoice.get('project_manager_name', '') or '').strip(),
+        'project_manager_name': (invoice.get('project_manager_name', '') or '').strip(),
         'job_no': invoice.get('job_no', ''),
         'invoice_date': invoice.get('invoice_date', ''),
         'due_date': invoice.get('due_date', ''),
