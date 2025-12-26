@@ -1,0 +1,72 @@
+~/workspace$ git status
+On branch main
+Your branch and 'origin/main' have diverged,
+and have 8 and 1 different commits each, respectively.
+  (use "git pull" if you want to integrate the remote branch with yours)
+
+nothing to commit, working tree clean
+~/workspace$ git pull --no-rebase
+Auto-merging public/data/ap_payment_job_allocation.json
+CONFLICT (content): Merge conflict in public/data/ap_payment_job_allocation.json
+Auto-merging public/data/ar_receipt_job_allocation.json
+CONFLICT (content): Merge conflict in public/data/ar_receipt_job_allocation.json
+Automatic merge failed; fix conflicts and then commit the result.
+~/workspace$ git checkout --ours public/data/ap_payment_job_allocation.json
+Updated 0 paths from the index
+~/workspace$ git checkout --ours public/data/ar_receipt_job_allocation.json
+Updated 0 paths from the index
+~/workspace$ git add public/data/ap_payment_job_allocation.json public/data/ar_receipt_job_allocation.json
+~/workspace$ git commit -m "Merge remote changes, keeping cleaned allocation files"
+On branch main
+Your branch and 'origin/main' have diverged,
+and have 8 and 1 different commits each, respectively.
+
+nothing to commit, working tree clean
+~/workspace$ git status
+On branch main
+Your branch and 'origin/main' have diverged,
+and have 8 and 1 different commits each, respectively.
+  (use "git pull" if you want to integrate the remote branch with yours)
+
+nothing to commit, working tree clean
+~/workspace$ git merge --abort
+fatal: There is no merge to abort (MERGE_HEAD missing).
+~/workspace$ git pull --no-rebase
+Auto-merging public/data/ap_payment_job_allocation.json
+CONFLICT (content): Merge conflict in public/data/ap_payment_job_allocation.json
+Auto-merging public/data/ar_receipt_job_allocation.json
+CONFLICT (content): Merge conflict in public/data/ar_receipt_job_allocation.json
+Automatic merge failed; fix conflicts and then commit the result.
+~/workspace$ git checkout --theirs public/data/ap_payment_job_allocation.json
+git checkout --theirs public/data/ar_receipt_job_allocation.json
+Updated 1 path from the index
+Updated 1 path from the index
+~/workspace$ git add .
+git commit -m "Merge complete"
+[main 234f9b5] Merge complete
+~/workspace$ git status
+interactive rebase in progress; onto a882790
+Last commands done (4 commands done):
+   pick 53e5a19 # Saved progress at the end of the loop # empty
+   pick dc160de # Update cash report to use allocation data for transaction attribution
+  (see more in file .git/rebase-merge/done)
+Next commands to do (4 remaining commands):
+   pick ee40ca9 # Published your App # empty
+   pick 7c647a8 # Improve withdrawal transaction matching with check number identification
+  (use "git rebase --edit-todo" to view and edit)
+You are currently rebasing branch 'main' on 'a882790'.
+  (fix conflicts and then run "git rebase --continue")
+  (use "git rebase --skip" to skip this patch)
+  (use "git rebase --abort" to check out the original branch)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+    modified:   replit.md
+
+Unmerged paths:
+  (use "git restore --staged <file>..." to unstage)
+  (use "git add <file>..." to mark resolution)
+    both modified:   public/data/ap_payment_job_allocation.json
+    both modified:   public/data/ar_receipt_job_allocation.json
+
+~/workspace$ 
