@@ -21,7 +21,13 @@ EXCLUDED_AP_VENDORS = [
     'FTG Builders LLC',
     'FTG Builders, LLC', 
     'FTG Builders',
-    'FTG BUILDERS LLC'
+    'FTG BUILDERS LLC',
+    'CoPower One',
+    'Travel costs',
+    'Meals and Entertainment',
+    'DoorDash Food Delivery',
+    'Costco Wholesale',
+    'Gas/other vehicle expense'
 ]
 
 def load_json_file(filename: str) -> dict:

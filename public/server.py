@@ -3889,7 +3889,13 @@ PAYMENTS_EXCLUDED_VENDORS = {
     'Bank of America',
     'Capital One',
     'CaliforniaChoice',
-    'Kaiser Foundation Health Plan'
+    'Kaiser Foundation Health Plan',
+    'CoPower One',
+    'Travel costs',
+    'Meals and Entertainment',
+    'DoorDash Food Delivery',
+    'Costco Wholesale',
+    'Gas/other vehicle expense'
 }
 
 _payments_cache = None
