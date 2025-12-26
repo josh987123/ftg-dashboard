@@ -17144,9 +17144,9 @@ function renderExecutiveSummary() {
     const safetyValue = safetyEl.textContent;
     const isPositive = safetyEl.classList.contains('positive');
     if (isPositive) {
-      summary += `Safety check remains <span class="highlight-positive">healthy at ${safetyValue}</span>.`;
+      summary += `Cash Safety Buffer remains <span class="highlight-positive">healthy at ${safetyValue}</span>.`;
     } else {
-      summary += `<span class="highlight-negative">Safety check is ${safetyValue}</span> - monitor closely.`;
+      summary += `<span class="highlight-negative">Cash Safety Buffer is ${safetyValue}</span> - monitor closely.`;
     }
   }
   
@@ -17848,56 +17848,76 @@ async function emailCashReport() {
 }
 
 function gatherCashReportDataForEmail() {
-  // Get summary data from the current view
-  const summary = {
-    currentBalance: document.querySelector('.dcr-metric-value')?.textContent || '--',
-    deposits: document.querySelectorAll('.dcr-metric-value')[1]?.textContent || '--',
-    withdrawals: document.querySelectorAll('.dcr-metric-value')[2]?.textContent || '--',
-    netChange: document.querySelectorAll('.dcr-metric-value')[3]?.textContent || '--',
-    periodLabel: 'Weekly Cash Report'
-  };
+  // Use the extractCashReportData function which properly grabs data from DOM IDs
+  const data = extractCashReportData();
   
-  // Get safety check data
-  const safetyBoxes = document.querySelectorAll('.dcr-safety-item');
-  const safety = {
-    cash: safetyBoxes[0]?.querySelector('.dcr-safety-value')?.textContent || '--',
-    ar: safetyBoxes[1]?.querySelector('.dcr-safety-value')?.textContent || '--',
-    ap: safetyBoxes[2]?.querySelector('.dcr-safety-value')?.textContent || '--',
-    oub: safetyBoxes[3]?.querySelector('.dcr-safety-value')?.textContent || '--',
-    opExp: safetyBoxes[4]?.querySelector('.dcr-safety-value')?.textContent || '--',
-    total: document.querySelector('.dcr-safety-total .dcr-safety-value')?.textContent || '--'
-  };
-  
-  // Get top deposits
-  const topDeposits = [];
-  const depositRows = document.querySelectorAll('#dcrTopDeposits .dcr-txn-row');
-  depositRows.forEach(row => {
-    topDeposits.push({
-      date: row.querySelector('.dcr-txn-date')?.textContent || '',
-      description: row.querySelector('.dcr-txn-desc')?.textContent || '',
-      amount: row.querySelector('.dcr-txn-amount')?.textContent || '',
-      attribution: row.querySelector('.dcr-txn-subtitle')?.textContent || ''
-    });
-  });
-  
-  // Get top withdrawals
-  const topWithdrawals = [];
-  const withdrawalRows = document.querySelectorAll('#dcrTopWithdrawals .dcr-txn-row');
-  withdrawalRows.forEach(row => {
-    topWithdrawals.push({
-      date: row.querySelector('.dcr-txn-date')?.textContent || '',
-      description: row.querySelector('.dcr-txn-desc')?.textContent || '',
-      amount: row.querySelector('.dcr-txn-amount')?.textContent || '',
-      attribution: row.querySelector('.dcr-txn-subtitle')?.textContent || ''
-    });
-  });
+  // Also get daily balance chart data for email
+  const dailyBalances = getDailyBalancesForEmail();
   
   return {
-    summary,
-    safetyCheck: safety,
-    topDeposits,
-    topWithdrawals
+    summary: {
+      currentBalance: data.summary.currentBalance,
+      deposits: data.summary.deposits,
+      withdrawals: data.summary.withdrawals,
+      netChange: data.summary.netChange,
+      periodLabel: data.summary.viewMode === 'weekly' ? 'Weekly Cash Report' : 'Daily Cash Report'
+    },
+    safetyCheck: {
+      cash: data.safetyCheck.cash,
+      ar: data.safetyCheck.ar,
+      ap: data.safetyCheck.ap,
+      oub: data.safetyCheck.oub,
+      opExp: data.safetyCheck.opExp,
+      total: data.safetyCheck.total
+    },
+    topDeposits: data.topDeposits,
+    topWithdrawals: data.topWithdrawals,
+    dailyBalances: dailyBalances
   };
+}
+
+function getDailyBalancesForEmail() {
+  // Get daily balances from the chart data
+  if (!dcrData || !dcrData.transactions) return [];
+  
+  const ftgAccounts = dcrData.accounts.filter(a => isFTGBuildersAccount(a.name));
+  const ftgAccountNames = ftgAccounts.map(a => a.name);
+  const currentBalance = ftgAccounts.reduce((sum, a) => sum + a.balance, 0);
+  
+  // Build daily balances for last 7 days
+  const today = new Date();
+  const dailyBalances = [];
+  
+  // Get all transactions sorted by date
+  const allTxns = dcrData.transactions
+    .filter(txn => ftgAccountNames.includes(txn.account))
+    .map(txn => ({ ...txn, dateObj: new Date(txn.date) }))
+    .sort((a, b) => b.dateObj - a.dateObj);
+  
+  // Calculate balance for each of last 7 days
+  let runningBalance = currentBalance;
+  for (let i = 0; i < 7; i++) {
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() - i);
+    const dateStr = targetDate.toISOString().split('T')[0];
+    const dayLabel = targetDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    
+    // Find transactions for this day and earlier
+    const dayTxns = allTxns.filter(t => t.dateObj.toISOString().split('T')[0] === dateStr);
+    
+    dailyBalances.unshift({
+      date: dayLabel,
+      balance: runningBalance,
+      formatted: formatCurrencyCompact(runningBalance)
+    });
+    
+    // Subtract this day's transactions to get prior day balance
+    dayTxns.forEach(t => {
+      runningBalance -= t.amount;
+    });
+  }
+  
+  return dailyBalances;
 }
 
 
@@ -17935,7 +17955,7 @@ function formatCashAnalysis(text) {
   
   // Safety check amounts - neutral/bold
   formatted = formatted.replace(
-    /\b(healthy|safety check)\s+at\s+(\$[\d,\.]+[KMB]?)/gi,
+    /\b(healthy|Cash Safety Buffer)\s+at\s+(\$[\d,\.]+[KMB]?)/gi,
     (match, context, amount) => `${context} at <span class="highlight-neutral">${amount}</span>`
   );
   
