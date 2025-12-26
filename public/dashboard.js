@@ -17568,12 +17568,13 @@ function matchWithdrawalToAP(amount) {
       }
       paymentGroups[paymentDoc].allocations.push(alloc);
       // Sum the applied amounts for this payment
-      paymentGroups[paymentDoc].totalAmount += parseFloat(alloc.applied_amount) || 0;
+      paymentGroups[paymentDoc].totalAmount += parseFloat(alloc.cash_applied_amount) || 0;
     });
     
-    // Look for exact matches on total payment amount
+    // Look for exact matches on total payment amount (sum of cash_applied_amount or payment_amount)
     Object.entries(paymentGroups).forEach(([paymentDoc, group]) => {
-      if (Math.abs(group.totalAmount - absAmount) < 0.01) {
+      const paymentAmt = parseFloat(group.allocations[0]?.payment_amount) || 0;
+      if (Math.abs(group.totalAmount - absAmount) < 0.01 || Math.abs(paymentAmt - absAmount) < 0.01) {
         // Found a match - aggregate info from all allocations
         const allocs = group.allocations;
         const firstAlloc = allocs[0];
@@ -17599,10 +17600,10 @@ function matchWithdrawalToAP(amount) {
       }
     });
     
-    // Also try matching individual applied amounts from allocations
+    // Also try matching individual cash_applied_amount from allocations
     dcrApAllocations.forEach(alloc => {
-      const appliedAmt = parseFloat(alloc.applied_amount) || 0;
-      if (Math.abs(appliedAmt - absAmount) < 0.01) {
+      const cashAppliedAmt = parseFloat(alloc.cash_applied_amount) || 0;
+      if (cashAppliedAmt > 0 && Math.abs(cashAppliedAmt - absAmount) < 0.01) {
         const existingMatch = matches.find(m => 
           m.vendor_no === alloc.vendor_no && m.job_no === (alloc.job_no || '')
         );
