@@ -17547,85 +17547,126 @@ function matchDepositToAR(amount) {
   return null;
 }
 
-// Match withdrawal amount against AP payment allocations to find vendor/job
-// Uses the ap_payment_job_allocation.json data for precise matching
+// Match withdrawal amount against AP payment allocations AND AP invoices to find vendor/job
+// Uses ap_payment_job_allocation.json for job-related payments AND ap_invoices.json for other vendors
 function matchWithdrawalToAP(amount) {
-  if (!dcrApAllocations || dcrApAllocations.length === 0) return null;
-  
   const absAmount = Math.abs(amount);
   const matches = [];
   
-  // Group allocations by payment_document_no to handle multi-voucher payments
-  const paymentGroups = {};
-  dcrApAllocations.forEach(alloc => {
-    const paymentDoc = alloc.payment_document_no;
-    if (!paymentGroups[paymentDoc]) {
-      paymentGroups[paymentDoc] = {
-        totalAmount: 0,
-        allocations: [],
-        paymentDate: parseFloat(alloc.payment_date) || 0
-      };
-    }
-    paymentGroups[paymentDoc].allocations.push(alloc);
-    // Sum the applied amounts for this payment
-    paymentGroups[paymentDoc].totalAmount += parseFloat(alloc.applied_amount) || 0;
-  });
-  
-  // Look for exact matches on total payment amount
-  Object.entries(paymentGroups).forEach(([paymentDoc, group]) => {
-    if (Math.abs(group.totalAmount - absAmount) < 0.01) {
-      // Found a match - aggregate info from all allocations
-      const allocs = group.allocations;
-      const firstAlloc = allocs[0];
-      
-      // Get unique vendors and jobs
-      const vendors = [...new Set(allocs.map(a => a.vendor_name))].filter(v => v);
-      const jobs = [...new Set(allocs.map(a => a.job_no))].filter(j => j);
-      const jobDescriptions = [...new Set(allocs.map(a => a.job_description))].filter(j => j);
-      
-      matches.push({
-        type: 'exact',
-        vendor: vendors.length === 1 ? vendors[0] : (vendors.length > 1 ? vendors.join(', ') : ''),
-        vendor_no: firstAlloc.vendor_no,
-        job_no: jobs.length === 1 ? jobs[0] : (jobs.length > 1 ? jobs.join(', ') : ''),
-        job_desc: jobDescriptions.length === 1 ? jobDescriptions[0] : (jobDescriptions.length > 1 ? 'Multiple jobs' : ''),
-        voucher_no: firstAlloc.voucher_no,
-        payment_doc: paymentDoc,
-        paymentDate: group.paymentDate,
-        confidence: 'high',
-        allocationCount: allocs.length
-      });
-    }
-  });
-  
-  // If multiple matches found for same amount, pick most recent payment date
-  if (matches.length > 1) {
-    matches.sort((a, b) => (b.paymentDate || 0) - (a.paymentDate || 0));
-    return matches[0];
-  }
-  
-  // If no exact total match, try matching individual applied amounts
-  if (matches.length === 0) {
+  // FIRST: Try matching against AP payment allocations (job-related payments)
+  if (dcrApAllocations && dcrApAllocations.length > 0) {
+    // Group allocations by payment_document_no to handle multi-voucher payments
+    const paymentGroups = {};
+    dcrApAllocations.forEach(alloc => {
+      const paymentDoc = alloc.payment_document_no;
+      if (!paymentGroups[paymentDoc]) {
+        paymentGroups[paymentDoc] = {
+          totalAmount: 0,
+          allocations: [],
+          paymentDate: parseFloat(alloc.payment_date) || 0
+        };
+      }
+      paymentGroups[paymentDoc].allocations.push(alloc);
+      // Sum the applied amounts for this payment
+      paymentGroups[paymentDoc].totalAmount += parseFloat(alloc.applied_amount) || 0;
+    });
+    
+    // Look for exact matches on total payment amount
+    Object.entries(paymentGroups).forEach(([paymentDoc, group]) => {
+      if (Math.abs(group.totalAmount - absAmount) < 0.01) {
+        // Found a match - aggregate info from all allocations
+        const allocs = group.allocations;
+        const firstAlloc = allocs[0];
+        
+        // Get unique vendors and jobs
+        const vendors = [...new Set(allocs.map(a => a.vendor_name))].filter(v => v);
+        const jobs = [...new Set(allocs.map(a => a.job_no))].filter(j => j);
+        const jobDescriptions = [...new Set(allocs.map(a => a.job_description))].filter(j => j);
+        
+        matches.push({
+          type: 'exact',
+          source: 'allocation',
+          vendor: vendors.length === 1 ? vendors[0] : (vendors.length > 1 ? vendors.join(', ') : ''),
+          vendor_no: firstAlloc.vendor_no,
+          job_no: jobs.length === 1 ? jobs[0] : (jobs.length > 1 ? jobs.join(', ') : ''),
+          job_desc: jobDescriptions.length === 1 ? jobDescriptions[0] : (jobDescriptions.length > 1 ? 'Multiple jobs' : ''),
+          voucher_no: firstAlloc.voucher_no,
+          payment_doc: paymentDoc,
+          paymentDate: group.paymentDate,
+          confidence: 'high',
+          allocationCount: allocs.length
+        });
+      }
+    });
+    
+    // Also try matching individual applied amounts from allocations
     dcrApAllocations.forEach(alloc => {
       const appliedAmt = parseFloat(alloc.applied_amount) || 0;
       if (Math.abs(appliedAmt - absAmount) < 0.01) {
-        matches.push({
-          type: 'exact',
-          vendor: alloc.vendor_name || '',
-          vendor_no: alloc.vendor_no,
-          job_no: alloc.job_no || '',
-          job_desc: alloc.job_description || '',
-          voucher_no: alloc.voucher_no,
-          confidence: 'high'
-        });
+        const existingMatch = matches.find(m => 
+          m.vendor_no === alloc.vendor_no && m.job_no === (alloc.job_no || '')
+        );
+        if (!existingMatch) {
+          matches.push({
+            type: 'exact',
+            source: 'allocation',
+            vendor: alloc.vendor_name || '',
+            vendor_no: alloc.vendor_no,
+            job_no: alloc.job_no || '',
+            job_desc: alloc.job_description || '',
+            voucher_no: alloc.voucher_no,
+            confidence: 'high'
+          });
+        }
       }
+    });
+  }
+  
+  // SECOND: Also try matching against AP invoices (for vendors not in allocation file)
+  // This catches payroll vendors, benefits, etc. that may not have job allocations
+  if (dcrApData?.invoices && dcrApData.invoices.length > 0) {
+    dcrApData.invoices.forEach(inv => {
+      const invoiceAmt = parseFloat(inv.invoice_amount) || 0;
+      const paidAmt = parseFloat(inv.amount_paid_to_date) || 0;
+      
+      // Check if invoice amount or paid amount matches the withdrawal
+      if (Math.abs(invoiceAmt - absAmount) < 0.01 || Math.abs(paidAmt - absAmount) < 0.01) {
+        // Check if we already have this vendor+job combo from allocations
+        const existingMatch = matches.find(m => 
+          m.vendor === inv.vendor_name && m.job_no === (inv.job_no || '')
+        );
+        
+        if (!existingMatch) {
+          matches.push({
+            type: 'exact',
+            source: 'invoice',
+            vendor: inv.vendor_name || '',
+            vendor_no: '',
+            job_no: inv.job_no || '',
+            job_desc: inv.job_description || '',
+            invoice_no: inv.invoice_no,
+            confidence: 'high'
+          });
+        }
+      }
+    });
+  }
+  
+  // If multiple matches found, prioritize allocation matches over invoice matches, then by payment date
+  if (matches.length > 1) {
+    matches.sort((a, b) => {
+      // Prioritize allocation matches (more precise)
+      if (a.source === 'allocation' && b.source !== 'allocation') return -1;
+      if (b.source === 'allocation' && a.source !== 'allocation') return 1;
+      // Then by payment date
+      return (b.paymentDate || 0) - (a.paymentDate || 0);
     });
   }
   
   // Dedupe matches by vendor + job
   const seen = new Set();
   const uniqueMatches = matches.filter(m => {
-    const key = `${m.vendor_no}-${m.job_no}`;
+    const key = `${m.vendor || m.vendor_no}-${m.job_no}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -17635,6 +17676,7 @@ function matchWithdrawalToAP(amount) {
   if (uniqueMatches.length >= 1) return uniqueMatches[0];
   return null;
 }
+
 
 function renderDcrTransactionList(txns, type) {
   if (txns.length === 0) {
