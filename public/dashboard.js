@@ -23382,6 +23382,7 @@ async function submitAiQaQuestion() {
   const submitBtn = document.getElementById('aiQaSubmitBtn');
   const conversation = document.getElementById('aiQaConversation');
   const welcome = document.querySelector('.ai-chat-welcome');
+  const fullAnalysisResults = document.getElementById('aiInsightsResults');
 
   const question = input?.value?.trim();
   if (!question) return;
@@ -23392,6 +23393,9 @@ async function submitAiQaQuestion() {
   
   // Hide welcome screen when conversation starts
   if (welcome) welcome.classList.add('hidden');
+
+  // Hide full analysis results when user asks a new question
+  if (fullAnalysisResults) fullAnalysisResults.classList.add('hidden');
   
   // Show conversation container
   conversation.classList.remove('hidden');
