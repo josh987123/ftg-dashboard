@@ -5084,15 +5084,24 @@ def execute_nlq_query(query_plan, data):
                 sort_field = field_aliases.get(sort_field, sort_field)
                 filtered.sort(key=lambda x: x.get(sort_field, 0), reverse=True)
                 
+                # Calculate aggregates from FULL filtered dataset before limiting
+                valid_for_profit = [j for j in filtered if j.get('valid_for_profit', False)]
+                total_profit = sum(j['profit'] for j in valid_for_profit)
+                avg_margin = sum(j['margin'] for j in valid_for_profit) / len(valid_for_profit) if valid_for_profit else 0
+                
                 results = {
                     'items': filtered[:limit or 20],
                     'total_count': len(filtered),
                     'jobs_with_budget': len(jobs_with_budget),
                     'jobs_without_budget': len(jobs_without_budget),
+                    'jobs_valid_for_profit': len(valid_for_profit),
                     'total_actual_cost': sum(j['actual_cost'] for j in filtered),
                     'total_contract': sum(j['contract'] for j in filtered),
+                    'total_billed': sum(j['billed'] for j in filtered),
+                    'total_profit': round(total_profit, 2),
+                    'avg_margin': round(avg_margin, 2),
                     'avg_completion_with_budget': round(sum(j['percent_complete'] for j in jobs_with_budget) / len(jobs_with_budget), 1) if jobs_with_budget else 0,
-                    'note': f'Showing top {min(limit or 20, len(filtered))} jobs by {sort_field}. {len(jobs_without_budget)} jobs have no budget.'
+                    'note': f'Showing top {min(limit or 20, len(filtered))} of {len(filtered)} jobs. Totals calculated from ALL {len(filtered)} matching jobs.'
                 }
         
         # AR queries - use pre-computed metrics from cache
@@ -5212,8 +5221,23 @@ def execute_nlq_query(query_plan, data):
                 total_collectible = sum(i['collectible'] for i in filtered)
                 results = {'total_ar': total_collectible, 'items': sorted_jobs}
             else:
+                # Calculate aggregates from FULL filtered dataset before limiting
+                total_collectible = sum(i['collectible'] for i in filtered)
+                total_retainage = sum(i['retainage'] for i in filtered)
+                total_due = sum(i['calc_due'] for i in filtered)
+                weighted_days = sum(i['collectible'] * i['days_outstanding'] for i in filtered)
+                avg_days = weighted_days / total_collectible if total_collectible > 0 else 0
+                
                 filtered.sort(key=lambda x: x['collectible'], reverse=True)
-                results = {'items': filtered[:limit], 'total_count': len(filtered)}
+                results = {
+                    'items': filtered[:limit], 
+                    'total_count': len(filtered),
+                    'total_collectible': round(total_collectible, 2),
+                    'total_retainage': round(total_retainage, 2),
+                    'total_due': round(total_due, 2),
+                    'avg_days_outstanding': round(avg_days, 1),
+                    'note': f'Showing top {min(limit, len(filtered))} of {len(filtered)} invoices. Totals calculated from ALL {len(filtered)} invoices.'
+                }
         
         # AP queries - use pre-computed metrics from cache
         elif target == 'ap':
@@ -5284,8 +5308,21 @@ def execute_nlq_query(query_plan, data):
                         buckets['days_90_plus'] += inv['amount']
                 results = buckets
             else:
+                # Calculate aggregates from FULL filtered dataset before limiting
+                total_amount = sum(i['amount'] for i in filtered)
+                total_retainage = sum(i.get('retainage', 0) for i in filtered)
+                weighted_days = sum(i['amount'] * i['days_outstanding'] for i in filtered)
+                avg_days = weighted_days / total_amount if total_amount > 0 else 0
+                
                 filtered.sort(key=lambda x: x['amount'], reverse=True)
-                results = {'items': filtered[:limit], 'total_count': len(filtered)}
+                results = {
+                    'items': filtered[:limit], 
+                    'total_count': len(filtered),
+                    'total_amount': round(total_amount, 2),
+                    'total_retainage': round(total_retainage, 2),
+                    'avg_days_outstanding': round(avg_days, 1),
+                    'note': f'Showing top {min(limit, len(filtered))} of {len(filtered)} invoices. Totals calculated from ALL {len(filtered)} invoices.'
+                }
         
         # GL queries
         elif target == 'gl':
@@ -5796,10 +5833,13 @@ Query Explanation: {query_plan.get('explanation', '')}
 Query Results:
 {results_json}
 
-Provide a direct, helpful answer. Use specific numbers and format currency as $X.XM or $XXK. 
-Keep the response concise (2-4 sentences for simple questions, more for complex breakdowns).
-If the results show items, list the top ones with their values.
-Never mention Josh Angelo in your response."""
+IMPORTANT: 
+- When totals are provided (total_profit, total_contract, total_count, avg_margin, etc.), ALWAYS use these pre-computed values - they are calculated from ALL matching data.
+- Do NOT try to sum up the 'items' array - items are only a sample of the top results for display.
+- The 'total_count' shows how many records the totals are based on.
+- Format currency as $X.XM or $XXK. Keep the response concise but accurate.
+- If the results show items, mention a few top ones as examples, but cite the aggregate totals for overall metrics.
+- Never mention Josh Angelo in your response."""
 
         answer_response = client.messages.create(
             model="claude-sonnet-4-20250514",
