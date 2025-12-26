@@ -959,7 +959,7 @@ def generate_cash_report_html_email(report_data, ai_analysis=''):
                     <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">-</td>
                     <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">AP</div><div style="font-size:14px;font-weight:700;color:#dc2626;">''' + safety_ap + '''</div></td>
                     <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">-</td>
-                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">OUB</div><div style="font-size:14px;font-weight:700;">''' + safety_oub + '''</div></td>
+                    <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">Over/Under Bill</div><div style="font-size:14px;font-weight:700;">''' + safety_oub + '''</div></td>
                     <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">-</td>
                     <td style="text-align:center;padding:8px;"><div style="font-size:10px;color:#64748b;">RESERVE</div><div style="font-size:14px;font-weight:700;color:#dc2626;">''' + safety_opexp + '''</div></td>
                     <td style="text-align:center;padding:8px;font-size:16px;color:#64748b;">=</td>
