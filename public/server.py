@@ -888,6 +888,7 @@ def generate_cash_report_html_email(report_data, ai_analysis=''):
     safety_color = '#16a34a' if safety_total and not safety_total.startswith('-') else '#dc2626'
     
     period_label = summary.get('periodLabel', 'Weekly Cash Report')
+    report_date = datetime.now().strftime('%B %d, %Y')
     current_balance = summary.get('currentBalance', '--')
     deposits_val = summary.get('deposits', '--')
     withdrawals_val = summary.get('withdrawals', '--')
@@ -909,6 +910,7 @@ def generate_cash_report_html_email(report_data, ai_analysis=''):
         <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:12px 12px 0 0;padding:24px;text-align:center;">
             <h1 style="margin:0;color:white;font-size:24px;font-weight:700;">FTG Builders Cash Report</h1>
             <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">''' + period_label + '''</p>
+            <p style="margin:4px 0 0;color:rgba(255,255,255,0.7);font-size:13px;">''' + report_date + '''</p>
         </div>
         ''' + ai_section + '''
         ''' + daily_chart_html + '''
