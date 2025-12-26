@@ -765,15 +765,17 @@ def generate_cash_report_html_email(report_data, ai_analysis=''):
     # Format AI analysis - replace "safety check" with "Cash Safety Buffer"
     formatted_analysis = ai_analysis.replace('Safety check', 'Cash Safety Buffer').replace('safety check', 'Cash safety buffer')
     if formatted_analysis:
+        # Only color the first dollar amount (the net change) - green for increase, red for decrease
+        # Match "increased $XXX" or "decreased $XXX" at the start of the analysis
         formatted_analysis = re.sub(
-            r'\b(increased|received|deposits?|paid us)\s+(\$[\d,\.]+[KMB]?)',
+            r'\b(increased)\s+(\$[\d,\.]+[KMB]?)',
             r'\1 <span style="color:#16a34a;font-weight:700;">\2</span>',
-            formatted_analysis, flags=re.IGNORECASE
+            formatted_analysis, count=1, flags=re.IGNORECASE
         )
         formatted_analysis = re.sub(
-            r'\b(decreased|paid out|withdrawals?)\s+(\$[\d,\\.]+[KMB]?)',
+            r'\b(decreased)\s+(\$[\d,\.]+[KMB]?)',
             r'\1 <span style="color:#dc2626;font-weight:700;">\2</span>',
-            formatted_analysis, flags=re.IGNORECASE
+            formatted_analysis, count=1, flags=re.IGNORECASE
         )
     
     # Determine net change color and sign using numeric value when available
