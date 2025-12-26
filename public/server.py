@@ -4816,6 +4816,7 @@ jobs: Use for INDIVIDUAL job-level queries or listing specific jobs. NOT for PM 
   - "List jobs for [PM name]" -> jobs with filters.pm="[PM name]" (returns individual jobs)
   - "What are [PM name]'s lowest margin jobs?" -> jobs with filters.pm and aggregation=bottom
   DO NOT use jobs target for questions about PM total/overall/average margin - use pm_summary instead.
+  WARNING: jobs with aggregation=by_pm uses INCORRECT margin calculation. Always use pm_summary for PM metrics.
 
 cost_codes: Use for cost code analysis across jobs
 customers: Use for customer-level aggregations combining jobs and AR data
@@ -4883,7 +4884,9 @@ def execute_nlq_query(query_plan, data):
         filters = query_plan.get('filters', {})
         aggregation = query_plan.get('aggregation', 'list')
         fields = query_plan.get('fields', [])
-        limit = query_plan.get('limit', 10)
+        # Default limit: 50 for listing queries (enough for meaningful analysis)
+        # Aggregate queries (sum, average, count) don't use limit - they use full dataset
+        limit = query_plan.get('limit', 50)
         
         # PM name matching helper
         def pm_matches(pm_name, filter_pm):
