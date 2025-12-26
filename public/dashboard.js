@@ -123,7 +123,7 @@ const LazyLoader = {
    These are typically non-full-time PMs or special cases
 ------------------------------------------------------------ */
 const PM_EXCLUSION_CONFIG = {
-  excludedPMs: ['Josh Angelo'],
+  excludedPMs: ['Josh Angelo', 'Greg Baba'],
   
   isExcluded(pmName) {
     if (!pmName) return false;
