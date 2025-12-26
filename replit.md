@@ -73,6 +73,13 @@ Three modules require raw detail-level data that isn't in the metrics cache:
 1. **Cost Codes Module** (`initCostCodes`): Needs individual `job_actuals` line items with cost code breakdown to display per-cost-code analysis
 2. **Job Costs Table** (`loadJobCostsData`): Needs individual `job_actuals` line items with cost code detail for cost breakdown display
 3. **Cash Report Safety Details** (`loadCashReportData`): Uses metrics for totals (AR, AP, OUB), but keeps raw AR/AP invoices for detailed safety breakdown sections showing individual invoices
+
+#### Cash Report Transaction Attribution (Dec 2025)
+The Cash Report top deposits/withdrawals tables use allocation data from Foundation for precise attribution:
+- **AR Receipt Allocations** (`ar_receipt_job_allocation.json`): 5,690 receipt-to-job allocations with customer_no, job_no, job_description, receipt_amount, applied_amount
+- **AP Payment Allocations** (`ap_payment_job_allocation.json`): 27,887 payment-to-job allocations with vendor_name, vendor_no, job_no, job_description, applied_amount
+- **Matching Logic**: Bank transaction amounts are matched against receipt/payment amounts from allocations to display customer, vendor, and job attribution
+- **Customer Lookup**: Customer names are derived from existing AR invoice data since allocations only contain customer_no
 ### Responsive Design
 The application uses a mobile-first approach with a responsive sidebar, hamburger menu, CSS flexbox layouts, and orientation-aware media queries for landscape mobile/tablet compatibility.
 
