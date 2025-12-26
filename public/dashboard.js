@@ -7789,7 +7789,9 @@ function updateQuickRecipientButtons() {
   });
 }
 
-
+// Expose functions to global scope for inline onclick handlers
+window.addEmailRecipient = addEmailRecipient;
+window.updateQuickRecipientButtons = updateQuickRecipientButtons;
 
 // EmailJS Configuration
 const EMAILJS_CONFIG = {
