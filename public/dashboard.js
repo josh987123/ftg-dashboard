@@ -2222,6 +2222,9 @@ function initAllAiPanelToggles() {
   const dcrBtn = document.getElementById('dcrAiAnalyzeBtn');
   if (dcrBtn) dcrBtn.addEventListener('click', performCashReportAiAnalysis);
   
+  const dcrEmailBtn = document.getElementById('dcrEmailReportBtn');
+  if (dcrEmailBtn) dcrEmailBtn.addEventListener('click', emailCashReport);
+  
 }
 
 async function performOverviewAiAnalysis() {
@@ -17798,6 +17801,105 @@ async function performCashReportAiAnalysis() {
     btn.textContent = 'Run Analysis';
   }
 }
+
+
+async function emailCashReport() {
+  const btn = document.getElementById('dcrEmailReportBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  
+  // Prompt for email address
+  const toEmail = prompt('Enter recipient email address:', '');
+  if (!toEmail) {
+    btn.disabled = false;
+    btn.textContent = 'Email Report';
+    return;
+  }
+  
+  try {
+    // Gather current report data
+    const reportData = gatherCashReportDataForEmail();
+    const aiAnalysis = document.getElementById('dcrAiAnalysisContent')?.textContent || '';
+    
+    const response = await fetch('/api/email-cash-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: toEmail,
+        reportData: reportData,
+        aiAnalysis: aiAnalysis
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('Cash Report email sent successfully!');
+    } else {
+      throw new Error(result.error || 'Failed to send email');
+    }
+  } catch (err) {
+    console.error('Email error:', err);
+    alert('Failed to send email: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Email Report';
+  }
+}
+
+function gatherCashReportDataForEmail() {
+  // Get summary data from the current view
+  const summary = {
+    currentBalance: document.querySelector('.dcr-metric-value')?.textContent || '--',
+    deposits: document.querySelectorAll('.dcr-metric-value')[1]?.textContent || '--',
+    withdrawals: document.querySelectorAll('.dcr-metric-value')[2]?.textContent || '--',
+    netChange: document.querySelectorAll('.dcr-metric-value')[3]?.textContent || '--',
+    periodLabel: 'Weekly Cash Report'
+  };
+  
+  // Get safety check data
+  const safetyBoxes = document.querySelectorAll('.dcr-safety-item');
+  const safety = {
+    cash: safetyBoxes[0]?.querySelector('.dcr-safety-value')?.textContent || '--',
+    ar: safetyBoxes[1]?.querySelector('.dcr-safety-value')?.textContent || '--',
+    ap: safetyBoxes[2]?.querySelector('.dcr-safety-value')?.textContent || '--',
+    oub: safetyBoxes[3]?.querySelector('.dcr-safety-value')?.textContent || '--',
+    opExp: safetyBoxes[4]?.querySelector('.dcr-safety-value')?.textContent || '--',
+    total: document.querySelector('.dcr-safety-total .dcr-safety-value')?.textContent || '--'
+  };
+  
+  // Get top deposits
+  const topDeposits = [];
+  const depositRows = document.querySelectorAll('#dcrTopDeposits .dcr-txn-row');
+  depositRows.forEach(row => {
+    topDeposits.push({
+      date: row.querySelector('.dcr-txn-date')?.textContent || '',
+      description: row.querySelector('.dcr-txn-desc')?.textContent || '',
+      amount: row.querySelector('.dcr-txn-amount')?.textContent || '',
+      attribution: row.querySelector('.dcr-txn-subtitle')?.textContent || ''
+    });
+  });
+  
+  // Get top withdrawals
+  const topWithdrawals = [];
+  const withdrawalRows = document.querySelectorAll('#dcrTopWithdrawals .dcr-txn-row');
+  withdrawalRows.forEach(row => {
+    topWithdrawals.push({
+      date: row.querySelector('.dcr-txn-date')?.textContent || '',
+      description: row.querySelector('.dcr-txn-desc')?.textContent || '',
+      amount: row.querySelector('.dcr-txn-amount')?.textContent || '',
+      attribution: row.querySelector('.dcr-txn-subtitle')?.textContent || ''
+    });
+  });
+  
+  return {
+    summary,
+    safetyCheck: safety,
+    topDeposits,
+    topWithdrawals
+  };
+}
+
 
 // Format cash analysis with green/red highlights for dollar amounts
 function formatCashAnalysis(text) {
