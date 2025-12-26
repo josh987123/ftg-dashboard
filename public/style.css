@@ -8296,6 +8296,17 @@ body.dark-mode #accounts .summary-tile .tile-label {
   color: #dc2626;
 }
 
+.dcr-safety-subtitle {
+  display: block;
+  font-size: 9px;
+  color: #94a3b8;
+  font-weight: 400;
+  margin-top: 2px;
+  line-height: 1.2;
+  max-width: 90px;
+  text-align: center;
+}
+
 .dcr-safety-operator {
   font-size: 24px;
   font-weight: 700;
