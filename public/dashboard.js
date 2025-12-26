@@ -16380,7 +16380,7 @@ function renderJobBudgetsTable() {
     <td class="number-col cost-detail-col ${costHidden}"><strong>${formatCurrency(allTotals.costAdj)}</strong></td>
     <td class="number-col revised-cost-col"><strong>${formatCurrency(allTotals.revisedCost)}</strong></td>
     <td class="number-col ${totalProfitClass}"><strong>${formatCurrency(allTotals.estimatedProfit)}</strong></td>
-    <td class="number-col" style="background-color: ${totalMarginColor}"><strong>${weightedMargin.toFixed(1)}%</strong></td>
+    <td class="number-col" style="background-color: ${totalMarginColor}"><strong>${avgMargin.toFixed(1)}%</strong></td>
   </tr>`;
   
   const dataRowsHtml = pageData.map(job => {
