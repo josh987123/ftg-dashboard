@@ -24023,43 +24023,19 @@ async function extractAiInsightsData() {
       text += "\n";
     }
     
-    // Jobs Summary
-    if (jobsData) {
+    // Jobs Summary - use pre-computed metrics
+    if (metricsData && metricsData.jobs) {
       text += "=== JOB PORTFOLIO ===\n";
-      const budgets = jobsData.job_budgets || [];
-      const actuals = jobsData.job_actuals || [];
-      const billedRevenueRaw = jobsData.job_billed_revenue || [];
-      
-      // Build billed revenue map from job_billed_revenue
-      const billedRevenueMap = new Map();
-      billedRevenueRaw.forEach(row => {
-        const jobNo = String(row.Job_No || row.job_no || '');
-        if (jobNo) {
-          const billedRev = parseFloat(row.Billed_Revenue || row.billed_revenue) || 0;
-          billedRevenueMap.set(jobNo, (billedRevenueMap.get(jobNo) || 0) + billedRev);
-        }
-      });
+      const jobs = metricsData.jobs || [];
       
       // Exclude configured PMs from analysis
-      const activeJobs = budgets.filter(j => j.job_status === 'A' && !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager_name));
+      const activeJobs = jobs.filter(j => j.job_status === 'A' && !PM_EXCLUSION_CONFIG.isExcluded(j.project_manager));
       
-      const totalContract = activeJobs.reduce((s, j) => s + (parseFloat(j.revised_contract) || 0), 0);
-      const totalCost = activeJobs.reduce((s, j) => s + (parseFloat(j.revised_cost) || 0), 0);
+      const totalContract = activeJobs.reduce((s, j) => s + (j.contract || 0), 0);
+      const totalCost = activeJobs.reduce((s, j) => s + (j.budget_cost || 0), 0);
+      const totalActualCost = activeJobs.reduce((s, j) => s + (j.actual_cost || 0), 0);
       const estProfit = totalContract - totalCost;
       const margin = totalContract > 0 ? (estProfit / totalContract * 100) : 0;
-      
-      // Calculate actual costs from job_actuals - only for ACTIVE jobs to match Job Actuals page
-      const activeJobNumbers = new Set(activeJobs.map(j => String(j.job_no)));
-      const actualCostByJob = {};
-      (actuals || []).forEach(a => {
-        const jobNum = String(a.Job_No || a.job_no || a.job_number || a.Job_Number || '');
-        const cost = parseFloat(a.Value || a.value || a.actual_cost || a.Actual_Cost) || 0;
-        // Only include actuals for active jobs (excluded PMs already filtered)
-        if (jobNum && activeJobNumbers.has(jobNum)) {
-          actualCostByJob[jobNum] = (actualCostByJob[jobNum] || 0) + cost;
-        }
-      });
-      const totalActualCost = Object.values(actualCostByJob).reduce((s, v) => s + v, 0);
       
       text += `Total Active Jobs: ${activeJobs.length}\n`;
       text += `Total Contract Value: $${totalContract.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}\n`;
@@ -24068,68 +24044,39 @@ async function extractAiInsightsData() {
       text += `Estimated Profit: $${estProfit.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}\n`;
       text += `Estimated Margin: ${margin.toFixed(1)}%\n\n`;
       
-      // Over/Under Billing Summary - calculate from actual data
-      let totalBilled = 0, totalEarned = 0, overBilledCount = 0, underBilledCount = 0;
-      activeJobs.forEach(j => {
-        const jobNo = String(j.job_no);
-        const billed = billedRevenueMap.get(jobNo) || 0;
-        const revisedContract = parseFloat(j.revised_contract) || 0;
-        const revisedCost = parseFloat(j.revised_cost) || 0;
-        const actualCost = actualCostByJob[jobNo] || 0;
-        
-        // Calculate earned revenue: (actualCost / revisedCost) * revisedContract
-        let earned = 0;
-        if (revisedCost > 0 && revisedContract > 0 && actualCost > 0) {
-          earned = (actualCost / revisedCost) * revisedContract;
-        }
-        if (!isFinite(earned)) earned = 0;
-        
-        totalBilled += billed;
-        totalEarned += earned;
-        if (billed > earned) overBilledCount++;
-        else if (billed < earned) underBilledCount++;
-      });
-      const netOverUnder = totalBilled - totalEarned;
+      // Over/Under Billing Summary - use pre-computed metrics
+      const totalBilled = activeJobs.reduce((s, j) => s + (j.billed || 0), 0);
+      const totalEarned = activeJobs.reduce((s, j) => s + (j.earned_revenue || 0), 0);
+      const netOverUnder = activeJobs.reduce((s, j) => s + (j.over_under_billing || 0), 0);
+      const overBilledCount = activeJobs.filter(j => (j.over_under_billing || 0) > 0).length;
+      const underBilledCount = activeJobs.filter(j => (j.over_under_billing || 0) < 0).length;
       
       text += `Total Billed to Date: $${totalBilled.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
       text += `Total Earned Revenue: $${totalEarned.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
       text += `Net Over/(Under) Billing: $${netOverUnder.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
       text += `Jobs Over-Billed: ${overBilledCount} | Jobs Under-Billed: ${underBilledCount}\n\n`;
       
-      // PM Summary - Exclude configured PMs
+      // PM Summary - use pre-computed metrics, exclude configured PMs
       const pmStats = {};
       activeJobs.forEach(j => {
-        const pm = j.project_manager_name || 'Unassigned';
+        const pm = j.project_manager || 'Unassigned';
         if (PM_EXCLUSION_CONFIG.isExcluded(pm)) return;
-        if (!pmStats[pm]) pmStats[pm] = {jobs: 0, contract: 0, cost: 0, billed: 0, earned: 0};
+        if (!pmStats[pm]) pmStats[pm] = {jobs: 0, contract: 0, cost: 0, billed: 0, earned: 0, overUnder: 0};
         pmStats[pm].jobs++;
-        const jobNo = String(j.job_no);
-        const jobContract = parseFloat(j.revised_contract) || 0;
-        const revisedCost = parseFloat(j.revised_cost) || 0;
-        const actualCost = actualCostByJob[jobNo] || 0;
-        pmStats[pm].contract += jobContract;
-        pmStats[pm].cost += revisedCost;
-        
-        // Get billed from billedRevenueMap
-        const billed = billedRevenueMap.get(jobNo) || 0;
-        pmStats[pm].billed += billed;
-        
-        // Calculate earned: (actualCost / revisedCost) * revisedContract
-        let jobEarned = 0;
-        if (revisedCost > 0 && jobContract > 0 && actualCost > 0) {
-          jobEarned = (actualCost / revisedCost) * jobContract;
-        }
-        if (!isFinite(jobEarned)) jobEarned = 0;
-        pmStats[pm].earned += jobEarned;
+        pmStats[pm].contract += j.contract || 0;
+        pmStats[pm].cost += j.budget_cost || 0;
+        pmStats[pm].billed += j.billed || 0;
+        pmStats[pm].earned += j.earned_revenue || 0;
+        pmStats[pm].overUnder += j.over_under_billing || 0;
       });
       text += "Project Managers (Active Jobs):\n";
       Object.entries(pmStats).sort((a, b) => b[1].contract - a[1].contract).forEach(([pm, stats]) => {
         const pmMargin = stats.contract > 0 ? ((stats.contract - stats.cost) / stats.contract * 100).toFixed(1) : 0;
-        const pmOverUnder = stats.billed - stats.earned;
-        text += `- ${pm}: ${stats.jobs} jobs, $${stats.contract.toLocaleString('en-US', {maximumFractionDigits: 0})} contract, ${pmMargin}% margin, O/U: $${pmOverUnder.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
+        text += `- ${pm}: ${stats.jobs} jobs, $${stats.contract.toLocaleString('en-US', {maximumFractionDigits: 0})} contract, ${pmMargin}% margin, O/U: $${stats.overUnder.toLocaleString('en-US', {maximumFractionDigits: 0})}\n`;
       });
       text += "\n";
     }
+    
     
     // AR Summary - use correct field names (invoices, amount_due)
     if (arData && arData.invoices) {
@@ -24266,58 +24213,39 @@ async function aggregateAllBusinessData() {
     };
   }
   
-  // Aggregate Jobs Data
-  if (jobsData) {
-    const budgets = jobsData.job_budgets || [];
-    const actuals = jobsData.job_actuals || [];
-    const billedRev = jobsData.job_billed_revenue || [];
-    
-    // Aggregate actuals by job
-    const actualsMap = new Map();
-    actuals.forEach(a => {
-      const jobNo = String(a.Job_No || a.job_no);
-      const cost = parseFloat(a.Value || a.actual_cost) || 0;
-      actualsMap.set(jobNo, (actualsMap.get(jobNo) || 0) + cost);
-    });
-    
-    // Aggregate billed by job
-    const billedMap = new Map();
-    billedRev.forEach(b => {
-      const jobNo = String(b.Job_No || b.job_no);
-      billedMap.set(jobNo, parseFloat(b.Billed_Revenue || b.billed_revenue) || 0);
-    });
+  // Aggregate Jobs Data - use pre-computed metrics values
+  if (metricsData && metricsData.jobs) {
+    const jobs = metricsData.jobs || [];
     
     let totalContract = 0, totalCost = 0, totalActualCost = 0, totalBilled = 0;
     let activeJobCount = 0;
     let totalOverUnder = 0;
+    let totalEarnedRevenue = 0;
     const pmStats = new Map();
     const clientStats = new Map();
     const missingBudgetJobs = [];
     
-    // Filter to active jobs only for totals to match Job Actuals page
-    const activeJobsList = budgets.filter(j => (j.job_status || '').toUpperCase() === 'A');
+    // Filter to active jobs only for totals
+    const activeJobsList = jobs.filter(j => (j.job_status || '').toUpperCase() === 'A');
     
     activeJobsList.forEach(job => {
-      const jobNo = String(job.job_no);
       const contract = parseFloat(job.contract) || 0;
-      const cost = parseFloat(job.revised_cost) || 0;
-      const actualCost = actualsMap.get(jobNo) || 0;
-      const billed = billedMap.get(jobNo) || 0;
-      const status = (job.job_status || '').toUpperCase();
-      const pm = job.project_manager_name || 'Unassigned';
+      const budgetCost = parseFloat(job.budget_cost) || 0;
+      const actualCost = parseFloat(job.actual_cost) || 0;
+      const billed = parseFloat(job.billed) || 0;
+      const earnedRev = parseFloat(job.earned_revenue) || 0;
+      const overUnder = parseFloat(job.over_under_billing) || 0;
+      const pm = job.project_manager || 'Unassigned';
       const client = job.customer_name || 'Unknown';
       
       totalContract += contract;
-      totalCost += cost;
+      totalCost += budgetCost;
       totalActualCost += actualCost;
       totalBilled += billed;
+      totalEarnedRevenue += earnedRev;
+      totalOverUnder += overUnder;
       
       activeJobCount++;
-      
-      // Calculate over/under
-      const earnedRev = cost > 0 ? (actualCost / cost) * contract : 0;
-      const overUnder = billed - earnedRev;
-      totalOverUnder += overUnder;
       
       // PM stats
       if (!pmStats.has(pm)) {
@@ -24339,19 +24267,20 @@ async function aggregateAllBusinessData() {
       clientStat.billed += billed;
       
       // Check for missing budgets
-      if (actualCost > 2500 && (contract === 0 || cost === 0)) {
-        missingBudgetJobs.push({ jobNo, actualCost, issue: contract === 0 && cost === 0 ? 'No Budget' : contract === 0 ? 'No Revenue' : 'No Cost' });
+      if (actualCost > 2500 && !job.has_budget) {
+        missingBudgetJobs.push({ jobNo: job.job_no, actualCost, issue: 'No Budget' });
       }
     });
     
     data.jobs = {
-      totalJobs: budgets.length,
+      totalJobs: jobs.length,
       activeJobs: activeJobCount,
-      closedJobs: budgets.filter(j => (j.job_status || '').toUpperCase() === 'C').length,
+      closedJobs: jobs.filter(j => (j.job_status || '').toUpperCase() === 'C').length,
       totalContract,
       totalCost,
       totalActualCost,
       totalBilled,
+      totalEarnedRevenue,
       totalOverUnder,
       avgProfitMargin: totalContract ? ((totalContract - totalCost) / totalContract * 100) : 0,
       missingBudgetCount: missingBudgetJobs.length
