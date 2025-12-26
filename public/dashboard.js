@@ -17562,7 +17562,8 @@ function matchWithdrawalToAP(amount) {
     if (!paymentGroups[paymentDoc]) {
       paymentGroups[paymentDoc] = {
         totalAmount: 0,
-        allocations: []
+        allocations: [],
+        paymentDate: parseFloat(alloc.payment_date) || 0
       };
     }
     paymentGroups[paymentDoc].allocations.push(alloc);
@@ -17590,11 +17591,18 @@ function matchWithdrawalToAP(amount) {
         job_desc: jobDescriptions.length === 1 ? jobDescriptions[0] : (jobDescriptions.length > 1 ? 'Multiple jobs' : ''),
         voucher_no: firstAlloc.voucher_no,
         payment_doc: paymentDoc,
+        paymentDate: group.paymentDate,
         confidence: 'high',
         allocationCount: allocs.length
       });
     }
   });
+  
+  // If multiple matches found for same amount, pick most recent payment date
+  if (matches.length > 1) {
+    matches.sort((a, b) => (b.paymentDate || 0) - (a.paymentDate || 0));
+    return matches[0];
+  }
   
   // If no exact total match, try matching individual applied amounts
   if (matches.length === 0) {
