@@ -16380,7 +16380,7 @@ function renderJobBudgetsTable() {
     <td class="number-col cost-detail-col ${costHidden}"><strong>${formatCurrency(allTotals.costAdj)}</strong></td>
     <td class="number-col revised-cost-col"><strong>${formatCurrency(allTotals.revisedCost)}</strong></td>
     <td class="number-col ${totalProfitClass}"><strong>${formatCurrency(allTotals.estimatedProfit)}</strong></td>
-    <td class="number-col" style="background-color: ${totalMarginColor}"><strong>${weightedMargin.toFixed(1)}%</strong></td>
+    <td class="number-col" style="background-color: ${totalMarginColor}"><strong>${avgMargin.toFixed(1)}%</strong></td>
   </tr>`;
   
   const dataRowsHtml = pageData.map(job => {
@@ -19051,10 +19051,19 @@ function calculatePmRadarData() {
     pmStats[pm].jobCount++;
     const contract = parseFloat(budget.revised_contract) || job.contract || 0;
     const cost = parseFloat(budget.revised_cost) || job.revised_cost || 0;
-    // Track jobs with valid budgets and their contract values separately for avgJobSize
-    if (contract > 0 && cost > 0) {
+    const billed = parseFloat(job.billed_revenue) || parseFloat(job.billed) || 0;
+    const actualCost = parseFloat(job.actual_cost) || 0;
+    const status = budget?.job_status || job.job_status || '';
+    // Track jobs with valid data for avgJobSize:
+    // - Active jobs: must have contract > 0 AND budget cost > 0
+    // - Closed jobs: must have billed > 0 AND actual cost > 0
+    const isValidForAvgSize = status === 'C' 
+      ? (billed > 0 && actualCost > 0)
+      : (contract > 0 && cost > 0);
+    if (isValidForAvgSize) {
       pmStats[pm].jobsWithBudget++;
-      pmStats[pm].contractWithBudget += contract;
+      // Use contract for active, billed for closed
+      pmStats[pm].contractWithBudget += status === 'C' ? billed : contract;
     }
     pmStats[pm].contractValue += contract;
     pmStats[pm].revisedCost += cost;
@@ -21157,7 +21166,7 @@ function renderJobActualsTable() {
     <td class="number-col"><strong>${formatCurrency(allTotals.actualCost)}</strong></td>
     <td class="number-col"><strong>${Math.round(avgPctComplete)}%</strong></td>
     <td class="number-col" style="color: ${totalProfitTextColor};"><strong>${formatCurrency(allTotals.profit)}</strong></td>
-    <td class="number-col"><strong>${weightedMargin.toFixed(1)}%</strong></td>
+    <td class="number-col"><strong>${avgMargin.toFixed(1)}%</strong></td>
   </tr>`;
   
   const dataRowsHtml = pageData.map(job => {
@@ -24627,10 +24636,17 @@ async function initCostCodes() {
         original_contract: parseFloat(job.original_contract) || 0,
         tot_income_adj: parseFloat(job.tot_income_adj) || 0,
         revised_contract: parseFloat(job.contract) || 0,
+        contract: parseFloat(job.contract) || 0,
         original_cost: parseFloat(job.original_cost) || 0,
         tot_cost_adj: parseFloat(job.tot_cost_adj) || 0,
-        revised_cost: parseFloat(job.revised_cost) || 0,
-        profit: (parseFloat(job.contract) || 0) - (parseFloat(job.revised_cost) || 0)
+        revised_cost: parseFloat(job.budget_cost) || parseFloat(job.revised_cost) || 0,
+        budget_cost: parseFloat(job.budget_cost) || parseFloat(job.revised_cost) || 0,
+        billed: parseFloat(job.billed) || 0,
+        billed_revenue: parseFloat(job.billed) || 0,
+        actual_cost: parseFloat(job.actual_cost) || 0,
+        earned_revenue: parseFloat(job.earned_revenue) || 0,
+        has_budget: (parseFloat(job.budget_cost) || parseFloat(job.revised_cost) || 0) > 0,
+        profit: (parseFloat(job.contract) || 0) - (parseFloat(job.budget_cost) || parseFloat(job.revised_cost) || 0)
       }));
     }
     
