@@ -21119,37 +21119,51 @@ function renderJobActualsTable() {
   const pageData = jobActualsFiltered.slice(startIdx, endIdx);
   
   if (pageData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">No jobs found matching filters</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="loading-cell">No jobs found matching filters</td></tr>';
     updateJaPagination(0);
     return;
   }
   
   // Calculate totals for ALL filtered data (not just current page)
+  // Use pre-computed over_under_billing from metrics (only valid for jobs with budgets)
+  const jobsWithBudget = jobActualsFiltered.filter(j => j.has_budget);
+  const jobsValidForProfit = jobActualsFiltered.filter(j => j.valid_for_profit);
+  
   const allTotals = {
     billedRevenue: jobActualsFiltered.reduce((sum, j) => sum + (j.billed_revenue || 0), 0),
-    earnedRevenue: jobActualsFiltered.reduce((sum, j) => sum + (j.earned_revenue || 0), 0),
-    actualCost: jobActualsFiltered.reduce((sum, j) => sum + (j.actual_cost || 0), 0)
+    earnedRevenue: jobsWithBudget.reduce((sum, j) => sum + (j.earned_revenue || 0), 0),
+    actualCost: jobActualsFiltered.reduce((sum, j) => sum + (j.actual_cost || 0), 0),
+    overUnder: jobsWithBudget.reduce((sum, j) => sum + (j.over_under_billing || 0), 0),
+    profit: jobsValidForProfit.reduce((sum, j) => sum + (j.profit || 0), 0)
   };
-  const totalOverUnder = allTotals.billedRevenue - allTotals.earnedRevenue;
-  const totalOverUnderTextColor = totalOverUnder >= 0 ? '#10b981' : '#ef4444';
-  const avgPctComplete = jobActualsFiltered.length > 0 
-    ? jobActualsFiltered.reduce((sum, j) => sum + (j.percent_complete || 0), 0) / jobActualsFiltered.length 
+  const totalOverUnderTextColor = allTotals.overUnder >= 0 ? '#10b981' : '#ef4444';
+  const totalProfitTextColor = allTotals.profit >= 0 ? '#10b981' : '#ef4444';
+  const avgPctComplete = jobsWithBudget.length > 0 
+    ? jobsWithBudget.reduce((sum, j) => sum + (j.percent_complete || 0), 0) / jobsWithBudget.length 
+    : 0;
+  const avgMargin = jobsValidForProfit.length > 0
+    ? jobsValidForProfit.reduce((sum, j) => sum + (j.margin || 0), 0) / jobsValidForProfit.length
     : 0;
   
   const totalsRowHtml = `<tr class="totals-row">
     <td colspan="5"><strong>Totals (${jobActualsFiltered.length} jobs)</strong></td>
     <td class="number-col"><strong>${formatCurrency(allTotals.billedRevenue)}</strong></td>
     <td class="number-col"><strong>${formatCurrency(allTotals.earnedRevenue)}</strong></td>
-    <td class="number-col" style="color: ${totalOverUnderTextColor};"><strong>${formatCurrency(totalOverUnder)}</strong></td>
+    <td class="number-col" style="color: ${totalOverUnderTextColor};"><strong>${formatCurrency(allTotals.overUnder)}</strong></td>
     <td class="number-col"><strong>${formatCurrency(allTotals.actualCost)}</strong></td>
     <td class="number-col"><strong>${Math.round(avgPctComplete)}%</strong></td>
+    <td class="number-col" style="color: ${totalProfitTextColor};"><strong>${formatCurrency(allTotals.profit)}</strong></td>
+    <td class="number-col"><strong>${avgMargin.toFixed(1)}%</strong></td>
   </tr>`;
   
   const dataRowsHtml = pageData.map(job => {
     const status = getJobStatusLabel(job.job_status);
     const pctComplete = job.percent_complete || 0;
-    const overUnderBill = (job.billed_revenue || 0) - (job.earned_revenue || 0);
+    const overUnderBill = job.over_under_billing || 0;
     const overUnderTextColor = overUnderBill >= 0 ? '#10b981' : '#ef4444';
+    const profit = job.profit || 0;
+    const profitTextColor = profit >= 0 ? '#10b981' : '#ef4444';
+    const margin = job.margin || 0;
     
     return `<tr>
       <td>${job.job_no}</td>
@@ -21158,10 +21172,12 @@ function renderJobActualsTable() {
       <td><span class="job-status-badge ${status.class}">${status.label}</span></td>
       <td>${job.project_manager_name || ''}</td>
       <td class="number-col">${formatCurrency(job.billed_revenue || 0)}</td>
-      <td class="number-col">${formatCurrency(job.earned_revenue)}</td>
+      <td class="number-col">${formatCurrency(job.earned_revenue || 0)}</td>
       <td class="number-col" style="color: ${overUnderTextColor};">${formatCurrency(overUnderBill)}</td>
-      <td class="number-col">${formatCurrency(job.actual_cost)}</td>
+      <td class="number-col">${formatCurrency(job.actual_cost || 0)}</td>
       <td class="number-col">${Math.round(pctComplete)}%</td>
+      <td class="number-col" style="color: ${profitTextColor};">${formatCurrency(profit)}</td>
+      <td class="number-col">${margin.toFixed(1)}%</td>
     </tr>`;
   }).join('');
   
