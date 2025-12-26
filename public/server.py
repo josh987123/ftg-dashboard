@@ -1153,15 +1153,17 @@ def api_analyze_cash_report():
 
 Write a 3-4 sentence summary in plain text (no bullet points, no markdown headers). Structure your response as follows:
 
-1. First sentence: Overall cash balance summary including the change amount, current balance, deposits received, and withdrawals paid out.
+1. First sentence: Start with "Cash increased/decreased [exact Net Change amount]" using the EXACT Net Change value provided in the data. Then mention current balance, deposits received, and withdrawals paid out.
 2. Second sentence: Comment on the cash balance safety check status.
 3. Third sentence: Summarize top deposits, aggregating by customer when the same customer has multiple deposits (e.g., "Sutter paid us $111K across two checks").
 4. Fourth sentence: Summarize top withdrawals, mentioning key vendors and whether they're job-related or overhead (like payroll/benefits).
 
-Use exact dollar amounts rounded to nearest thousand (e.g., $243K, $12.5M). Be specific about customer/vendor names.
+CRITICAL: The Net Change value in the data is the authoritative weekly change amount. Use it EXACTLY as provided - do not calculate your own change from deposits minus withdrawals or from balance differences.
+
+Use dollar amounts rounded to nearest thousand (e.g., $243K, $12.5M). Be specific about customer/vendor names.
 
 EXAMPLE FORMAT:
-"Cash decreased $243K this week to $12,450,823. Received $312K in deposits, paid out $628K. Safety check remains healthy at $5.7M. The largest deposits came from Mee Memorial ($97K for job 3780), followed by Sutter ($111K across two payments), Dignity ($50K), and El Camino ($29K). Major withdrawals included payroll processing through Employee Fiduciary ($166K), Choice Admin benefits ($50K), and subcontractor payments to Walters & Wolf ($93K across jobs 1805, 4531, 4164)."
+"Cash decreased $243K this week to $12,450,823 after receiving $312K in deposits and paying out $628K in withdrawals. Safety check remains healthy at $5.7M above operating requirements. The largest deposits came from Mee Memorial ($97K for job 3780), followed by Sutter ($111K across two payments), Dignity ($50K), and El Camino ($29K). Major withdrawals included payroll processing through Employee Fiduciary ($166K), Choice Admin benefits ($50K), and subcontractor payments to Walters & Wolf ($93K across jobs 1805, 4531, 4164)."
 
 Return ONLY the summary paragraph, no other text."""
 
