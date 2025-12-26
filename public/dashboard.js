@@ -8251,7 +8251,10 @@ async function sendReportEmail() {
       report_title: data.title,
       chart_attachment: screenshotImage ? "data:image/jpeg;base64," + screenshotImage : "",
       attachment_name: `${viewFilename}.jpg`,
-      chart_filename: `${viewFilename}.jpg`
+      chart_filename: `${viewFilename}.jpg`,
+      file_name: `${viewFilename}.jpg`,
+      image_name: `${viewFilename}.jpg`,
+      filename: `${viewFilename}.jpg`
     };
     
     const response = await emailjs.send(
