@@ -15366,6 +15366,7 @@ async function exportTransactionsToExcel() {
 // ========================================
 
 let jobBudgetsData = [];
+let jobsDataAsOf = null;
 let jobBudgetsFiltered = [];
 let jobBudgetsCurrentPage = 1;
 let jobBudgetsPageSize = 25;
@@ -15563,7 +15564,7 @@ async function loadJobBudgetsData() {
       original_cost: job.original_cost || 0,
       tot_cost_adj: job.tot_cost_adj || 0,
       revised_cost: job.budget_cost,
-      profit: job.profit
+      profit: job.profit,
       margin: job.margin,
     }));
     // Initialize column filter dropdowns
@@ -15575,8 +15576,8 @@ async function loadJobBudgetsData() {
     
     // Set data as of date
     const dataAsOf = document.getElementById('jobBudgetsDataAsOf');
-    if (dataAsOf && data.generated_at) {
-      dataAsOf.textContent = new Date(data.generated_at).toLocaleDateString();
+    if (dataAsOf && metricsData.generated_at) {
+      dataAsOf.textContent = new Date(metricsData.generated_at).toLocaleDateString();
     }
     
     // Apply initial filter (Active only by default)
@@ -21312,8 +21313,8 @@ async function loadJobCostsData() {
     populateCostCodesTabs();
     
     const dataAsOf = document.getElementById('costCodesDataAsOf');
-    if (dataAsOf && data.generated_at) {
-      dataAsOf.textContent = new Date(data.generated_at).toLocaleDateString();
+    if (dataAsOf && metricsData.generated_at) {
+      dataAsOf.textContent = new Date(metricsData.generated_at).toLocaleDateString();
     }
     
     filterCostCodes();
@@ -21472,7 +21473,7 @@ async function loadMissingBudgetsData() {
       original_cost: job.original_cost || 0,
       tot_cost_adj: job.tot_cost_adj || 0,
       revised_cost: job.budget_cost,
-      profit: job.profit
+      profit: job.profit,
       margin: job.margin,
     }));
     
