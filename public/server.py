@@ -711,6 +711,97 @@ Period: {period_info}
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/analyze-cash-report', methods=['POST', 'OPTIONS'])
+def api_analyze_cash_report():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        statement_data = data.get('statementData')
+        if not statement_data:
+            return jsonify({'error': 'Missing statement data'}), 400
+        
+        client = get_anthropic_client()
+        
+        # Build context from the cash report data
+        summary = statement_data.get('summary', {})
+        safety = statement_data.get('safetyCheck', {})
+        deposits = statement_data.get('topDeposits', [])
+        withdrawals = statement_data.get('topWithdrawals', [])
+        
+        # Format deposits for the prompt
+        deposits_text = ""
+        for d in deposits:
+            attr = f" - {d['attribution']}" if d.get('attribution') else ""
+            deposits_text += f"  {d['date']}: {d['amount']} - {d['description']}{attr}\n"
+        
+        # Format withdrawals for the prompt
+        withdrawals_text = ""
+        for w in withdrawals:
+            attr = f" - {w['attribution']}" if w.get('attribution') else ""
+            withdrawals_text += f"  {w['date']}: {w['amount']} - {w['description']}{attr}\n"
+        
+        system_prompt = """You are a CFO analyzing a construction company's weekly cash position.
+
+Write a 3-4 sentence summary in plain text (no bullet points, no markdown headers). Structure your response as follows:
+
+1. First sentence: Overall cash balance summary including the change amount, current balance, deposits received, and withdrawals paid out.
+2. Second sentence: Comment on the cash balance safety check status.
+3. Third sentence: Summarize top deposits, aggregating by customer when the same customer has multiple deposits (e.g., "Sutter paid us $111K across two checks").
+4. Fourth sentence: Summarize top withdrawals, mentioning key vendors and whether they're job-related or overhead (like payroll/benefits).
+
+Use exact dollar amounts rounded to nearest thousand (e.g., $243K, $12.5M). Be specific about customer/vendor names.
+
+EXAMPLE FORMAT:
+"Cash decreased $243K this week to $12,450,823. Received $312K in deposits, paid out $628K. Safety check remains healthy at $5.7M. The largest deposits came from Mee Memorial ($97K for job 3780), followed by Sutter ($111K across two payments), Dignity ($50K), and El Camino ($29K). Major withdrawals included payroll processing through Employee Fiduciary ($166K), Choice Admin benefits ($50K), and subcontractor payments to Walters & Wolf ($93K across jobs 1805, 4531, 4164)."
+
+Return ONLY the summary paragraph, no other text."""
+
+        user_prompt = f"""Analyze this cash report data:
+
+SUMMARY ({summary.get('periodLabel', 'this week')}):
+- Current Balance: {summary.get('currentBalance', '--')}
+- Deposits: {summary.get('deposits', '--')}
+- Withdrawals: {summary.get('withdrawals', '--')}
+- Net Change: {summary.get('netChange', '--')}
+
+SAFETY CHECK:
+- Cash Balance: {safety.get('cash', '--')}
+- Receivables (AR): {safety.get('ar', '--')}
+- Payables (AP): {safety.get('ap', '--')}
+- Net Over/Under Bill: {safety.get('oub', '--')}
+- Operating Reserve (3-mo SG&A): {safety.get('opExp', '--')}
+- Safety Check Total: {safety.get('total', '--')}
+
+TOP DEPOSITS:
+{deposits_text if deposits_text else '  No deposits data available'}
+
+TOP WITHDRAWALS:
+{withdrawals_text if withdrawals_text else '  No withdrawals data available'}
+
+Write a 3-4 sentence summary paragraph following the format specified."""
+        
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=500,
+            messages=[
+                {"role": "user", "content": system_prompt + "\n\n" + user_prompt}
+            ]
+        )
+        
+        analysis = response.content[0].text.strip()
+        return jsonify({'success': True, 'analysis': analysis})
+        
+    except Exception as e:
+        import traceback
+        print(f"Cash Report AI Analysis error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/analyze-overview', methods=['POST', 'OPTIONS'])
 @app.route('/api/analyze-revenue', methods=['POST', 'OPTIONS'])
 @app.route('/api/analyze-account', methods=['POST', 'OPTIONS'])

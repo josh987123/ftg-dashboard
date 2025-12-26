@@ -2218,6 +2218,19 @@ function initAllAiPanelToggles() {
   
   const jaBtn = document.getElementById('jaAiAnalyzeBtn');
   if (jaBtn) jaBtn.addEventListener('click', performJobActualsAiAnalysis);
+  
+  const dcrBtn = document.getElementById('dcrAiAnalyzeBtn');
+  if (dcrBtn) dcrBtn.addEventListener('click', performCashReportAiAnalysis);
+  
+  // Setup Cash Report AI panel toggle
+  const dcrAiHeader = document.getElementById('dcrAiAnalysisHeader');
+  const dcrAiPanel = document.getElementById('dcrAiAnalysisPanel');
+  if (dcrAiHeader && dcrAiPanel) {
+    dcrAiHeader.addEventListener('click', (e) => {
+      if (dcrBtn && (e.target === dcrBtn || dcrBtn.contains(e.target))) return;
+      dcrAiPanel.classList.toggle('collapsed');
+    });
+  }
 }
 
 async function performOverviewAiAnalysis() {
@@ -17756,6 +17769,131 @@ function renderDcrTransactionList(txns, type) {
   
   html += '</tbody></table>';
   return html;
+}
+
+// Cash Report AI Analysis
+async function performCashReportAiAnalysis() {
+  const btn = document.getElementById('dcrAiAnalyzeBtn');
+  const panel = document.getElementById('dcrAiAnalysisPanel');
+  const content = document.getElementById('dcrAiAnalysisContent');
+  
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  panel.classList.remove('collapsed');
+  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing cash position...</div>';
+  
+  try {
+    const statementData = extractCashReportData();
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/analyze-cash-report' : '/.netlify/functions/analyze-cash-report';
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({statementData, periodInfo: 'Cash Report Analysis'})
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      content.innerHTML = formatMarkdown(result.analysis);
+      panel.classList.add('has-analysis');
+    } else {
+      content.innerHTML = `<div style="color: #dc2626;">Error: ${result.error}</div>`;
+    }
+  } catch (e) {
+    content.innerHTML = `<div style="color: #dc2626;">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis';
+  }
+}
+
+function extractCashReportData() {
+  // Get current balance and metrics
+  const currentBalance = document.getElementById('dcrCurrentBalance')?.textContent || '--';
+  const deposits = document.getElementById('dcrDeposits')?.textContent || '--';
+  const withdrawals = document.getElementById('dcrWithdrawals')?.textContent || '--';
+  const netChange = document.getElementById('dcrPercentChange')?.textContent || '--';
+  
+  // Get safety check values
+  const safetyCash = document.getElementById('dcrSafetyCash')?.textContent || '--';
+  const safetyAR = document.getElementById('dcrSafetyAR')?.textContent || '--';
+  const safetyAP = document.getElementById('dcrSafetyAP')?.textContent || '--';
+  const safetyOUB = document.getElementById('dcrSafetyOUB')?.textContent || '--';
+  const safetyOpExp = document.getElementById('dcrSafetyOpExp')?.textContent || '--';
+  const safetyTotal = document.getElementById('dcrSafetyTotal')?.textContent || '--';
+  
+  // Get view mode (daily/weekly)
+  const viewMode = dcrViewMode || 'weekly';
+  const periodLabel = viewMode === 'weekly' ? 'this week' : 'prior day';
+  
+  // Get top deposits from the table
+  const depositsContainer = document.getElementById('dcrDepositsContainer');
+  const topDeposits = [];
+  if (depositsContainer) {
+    const rows = depositsContainer.querySelectorAll('tr:not(.dcr-match-row)');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 3) {
+        const matchRow = row.nextElementSibling;
+        let attribution = '';
+        if (matchRow && matchRow.classList.contains('dcr-match-row')) {
+          attribution = matchRow.querySelector('.match-info')?.textContent || '';
+        }
+        topDeposits.push({
+          date: cells[0]?.textContent || '',
+          description: cells[1]?.textContent || '',
+          amount: cells[2]?.textContent || '',
+          attribution: attribution
+        });
+      }
+    });
+  }
+  
+  // Get top withdrawals from the table
+  const withdrawalsContainer = document.getElementById('dcrWithdrawalsContainer');
+  const topWithdrawals = [];
+  if (withdrawalsContainer) {
+    const rows = withdrawalsContainer.querySelectorAll('tr:not(.dcr-match-row)');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 3) {
+        const matchRow = row.nextElementSibling;
+        let attribution = '';
+        if (matchRow && matchRow.classList.contains('dcr-match-row')) {
+          attribution = matchRow.querySelector('.match-info')?.textContent || '';
+        }
+        topWithdrawals.push({
+          date: cells[0]?.textContent || '',
+          description: cells[1]?.textContent || '',
+          amount: cells[2]?.textContent || '',
+          attribution: attribution
+        });
+      }
+    });
+  }
+  
+  return {
+    summary: {
+      currentBalance,
+      deposits,
+      withdrawals,
+      netChange,
+      viewMode,
+      periodLabel
+    },
+    safetyCheck: {
+      cash: safetyCash,
+      ar: safetyAR,
+      ap: safetyAP,
+      oub: safetyOUB,
+      opExp: safetyOpExp,
+      total: safetyTotal
+    },
+    topDeposits,
+    topWithdrawals
+  };
 }
 
 // ========================================
