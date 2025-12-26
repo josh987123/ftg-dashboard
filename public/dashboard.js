@@ -8355,6 +8355,7 @@ async function sendCashReportViaRibbon(toEmail, statusEl, sendBtn) {
         <p style="color: #6b7280; margin: 0 0 20px 0;">${data.subtitle}</p>
         ${screenshotImage ? '<p style="margin-bottom: 10px;">Dashboard screenshot is attached below.</p>' : '<p>Screenshot could not be captured. Please view the dashboard directly.</p>'}
         <p style="color: #9ca3af; font-size: 12px; margin-top: 20px;">Generated on ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${new Date().toLocaleTimeString()} | FTG Dashboard</p>
+        <p style="text-align: center; margin-top: 16px;"><a href="https://ftg-dashboard.replit.app/" style="color: #3b82f6; font-size: 12px; text-decoration: none;">Visit FTG Dashboard for additional detail</a></p>
       </div>
     `;
     
