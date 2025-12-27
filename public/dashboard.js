@@ -7434,8 +7434,9 @@ async function universalExportToPdf() {
     await LazyLoader.loadMultiple(['html2canvas', 'jspdf']);
     
     // Fix glassmorphism effects directly on elements (will restore after)
-    const glassElements = section.querySelectorAll('.welcome-card, .summary-card, .metric-tile, .chart-card, .config-panel, .ai-analysis-panel, [style*="backdrop-filter"], [style*="blur"]');
+    const glassElements = section.querySelectorAll('.welcome-card, .summary-card, .metric-tile, .chart-card, .config-panel, .ai-analysis-panel, .pm-tabs-bar, .pm-tab-btn, .ap-aging-summary, .ap-aging-chart-section, .ap-aging-chart-wrapper, .job-budgets-table, table, canvas, .chart-wrapper, [style*="backdrop-filter"], [style*="blur"]');
     glassElements.forEach(el => {
+      const computed = window.getComputedStyle(el);
       originalStyles.set(el, {
         backdropFilter: el.style.backdropFilter,
         webkitBackdropFilter: el.style.webkitBackdropFilter,
@@ -7444,8 +7445,10 @@ async function universalExportToPdf() {
       });
       el.style.backdropFilter = 'none';
       el.style.webkitBackdropFilter = 'none';
-      if (!el.style.backgroundColor || el.style.backgroundColor.includes('rgba')) {
-        el.style.backgroundColor = '#f8fafc';
+      // Check computed background - if transparent or semi-transparent, make solid
+      const bg = computed.backgroundColor;
+      if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)' || (bg.startsWith('rgba') && !bg.endsWith(', 1)'))) {
+        el.style.backgroundColor = '#ffffff';
       }
     });
     
