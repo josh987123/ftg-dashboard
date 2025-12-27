@@ -7430,40 +7430,52 @@ async function universalExportToPdf() {
   const pdfStyle = document.createElement('style');
   pdfStyle.id = 'pdf-export-style';
   pdfStyle.textContent = `
-    body::before, body::after,
-    .main-content::before, .main-content::after,
-    .dashboard-section::before, .dashboard-section::after,
-    .welcome-card::before, .welcome-card::after,
-    .summary-card::before, .summary-card::after,
-    .metric-tile::before, .metric-tile::after,
-    .chart-card::before, .chart-card::after,
-    .pm-tabs-bar::before, .pm-tabs-bar::after,
-    .pm-tabs-container::before, .pm-tabs-container::after,
-    .ap-aging-summary::before, .ap-aging-summary::after,
-    .ap-aging-chart-section::before, .ap-aging-chart-section::after,
-    .glass-card::before, .glass-card::after,
+    /* Override CSS variables to solid colors */
+    :root, body, html {
+      --glass-bg: #ffffff !important;
+      --glass-border: #e2e8f0 !important;
+      --glass-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+      --bg-primary: #ffffff !important;
+      --bg-secondary: #f8fafc !important;
+    }
+    
+    /* Kill ALL pseudo-elements */
     *::before, *::after {
       content: none !important;
       display: none !important;
-      background: none !important;
+      background: transparent !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
+      opacity: 0 !important;
     }
     
-    body, .main-content, .dashboard-section, .sidebar {
+    /* Force solid backgrounds on major containers */
+    body, html, .main-content, .dashboard-section, .sidebar,
+    #arAging, #apAging, #overview, #incomeStatement, #balanceSheet,
+    #cashFlow, #cashBalances, #jobOverview, #jobBudgets, #jobActuals,
+    #costCodes, #overUnderBilling, #pmReport, #adminDashboard {
       background: #f8fafc !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
       filter: none !important;
+      opacity: 1 !important;
     }
     
+    /* Force solid on all card/panel elements */
     .welcome-card, .summary-card, .metric-tile, .chart-card,
-    .pm-tabs-bar, .pm-tab-btn, .ap-aging-summary, .ap-aging-chart-section,
-    .ap-aging-chart-wrapper, .chart-wrapper, table, .job-budgets-table {
+    .glass-panel, .config-panel, .glass-card,
+    .pm-tabs-bar, .pm-tab-btn, .pm-tabs-container,
+    .ap-aging-summary, .ap-aging-chart-section, .ap-aging-chart-wrapper,
+    .chart-wrapper, table, .job-budgets-table, thead, tbody, tr, td, th {
       background: #ffffff !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
       filter: none !important;
+      opacity: 1 !important;
+    }
+    
+    /* Ensure text is visible */
+    .summary-label, .metric-label, h1, h2, h3, h4, h5, h6, p, span, label {
       opacity: 1 !important;
     }
     
