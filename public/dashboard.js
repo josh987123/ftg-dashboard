@@ -18065,7 +18065,7 @@ function gatherAPAgingDataForEmail() {
   const vendors = [];
   const tableBody = document.querySelector('#apAgingTable tbody');
   if (tableBody) {
-    const rows = tableBody.querySelectorAll('tr.vendor-row');
+    const rows = tableBody.querySelectorAll('tr:not(.vendor-detail-row)');
     rows.forEach((row, idx) => {
       if (idx >= 15) return; // Limit to top 15
       const cells = row.querySelectorAll('td');
@@ -18084,7 +18084,7 @@ function gatherAPAgingDataForEmail() {
   }
   
   // Get vendor count
-  const vendorCount = document.querySelectorAll('#apAgingTable tbody tr.vendor-row').length || 0;
+  const vendorCount = document.querySelectorAll('#apAgingTable tbody tr:not(.vendor-detail-row)').length || 0;
   
   return {
     summary: {
@@ -18094,7 +18094,6 @@ function gatherAPAgingDataForEmail() {
       days61to90,
       days90plus,
       retainage,
-      avgDays,
       dataAsOf,
       vendorCount
     },

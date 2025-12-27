@@ -1170,7 +1170,7 @@ def generate_ap_aging_html_email(report_data):
     days61to90 = summary.get('days61to90', '--')
     days90plus = summary.get('days90plus', '--')
     retainage = summary.get('retainage', '--')
-    avg_days = summary.get('avgDays', '--')
+    # avg_days removed per user request
     data_as_of = summary.get('dataAsOf', '--')
     vendor_count = summary.get('vendorCount', 0)
     
@@ -1330,9 +1330,6 @@ def generate_ap_aging_html_email(report_data):
                                             <tr><td align="center" style="font-size:18px;font-weight:bold;color:#6366f1;">''' + retainage + '''</td></tr>
                                         </table>
                                     </td>
-                                            <tr><td align="center" style="font-size:18px;font-weight:bold;color:#1e293b;">''' + avg_days + '''</td></tr>
-                                        </table>
-                                    </td>
                                 </tr>
                             </table>
                         </td>
@@ -1473,7 +1470,7 @@ def generate_ar_aging_html_email(report_data):
     days61to90 = summary.get('days61to90', '--')
     days90plus = summary.get('days90plus', '--')
     retainage = summary.get('retainage', '--')
-    avg_days = summary.get('avgDays', '--')
+    # avg_days removed per user request
     data_as_of = summary.get('dataAsOf', '--')
     customer_count = summary.get('customerCount', 0)
     
