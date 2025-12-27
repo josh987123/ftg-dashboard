@@ -7697,6 +7697,8 @@ async function universalExportToExcel() {
 
 function openEmailModal() {
   const view = getCurrentView();
+  console.log('[Email] getCurrentView returned:', view);
+  console.log('[Email] arAging visible:', document.getElementById('arAging')?.classList.contains('visible'));
   
   // Special handling for AP Aging - use embedded HTML email
   if (view === 'apAging') {
