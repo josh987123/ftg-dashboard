@@ -1600,28 +1600,16 @@ def generate_ar_aging_html_email(report_data):
                         <td>
                             <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
                                 <tr>
-                                    <td width="25%" align="center" style="padding:20px 10px;border-right:1px solid #e2e8f0;">
+                                    <td width="50%" align="center" style="padding:20px 10px;border-right:1px solid #e2e8f0;">
                                         <table cellpadding="0" cellspacing="0" border="0">
                                             <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">TOTAL DUE</td></tr>
                                             <tr><td align="center" style="font-size:20px;font-weight:bold;color:#1e293b;">''' + total_due + '''</td></tr>
                                         </table>
                                     </td>
-                                    <td width="25%" align="center" style="padding:20px 10px;border-right:1px solid #e2e8f0;">
-                                        <table cellpadding="0" cellspacing="0" border="0">
-                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">COLLECTIBLE</td></tr>
-                                            <tr><td align="center" style="font-size:20px;font-weight:bold;color:#16a34a;">''' + collectible + '''</td></tr>
-                                        </table>
-                                    </td>
-                                    <td width="25%" align="center" style="padding:20px 10px;border-right:1px solid #e2e8f0;">
+                                    <td width="50%" align="center" style="padding:20px 10px;">
                                         <table cellpadding="0" cellspacing="0" border="0">
                                             <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">RETAINAGE</td></tr>
                                             <tr><td align="center" style="font-size:20px;font-weight:bold;color:#6366f1;">''' + retainage + '''</td></tr>
-                                        </table>
-                                    </td>
-                                    <td width="25%" align="center" style="padding:20px 10px;">
-                                        <table cellpadding="0" cellspacing="0" border="0">
-                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">AVG DAYS OUT</td></tr>
-                                            <tr><td align="center" style="font-size:20px;font-weight:bold;color:#1e293b;">''' + avg_days + '''</td></tr>
                                         </table>
                                     </td>
                                 </tr>
