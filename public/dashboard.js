@@ -7407,92 +7407,82 @@ function universalPrint() {
 }
 
 async function universalExportToPdf() {
-  // Get current view using the established getCurrentView function
-  const view = getCurrentView();
-  const sectionId = view;
-  const section = document.getElementById(sectionId);
+  // Use getCurrentView() to identify the section ID
+  const viewId = getCurrentView();
+  const section = document.getElementById(viewId);
   
   if (!section) {
-    alert("No report section found for: " + view);
+    alert("Could not find section: " + viewId);
     return;
   }
   
-  const filename = `ftg_${view}_${new Date().toISOString().split("T")[0]}.pdf`;
+  console.log('[PDF] Exporting view:', viewId);
+  
+  const filename = `ftg_${viewId}_${new Date().toISOString().split("T")[0]}.pdf`;
   
   // Show loading overlay
   const loadingOverlay = document.createElement('div');
   loadingOverlay.id = 'pdfLoadingOverlay';
-  loadingOverlay.innerHTML = '<div class="pdf-loading-content"><div class="ai-spinner"></div><div>Generating PDF...</div></div>';
+  loadingOverlay.innerHTML = '<div style="background:#fff;padding:30px 50px;border-radius:12px;text-align:center;font-size:16px;color:#1f2937;box-shadow:0 4px 20px rgba(0,0,0,0.3);"><div class="ai-spinner"></div><div>Generating PDF...</div></div>';
   loadingOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100000;';
-  loadingOverlay.querySelector('.pdf-loading-content').style.cssText = 'background:#fff;padding:30px 50px;border-radius:12px;text-align:center;font-size:16px;color:#1f2937;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
   document.body.appendChild(loadingOverlay);
   
+  // Store original styles to restore later
+  const originalStyles = new Map();
+  
   try {
-    // Load libraries
     await LazyLoader.loadMultiple(['html2canvas', 'jspdf']);
     
-    // Clone the section for export (prevents modifying the live DOM)
-    const clone = section.cloneNode(true);
-    clone.id = 'pdf-export-clone';
-    
-    // Create offscreen container
-    const container = document.createElement('div');
-    container.id = 'pdf-export-container';
-    container.style.cssText = 'position:absolute;left:-9999px;top:0;width:' + section.scrollWidth + 'px;background:#ffffff;';
-    container.appendChild(clone);
-    document.body.appendChild(container);
-    
-    // Apply PDF-safe styles to the clone (remove glassmorphism, use solid backgrounds)
-    const applyPdfStyles = (el) => {
-      const style = window.getComputedStyle(el);
-      // Remove backdrop-filter and use solid background
-      if (style.backdropFilter && style.backdropFilter !== 'none') {
-        el.style.backdropFilter = 'none';
-        el.style.webkitBackdropFilter = 'none';
-        // Use solid background color
-        const bgColor = style.backgroundColor;
-        if (bgColor.includes('rgba') && bgColor.includes('0.')) {
-          el.style.backgroundColor = '#ffffff';
-        }
-      }
-      // Ensure text is visible
-      if (style.color === 'rgba(0, 0, 0, 0)' || style.color === 'transparent') {
-        el.style.color = '#1f2937';
-      }
-      // Make sure cards have solid backgrounds
-      if (el.classList && (el.classList.contains('welcome-card') || el.classList.contains('summary-card') || el.classList.contains('metric-tile') || el.classList.contains('chart-card'))) {
+    // Fix glassmorphism effects directly on elements (will restore after)
+    const glassElements = section.querySelectorAll('.welcome-card, .summary-card, .metric-tile, .chart-card, .config-panel, .ai-analysis-panel, [style*="backdrop-filter"], [style*="blur"]');
+    glassElements.forEach(el => {
+      originalStyles.set(el, {
+        backdropFilter: el.style.backdropFilter,
+        webkitBackdropFilter: el.style.webkitBackdropFilter,
+        background: el.style.background,
+        backgroundColor: el.style.backgroundColor
+      });
+      el.style.backdropFilter = 'none';
+      el.style.webkitBackdropFilter = 'none';
+      if (!el.style.backgroundColor || el.style.backgroundColor.includes('rgba')) {
         el.style.backgroundColor = '#f8fafc';
-        el.style.backdropFilter = 'none';
-        el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
       }
-    };
-    
-    // Apply styles recursively
-    const allElements = clone.querySelectorAll('*');
-    allElements.forEach(applyPdfStyles);
-    applyPdfStyles(clone);
-    
-    // Hide elements that shouldn't appear in PDF
-    clone.querySelectorAll('.config-panel, .config-header, .config-body, .ai-analysis-panel:not(.has-analysis), .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay, .loading-spinner, .skeleton, .loading-skeleton, .table-export-btn-row').forEach(el => {
-      el.style.display = 'none';
     });
     
-    // Wait for rendering
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Hide elements that shouldn't be in PDF
+    const hideSelectors = '.config-panel, .config-header, .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay, .loading-spinner, .skeleton, .table-export-btn-row';
+    const hiddenEls = [];
+    section.querySelectorAll(hideSelectors).forEach(el => {
+      if (el.style.display !== 'none') {
+        hiddenEls.push({ el, display: el.style.display });
+        el.style.display = 'none';
+      }
+    });
     
-    // Capture with html2canvas
-    const canvas = await html2canvas(clone, {
+    // Wait for any animations to settle
+    await new Promise(r => setTimeout(r, 100));
+    
+    // Capture directly on the section
+    const canvas = await html2canvas(section, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
-      logging: false,
-      width: clone.scrollWidth,
-      height: clone.scrollHeight
+      logging: false
     });
     
-    // Clean up clone
-    container.remove();
+    // Restore hidden elements
+    hiddenEls.forEach(({ el, display }) => {
+      el.style.display = display || '';
+    });
+    
+    // Restore glass effects
+    originalStyles.forEach((styles, el) => {
+      el.style.backdropFilter = styles.backdropFilter || '';
+      el.style.webkitBackdropFilter = styles.webkitBackdropFilter || '';
+      el.style.background = styles.background || '';
+      el.style.backgroundColor = styles.backgroundColor || '';
+    });
     
     // Generate PDF
     const imgData = canvas.toDataURL('image/png');
@@ -7500,35 +7490,32 @@ async function universalExportToPdf() {
     const imgHeight = canvas.height;
     
     const isLandscape = imgWidth > imgHeight * 1.2;
-    const orientation = isLandscape ? 'landscape' : 'portrait';
-    
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({
-      orientation: orientation,
+      orientation: isLandscape ? 'landscape' : 'portrait',
       unit: 'px',
       format: [imgWidth / 2 + 40, imgHeight / 2 + 80]
     });
     
-    // Add header
     pdf.setFontSize(10);
     pdf.setTextColor(100);
     pdf.text('FTG Builders Dashboard', 20, 20);
     pdf.text(new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }), pdf.internal.pageSize.getWidth() - 20, 20, { align: 'right' });
-    
-    // Add the captured image
     pdf.addImage(imgData, 'PNG', 20, 40, imgWidth / 2, imgHeight / 2);
-    
-    // Save
     pdf.save(filename);
     
   } catch (err) {
     console.error('PDF export error:', err);
-    alert('Failed to generate PDF: ' + err.message);
+    alert('PDF export failed: ' + err.message);
+    // Restore styles on error
+    originalStyles.forEach((styles, el) => {
+      el.style.backdropFilter = styles.backdropFilter || '';
+      el.style.webkitBackdropFilter = styles.webkitBackdropFilter || '';
+      el.style.background = styles.background || '';
+      el.style.backgroundColor = styles.backgroundColor || '';
+    });
   } finally {
     loadingOverlay.remove();
-    // Clean up any leftover container
-    const leftover = document.getElementById('pdf-export-container');
-    if (leftover) leftover.remove();
   }
 }
 
