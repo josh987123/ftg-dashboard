@@ -1176,6 +1176,55 @@ def generate_ap_aging_html_email(report_data):
     report_date = datetime.now().strftime('%B %d, %Y')
     gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
     
+    # Parse numeric values for bar chart (handle formatted currency strings)
+    import re as re_mod
+    def parse_currency(val):
+        if isinstance(val, (int, float)):
+            return float(val)
+        if isinstance(val, str):
+            cleaned = re_mod.sub(r'[^0-9.-]', '', val.replace('(', '-').replace(')', ''))
+            try:
+                return float(cleaned) if cleaned else 0
+            except:
+                return 0
+        return 0
+    
+    current_val = parse_currency(current)
+    days31to60_val = parse_currency(days31to60)
+    days61to90_val = parse_currency(days61to90)
+    days90plus_val = parse_currency(days90plus)
+    
+    # Build aging bucket bar chart
+    aging_data = [
+        {'label': 'Current', 'value': current_val, 'color': '#16a34a', 'formatted': current},
+        {'label': '31-60', 'value': days31to60_val, 'color': '#eab308', 'formatted': days31to60},
+        {'label': '61-90', 'value': days61to90_val, 'color': '#f97316', 'formatted': days61to90},
+        {'label': '90+', 'value': days90plus_val, 'color': '#dc2626', 'formatted': days90plus},
+    ]
+    
+    max_val = max(d['value'] for d in aging_data) if aging_data else 1
+    if max_val <= 0:
+        max_val = 1
+    
+    chart_height = 100
+    aging_bars_html = ''
+    aging_labels_html = ''
+    
+    for d in aging_data:
+        bar_pct = max(5, (d['value'] / max_val) * 100) if d['value'] > 0 else 5
+        bar_px = int((bar_pct / 100) * chart_height)
+        spacer_px = chart_height - bar_px
+        
+        aging_bars_html += '<td style="vertical-align:bottom;text-align:center;padding:0 8px;width:25%;">'
+        aging_bars_html += '<table width="100%" cellpadding="0" cellspacing="0" border="0">'
+        aging_bars_html += '<tr><td style="text-align:center;font-size:11px;color:#475569;padding-bottom:4px;font-weight:600;">' + str(d['formatted']) + '</td></tr>'
+        if spacer_px > 0:
+            aging_bars_html += '<tr><td height="' + str(spacer_px) + '" style="font-size:1px;line-height:' + str(spacer_px) + 'px;">&nbsp;</td></tr>'
+        aging_bars_html += '<tr><td height="' + str(bar_px) + '" bgcolor="' + d['color'] + '" style="background-color:' + d['color'] + ';font-size:1px;line-height:' + str(bar_px) + 'px;border-radius:4px 4px 0 0;">&nbsp;</td></tr>'
+        aging_bars_html += '</table></td>'
+        
+        aging_labels_html += '<td style="text-align:center;padding-top:8px;font-size:12px;color:#64748b;font-weight:500;">' + d['label'] + '</td>'
+    
     # Build vendor rows for the table
     vendor_rows = ''
     for i, vendor in enumerate(vendors[:15]):
@@ -1278,6 +1327,27 @@ def generate_ap_aging_html_email(report_data):
                                         <table cellpadding="0" cellspacing="0" border="0">
                                             <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">RETAINAGE</td></tr>
                                             <tr><td align="center" style="font-size:18px;font-weight:bold;color:#6366f1;">''' + retainage + '''</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Aging Distribution Chart -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+                                <tr>
+                                    <td style="padding:20px;">
+                                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                            <tr><td style="font-size:14px;font-weight:600;color:#1e293b;padding-bottom:16px;">Aging Distribution</td></tr>
+                                            <tr><td>
+                                                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                    <tr>''' + aging_bars_html + '''</tr>
+                                                    <tr>''' + aging_labels_html + '''</tr>
+                                                </table>
+                                            </td></tr>
                                         </table>
                                     </td>
                                 </tr>
@@ -1406,6 +1476,55 @@ def generate_ar_aging_html_email(report_data):
     report_date = datetime.now().strftime('%B %d, %Y')
     gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
     
+    # Parse numeric values for bar chart (handle formatted currency strings)
+    import re as re_mod
+    def parse_currency(val):
+        if isinstance(val, (int, float)):
+            return float(val)
+        if isinstance(val, str):
+            cleaned = re_mod.sub(r'[^0-9.-]', '', val.replace('(', '-').replace(')', ''))
+            try:
+                return float(cleaned) if cleaned else 0
+            except:
+                return 0
+        return 0
+    
+    current_val = parse_currency(current)
+    days31to60_val = parse_currency(days31to60)
+    days61to90_val = parse_currency(days61to90)
+    days90plus_val = parse_currency(days90plus)
+    
+    # Build aging bucket bar chart
+    aging_data = [
+        {'label': 'Current', 'value': current_val, 'color': '#16a34a', 'formatted': current},
+        {'label': '31-60', 'value': days31to60_val, 'color': '#eab308', 'formatted': days31to60},
+        {'label': '61-90', 'value': days61to90_val, 'color': '#f97316', 'formatted': days61to90},
+        {'label': '90+', 'value': days90plus_val, 'color': '#dc2626', 'formatted': days90plus},
+    ]
+    
+    max_val = max(d['value'] for d in aging_data) if aging_data else 1
+    if max_val <= 0:
+        max_val = 1
+    
+    chart_height = 100
+    aging_bars_html = ''
+    aging_labels_html = ''
+    
+    for d in aging_data:
+        bar_pct = max(5, (d['value'] / max_val) * 100) if d['value'] > 0 else 5
+        bar_px = int((bar_pct / 100) * chart_height)
+        spacer_px = chart_height - bar_px
+        
+        aging_bars_html += '<td style="vertical-align:bottom;text-align:center;padding:0 8px;width:25%;">'
+        aging_bars_html += '<table width="100%" cellpadding="0" cellspacing="0" border="0">'
+        aging_bars_html += '<tr><td style="text-align:center;font-size:11px;color:#475569;padding-bottom:4px;font-weight:600;">' + str(d['formatted']) + '</td></tr>'
+        if spacer_px > 0:
+            aging_bars_html += '<tr><td height="' + str(spacer_px) + '" style="font-size:1px;line-height:' + str(spacer_px) + 'px;">&nbsp;</td></tr>'
+        aging_bars_html += '<tr><td height="' + str(bar_px) + '" bgcolor="' + d['color'] + '" style="background-color:' + d['color'] + ';font-size:1px;line-height:' + str(bar_px) + 'px;border-radius:4px 4px 0 0;">&nbsp;</td></tr>'
+        aging_bars_html += '</table></td>'
+        
+        aging_labels_html += '<td style="text-align:center;padding-top:8px;font-size:12px;color:#64748b;font-weight:500;">' + d['label'] + '</td>'
+    
     # Build customer rows for the table
     customer_rows = ''
     for i, customer in enumerate(customers[:15]):
@@ -1530,6 +1649,27 @@ def generate_ar_aging_html_email(report_data):
                                         <table cellpadding="0" cellspacing="0" border="0">
                                             <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">90+ DAYS</td></tr>
                                             <tr><td align="center" style="font-size:18px;font-weight:bold;color:#dc2626;">''' + days90plus + '''</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Aging Distribution Chart -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+                                <tr>
+                                    <td style="padding:20px;">
+                                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                            <tr><td style="font-size:14px;font-weight:600;color:#1e293b;padding-bottom:16px;">Aging Distribution</td></tr>
+                                            <tr><td>
+                                                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                    <tr>''' + aging_bars_html + '''</tr>
+                                                    <tr>''' + aging_labels_html + '''</tr>
+                                                </table>
+                                            </td></tr>
                                         </table>
                                     </td>
                                 </tr>
