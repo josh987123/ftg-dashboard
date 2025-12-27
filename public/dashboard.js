@@ -18058,7 +18058,7 @@ function gatherAPAgingDataForEmail() {
   const days61to90 = document.getElementById('apAging61to90')?.textContent || '--';
   const days90plus = document.getElementById('apAging90plus')?.textContent || '--';
   const retainage = document.getElementById('apAgingRetainage')?.textContent || '--';
-  const avgDays = document.getElementById('apAgingAvgDays')?.textContent || '--';
+  // avgDays removed per user request
   const dataAsOf = document.getElementById('apAgingDataAsOf')?.textContent || '--';
   
   // Get vendor data from table (top 15 vendors)
@@ -28907,12 +28907,7 @@ function updateApAgingSummary(totals) {
     if (el) el.textContent = formatCurrencyCompact(value);
   }
   
-  // Update avg days outstanding (numeric, not currency)
-  const avgDaysEl = document.getElementById('apAgingAvgDays');
-  if (avgDaysEl) {
-    const avgDays = totals.avg_days_outstanding || 0;
-    avgDaysEl.textContent = Math.round(avgDays);
-  }
+  // avgDays display removed per user request
   
   // Update chart
   updateApAgingChart(totals);

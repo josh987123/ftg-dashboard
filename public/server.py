@@ -1324,15 +1324,12 @@ def generate_ap_aging_html_email(report_data):
                                             <tr><td align="center" style="font-size:18px;font-weight:bold;color:#dc2626;">''' + days90plus + '''</td></tr>
                                         </table>
                                     </td>
-                                    <td width="14%" align="center" style="padding:20px 8px;border-right:1px solid #e2e8f0;">
+                                    <td width="14%" align="center" style="padding:20px 8px;">
                                         <table cellpadding="0" cellspacing="0" border="0">
                                             <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">RETAINAGE</td></tr>
                                             <tr><td align="center" style="font-size:18px;font-weight:bold;color:#6366f1;">''' + retainage + '''</td></tr>
                                         </table>
                                     </td>
-                                    <td width="14%" align="center" style="padding:20px 8px;">
-                                        <table cellpadding="0" cellspacing="0" border="0">
-                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">AVG DAYS OUT</td></tr>
                                             <tr><td align="center" style="font-size:18px;font-weight:bold;color:#1e293b;">''' + avg_days + '''</td></tr>
                                         </table>
                                     </td>
