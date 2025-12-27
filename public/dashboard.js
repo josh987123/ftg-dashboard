@@ -18102,40 +18102,24 @@ function gatherAPAgingDataForEmail() {
 }
 
 async function sendAPAgingEmail(toEmail) {
-  const btn = document.querySelector('#apAgingEmailBtn') || document.querySelector('.ap-aging-email-btn');
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
+  const reportData = gatherAPAgingDataForEmail();
+  
+  const response = await fetch('/api/email-ap-aging', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      to: toEmail,
+      reportData: reportData
+    })
+  });
+  
+  const result = await response.json();
+  
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to send email');
   }
   
-  try {
-    const reportData = gatherAPAgingDataForEmail();
-    
-    const response = await fetch('/api/email-ap-aging', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: toEmail,
-        reportData: reportData
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      alert('AP Aging email sent successfully!');
-    } else {
-      throw new Error(result.error || 'Failed to send email');
-    }
-  } catch (err) {
-    console.error('Email error:', err);
-    alert('Failed to send email: ' + err.message);
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = 'Email Report';
-    }
-  }
+  return result;
 }
 
 // ============================================================
@@ -18198,45 +18182,117 @@ function gatherARAgingDataForEmail() {
 }
 
 async function sendARAgingEmail(toEmail) {
-  const btn = document.querySelector('#arAgingEmailBtn') || document.querySelector('.ar-aging-email-btn');
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
+  const reportData = gatherARAgingDataForEmail();
+  
+  const response = await fetch('/api/email-ar-aging', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      to: toEmail,
+      reportData: reportData
+    })
+  });
+  
+  const result = await response.json();
+  
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to send email');
   }
   
-  try {
-    const reportData = gatherARAgingDataForEmail();
-    
-    const response = await fetch('/api/email-ar-aging', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: toEmail,
-        reportData: reportData
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      alert('AR Aging email sent successfully!');
-    } else {
-      throw new Error(result.error || 'Failed to send email');
-    }
-  } catch (err) {
-    console.error('Email error:', err);
-    alert('Failed to send email: ' + err.message);
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = 'Email Report';
-    }
-  }
+  return result;
 }
 
 // Expose email functions to window scope for inline onclick handlers
 window.sendAPAgingEmail = sendAPAgingEmail;
 window.sendARAgingEmail = sendARAgingEmail;
+
+// ============================================================
+// AGING EMAIL MODAL FUNCTIONS
+// ============================================================
+
+let currentAgingEmailType = 'ap'; // 'ap' or 'ar'
+
+function showAgingEmailModal(type) {
+  currentAgingEmailType = type;
+  const modal = document.getElementById('agingEmailModal');
+  const header = document.getElementById('agingEmailModalHeader');
+  const title = document.getElementById('agingEmailModalTitle');
+  const input = document.getElementById('agingEmailTo');
+  const status = document.getElementById('agingEmailStatus');
+  
+  if (type === 'ap') {
+    header.style.background = '#dc2626';
+    title.textContent = 'Email AP Aging Report';
+  } else {
+    header.style.background = '#16a34a';
+    title.textContent = 'Email AR Aging Report';
+  }
+  
+  input.value = '';
+  status.textContent = '';
+  status.className = 'email-status';
+  modal.classList.remove('hidden');
+}
+
+function closeAgingEmailModal() {
+  const modal = document.getElementById('agingEmailModal');
+  modal.classList.add('hidden');
+}
+
+function addAgingEmailRecipient(email) {
+  const input = document.getElementById('agingEmailTo');
+  const current = input.value.trim();
+  if (current) {
+    // Check if email is already added
+    const emails = current.split(',').map(e => e.trim().toLowerCase());
+    if (!emails.includes(email.toLowerCase())) {
+      input.value = current + ', ' + email;
+    }
+  } else {
+    input.value = email;
+  }
+}
+
+async function sendAgingEmail() {
+  const input = document.getElementById('agingEmailTo');
+  const status = document.getElementById('agingEmailStatus');
+  const btn = document.getElementById('sendAgingEmailBtn');
+  const toEmail = input.value.trim();
+  
+  if (!toEmail) {
+    status.textContent = 'Please enter a recipient email address';
+    status.className = 'email-status error';
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  status.textContent = 'Preparing report...';
+  status.className = 'email-status';
+  
+  try {
+    if (currentAgingEmailType === 'ap') {
+      await sendAPAgingEmail(toEmail);
+    } else {
+      await sendARAgingEmail(toEmail);
+    }
+    status.textContent = 'Email sent successfully!';
+    status.className = 'email-status success';
+    setTimeout(closeAgingEmailModal, 2000);
+  } catch (err) {
+    status.textContent = 'Error: ' + err.message;
+    status.className = 'email-status error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send Email';
+  }
+}
+
+// Expose aging modal functions to window scope
+window.showAgingEmailModal = showAgingEmailModal;
+window.closeAgingEmailModal = closeAgingEmailModal;
+window.addAgingEmailRecipient = addAgingEmailRecipient;
+window.sendAgingEmail = sendAgingEmail;
 
 // Format cash analysis with green/red highlights for dollar amounts
 function formatCashAnalysis(text) {

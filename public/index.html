@@ -2812,7 +2812,12 @@
            AP AGING REPORT
       ============================================================= -->
       <section id="apAging" class="dashboard-section">
-        <h2>Accounts Payable Aging Report</h2>
+        <div class="section-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <h2 style="margin:0;">Accounts Payable Aging Report</h2>
+          <button class="btn-email-report ap-aging-email-btn" onclick="showAgingEmailModal('ap')" style="background:#dc2626;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:14px;">✉</span> Email Report
+          </button>
+        </div>
         <div class="data-as-of">Data as of: <span id="apAgingDataAsOf">-</span></div>
 
         <!-- PM Selection Tabs -->
@@ -2990,7 +2995,12 @@
            AR AGING REPORT
       ============================================================= -->
       <section id="arAging" class="dashboard-section">
-        <h2>Accounts Receivable Aging Report</h2>
+        <div class="section-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <h2 style="margin:0;">Accounts Receivable Aging Report</h2>
+          <button class="btn-email-report ar-aging-email-btn" onclick="showAgingEmailModal('ar')" style="background:#16a34a;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:14px;">✉</span> Email Report
+          </button>
+        </div>
         <div class="data-as-of">Data as of: <span id="arAgingDataAsOf">-</span></div>
 
         <!-- PM Selection Tabs -->
@@ -3744,8 +3754,35 @@
     </div>
   </div>
 
+  <!-- Aging Email Modal -->
+  <div id="agingEmailModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header" id="agingEmailModalHeader" style="background:#dc2626;">
+        <h3 style="color:#fff;margin:0;" id="agingEmailModalTitle">Email AP Aging Report</h3>
+        <button class="modal-close" onclick="closeAgingEmailModal()" style="color:#fff;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="agingEmailTo">Send to:</label>
+        <input type="text" id="agingEmailTo" placeholder="recipient@example.com (comma-separated for multiple)" />
+        <div class="quick-recipients" style="margin-top:8px;margin-bottom:16px;">
+          <span style="font-size:12px;color:#64748b;margin-right:8px;">Quick add:</span>
+          <button type="button" class="quick-recipient-btn" onclick="addAgingEmailRecipient('bailey@ftgbuilders.com')">Bailey</button>
+          <button type="button" class="quick-recipient-btn" onclick="addAgingEmailRecipient('greg@ftgbuilders.com')">Greg</button>
+          <button type="button" class="quick-recipient-btn" onclick="addAgingEmailRecipient('sergio@ftgbuilders.com')">Sergio</button>
+          <button type="button" class="quick-recipient-btn" onclick="addAgingEmailRecipient('rodney@ftgbuilders.com')">Rodney</button>
+          <button type="button" class="quick-recipient-btn" onclick="addAgingEmailRecipient('joshl@ftgbuilders.com')">Josh</button>
+        </div>
+        <div id="agingEmailStatus" class="email-status"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeAgingEmailModal()">Cancel</button>
+        <button class="btn-primary" id="sendAgingEmailBtn" onclick="sendAgingEmail()">Send Email</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MAIN SCRIPT -->
-  <script defer src="dashboard.js?v=20251226e"></script>
+  <script defer src="dashboard.js?v=20251226f"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>
