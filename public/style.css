@@ -22725,10 +22725,22 @@ body.dark-mode .dashboard-section > h2 {
 /* ============================================= */
 /* PDF Export Mode - Override glassmorphism     */
 /* ============================================= */
+/* ============================================= */
+/* PDF Export Mode - COMPREHENSIVE OVERRIDES    */
+/* ============================================= */
+body.pdf-export-mode {
+  --glass-bg: #ffffff !important;
+  --glass-border: #e2e8f0 !important;
+  --glass-shadow: none !important;
+}
+
 body.pdf-export-mode,
 body.pdf-export-mode .dashboard-section,
 body.pdf-export-mode .main-content,
-body.pdf-export-mode .sidebar {
+body.pdf-export-mode .sidebar,
+body.pdf-export-mode #arAging,
+body.pdf-export-mode #apAging,
+body.pdf-export-mode #overview {
   background: #ffffff !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -22736,58 +22748,59 @@ body.pdf-export-mode .sidebar {
   opacity: 1 !important;
 }
 
-body.pdf-export-mode::before,
-body.pdf-export-mode::after,
-body.pdf-export-mode .dashboard-section::before,
-body.pdf-export-mode .dashboard-section::after,
-body.pdf-export-mode .main-content::before,
-body.pdf-export-mode .main-content::after,
-body.pdf-export-mode .pm-tabs-bar::before,
-body.pdf-export-mode .pm-tabs-bar::after,
-body.pdf-export-mode .pm-tabs-container::before,
-body.pdf-export-mode .pm-tabs-container::after,
-body.pdf-export-mode .ap-aging-summary::before,
-body.pdf-export-mode .ap-aging-summary::after,
-body.pdf-export-mode .ap-aging-chart-section::before,
-body.pdf-export-mode .ap-aging-chart-section::after,
-body.pdf-export-mode .summary-card::before,
-body.pdf-export-mode .summary-card::after,
-body.pdf-export-mode .chart-card::before,
-body.pdf-export-mode .chart-card::after,
-body.pdf-export-mode .metric-tile::before,
-body.pdf-export-mode .metric-tile::after,
-body.pdf-export-mode .welcome-card::before,
-body.pdf-export-mode .welcome-card::after {
+/* Kill ALL pseudo-elements */
+body.pdf-export-mode *::before,
+body.pdf-export-mode *::after {
   display: none !important;
   content: none !important;
-  background: none !important;
+  background: transparent !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   opacity: 0 !important;
+  visibility: hidden !important;
 }
 
+/* Force solid backgrounds on ALL elements that might have rgba */
 body.pdf-export-mode .summary-card,
 body.pdf-export-mode .metric-tile,
 body.pdf-export-mode .chart-card,
 body.pdf-export-mode .welcome-card,
+body.pdf-export-mode .glass-panel,
+body.pdf-export-mode .glass-card,
+body.pdf-export-mode .config-panel,
+body.pdf-export-mode .overview-tile,
 body.pdf-export-mode .pm-tabs-bar,
+body.pdf-export-mode .pm-tabs-container,
 body.pdf-export-mode .pm-tab-btn,
 body.pdf-export-mode .ap-aging-summary,
 body.pdf-export-mode .ap-aging-chart-section,
 body.pdf-export-mode .ap-aging-chart-wrapper,
+body.pdf-export-mode .chart-wrapper,
 body.pdf-export-mode table,
-body.pdf-export-mode .job-budgets-table {
+body.pdf-export-mode thead,
+body.pdf-export-mode tbody,
+body.pdf-export-mode tr,
+body.pdf-export-mode td,
+body.pdf-export-mode th,
+body.pdf-export-mode .job-budgets-table,
+body.pdf-export-mode .section-title,
+body.pdf-export-mode .data-as-of,
+body.pdf-export-mode .filter-row,
+body.pdf-export-mode .search-container,
+body.pdf-export-mode input,
+body.pdf-export-mode select {
   background: #ffffff !important;
+  background-color: #ffffff !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   filter: none !important;
   opacity: 1 !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
 }
 
 body.pdf-export-mode .pm-tab-btn {
   background: #e2e8f0 !important;
   color: #1e293b !important;
+  border: 1px solid #cbd5e1 !important;
 }
 
 body.pdf-export-mode .pm-tab-btn.active {
@@ -22803,3 +22816,4 @@ body.pdf-export-mode * {
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
 }
+

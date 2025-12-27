@@ -7426,7 +7426,10 @@ async function universalExportToPdf() {
   loadingOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100000;';
   document.body.appendChild(loadingOverlay);
   
-  // Inject temporary style to kill all pseudo-elements and glassmorphism
+  // Add pdf-export-mode class to body - this uses the comprehensive CSS rules
+  document.body.classList.add('pdf-export-mode');
+  
+  // Also inject temporary style for additional overrides
   const pdfStyle = document.createElement('style');
   pdfStyle.id = 'pdf-export-style';
   pdfStyle.textContent = `
@@ -7539,7 +7542,8 @@ async function universalExportToPdf() {
     console.error('PDF export error:', err);
     alert('PDF export failed: ' + err.message);
   } finally {
-    // Clean up: remove injected style
+    // Clean up: remove class and injected style
+    document.body.classList.remove('pdf-export-mode');
     pdfStyle.remove();
     
     // Restore hidden elements
