@@ -18147,16 +18147,15 @@ function gatherARAgingDataForEmail() {
     rows.forEach((row, idx) => {
       if (idx >= 15) return; // Limit to top 15
       const cells = row.querySelectorAll('td');
-      if (cells.length >= 6) {
+      if (cells.length >= 7) {
         customers.push({
           name: cells[0]?.textContent?.trim() || '',
           totalDue: cells[1]?.textContent?.trim() || '',
-          collectible: cells[2]?.textContent?.trim() || '',
-          current: cells[3]?.textContent?.trim() || '',
-          days31to60: cells[4]?.textContent?.trim() || '',
-          days61to90: cells[5]?.textContent?.trim() || '',
-          days90plus: cells[6]?.textContent?.trim() || '',
-          retainage: cells[7]?.textContent?.trim() || ''
+          current: cells[2]?.textContent?.trim() || '',
+          days31to60: cells[3]?.textContent?.trim() || '',
+          days61to90: cells[4]?.textContent?.trim() || '',
+          days90plus: cells[5]?.textContent?.trim() || '',
+          retainage: cells[6]?.textContent?.trim() || ''
         });
       }
     });
