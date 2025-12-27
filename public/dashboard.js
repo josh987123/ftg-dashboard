@@ -8247,90 +8247,85 @@ async function captureVisibleSectionAsImage() {
   try {
     await new Promise(resolve => setTimeout(resolve, 150));
     
-    const canvas = await html2canvas(visibleSection, {
+    // Create a clean container for PDF export
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.cssText = 'position:absolute;left:-9999px;top:0;background:#fff;';
+    document.body.appendChild(pdfContainer);
+    
+    // Clone the section
+    const cleanClone = visibleSection.cloneNode(true);
+    pdfContainer.appendChild(cleanClone);
+    
+    // Force solid backgrounds on all elements in the clone
+    const allElements = cleanClone.querySelectorAll('*');
+    allElements.forEach(el => {
+      const style = el.style;
+      style.backdropFilter = 'none';
+      style.webkitBackdropFilter = 'none';
+      style.filter = 'none';
+      
+      // Check if element has translucent background
+      const computed = window.getComputedStyle(el);
+      const bg = computed.backgroundColor;
+      if (bg && bg.includes('rgba')) {
+        // Force solid white for translucent backgrounds
+        style.backgroundColor = '#ffffff';
+      }
+      // Force backgrounds for common glass elements
+      if (el.classList.contains('summary-card') || 
+          el.classList.contains('metric-tile') ||
+          el.classList.contains('chart-card') ||
+          el.classList.contains('pm-tab-btn') ||
+          el.classList.contains('glass-panel') ||
+          el.classList.contains('overview-tile')) {
+        style.backgroundColor = '#ffffff';
+        style.backgroundImage = 'none';
+      }
+    });
+    
+    // Remove all pseudo-element-generating classes' visual effects by adding inline backgrounds
+    cleanClone.style.backgroundColor = '#ffffff';
+    cleanClone.style.backgroundImage = 'none';
+    
+    // Copy canvas elements (charts) as images
+    const originalCanvases = visibleSection.querySelectorAll('canvas');
+    const clonedCanvases = cleanClone.querySelectorAll('canvas');
+    originalCanvases.forEach((origCanvas, idx) => {
+      if (clonedCanvases[idx]) {
+        try {
+          const dataUrl = origCanvas.toDataURL();
+          const img = document.createElement('img');
+          img.src = dataUrl;
+          img.style.cssText = origCanvas.style.cssText;
+          img.style.width = origCanvas.offsetWidth + 'px';
+          img.style.height = origCanvas.offsetHeight + 'px';
+          clonedCanvases[idx].parentNode.replaceChild(img, clonedCanvases[idx]);
+        } catch (e) {
+          console.log('Could not convert canvas to image:', e);
+        }
+      }
+    });
+    
+    // Now capture the clean clone
+    const canvas = await html2canvas(cleanClone, {
       scale: 1.5,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
-      windowWidth: visibleSection.scrollWidth,
-      windowHeight: visibleSection.scrollHeight,
+      windowWidth: cleanClone.scrollWidth,
+      windowHeight: cleanClone.scrollHeight,
       ignoreElements: (el) => {
-        // Ignore loading overlays and spinners
         return el.classList && (
           el.classList.contains('loading-overlay') ||
           el.classList.contains('loading-spinner') ||
           el.id?.includes('Loading')
         );
-      },
-      onclone: (clonedDoc) => {
-        // Apply PDF export mode to the CLONE - this is critical!
-        clonedDoc.body.classList.add('pdf-export-mode');
-        clonedDoc.documentElement.classList.add('pdf-export-mode');
-        
-        // Inject comprehensive override styles into the clone
-        const styleEl = clonedDoc.createElement('style');
-        styleEl.textContent = `
-          body.pdf-export-mode,
-          body.pdf-export-mode * {
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-          }
-          body.pdf-export-mode *::before,
-          body.pdf-export-mode *::after {
-            display: none !important;
-            content: none !important;
-            background: transparent !important;
-            opacity: 0 !important;
-          }
-          body.pdf-export-mode .summary-card,
-          body.pdf-export-mode .metric-tile,
-          body.pdf-export-mode .chart-card,
-          body.pdf-export-mode .welcome-card,
-          body.pdf-export-mode .glass-panel,
-          body.pdf-export-mode .glass-card,
-          body.pdf-export-mode .config-panel,
-          body.pdf-export-mode .overview-tile,
-          body.pdf-export-mode .pm-tabs-bar,
-          body.pdf-export-mode .pm-tabs-container,
-          body.pdf-export-mode .ap-aging-summary,
-          body.pdf-export-mode .ap-aging-chart-section,
-          body.pdf-export-mode .chart-wrapper,
-          body.pdf-export-mode .dashboard-section,
-          body.pdf-export-mode .main-content,
-          body.pdf-export-mode table,
-          body.pdf-export-mode thead,
-          body.pdf-export-mode tbody,
-          body.pdf-export-mode tr,
-          body.pdf-export-mode td,
-          body.pdf-export-mode th,
-          body.pdf-export-mode input,
-          body.pdf-export-mode select {
-            background: #ffffff !important;
-            background-color: #ffffff !important;
-            background-image: none !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            filter: none !important;
-            opacity: 1 !important;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
-          }
-          body.pdf-export-mode .pm-tab-btn {
-            background: #e2e8f0 !important;
-            color: #1e293b !important;
-            border: 1px solid #cbd5e1 !important;
-          }
-          body.pdf-export-mode .pm-tab-btn.active {
-            background: #3b82f6 !important;
-            color: #ffffff !important;
-          }
-          body.pdf-export-mode canvas {
-            opacity: 1 !important;
-          }
-        `;
-        clonedDoc.head.appendChild(styleEl);
       }
     });
+    
+    // Clean up
+    pdfContainer.remove();
     
     const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
     const base64Data = dataUrl.split(',')[1];
