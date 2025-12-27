@@ -22720,13 +22720,4 @@ body.dark-mode .dashboard-section > h2 {
   color: white;
 }
 
-/* PDF Capture Mode - Only hide actual loading spinners and overlays */
-body.pdf-capture-mode .loading-overlay,
-body.pdf-capture-mode .table-loading-overlay,
-body.pdf-capture-mode .loading-spinner,
-body.pdf-capture-mode .skeleton,
-body.pdf-capture-mode .loading-skeleton,
-body.pdf-capture-mode #pdfLoadingOverlay {
-  display: none !important;
-  visibility: hidden !important;
-}
+

@@ -7461,8 +7461,7 @@ async function universalExportToPdf() {
     }
   });
   
-  // Add class to disable glass/blur effects during capture
-  document.body.classList.add('pdf-capture-mode');
+  // Prepare for capture
   
   try {
     await new Promise(resolve => setTimeout(resolve, 150));
@@ -7537,7 +7536,7 @@ async function universalExportToPdf() {
     console.error('PDF generation error:', error);
     alert('Error generating PDF. Please try again.');
   } finally {
-    document.body.classList.remove('pdf-capture-mode');
+    // Capture complete
     hiddenElements.forEach(item => {
       if (item.removeClass) {
         item.el.classList.remove(item.removeClass);
@@ -8236,8 +8235,7 @@ async function captureVisibleSectionAsImage() {
     }
   });
   
-  // Add class to disable glass/blur effects during capture
-  document.body.classList.add('pdf-capture-mode');
+  // Prepare for capture
   
   try {
     await new Promise(resolve => setTimeout(resolve, 150));
@@ -8270,7 +8268,7 @@ async function captureVisibleSectionAsImage() {
     console.error('Screenshot capture error:', err);
     return null;
   } finally {
-    document.body.classList.remove('pdf-capture-mode');
+    // Capture complete
     hiddenElements.forEach(item => {
       if (item.removeClass) {
         item.el.classList.remove(item.removeClass);
