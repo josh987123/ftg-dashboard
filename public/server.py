@@ -1113,6 +1113,482 @@ def generate_cash_report_html_email(report_data, ai_analysis=''):
     return html
 
 
+# ============================================================
+# AP AGING EMAIL ENDPOINT
+# ============================================================
+
+@app.route('/api/email-ap-aging', methods=['POST', 'OPTIONS'])
+def api_email_ap_aging():
+    """Send AP Aging Report as HTML email with content embedded in body"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        to_email = data.get('to')
+        report_data = data.get('reportData')
+        
+        if not to_email:
+            return jsonify({'error': 'Recipient email is required'}), 400
+        
+        if not report_data:
+            return jsonify({'error': 'Report data is required'}), 400
+        
+        # Generate HTML email content
+        html_content = generate_ap_aging_html_email(report_data)
+        
+        # Generate subject line with today's date
+        from datetime import datetime
+        today = datetime.now().strftime('%m/%d/%y')
+        subject = f"FTG Builders AP Aging Report: {today}"
+        
+        # Send via Gmail API
+        result = send_gmail(to_email, subject, html_content)
+        
+        return jsonify({'success': True, 'messageId': result.get('id')})
+        
+    except Exception as e:
+        import traceback
+        print(f"AP Aging email error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+def generate_ap_aging_html_email(report_data):
+    """Generate HTML email content for AP Aging Report with Outlook-compatible styling"""
+    from datetime import datetime
+    
+    summary = report_data.get('summary', {})
+    vendors = report_data.get('vendors', [])
+    
+    total_due = summary.get('totalDue', '--')
+    current = summary.get('current', '--')
+    days31to60 = summary.get('days31to60', '--')
+    days61to90 = summary.get('days61to90', '--')
+    days90plus = summary.get('days90plus', '--')
+    retainage = summary.get('retainage', '--')
+    data_as_of = summary.get('dataAsOf', '--')
+    vendor_count = summary.get('vendorCount', 0)
+    
+    report_date = datetime.now().strftime('%B %d, %Y')
+    gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    # Build vendor rows for the table
+    vendor_rows = ''
+    for i, vendor in enumerate(vendors[:15]):
+        bg_color = '#ffffff' if i % 2 == 0 else '#f8fafc'
+        vendor_rows += f'''<tr>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;background-color:{bg_color};">{vendor.get('name', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;text-align:right;background-color:{bg_color};font-weight:600;">{vendor.get('totalDue', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#16a34a;text-align:right;background-color:{bg_color};">{vendor.get('current', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#eab308;text-align:right;background-color:{bg_color};">{vendor.get('days31to60', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#f97316;text-align:right;background-color:{bg_color};">{vendor.get('days61to90', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#dc2626;text-align:right;background-color:{bg_color};">{vendor.get('days90plus', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#6366f1;text-align:right;background-color:{bg_color};">{vendor.get('retainage', '')}</td>
+        </tr>'''
+    
+    vendors_note = f"Showing top {len(vendors)} of {vendor_count} vendors" if vendor_count > 15 else f"Showing all {vendor_count} vendors"
+    
+    # Outlook-compatible HTML email
+    html = '''<!DOCTYPE html>
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--[if gte mso 9]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+    </xml>
+    <![endif]-->
+</head>
+<body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background-color:#f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9" style="background-color:#f1f5f9;">
+        <tr>
+            <td align="center" style="padding:24px;">
+                <table width="700" cellpadding="0" cellspacing="0" border="0">
+                    <!-- Header with VML background for Outlook -->
+                    <tr>
+                        <td align="center">
+                            <!--[if gte mso 9]>
+                            <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:700px;height:100px;">
+                                <v:fill type="solid" color="#dc2626"/>
+                                <v:textbox inset="0,0,0,0">
+                            <![endif]-->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#dc2626" style="background-color:#dc2626;">
+                                <tr>
+                                    <td align="center" style="padding:24px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:24px;font-weight:bold;color:#ffffff;font-family:Arial,Helvetica,sans-serif;">FTG Builders AP Aging Report</td></tr>
+                                            <tr><td align="center" style="font-size:14px;color:#fecaca;padding-top:8px;font-family:Arial,Helvetica,sans-serif;">Accounts Payable Summary</td></tr>
+                                            <tr><td align="center" style="font-size:13px;color:#fecaca;padding-top:4px;font-family:Arial,Helvetica,sans-serif;">''' + report_date + '''</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--[if gte mso 9]>
+                                </v:textbox>
+                            </v:rect>
+                            <![endif]-->
+                        </td>
+                    </tr>
+                    
+                    <!-- Key Metrics -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+                                <tr>
+                                    <td width="16%" align="center" style="padding:20px 8px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">TOTAL DUE</td></tr>
+                                            <tr><td align="center" style="font-size:18px;font-weight:bold;color:#1e293b;">''' + total_due + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="16%" align="center" style="padding:20px 8px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">CURRENT</td></tr>
+                                            <tr><td align="center" style="font-size:18px;font-weight:bold;color:#16a34a;">''' + current + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="16%" align="center" style="padding:20px 8px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">31-60 DAYS</td></tr>
+                                            <tr><td align="center" style="font-size:18px;font-weight:bold;color:#eab308;">''' + days31to60 + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="16%" align="center" style="padding:20px 8px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">61-90 DAYS</td></tr>
+                                            <tr><td align="center" style="font-size:18px;font-weight:bold;color:#f97316;">''' + days61to90 + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="16%" align="center" style="padding:20px 8px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">90+ DAYS</td></tr>
+                                            <tr><td align="center" style="font-size:18px;font-weight:bold;color:#dc2626;">''' + days90plus + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="16%" align="center" style="padding:20px 8px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">RETAINAGE</td></tr>
+                                            <tr><td align="center" style="font-size:18px;font-weight:bold;color:#6366f1;">''' + retainage + '''</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Vendor Table -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border:1px solid #e2e8f0;border-top:none;">
+                                <tr>
+                                    <td style="padding:16px 20px 8px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td style="font-size:16px;font-weight:600;color:#1e293b;">Top Vendors by Amount Due</td></tr>
+                                            <tr><td style="font-size:12px;color:#64748b;padding-top:4px;">''' + vendors_note + '''</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:12px 20px 20px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+                                            <tr bgcolor="#f8fafc" style="background-color:#f8fafc;">
+                                                <th style="padding:12px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Vendor</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Total Due</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Current</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">31-60</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">61-90</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">90+</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Retainage</th>
+                                            </tr>
+                                            ''' + vendor_rows + '''
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8fafc" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;">
+                                <tr>
+                                    <td align="center" style="padding:16px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:11px;color:#64748b;">Data as of: ''' + data_as_of + ''' | Generated: ''' + gen_date + '''</td></tr>
+                                            <tr><td align="center" style="font-size:11px;color:#94a3b8;padding-top:4px;">FTG Builders Financial Dashboard</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>'''
+    
+    return html
+
+
+# ============================================================
+# AR AGING EMAIL ENDPOINT
+# ============================================================
+
+@app.route('/api/email-ar-aging', methods=['POST', 'OPTIONS'])
+def api_email_ar_aging():
+    """Send AR Aging Report as HTML email with content embedded in body"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        to_email = data.get('to')
+        report_data = data.get('reportData')
+        
+        if not to_email:
+            return jsonify({'error': 'Recipient email is required'}), 400
+        
+        if not report_data:
+            return jsonify({'error': 'Report data is required'}), 400
+        
+        # Generate HTML email content
+        html_content = generate_ar_aging_html_email(report_data)
+        
+        # Generate subject line with today's date
+        from datetime import datetime
+        today = datetime.now().strftime('%m/%d/%y')
+        subject = f"FTG Builders AR Aging Report: {today}"
+        
+        # Send via Gmail API
+        result = send_gmail(to_email, subject, html_content)
+        
+        return jsonify({'success': True, 'messageId': result.get('id')})
+        
+    except Exception as e:
+        import traceback
+        print(f"AR Aging email error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+def generate_ar_aging_html_email(report_data):
+    """Generate HTML email content for AR Aging Report with Outlook-compatible styling"""
+    from datetime import datetime
+    
+    summary = report_data.get('summary', {})
+    customers = report_data.get('customers', [])
+    
+    total_due = summary.get('totalDue', '--')
+    collectible = summary.get('collectible', '--')
+    current = summary.get('current', '--')
+    days31to60 = summary.get('days31to60', '--')
+    days61to90 = summary.get('days61to90', '--')
+    days90plus = summary.get('days90plus', '--')
+    retainage = summary.get('retainage', '--')
+    avg_days = summary.get('avgDays', '--')
+    data_as_of = summary.get('dataAsOf', '--')
+    customer_count = summary.get('customerCount', 0)
+    
+    report_date = datetime.now().strftime('%B %d, %Y')
+    gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    # Build customer rows for the table
+    customer_rows = ''
+    for i, customer in enumerate(customers[:15]):
+        bg_color = '#ffffff' if i % 2 == 0 else '#f8fafc'
+        customer_rows += f'''<tr>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;background-color:{bg_color};">{customer.get('name', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;text-align:right;background-color:{bg_color};font-weight:600;">{customer.get('totalDue', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#16a34a;text-align:right;background-color:{bg_color};">{customer.get('current', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#eab308;text-align:right;background-color:{bg_color};">{customer.get('days31to60', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#f97316;text-align:right;background-color:{bg_color};">{customer.get('days61to90', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#dc2626;text-align:right;background-color:{bg_color};">{customer.get('days90plus', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#6366f1;text-align:right;background-color:{bg_color};">{customer.get('retainage', '')}</td>
+        </tr>'''
+    
+    customers_note = f"Showing top {len(customers)} of {customer_count} customers" if customer_count > 15 else f"Showing all {customer_count} customers"
+    
+    # Outlook-compatible HTML email
+    html = '''<!DOCTYPE html>
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--[if gte mso 9]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+    </xml>
+    <![endif]-->
+</head>
+<body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background-color:#f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9" style="background-color:#f1f5f9;">
+        <tr>
+            <td align="center" style="padding:24px;">
+                <table width="700" cellpadding="0" cellspacing="0" border="0">
+                    <!-- Header with VML background for Outlook -->
+                    <tr>
+                        <td align="center">
+                            <!--[if gte mso 9]>
+                            <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:700px;height:100px;">
+                                <v:fill type="solid" color="#16a34a"/>
+                                <v:textbox inset="0,0,0,0">
+                            <![endif]-->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#16a34a" style="background-color:#16a34a;">
+                                <tr>
+                                    <td align="center" style="padding:24px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:24px;font-weight:bold;color:#ffffff;font-family:Arial,Helvetica,sans-serif;">FTG Builders AR Aging Report</td></tr>
+                                            <tr><td align="center" style="font-size:14px;color:#bbf7d0;padding-top:8px;font-family:Arial,Helvetica,sans-serif;">Accounts Receivable Summary</td></tr>
+                                            <tr><td align="center" style="font-size:13px;color:#bbf7d0;padding-top:4px;font-family:Arial,Helvetica,sans-serif;">''' + report_date + '''</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--[if gte mso 9]>
+                                </v:textbox>
+                            </v:rect>
+                            <![endif]-->
+                        </td>
+                    </tr>
+                    
+                    <!-- Key Metrics - Row 1 -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+                                <tr>
+                                    <td width="25%" align="center" style="padding:20px 10px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">TOTAL DUE</td></tr>
+                                            <tr><td align="center" style="font-size:20px;font-weight:bold;color:#1e293b;">''' + total_due + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="25%" align="center" style="padding:20px 10px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">COLLECTIBLE</td></tr>
+                                            <tr><td align="center" style="font-size:20px;font-weight:bold;color:#16a34a;">''' + collectible + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="25%" align="center" style="padding:20px 10px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">RETAINAGE</td></tr>
+                                            <tr><td align="center" style="font-size:20px;font-weight:bold;color:#6366f1;">''' + retainage + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="25%" align="center" style="padding:20px 10px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">AVG DAYS OUT</td></tr>
+                                            <tr><td align="center" style="font-size:20px;font-weight:bold;color:#1e293b;">''' + avg_days + '''</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Key Metrics - Row 2 (Aging Buckets) -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8fafc" style="background-color:#f8fafc;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+                                <tr>
+                                    <td width="25%" align="center" style="padding:16px 10px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">CURRENT</td></tr>
+                                            <tr><td align="center" style="font-size:18px;font-weight:bold;color:#16a34a;">''' + current + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="25%" align="center" style="padding:16px 10px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">31-60 DAYS</td></tr>
+                                            <tr><td align="center" style="font-size:18px;font-weight:bold;color:#eab308;">''' + days31to60 + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="25%" align="center" style="padding:16px 10px;border-right:1px solid #e2e8f0;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">61-90 DAYS</td></tr>
+                                            <tr><td align="center" style="font-size:18px;font-weight:bold;color:#f97316;">''' + days61to90 + '''</td></tr>
+                                        </table>
+                                    </td>
+                                    <td width="25%" align="center" style="padding:16px 10px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;padding-bottom:6px;">90+ DAYS</td></tr>
+                                            <tr><td align="center" style="font-size:18px;font-weight:bold;color:#dc2626;">''' + days90plus + '''</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Customer Table -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border:1px solid #e2e8f0;border-top:none;">
+                                <tr>
+                                    <td style="padding:16px 20px 8px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td style="font-size:16px;font-weight:600;color:#1e293b;">Top Customers by Amount Due</td></tr>
+                                            <tr><td style="font-size:12px;color:#64748b;padding-top:4px;">''' + customers_note + '''</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:12px 20px 20px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+                                            <tr bgcolor="#f8fafc" style="background-color:#f8fafc;">
+                                                <th style="padding:12px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Customer</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Total Due</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Current</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">31-60</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">61-90</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">90+</th>
+                                                <th style="padding:12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:2px solid #e2e8f0;">Retainage</th>
+                                            </tr>
+                                            ''' + customer_rows + '''
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8fafc" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;">
+                                <tr>
+                                    <td align="center" style="padding:16px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:11px;color:#64748b;">Data as of: ''' + data_as_of + ''' | Generated: ''' + gen_date + '''</td></tr>
+                                            <tr><td align="center" style="font-size:11px;color:#94a3b8;padding-top:4px;">FTG Builders Financial Dashboard</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>'''
+    
+    return html
 
 
 @app.route('/api/analyze-cash-report', methods=['POST', 'OPTIONS'])
