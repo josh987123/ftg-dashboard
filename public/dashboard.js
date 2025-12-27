@@ -18219,7 +18219,18 @@ function showAgingEmailModal(type) {
   const title = document.getElementById('agingEmailModalTitle');
   const input = document.getElementById('agingEmailTo');
   const status = document.getElementById('agingEmailStatus');
+  const sendBtn = document.getElementById('sendAgingEmailBtn');
   
+  // Reset all state to prevent crossover between report types
+  input.value = '';
+  status.textContent = '';
+  status.className = 'email-status';
+  if (sendBtn) {
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Send Email';
+  }
+  
+  // Apply type-specific theming
   if (type === 'ap') {
     header.style.background = '#dc2626';
     title.textContent = 'Email AP Aging Report';
@@ -18228,9 +18239,6 @@ function showAgingEmailModal(type) {
     title.textContent = 'Email AR Aging Report';
   }
   
-  input.value = '';
-  status.textContent = '';
-  status.className = 'email-status';
   modal.classList.remove('hidden');
 }
 

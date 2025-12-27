@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+from html import escape as html_escape
 import json
 import base64
 import uuid
@@ -1179,8 +1180,9 @@ def generate_ap_aging_html_email(report_data):
     vendor_rows = ''
     for i, vendor in enumerate(vendors[:15]):
         bg_color = '#ffffff' if i % 2 == 0 else '#f8fafc'
+        vendor_name = html_escape(str(vendor.get('name', '')))
         vendor_rows += f'''<tr>
-            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;background-color:{bg_color};">{vendor.get('name', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;background-color:{bg_color};">{vendor_name}</td>
             <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;text-align:right;background-color:{bg_color};font-weight:600;">{vendor.get('totalDue', '')}</td>
             <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#16a34a;text-align:right;background-color:{bg_color};">{vendor.get('current', '')}</td>
             <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#eab308;text-align:right;background-color:{bg_color};">{vendor.get('days31to60', '')}</td>
@@ -1408,8 +1410,9 @@ def generate_ar_aging_html_email(report_data):
     customer_rows = ''
     for i, customer in enumerate(customers[:15]):
         bg_color = '#ffffff' if i % 2 == 0 else '#f8fafc'
+        customer_name = html_escape(str(customer.get('name', '')))
         customer_rows += f'''<tr>
-            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;background-color:{bg_color};">{customer.get('name', '')}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;background-color:{bg_color};">{customer_name}</td>
             <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;text-align:right;background-color:{bg_color};font-weight:600;">{customer.get('totalDue', '')}</td>
             <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#16a34a;text-align:right;background-color:{bg_color};">{customer.get('current', '')}</td>
             <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#eab308;text-align:right;background-color:{bg_color};">{customer.get('days31to60', '')}</td>
