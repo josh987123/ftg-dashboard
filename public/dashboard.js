@@ -7716,6 +7716,18 @@ async function universalExportToExcel() {
 function openEmailModal() {
   const view = getCurrentView();
   
+  // Special handling for AP Aging - use embedded HTML email
+  if (view === 'apAging') {
+    showAgingEmailModal('ap');
+    return;
+  }
+  
+  // Special handling for AR Aging - use embedded HTML email
+  if (view === 'arAging') {
+    showAgingEmailModal('ar');
+    return;
+  }
+  
   // Special handling for Cash Report
   if (view === 'cashReport') {
     const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
