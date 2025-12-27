@@ -7426,93 +7426,82 @@ async function universalExportToPdf() {
   loadingOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100000;';
   document.body.appendChild(loadingOverlay);
   
-  let container = null;
+  // Inject temporary style to kill all pseudo-elements and glassmorphism
+  const pdfStyle = document.createElement('style');
+  pdfStyle.id = 'pdf-export-style';
+  pdfStyle.textContent = `
+    body::before, body::after,
+    .main-content::before, .main-content::after,
+    .dashboard-section::before, .dashboard-section::after,
+    .welcome-card::before, .welcome-card::after,
+    .summary-card::before, .summary-card::after,
+    .metric-tile::before, .metric-tile::after,
+    .chart-card::before, .chart-card::after,
+    .pm-tabs-bar::before, .pm-tabs-bar::after,
+    .pm-tabs-container::before, .pm-tabs-container::after,
+    .ap-aging-summary::before, .ap-aging-summary::after,
+    .ap-aging-chart-section::before, .ap-aging-chart-section::after,
+    .glass-card::before, .glass-card::after,
+    *::before, *::after {
+      content: none !important;
+      display: none !important;
+      background: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    
+    body, .main-content, .dashboard-section, .sidebar {
+      background: #f8fafc !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      filter: none !important;
+    }
+    
+    .welcome-card, .summary-card, .metric-tile, .chart-card,
+    .pm-tabs-bar, .pm-tab-btn, .ap-aging-summary, .ap-aging-chart-section,
+    .ap-aging-chart-wrapper, .chart-wrapper, table, .job-budgets-table {
+      background: #ffffff !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      filter: none !important;
+      opacity: 1 !important;
+    }
+    
+    .pm-tab-btn {
+      background: #e2e8f0 !important;
+      color: #1e293b !important;
+    }
+    .pm-tab-btn.active {
+      background: #3b82f6 !important;
+      color: #ffffff !important;
+    }
+  `;
+  document.head.appendChild(pdfStyle);
+  
+  // Hide elements that shouldn't be in PDF
+  const hideSelectors = '.config-panel, .config-header, .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay:not(#pdfLoadingOverlay), .loading-spinner, .skeleton, .table-export-btn-row';
+  const hiddenEls = [];
+  section.querySelectorAll(hideSelectors).forEach(el => {
+    if (el.style.display !== 'none') {
+      hiddenEls.push({ el, display: el.style.display });
+      el.style.display = 'none';
+    }
+  });
   
   try {
     await LazyLoader.loadMultiple(['html2canvas', 'jspdf']);
     
-    // Create an isolated off-screen container with no inherited styles
-    container = document.createElement('div');
-    container.id = 'pdf-export-container';
-    container.style.cssText = 'position:absolute;left:-9999px;top:0;width:1200px;background:#ffffff;padding:20px;z-index:-1;';
-    document.body.appendChild(container);
+    // Wait for styles to apply
+    await new Promise(r => setTimeout(r, 200));
     
-    // Clone the section
-    const clone = section.cloneNode(true);
-    clone.style.cssText = 'background:#ffffff;width:100%;position:relative;';
-    clone.removeAttribute('id');
-    
-    // Walk all elements in clone and force solid backgrounds
-    const allElements = clone.querySelectorAll('*');
-    allElements.forEach(el => {
-      el.style.backdropFilter = 'none';
-      el.style.webkitBackdropFilter = 'none';
-      el.style.filter = 'none';
-      el.style.opacity = '1';
-      el.style.transform = 'none';
-      
-      const tagName = el.tagName.toLowerCase();
-      if (tagName === 'div' || tagName === 'section' || tagName === 'article' || tagName === 'header' || tagName === 'nav') {
-        const currentBg = el.style.backgroundColor;
-        if (!currentBg || currentBg === 'transparent' || currentBg.includes('rgba(0, 0, 0, 0)')) {
-          el.style.backgroundColor = '#ffffff';
-        }
-      }
-      
-      if (tagName === 'span' || tagName === 'p' || tagName === 'h1' || tagName === 'h2' || tagName === 'h3' || tagName === 'h4' || tagName === 'h5' || tagName === 'h6' || tagName === 'td' || tagName === 'th' || tagName === 'label') {
-        if (!el.style.color) {
-          el.style.color = '#1e293b';
-        }
-      }
-    });
-    
-    // Apply solid backgrounds to known container classes
-    clone.querySelectorAll('.summary-card, .metric-tile, .chart-card, .welcome-card, .pm-tabs-bar, .pm-tab-btn, .ap-aging-summary, .ap-aging-chart-section, .chart-wrapper, table, tbody, thead, tr, td, th').forEach(el => {
-      el.style.backgroundColor = '#ffffff';
-      el.style.backdropFilter = 'none';
-      el.style.webkitBackdropFilter = 'none';
-    });
-    
-    // Make PM tabs visible with solid colors
-    clone.querySelectorAll('.pm-tab-btn').forEach(el => {
-      el.style.backgroundColor = '#e2e8f0';
-      el.style.color = '#1e293b';
-      el.style.border = '1px solid #cbd5e1';
-    });
-    clone.querySelectorAll('.pm-tab-btn.active').forEach(el => {
-      el.style.backgroundColor = '#3b82f6';
-      el.style.color = '#ffffff';
-    });
-    
-    // Hide elements that shouldn't be in PDF
-    const hideSelectors = '.config-panel, .config-header, .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay, .loading-spinner, .skeleton, .table-export-btn-row';
-    clone.querySelectorAll(hideSelectors).forEach(el => {
-      el.style.display = 'none';
-    });
-    
-    container.appendChild(clone);
-    
-    // Force layout recalculation
-    await new Promise(r => setTimeout(r, 300));
-    
-    // Capture the isolated clone
-    const canvas = await html2canvas(container, {
+    // Capture the LIVE section (preserves charts and data)
+    const canvas = await html2canvas(section, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
-      logging: false,
-      onclone: (clonedDoc) => {
-        clonedDoc.querySelectorAll('*').forEach(el => {
-          el.style.backdropFilter = 'none';
-          el.style.webkitBackdropFilter = 'none';
-        });
-      }
+      logging: false
     });
-    
-    // Remove the container immediately
-    container.remove();
-    container = null;
     
     // Generate PDF
     const imgData = canvas.toDataURL('image/png');
@@ -7538,7 +7527,14 @@ async function universalExportToPdf() {
     console.error('PDF export error:', err);
     alert('PDF export failed: ' + err.message);
   } finally {
-    if (container) container.remove();
+    // Clean up: remove injected style
+    pdfStyle.remove();
+    
+    // Restore hidden elements
+    hiddenEls.forEach(({ el, display }) => {
+      el.style.display = display || '';
+    });
+    
     loadingOverlay.remove();
   }
 }
