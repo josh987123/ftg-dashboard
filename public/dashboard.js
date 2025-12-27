@@ -29336,7 +29336,6 @@ function renderArInvoiceRows(invoices, cell) {
 function updateArAgingSummary(totals) {
   const currencyIds = {
     'arAgingTotalDue': totals.total_due || 0,
-    'arAgingCollectible': totals.collectible || 0,
     'arAgingCurrent': totals.current || 0,
     'arAging31to60': totals.days_31_60 || 0,
     'arAging61to90': totals.days_61_90 || 0,
@@ -29347,13 +29346,6 @@ function updateArAgingSummary(totals) {
   for (const [id, value] of Object.entries(currencyIds)) {
     const el = document.getElementById(id);
     if (el) el.textContent = formatCurrencyCompact(value);
-  }
-  
-  // Update avg days outstanding (numeric, not currency)
-  const avgDaysEl = document.getElementById('arAgingAvgDays');
-  if (avgDaysEl) {
-    const avgDays = totals.avg_days_outstanding || 0;
-    avgDaysEl.textContent = Math.round(avgDays);
   }
   
   updateArAgingChart(totals);
