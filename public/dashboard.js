@@ -7433,6 +7433,9 @@ async function universalExportToPdf() {
   try {
     await LazyLoader.loadMultiple(['html2canvas', 'jspdf']);
     
+    // Add pdf-export-mode class to body to disable all glassmorphism via CSS
+    document.body.classList.add('pdf-export-mode');
+    
     // Fix glassmorphism effects directly on elements (will restore after)
     const glassElements = section.querySelectorAll('.welcome-card, .summary-card, .metric-tile, .chart-card, .config-panel, .ai-analysis-panel, .pm-tabs-bar, .pm-tab-btn, .ap-aging-summary, .ap-aging-chart-section, .ap-aging-chart-wrapper, .job-budgets-table, table, canvas, .chart-wrapper, [style*="backdrop-filter"], [style*="blur"]');
     glassElements.forEach(el => {
@@ -7510,6 +7513,8 @@ async function universalExportToPdf() {
   } catch (err) {
     console.error('PDF export error:', err);
     alert('PDF export failed: ' + err.message);
+    // Remove pdf-export-mode class on error
+    document.body.classList.remove('pdf-export-mode');
     // Restore styles on error
     originalStyles.forEach((styles, el) => {
       el.style.backdropFilter = styles.backdropFilter || '';
@@ -7518,6 +7523,8 @@ async function universalExportToPdf() {
       el.style.backgroundColor = styles.backgroundColor || '';
     });
   } finally {
+    // Remove pdf-export-mode class
+    document.body.classList.remove('pdf-export-mode');
     loadingOverlay.remove();
   }
 }

@@ -22721,3 +22721,85 @@ body.dark-mode .dashboard-section > h2 {
 }
 
 
+
+/* ============================================= */
+/* PDF Export Mode - Override glassmorphism     */
+/* ============================================= */
+body.pdf-export-mode,
+body.pdf-export-mode .dashboard-section,
+body.pdf-export-mode .main-content,
+body.pdf-export-mode .sidebar {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+body.pdf-export-mode::before,
+body.pdf-export-mode::after,
+body.pdf-export-mode .dashboard-section::before,
+body.pdf-export-mode .dashboard-section::after,
+body.pdf-export-mode .main-content::before,
+body.pdf-export-mode .main-content::after,
+body.pdf-export-mode .pm-tabs-bar::before,
+body.pdf-export-mode .pm-tabs-bar::after,
+body.pdf-export-mode .pm-tabs-container::before,
+body.pdf-export-mode .pm-tabs-container::after,
+body.pdf-export-mode .ap-aging-summary::before,
+body.pdf-export-mode .ap-aging-summary::after,
+body.pdf-export-mode .ap-aging-chart-section::before,
+body.pdf-export-mode .ap-aging-chart-section::after,
+body.pdf-export-mode .summary-card::before,
+body.pdf-export-mode .summary-card::after,
+body.pdf-export-mode .chart-card::before,
+body.pdf-export-mode .chart-card::after,
+body.pdf-export-mode .metric-tile::before,
+body.pdf-export-mode .metric-tile::after,
+body.pdf-export-mode .welcome-card::before,
+body.pdf-export-mode .welcome-card::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  opacity: 0 !important;
+}
+
+body.pdf-export-mode .summary-card,
+body.pdf-export-mode .metric-tile,
+body.pdf-export-mode .chart-card,
+body.pdf-export-mode .welcome-card,
+body.pdf-export-mode .pm-tabs-bar,
+body.pdf-export-mode .pm-tab-btn,
+body.pdf-export-mode .ap-aging-summary,
+body.pdf-export-mode .ap-aging-chart-section,
+body.pdf-export-mode .ap-aging-chart-wrapper,
+body.pdf-export-mode table,
+body.pdf-export-mode .job-budgets-table {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+body.pdf-export-mode .pm-tab-btn {
+  background: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+body.pdf-export-mode .pm-tab-btn.active {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+body.pdf-export-mode canvas {
+  opacity: 1 !important;
+}
+
+body.pdf-export-mode * {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
