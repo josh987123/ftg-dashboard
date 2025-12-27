@@ -7433,7 +7433,7 @@ async function universalExportToPdf() {
   }
   
   // Hide UI elements that shouldn't appear in the PDF
-  const elementsToHide = visibleSection.querySelectorAll('.config-panel, .config-header, .config-body, .ai-analysis-panel:not(.has-analysis), .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay, .loading-spinner, [class*="LoadingOverlay"]');
+  const elementsToHide = visibleSection.querySelectorAll('.config-panel, .config-header, .config-body, .ai-analysis-panel:not(.has-analysis), .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay, .loading-spinner, [class*="LoadingOverlay"], .table-loading-overlay, .skeleton, .loading-skeleton');
   const hiddenElements = [];
   elementsToHide.forEach(el => {
     if (el.style.display !== 'none') {
@@ -7443,13 +7443,35 @@ async function universalExportToPdf() {
   });
   
   // Also ensure any loading overlays with 'hidden' class stay hidden
-  const loadingOverlays = visibleSection.querySelectorAll('.loading-overlay');
+  const loadingOverlays = visibleSection.querySelectorAll('.loading-overlay, .table-loading-overlay');
   loadingOverlays.forEach(overlay => {
     if (!overlay.classList.contains('hidden')) {
       overlay.classList.add('hidden');
       hiddenElements.push({ el: overlay, removeClass: 'hidden' });
     }
   });
+  
+  // Force hide any elements with loading-overlay class and make them invisible
+  const allLoadingOverlays = visibleSection.querySelectorAll('[class*="loading"], [class*="overlay"]:not(.content-export-area)');
+  allLoadingOverlays.forEach(overlay => {
+    if (overlay.offsetParent !== null) {
+      const origOpacity = overlay.style.opacity;
+      overlay.style.opacity = '0';
+      hiddenElements.push({ el: overlay, opacity: origOpacity, restoreOpacity: true });
+    }
+  });
+  
+  // Temporarily remove backdrop-filter from glass elements (causes white haze)
+  const glassElements = visibleSection.querySelectorAll('[style*="backdrop-filter"], [style*="-webkit-backdrop-filter"]');
+  glassElements.forEach(el => {
+    const orig = el.style.backdropFilter;
+    el.style.backdropFilter = 'none';
+    el.style.webkitBackdropFilter = 'none';
+    hiddenElements.push({ el, backdropFilter: orig, restoreBackdrop: true });
+  });
+  
+  // Add class to disable glass/blur effects during capture
+  document.body.classList.add('pdf-capture-mode');
   
   try {
     await new Promise(resolve => setTimeout(resolve, 150));
@@ -7524,9 +7546,15 @@ async function universalExportToPdf() {
     console.error('PDF generation error:', error);
     alert('Error generating PDF. Please try again.');
   } finally {
+    document.body.classList.remove('pdf-capture-mode');
     hiddenElements.forEach(item => {
       if (item.removeClass) {
         item.el.classList.remove(item.removeClass);
+      } else if (item.restoreOpacity) {
+        item.el.style.opacity = item.opacity || '';
+      } else if (item.restoreBackdrop) {
+        item.el.style.backdropFilter = item.backdropFilter || '';
+        item.el.style.webkitBackdropFilter = item.backdropFilter || '';
       } else {
         item.el.style.display = item.display;
       }
@@ -8222,6 +8250,9 @@ async function captureVisibleSectionAsImage() {
     }
   });
   
+  // Add class to disable glass/blur effects during capture
+  document.body.classList.add('pdf-capture-mode');
+  
   try {
     await new Promise(resolve => setTimeout(resolve, 150));
     
@@ -8253,9 +8284,15 @@ async function captureVisibleSectionAsImage() {
     console.error('Screenshot capture error:', err);
     return null;
   } finally {
+    document.body.classList.remove('pdf-capture-mode');
     hiddenElements.forEach(item => {
       if (item.removeClass) {
         item.el.classList.remove(item.removeClass);
+      } else if (item.restoreOpacity) {
+        item.el.style.opacity = item.opacity || '';
+      } else if (item.restoreBackdrop) {
+        item.el.style.backdropFilter = item.backdropFilter || '';
+        item.el.style.webkitBackdropFilter = item.backdropFilter || '';
       } else {
         item.el.style.display = item.display;
       }

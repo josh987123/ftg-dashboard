@@ -22719,3 +22719,25 @@ body.dark-mode .dashboard-section > h2 {
   border-color: #3b82f6;
   color: white;
 }
+
+/* PDF Capture Mode - Disable glass effects and overlays */
+body.pdf-capture-mode .loading-overlay,
+body.pdf-capture-mode .table-loading-overlay,
+body.pdf-capture-mode .skeleton,
+body.pdf-capture-mode .loading-skeleton,
+body.pdf-capture-mode [class*="loading"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+body.pdf-capture-mode * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body.pdf-capture-mode .modal-content,
+body.pdf-capture-mode .dropdown-menu,
+body.pdf-capture-mode .config-panel {
+  background: var(--bg-secondary) !important;
+}
