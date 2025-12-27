@@ -18047,6 +18047,196 @@ function getDailyBalancesForEmail() {
   return weeklyBalances;
 }
 
+// ============================================================
+// AP AGING EMAIL FUNCTIONS
+// ============================================================
+
+function gatherAPAgingDataForEmail() {
+  // Get summary metrics from DOM
+  const totalDue = document.getElementById('apAgingTotalDue')?.textContent || '--';
+  const current = document.getElementById('apAgingCurrent')?.textContent || '--';
+  const days31to60 = document.getElementById('apAging31to60')?.textContent || '--';
+  const days61to90 = document.getElementById('apAging61to90')?.textContent || '--';
+  const days90plus = document.getElementById('apAging90plus')?.textContent || '--';
+  const retainage = document.getElementById('apAgingRetainage')?.textContent || '--';
+  const dataAsOf = document.getElementById('apAgingDataAsOf')?.textContent || '--';
+  
+  // Get vendor data from table (top 15 vendors)
+  const vendors = [];
+  const tableBody = document.querySelector('#apAgingTable tbody');
+  if (tableBody) {
+    const rows = tableBody.querySelectorAll('tr.vendor-row');
+    rows.forEach((row, idx) => {
+      if (idx >= 15) return; // Limit to top 15
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 6) {
+        vendors.push({
+          name: cells[0]?.textContent?.trim() || '',
+          totalDue: cells[1]?.textContent?.trim() || '',
+          current: cells[2]?.textContent?.trim() || '',
+          days31to60: cells[3]?.textContent?.trim() || '',
+          days61to90: cells[4]?.textContent?.trim() || '',
+          days90plus: cells[5]?.textContent?.trim() || '',
+          retainage: cells[6]?.textContent?.trim() || ''
+        });
+      }
+    });
+  }
+  
+  // Get vendor count
+  const vendorCount = document.querySelectorAll('#apAgingTable tbody tr.vendor-row').length || 0;
+  
+  return {
+    summary: {
+      totalDue,
+      current,
+      days31to60,
+      days61to90,
+      days90plus,
+      retainage,
+      dataAsOf,
+      vendorCount
+    },
+    vendors
+  };
+}
+
+async function sendAPAgingEmail(toEmail) {
+  const btn = document.querySelector('#apAgingEmailBtn') || document.querySelector('.ap-aging-email-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+  }
+  
+  try {
+    const reportData = gatherAPAgingDataForEmail();
+    
+    const response = await fetch('/api/email-ap-aging', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: toEmail,
+        reportData: reportData
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('AP Aging email sent successfully!');
+    } else {
+      throw new Error(result.error || 'Failed to send email');
+    }
+  } catch (err) {
+    console.error('Email error:', err);
+    alert('Failed to send email: ' + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Email Report';
+    }
+  }
+}
+
+// ============================================================
+// AR AGING EMAIL FUNCTIONS
+// ============================================================
+
+function gatherARAgingDataForEmail() {
+  // Get summary metrics from DOM
+  const totalDue = document.getElementById('arAgingTotalDue')?.textContent || '--';
+  const collectible = document.getElementById('arAgingCollectible')?.textContent || '--';
+  const current = document.getElementById('arAgingCurrent')?.textContent || '--';
+  const days31to60 = document.getElementById('arAging31to60')?.textContent || '--';
+  const days61to90 = document.getElementById('arAging61to90')?.textContent || '--';
+  const days90plus = document.getElementById('arAging90plus')?.textContent || '--';
+  const retainage = document.getElementById('arAgingRetainage')?.textContent || '--';
+  const avgDays = document.getElementById('arAgingAvgDays')?.textContent || '--';
+  const dataAsOf = document.getElementById('arAgingDataAsOf')?.textContent || '--';
+  
+  // Get customer data from table (top 15 customers)
+  const customers = [];
+  const tableBody = document.querySelector('#arAgingTable tbody');
+  if (tableBody) {
+    const rows = tableBody.querySelectorAll('tr.customer-row, tr:not(.customer-detail-row)');
+    rows.forEach((row, idx) => {
+      if (idx >= 15) return; // Limit to top 15
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 6) {
+        customers.push({
+          name: cells[0]?.textContent?.trim() || '',
+          totalDue: cells[1]?.textContent?.trim() || '',
+          collectible: cells[2]?.textContent?.trim() || '',
+          current: cells[3]?.textContent?.trim() || '',
+          days31to60: cells[4]?.textContent?.trim() || '',
+          days61to90: cells[5]?.textContent?.trim() || '',
+          days90plus: cells[6]?.textContent?.trim() || '',
+          retainage: cells[7]?.textContent?.trim() || ''
+        });
+      }
+    });
+  }
+  
+  // Get customer count
+  const customerCount = document.querySelectorAll('#arAgingTable tbody tr').length || 0;
+  
+  return {
+    summary: {
+      totalDue,
+      collectible,
+      current,
+      days31to60,
+      days61to90,
+      days90plus,
+      retainage,
+      avgDays,
+      dataAsOf,
+      customerCount
+    },
+    customers
+  };
+}
+
+async function sendARAgingEmail(toEmail) {
+  const btn = document.querySelector('#arAgingEmailBtn') || document.querySelector('.ar-aging-email-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+  }
+  
+  try {
+    const reportData = gatherARAgingDataForEmail();
+    
+    const response = await fetch('/api/email-ar-aging', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: toEmail,
+        reportData: reportData
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('AR Aging email sent successfully!');
+    } else {
+      throw new Error(result.error || 'Failed to send email');
+    }
+  } catch (err) {
+    console.error('Email error:', err);
+    alert('Failed to send email: ' + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Email Report';
+    }
+  }
+}
+
+// Expose email functions to window scope for inline onclick handlers
+window.sendAPAgingEmail = sendAPAgingEmail;
+window.sendARAgingEmail = sendARAgingEmail;
 
 // Format cash analysis with green/red highlights for dollar amounts
 function formatCashAnalysis(text) {
