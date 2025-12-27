@@ -7407,83 +7407,94 @@ function universalPrint() {
 }
 
 async function universalExportToPdf() {
-  const visibleSection = document.querySelector('.dashboard-section.visible');
-  if (!visibleSection) {
-    alert("No report section is currently visible.");
+  // Get current view using the established getCurrentView function
+  const view = getCurrentView();
+  const sectionId = view;
+  const section = document.getElementById(sectionId);
+  
+  if (!section) {
+    alert("No report section found for: " + view);
     return;
   }
   
-  const view = getCurrentView();
   const filename = `ftg_${view}_${new Date().toISOString().split("T")[0]}.pdf`;
   
+  // Show loading overlay
   const loadingOverlay = document.createElement('div');
   loadingOverlay.id = 'pdfLoadingOverlay';
-  loadingOverlay.innerHTML = '<div class="pdf-loading-content"><div class="ai-spinner"></div><div>Loading PDF libraries...</div></div>';
-  loadingOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
-  loadingOverlay.querySelector('.pdf-loading-content').style.cssText = 'background:#fff;padding:30px 50px;border-radius:12px;text-align:center;font-size:16px;color:#1f2937;';
+  loadingOverlay.innerHTML = '<div class="pdf-loading-content"><div class="ai-spinner"></div><div>Generating PDF...</div></div>';
+  loadingOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100000;';
+  loadingOverlay.querySelector('.pdf-loading-content').style.cssText = 'background:#fff;padding:30px 50px;border-radius:12px;text-align:center;font-size:16px;color:#1f2937;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
   document.body.appendChild(loadingOverlay);
   
   try {
+    // Load libraries
     await LazyLoader.loadMultiple(['html2canvas', 'jspdf']);
-    loadingOverlay.querySelector('.pdf-loading-content').innerHTML = '<div class="ai-spinner"></div><div>Generating PDF...</div>';
-  } catch (err) {
-    loadingOverlay.remove();
-    alert('Failed to load PDF libraries. Please check your internet connection.');
-    return;
-  }
-  
-  // Hide UI elements that shouldn't appear in the PDF
-  const elementsToHide = visibleSection.querySelectorAll('.config-panel, .config-header, .config-body, .ai-analysis-panel:not(.has-analysis), .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay, .loading-spinner, [class*="LoadingOverlay"], .table-loading-overlay, .skeleton, .loading-skeleton');
-  const hiddenElements = [];
-  elementsToHide.forEach(el => {
-    if (el.style.display !== 'none') {
-      hiddenElements.push({ el, display: el.style.display });
-      el.style.display = 'none';
-    }
-  });
-  
-  // Also ensure any loading overlays with 'hidden' class stay hidden
-  const loadingOverlays = visibleSection.querySelectorAll('.loading-overlay, .table-loading-overlay');
-  loadingOverlays.forEach(overlay => {
-    if (!overlay.classList.contains('hidden')) {
-      overlay.classList.add('hidden');
-      hiddenElements.push({ el: overlay, removeClass: 'hidden' });
-    }
-  });
-  
-  // Hide actual loading spinners only (not content)
-  const spinners = visibleSection.querySelectorAll('.loading-spinner, .ai-spinner');
-  spinners.forEach(spinner => {
-    if (spinner.offsetParent !== null) {
-      const origDisplay = spinner.style.display;
-      spinner.style.display = 'none';
-      hiddenElements.push({ el: spinner, display: origDisplay });
-    }
-  });
-  
-  // Prepare for capture
-  
-  try {
-    await new Promise(resolve => setTimeout(resolve, 150));
     
-    const canvas = await html2canvas(visibleSection, {
+    // Clone the section for export (prevents modifying the live DOM)
+    const clone = section.cloneNode(true);
+    clone.id = 'pdf-export-clone';
+    
+    // Create offscreen container
+    const container = document.createElement('div');
+    container.id = 'pdf-export-container';
+    container.style.cssText = 'position:absolute;left:-9999px;top:0;width:' + section.scrollWidth + 'px;background:#ffffff;';
+    container.appendChild(clone);
+    document.body.appendChild(container);
+    
+    // Apply PDF-safe styles to the clone (remove glassmorphism, use solid backgrounds)
+    const applyPdfStyles = (el) => {
+      const style = window.getComputedStyle(el);
+      // Remove backdrop-filter and use solid background
+      if (style.backdropFilter && style.backdropFilter !== 'none') {
+        el.style.backdropFilter = 'none';
+        el.style.webkitBackdropFilter = 'none';
+        // Use solid background color
+        const bgColor = style.backgroundColor;
+        if (bgColor.includes('rgba') && bgColor.includes('0.')) {
+          el.style.backgroundColor = '#ffffff';
+        }
+      }
+      // Ensure text is visible
+      if (style.color === 'rgba(0, 0, 0, 0)' || style.color === 'transparent') {
+        el.style.color = '#1f2937';
+      }
+      // Make sure cards have solid backgrounds
+      if (el.classList && (el.classList.contains('welcome-card') || el.classList.contains('summary-card') || el.classList.contains('metric-tile') || el.classList.contains('chart-card'))) {
+        el.style.backgroundColor = '#f8fafc';
+        el.style.backdropFilter = 'none';
+        el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+      }
+    };
+    
+    // Apply styles recursively
+    const allElements = clone.querySelectorAll('*');
+    allElements.forEach(applyPdfStyles);
+    applyPdfStyles(clone);
+    
+    // Hide elements that shouldn't appear in PDF
+    clone.querySelectorAll('.config-panel, .config-header, .config-body, .ai-analysis-panel:not(.has-analysis), .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay, .loading-spinner, .skeleton, .loading-skeleton, .table-export-btn-row').forEach(el => {
+      el.style.display = 'none';
+    });
+    
+    // Wait for rendering
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Capture with html2canvas
+    const canvas = await html2canvas(clone, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
-      windowWidth: visibleSection.scrollWidth,
-      windowHeight: visibleSection.scrollHeight,
-      ignoreElements: (el) => {
-        // Ignore loading overlays and spinners
-        return el.classList && (
-          el.classList.contains('loading-overlay') ||
-          el.classList.contains('loading-spinner') ||
-          el.id?.includes('Loading')
-        );
-      }
+      width: clone.scrollWidth,
+      height: clone.scrollHeight
     });
     
+    // Clean up clone
+    container.remove();
+    
+    // Generate PDF
     const imgData = canvas.toDataURL('image/png');
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
@@ -7498,55 +7509,26 @@ async function universalExportToPdf() {
       format: [imgWidth / 2 + 40, imgHeight / 2 + 80]
     });
     
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    
+    // Add header
     pdf.setFontSize(10);
     pdf.setTextColor(100);
-    pdf.text('FTG Builders Dashboard', 20, 25);
-    pdf.text(new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }), pageWidth - 20, 25, { align: 'right' });
+    pdf.text('FTG Builders Dashboard', 20, 20);
+    pdf.text(new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }), pdf.internal.pageSize.getWidth() - 20, 20, { align: 'right' });
     
-    const marginX = 20;
-    const marginTop = 40;
-    const availableWidth = pageWidth - (marginX * 2);
-    const availableHeight = pageHeight - marginTop - 40;
+    // Add the captured image
+    pdf.addImage(imgData, 'PNG', 20, 40, imgWidth / 2, imgHeight / 2);
     
-    let finalWidth = imgWidth / 2;
-    let finalHeight = imgHeight / 2;
-    
-    if (finalWidth > availableWidth) {
-      const ratio = availableWidth / finalWidth;
-      finalWidth = availableWidth;
-      finalHeight = finalHeight * ratio;
-    }
-    
-    if (finalHeight > availableHeight) {
-      const ratio = availableHeight / finalHeight;
-      finalHeight = availableHeight;
-      finalWidth = finalWidth * ratio;
-    }
-    
-    pdf.addImage(imgData, 'PNG', marginX, marginTop, finalWidth, finalHeight);
-    
-    pdf.setFontSize(8);
-    pdf.text('Generated by FTG Dashboard', pageWidth / 2, pageHeight - 15, { align: 'center' });
-    
+    // Save
     pdf.save(filename);
-  } catch (error) {
-    console.error('PDF generation error:', error);
-    alert('Error generating PDF. Please try again.');
-  } finally {
-    // Capture complete
-    hiddenElements.forEach(item => {
-      if (item.removeClass) {
-        item.el.classList.remove(item.removeClass);
-      } else {
-        item.el.style.display = item.display;
-      }
-    });
     
-    const overlay = document.getElementById('pdfLoadingOverlay');
-    if (overlay) overlay.remove();
+  } catch (err) {
+    console.error('PDF export error:', err);
+    alert('Failed to generate PDF: ' + err.message);
+  } finally {
+    loadingOverlay.remove();
+    // Clean up any leftover container
+    const leftover = document.getElementById('pdf-export-container');
+    if (leftover) leftover.remove();
   }
 }
 
