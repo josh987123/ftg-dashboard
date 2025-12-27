@@ -18108,6 +18108,7 @@ function gatherAPAgingDataForEmail() {
   const days61to90 = document.getElementById('apAging61to90')?.textContent || '--';
   const days90plus = document.getElementById('apAging90plus')?.textContent || '--';
   const retainage = document.getElementById('apAgingRetainage')?.textContent || '--';
+  const avgDays = document.getElementById('apAgingAvgDays')?.textContent || '--';
   const dataAsOf = document.getElementById('apAgingDataAsOf')?.textContent || '--';
   
   // Get vendor data from table (top 15 vendors)
@@ -18143,6 +18144,7 @@ function gatherAPAgingDataForEmail() {
       days61to90,
       days90plus,
       retainage,
+      avgDays,
       dataAsOf,
       vendorCount
     },
@@ -28942,7 +28944,7 @@ function renderApInvoiceRows(invoices, cell) {
 }
 
 function updateApAgingSummary(totals) {
-  const ids = {
+  const currencyIds = {
     'apAgingTotalDue': totals.total_due || 0,
     'apAgingCurrent': totals.current || 0,
     'apAging31to60': totals.days_31_60 || 0,
@@ -28951,9 +28953,16 @@ function updateApAgingSummary(totals) {
     'apAgingRetainage': totals.retainage || 0
   };
   
-  for (const [id, value] of Object.entries(ids)) {
+  for (const [id, value] of Object.entries(currencyIds)) {
     const el = document.getElementById(id);
     if (el) el.textContent = formatCurrencyCompact(value);
+  }
+  
+  // Update avg days outstanding (numeric, not currency)
+  const avgDaysEl = document.getElementById('apAgingAvgDays');
+  if (avgDaysEl) {
+    const avgDays = totals.avg_days_outstanding || 0;
+    avgDaysEl.textContent = Math.round(avgDays);
   }
   
   // Update chart
@@ -29346,8 +29355,9 @@ function renderArInvoiceRows(invoices, cell) {
 }
 
 function updateArAgingSummary(totals) {
-  const ids = {
+  const currencyIds = {
     'arAgingTotalDue': totals.total_due || 0,
+    'arAgingCollectible': totals.collectible || 0,
     'arAgingCurrent': totals.current || 0,
     'arAging31to60': totals.days_31_60 || 0,
     'arAging61to90': totals.days_61_90 || 0,
@@ -29355,9 +29365,16 @@ function updateArAgingSummary(totals) {
     'arAgingRetainage': totals.retainage || 0
   };
   
-  for (const [id, value] of Object.entries(ids)) {
+  for (const [id, value] of Object.entries(currencyIds)) {
     const el = document.getElementById(id);
     if (el) el.textContent = formatCurrencyCompact(value);
+  }
+  
+  // Update avg days outstanding (numeric, not currency)
+  const avgDaysEl = document.getElementById('arAgingAvgDays');
+  if (avgDaysEl) {
+    const avgDays = totals.avg_days_outstanding || 0;
+    avgDaysEl.textContent = Math.round(avgDays);
   }
   
   updateArAgingChart(totals);
