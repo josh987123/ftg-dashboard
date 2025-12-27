@@ -7451,23 +7451,14 @@ async function universalExportToPdf() {
     }
   });
   
-  // Force hide any elements with loading-overlay class and make them invisible
-  const allLoadingOverlays = visibleSection.querySelectorAll('[class*="loading"], [class*="overlay"]:not(.content-export-area)');
-  allLoadingOverlays.forEach(overlay => {
-    if (overlay.offsetParent !== null) {
-      const origOpacity = overlay.style.opacity;
-      overlay.style.opacity = '0';
-      hiddenElements.push({ el: overlay, opacity: origOpacity, restoreOpacity: true });
+  // Hide actual loading spinners only (not content)
+  const spinners = visibleSection.querySelectorAll('.loading-spinner, .ai-spinner');
+  spinners.forEach(spinner => {
+    if (spinner.offsetParent !== null) {
+      const origDisplay = spinner.style.display;
+      spinner.style.display = 'none';
+      hiddenElements.push({ el: spinner, display: origDisplay });
     }
-  });
-  
-  // Temporarily remove backdrop-filter from glass elements (causes white haze)
-  const glassElements = visibleSection.querySelectorAll('[style*="backdrop-filter"], [style*="-webkit-backdrop-filter"]');
-  glassElements.forEach(el => {
-    const orig = el.style.backdropFilter;
-    el.style.backdropFilter = 'none';
-    el.style.webkitBackdropFilter = 'none';
-    hiddenElements.push({ el, backdropFilter: orig, restoreBackdrop: true });
   });
   
   // Add class to disable glass/blur effects during capture
@@ -7550,11 +7541,6 @@ async function universalExportToPdf() {
     hiddenElements.forEach(item => {
       if (item.removeClass) {
         item.el.classList.remove(item.removeClass);
-      } else if (item.restoreOpacity) {
-        item.el.style.opacity = item.opacity || '';
-      } else if (item.restoreBackdrop) {
-        item.el.style.backdropFilter = item.backdropFilter || '';
-        item.el.style.webkitBackdropFilter = item.backdropFilter || '';
       } else {
         item.el.style.display = item.display;
       }
@@ -8288,11 +8274,6 @@ async function captureVisibleSectionAsImage() {
     hiddenElements.forEach(item => {
       if (item.removeClass) {
         item.el.classList.remove(item.removeClass);
-      } else if (item.restoreOpacity) {
-        item.el.style.opacity = item.opacity || '';
-      } else if (item.restoreBackdrop) {
-        item.el.style.backdropFilter = item.backdropFilter || '';
-        item.el.style.webkitBackdropFilter = item.backdropFilter || '';
       } else {
         item.el.style.display = item.display;
       }
