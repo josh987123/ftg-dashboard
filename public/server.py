@@ -2058,7 +2058,7 @@ def api_email_overview():
         return jsonify({'error': str(e)}), 500
 
 def generate_overview_html_email(report_data, ai_analysis=''):
-    """Generate HTML email content for Executive Overview"""
+    """Generate HTML email content for Executive Overview - Outlook compatible with VML backgrounds"""
     from datetime import datetime
     
     tiles = report_data.get('tiles', [])
@@ -2067,7 +2067,7 @@ def generate_overview_html_email(report_data, ai_analysis=''):
     report_date = datetime.now().strftime('%B %d, %Y')
     gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
     
-    # Build tile rows (2 tiles per row)
+    # Build metric tiles - each tile becomes a professional card
     tiles_html = ''
     for i in range(0, len(tiles), 2):
         tiles_html += '<tr>'
@@ -2075,86 +2075,142 @@ def generate_overview_html_email(report_data, ai_analysis=''):
             if i + j < len(tiles):
                 tile = tiles[i + j]
                 title = html_escape(str(tile.get('title', '')))
-                stats_html = ''
+                
+                # Build stats rows for this tile
+                stats_rows = ''
                 for stat in tile.get('stats', []):
                     label = html_escape(str(stat.get('label', '')))
                     value = html_escape(str(stat.get('value', '')))
-                    color = '#1e293b'
-                    if 'negative' in str(stat.get('class', '')).lower() or value.startswith('-'):
-                        color = '#dc2626'
-                    elif 'positive' in str(stat.get('class', '')).lower():
-                        color = '#16a34a'
-                    stats_html += '<tr><td style="padding:4px 0;font-size:12px;color:#64748b;">' + label + '</td><td style="padding:4px 0;font-size:14px;font-weight:600;color:' + color + ';text-align:right;">' + value + '</td></tr>'
+                    
+                    # Determine color based on class or value
+                    value_color = '#1e3a5f'
+                    stat_class = str(stat.get('class', '')).lower()
+                    if 'negative' in stat_class or (value.startswith('-') and '%' in value):
+                        value_color = '#dc2626'
+                    elif 'positive' in stat_class or (value.startswith('+') and '%' in value):
+                        value_color = '#16a34a'
+                    
+                    stats_rows += '<tr>'
+                    stats_rows += '<td style="padding:6px 0;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;">' + label + '</td>'
+                    stats_rows += '<td style="padding:6px 0;font-size:15px;font-weight:700;color:' + value_color + ';text-align:right;border-bottom:1px solid #f1f5f9;">' + value + '</td>'
+                    stats_rows += '</tr>'
                 
-                tiles_html += '<td width="48%" style="padding:8px;">'
-                tiles_html += '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff;border-radius:8px;border:1px solid #e2e8f0;">'
-                tiles_html += '<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;font-weight:600;color:#1e293b;">' + title + '</td></tr>'
-                tiles_html += '<tr><td style="padding:12px 16px;"><table width="100%" cellpadding="0" cellspacing="0" border="0">' + stats_html + '</table></td></tr>'
+                tiles_html += '<td width="50%" style="padding:8px;vertical-align:top;">'
+                tiles_html += '<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border:1px solid #e2e8f0;border-radius:8px;">'
+                tiles_html += '<tr><td colspan="2" bgcolor="#f8fafc" style="background-color:#f8fafc;padding:12px 16px;border-bottom:2px solid #e2e8f0;font-size:13px;font-weight:700;color:#1e3a5f;text-transform:uppercase;letter-spacing:0.5px;">' + title + '</td></tr>'
+                tiles_html += '<tr><td colspan="2" style="padding:12px 16px;"><table width="100%" cellpadding="0" cellspacing="0" border="0">' + stats_rows + '</table></td></tr>'
                 tiles_html += '</table></td>'
             else:
-                tiles_html += '<td width="48%"></td>'
+                tiles_html += '<td width="50%"></td>'
         tiles_html += '</tr>'
     
     # AI Analysis section
     ai_section = ''
     if ai_analysis:
-        ai_section = '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;"><tr>'
-        ai_section += '<td style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px;border-radius:4px;">'
-        ai_section += '<table width="100%" cellpadding="0" cellspacing="0" border="0">'
-        ai_section += '<tr><td style="font-size:12px;font-weight:600;color:#16a34a;text-transform:uppercase;letter-spacing:0.5px;padding-bottom:8px;">AI Analysis</td></tr>'
-        ai_section += '<tr><td style="font-size:14px;color:#1e293b;line-height:1.5;">' + html_escape(ai_analysis) + '</td></tr>'
-        ai_section += '</table></td></tr></table>'
+        ai_section = """
+                    <tr>
+                        <td style="padding:8px 24px 16px 24px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f0fdf4" style="background-color:#f0fdf4;border-left:4px solid #16a34a;border-radius:4px;">
+                                <tr><td style="padding:16px;">
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr><td style="font-size:11px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:1px;padding-bottom:8px;">AI Analysis</td></tr>
+                                        <tr><td style="font-size:14px;color:#1e293b;line-height:1.6;">""" + html_escape(ai_analysis) + """</td></tr>
+                                    </table>
+                                </td></tr>
+                            </table>
+                        </td>
+                    </tr>"""
     
-    html = '''<!DOCTYPE html>
+    html = """<!DOCTYPE html>
 <html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--[if gte mso 9]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+    </xml>
+    <![endif]-->
     <title>FTG Builders Executive Overview</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">
+<body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background-color:#f1f5f9;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9" style="background-color:#f1f5f9;">
         <tr>
-            <td align="center" style="padding:20px;">
-                <table width="650" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-                    <!-- Header -->
+            <td align="center" style="padding:24px;">
+                <table width="700" cellpadding="0" cellspacing="0" border="0">
+                    <!-- Header with VML background for Outlook -->
                     <tr>
-                        <td bgcolor="#1e3a5f" style="background-color:#1e3a5f;padding:24px 32px;border-radius:12px 12px 0 0;">
-                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <td align="center">
+                            <!--[if gte mso 9]>
+                            <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:700px;height:100px;">
+                                <v:fill type="solid" color="#1e3a5f"/>
+                                <v:textbox inset="0,0,0,0">
+                            <![endif]-->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#1e3a5f" style="background-color:#1e3a5f;border-radius:8px 8px 0 0;">
                                 <tr>
-                                    <td style="font-size:24px;font-weight:700;color:#ffffff;">FTG Builders Dashboard</td>
-                                    <td align="right" style="font-size:14px;color:#94a3b8;">'''+ report_date +'''</td>
+                                    <td align="center" style="padding:28px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr><td align="center" style="font-size:26px;font-weight:bold;color:#ffffff;font-family:Arial,Helvetica,sans-serif;">FTG Builders Executive Overview</td></tr>
+                                            <tr><td align="center" style="font-size:14px;color:#94a3b8;padding-top:8px;font-family:Arial,Helvetica,sans-serif;">Financial Performance Dashboard</td></tr>
+                                            <tr><td align="center" style="font-size:13px;color:#94a3b8;padding-top:4px;font-family:Arial,Helvetica,sans-serif;">""" + report_date + """</td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--[if gte mso 9]>
+                                </v:textbox>
+                            </v:rect>
+                            <![endif]-->
+                        </td>
+                    </tr>
+                    
+                    <!-- Data As Of Banner -->
+                    <tr>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#16a34a" style="background-color:#16a34a;">
+                                <tr>
+                                    <td align="center" style="padding:12px;font-size:13px;font-weight:600;color:#ffffff;">
+                                        Data as of: """ + data_as_of + """
+                                    </td>
                                 </tr>
                             </table>
                         </td>
                     </tr>
                     
-                    <!-- Title -->
-                    <tr>
-                        <td style="padding:24px 32px 8px 32px;">
-                            <h1 style="margin:0;font-size:28px;font-weight:700;color:#22c55e;">Executive Overview</h1>
-                            <p style="margin:8px 0 0 0;font-size:14px;color:#64748b;">Data as of: ''' + data_as_of + '''</p>
-                        </td>
-                    </tr>
+                    <!-- AI Analysis (if present) -->
+                    """ + ai_section + """
                     
-                    ''' + ai_section + '''
-                    
-                    <!-- Metric Tiles -->
+                    <!-- Metric Tiles Container -->
                     <tr>
-                        <td style="padding:16px 24px;">
-                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                                ''' + tiles_html + '''
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+                                <tr>
+                                    <td style="padding:16px 16px 8px 16px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            """ + tiles_html + """
+                                        </table>
+                                    </td>
+                                </tr>
                             </table>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="padding:24px 32px;border-top:1px solid #e2e8f0;">
-                            <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
-                                Report generated on ''' + gen_date + '''<br>
-                                FTG Builders Financial Dashboard
-                            </p>
+                        <td>
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8fafc" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;">
+                                <tr>
+                                    <td align="center" style="padding:20px;">
+                                        <p style="margin:0;font-size:12px;color:#64748b;">
+                                            Report generated on """ + gen_date + """<br>
+                                            <span style="color:#94a3b8;">FTG Builders Financial Dashboard</span>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>
@@ -2162,10 +2218,9 @@ def generate_overview_html_email(report_data, ai_analysis=''):
         </tr>
     </table>
 </body>
-</html>'''
+</html>"""
     
     return html
-
 
 
 @app.route('/api/email-ar-aging', methods=['POST', 'OPTIONS'])

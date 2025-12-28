@@ -7578,6 +7578,9 @@ async function universalExportToPdf() {
     }
   });
   
+  // Add pdf-export-mode class to body for CSS overrides that kill pseudo-elements
+  document.body.classList.add('pdf-export-mode');
+  
   try {
     await LazyLoader.loadMultiple(['html2canvas', 'jspdf']);
     await new Promise(r => setTimeout(r, 150));
@@ -7692,6 +7695,9 @@ async function universalExportToPdf() {
     console.error('PDF export error:', err);
     alert('PDF export failed: ' + err.message);
   } finally {
+    // Remove pdf-export-mode class from body
+    document.body.classList.remove('pdf-export-mode');
+    
     // Clean up PDF container if it exists
     const pdfCont = document.querySelector('div[style*="left:-9999px"]');
     if (pdfCont) pdfCont.remove();
