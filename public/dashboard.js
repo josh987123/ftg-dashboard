@@ -8247,13 +8247,18 @@ async function captureVisibleSectionAsImage() {
   try {
     await new Promise(resolve => setTimeout(resolve, 150));
     
-    // Create a clean container for PDF export
+    // Create a clean container for PDF export with forced desktop width
     const pdfContainer = document.createElement('div');
-    pdfContainer.style.cssText = 'position:absolute;left:-9999px;top:0;background:#fff;';
+    // Force desktop-like width to avoid mobile responsive styles
+    const desktopWidth = Math.max(1200, visibleSection.scrollWidth);
+    pdfContainer.style.cssText = 'position:absolute;left:-9999px;top:0;background:#fff;width:' + desktopWidth + 'px;min-width:1200px;';
     document.body.appendChild(pdfContainer);
     
     // Clone the section
     const cleanClone = visibleSection.cloneNode(true);
+    cleanClone.style.width = desktopWidth + 'px';
+    cleanClone.style.minWidth = '1200px';
+    cleanClone.style.maxWidth = 'none';
     pdfContainer.appendChild(cleanClone);
     
     // Force solid backgrounds on all elements in the clone
@@ -8313,7 +8318,7 @@ async function captureVisibleSectionAsImage() {
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
-      windowWidth: cleanClone.scrollWidth,
+      windowWidth: Math.max(1200, cleanClone.scrollWidth),
       windowHeight: cleanClone.scrollHeight,
       ignoreElements: (el) => {
         return el.classList && (
