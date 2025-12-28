@@ -8552,9 +8552,54 @@ async function sendCashReportViaRibbon(toEmail, statusEl, sendBtn) {
   
   const view = getCurrentView();
   
-  // Special handling for Cash Report - use new HTML email
+  // Route to view-specific HTML email handlers
   if (view === 'cashReport') {
     await sendCashReportViaRibbon(toEmail, statusEl, sendBtn);
+    return;
+  }
+  
+  if (view === 'arAging') {
+    await sendARAgingEmail(toEmail);
+    return;
+  }
+  
+  if (view === 'apAging') {
+    await sendAPAgingEmail(toEmail);
+    return;
+  }
+  
+  if (view === 'overview') {
+    await sendOverviewEmail(toEmail, statusEl, sendBtn);
+    return;
+  }
+  
+  if (view === 'incomeStatement') {
+    await sendIncomeStatementEmail(toEmail, statusEl, sendBtn);
+    return;
+  }
+  
+  if (view === 'balanceSheet') {
+    await sendBalanceSheetEmail(toEmail, statusEl, sendBtn);
+    return;
+  }
+  
+  if (view === 'cashFlow') {
+    await sendCashFlowEmail(toEmail, statusEl, sendBtn);
+    return;
+  }
+  
+  if (view === 'jobOverview') {
+    await sendJobOverviewEmail(toEmail, statusEl, sendBtn);
+    return;
+  }
+  
+  if (view === 'jobBudgets') {
+    await sendJobBudgetsEmail(toEmail, statusEl, sendBtn);
+    return;
+  }
+  
+  if (view === 'jobActuals') {
+    await sendJobActualsEmail(toEmail, statusEl, sendBtn);
     return;
   }
   
@@ -18449,6 +18494,439 @@ async function sendARAgingEmail(toEmail) {
 // Expose email functions to window scope for inline onclick handlers
 window.sendAPAgingEmail = sendAPAgingEmail;
 window.sendARAgingEmail = sendARAgingEmail;
+
+// Overview Email Functions
+async function sendOverviewEmail(toEmail, statusEl, sendBtn) {
+  sendBtn.disabled = true;
+  statusEl.textContent = "Preparing overview report...";
+  statusEl.className = "email-status";
+  
+  try {
+    const reportData = gatherOverviewDataForEmail();
+    const aiAnalysis = document.getElementById('overviewAiAnalysisContent')?.textContent || '';
+    
+    statusEl.textContent = "Sending email...";
+    
+    const response = await fetch('/api/email-overview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: toEmail, reportData: reportData, aiAnalysis: aiAnalysis })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      statusEl.textContent = "Email sent successfully!";
+      statusEl.className = "email-status success";
+      setTimeout(closeEmailModal, 2000);
+    } else {
+      statusEl.textContent = "Error: " + (result.error || "Failed to send email");
+      statusEl.className = "email-status error";
+    }
+  } catch (e) {
+    statusEl.textContent = "Error sending email: " + e.message;
+    statusEl.className = "email-status error";
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+function gatherOverviewDataForEmail() {
+  const tiles = [];
+  document.querySelectorAll('.overview-metric-tile').forEach(tile => {
+    const title = tile.querySelector('.metric-tile-title')?.textContent.trim() || '';
+    const stats = [];
+    tile.querySelectorAll('.stat-box').forEach(box => {
+      const label = box.querySelector('.stat-label')?.textContent.trim() || '';
+      const value = box.querySelector('.stat-value')?.textContent.trim() || '';
+      const cls = box.querySelector('.stat-value')?.className || '';
+      if (label) stats.push({ label, value, class: cls });
+    });
+    if (title) tiles.push({ title, stats });
+  });
+  
+  return {
+    tiles: tiles,
+    dataAsOf: document.getElementById('overviewDataAsOf')?.textContent || '--'
+  };
+}
+
+// Income Statement Email Functions
+async function sendIncomeStatementEmail(toEmail, statusEl, sendBtn) {
+  sendBtn.disabled = true;
+  statusEl.textContent = "Preparing income statement...";
+  
+  try {
+    const reportData = gatherIncomeStatementDataForEmail();
+    const aiAnalysis = document.getElementById('isAiAnalysisContent')?.textContent || '';
+    
+    statusEl.textContent = "Sending email...";
+    
+    const response = await fetch('/api/email-income-statement', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: toEmail, reportData: reportData, aiAnalysis: aiAnalysis })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      statusEl.textContent = "Email sent successfully!";
+      statusEl.className = "email-status success";
+      setTimeout(closeEmailModal, 2000);
+    } else {
+      statusEl.textContent = "Error: " + (result.error || "Failed to send email");
+      statusEl.className = "email-status error";
+    }
+  } catch (e) {
+    statusEl.textContent = "Error sending email: " + e.message;
+    statusEl.className = "email-status error";
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+function gatherIncomeStatementDataForEmail() {
+  const period = document.getElementById('incomeStatementPeriod')?.textContent || '--';
+  const lineItems = [];
+  
+  document.querySelectorAll('#incomeStatementTable tbody tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 2) {
+      const name = cells[0]?.textContent.trim() || '';
+      const amount = cells[1]?.textContent.trim() || '';
+      const indent = (cells[0]?.style.paddingLeft?.replace('px', '') || 0) / 16;
+      const isTotal = row.classList.contains('total-row') || name.toLowerCase().includes('total');
+      if (name) lineItems.push({ name, amount, indent: Math.floor(indent), isTotal });
+    }
+  });
+  
+  return {
+    period: period,
+    summary: {
+      revenue: document.querySelector('#incomeStatementSection .summary-value.revenue')?.textContent || '--',
+      grossProfit: document.querySelector('#incomeStatementSection .summary-value.gross-profit')?.textContent || '--',
+      operatingIncome: document.querySelector('#incomeStatementSection .summary-value.operating-income')?.textContent || '--',
+      netIncome: document.querySelector('#incomeStatementSection .summary-value.net-income')?.textContent || '--'
+    },
+    lineItems: lineItems.slice(0, 30)
+  };
+}
+
+// Balance Sheet Email Functions
+async function sendBalanceSheetEmail(toEmail, statusEl, sendBtn) {
+  sendBtn.disabled = true;
+  statusEl.textContent = "Preparing balance sheet...";
+  
+  try {
+    const reportData = gatherBalanceSheetDataForEmail();
+    const aiAnalysis = document.getElementById('bsAiAnalysisContent')?.textContent || '';
+    
+    statusEl.textContent = "Sending email...";
+    
+    const response = await fetch('/api/email-balance-sheet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: toEmail, reportData: reportData, aiAnalysis: aiAnalysis })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      statusEl.textContent = "Email sent successfully!";
+      statusEl.className = "email-status success";
+      setTimeout(closeEmailModal, 2000);
+    } else {
+      statusEl.textContent = "Error: " + (result.error || "Failed to send email");
+      statusEl.className = "email-status error";
+    }
+  } catch (e) {
+    statusEl.textContent = "Error sending email: " + e.message;
+    statusEl.className = "email-status error";
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+function gatherBalanceSheetDataForEmail() {
+  const period = document.getElementById('balanceSheetPeriod')?.textContent || '--';
+  const lineItems = [];
+  
+  document.querySelectorAll('#balanceSheetTable tbody tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 2) {
+      const name = cells[0]?.textContent.trim() || '';
+      const amount = cells[1]?.textContent.trim() || '';
+      const indent = (cells[0]?.style.paddingLeft?.replace('px', '') || 0) / 16;
+      const isTotal = row.classList.contains('total-row') || name.toLowerCase().includes('total');
+      if (name) lineItems.push({ name, amount, indent: Math.floor(indent), isTotal });
+    }
+  });
+  
+  return {
+    period: period,
+    summary: {
+      totalAssets: document.querySelector('#balanceSheet .summary-value.total-assets')?.textContent || '--',
+      totalLiabilities: document.querySelector('#balanceSheet .summary-value.total-liabilities')?.textContent || '--',
+      totalEquity: document.querySelector('#balanceSheet .summary-value.total-equity')?.textContent || '--'
+    },
+    lineItems: lineItems.slice(0, 40)
+  };
+}
+
+// Cash Flow Email Functions
+async function sendCashFlowEmail(toEmail, statusEl, sendBtn) {
+  sendBtn.disabled = true;
+  statusEl.textContent = "Preparing cash flow statement...";
+  
+  try {
+    const reportData = gatherCashFlowDataForEmail();
+    const aiAnalysis = document.getElementById('cfAiAnalysisContent')?.textContent || '';
+    
+    statusEl.textContent = "Sending email...";
+    
+    const response = await fetch('/api/email-cash-flow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: toEmail, reportData: reportData, aiAnalysis: aiAnalysis })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      statusEl.textContent = "Email sent successfully!";
+      statusEl.className = "email-status success";
+      setTimeout(closeEmailModal, 2000);
+    } else {
+      statusEl.textContent = "Error: " + (result.error || "Failed to send email");
+      statusEl.className = "email-status error";
+    }
+  } catch (e) {
+    statusEl.textContent = "Error sending email: " + e.message;
+    statusEl.className = "email-status error";
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+function gatherCashFlowDataForEmail() {
+  const period = document.getElementById('cashFlowPeriod')?.textContent || '--';
+  const lineItems = [];
+  
+  document.querySelectorAll('#cashFlowTable tbody tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 2) {
+      const name = cells[0]?.textContent.trim() || '';
+      const amount = cells[1]?.textContent.trim() || '';
+      const indent = (cells[0]?.style.paddingLeft?.replace('px', '') || 0) / 16;
+      const isTotal = row.classList.contains('total-row') || name.toLowerCase().includes('total');
+      if (name) lineItems.push({ name, amount, indent: Math.floor(indent), isTotal });
+    }
+  });
+  
+  return {
+    period: period,
+    summary: {
+      operating: document.querySelector('#cashFlow .summary-value.operating')?.textContent || '--',
+      investing: document.querySelector('#cashFlow .summary-value.investing')?.textContent || '--',
+      financing: document.querySelector('#cashFlow .summary-value.financing')?.textContent || '--',
+      netChange: document.querySelector('#cashFlow .summary-value.net-change')?.textContent || '--'
+    },
+    lineItems: lineItems.slice(0, 40)
+  };
+}
+
+// Job Overview Email Functions
+async function sendJobOverviewEmail(toEmail, statusEl, sendBtn) {
+  sendBtn.disabled = true;
+  statusEl.textContent = "Preparing job overview...";
+  
+  try {
+    const reportData = gatherJobOverviewDataForEmail();
+    const aiAnalysis = document.getElementById('joAiAnalysisContent')?.textContent || '';
+    
+    statusEl.textContent = "Sending email...";
+    
+    const response = await fetch('/api/email-job-overview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: toEmail, reportData: reportData, aiAnalysis: aiAnalysis })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      statusEl.textContent = "Email sent successfully!";
+      statusEl.className = "email-status success";
+      setTimeout(closeEmailModal, 2000);
+    } else {
+      statusEl.textContent = "Error: " + (result.error || "Failed to send email");
+      statusEl.className = "email-status error";
+    }
+  } catch (e) {
+    statusEl.textContent = "Error sending email: " + e.message;
+    statusEl.className = "email-status error";
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+function gatherJobOverviewDataForEmail() {
+  const pmFilter = document.querySelector('#jobOverview .pm-tab-btn.active')?.textContent.trim() || 'All';
+  const jobs = [];
+  
+  document.querySelectorAll('#jobOverviewTable tbody tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 5) {
+      jobs.push({
+        jobNo: cells[0]?.textContent.trim() || '',
+        jobName: cells[1]?.textContent.trim() || '',
+        contract: cells[2]?.textContent.trim() || '',
+        billed: cells[3]?.textContent.trim() || '',
+        percentComplete: cells[4]?.textContent.trim() || ''
+      });
+    }
+  });
+  
+  return {
+    pmFilter: pmFilter,
+    summary: {
+      totalContract: document.getElementById('joTotalContract')?.textContent || '--',
+      totalBilled: document.getElementById('joTotalBilled')?.textContent || '--',
+      backlog: document.getElementById('joBacklog')?.textContent || '--',
+      jobCount: jobs.length
+    },
+    jobs: jobs.slice(0, 20)
+  };
+}
+
+
+
+// Job Budgets Email Functions
+async function sendJobBudgetsEmail(toEmail, statusEl, sendBtn) {
+  sendBtn.disabled = true;
+  statusEl.textContent = "Preparing job budgets report...";
+  
+  try {
+    const reportData = gatherJobBudgetsDataForEmail();
+    const aiAnalysis = document.getElementById('jbAiAnalysisContent')?.textContent || '';
+    
+    statusEl.textContent = "Sending email...";
+    
+    const response = await fetch('/api/email-job-budgets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: toEmail, reportData: reportData, aiAnalysis: aiAnalysis })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      statusEl.textContent = "Email sent successfully!";
+      statusEl.className = "email-status success";
+      setTimeout(closeEmailModal, 2000);
+    } else {
+      statusEl.textContent = "Error: " + (result.error || "Failed to send email");
+      statusEl.className = "email-status error";
+    }
+  } catch (e) {
+    statusEl.textContent = "Error sending email: " + e.message;
+    statusEl.className = "email-status error";
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+function gatherJobBudgetsDataForEmail() {
+  const pmFilter = document.querySelector('#jobBudgets .pm-tab-btn.active')?.textContent.trim() || 'All';
+  const jobs = [];
+  
+  document.querySelectorAll('#jobBudgetsTable tbody tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 5) {
+      jobs.push({
+        jobNo: cells[0]?.textContent.trim() || '',
+        jobName: cells[1]?.textContent.trim() || '',
+        budget: cells[2]?.textContent.trim() || '',
+        actual: cells[3]?.textContent.trim() || '',
+        variance: cells[4]?.textContent.trim() || ''
+      });
+    }
+  });
+  
+  return {
+    pmFilter: pmFilter,
+    summary: {
+      totalBudget: document.getElementById('jbTotalBudget')?.textContent || '--',
+      totalActual: document.getElementById('jbTotalActual')?.textContent || '--',
+      variance: document.getElementById('jbVariance')?.textContent || '--'
+    },
+    jobs: jobs.slice(0, 20)
+  };
+}
+
+// Job Actuals Email Functions
+async function sendJobActualsEmail(toEmail, statusEl, sendBtn) {
+  sendBtn.disabled = true;
+  statusEl.textContent = "Preparing job actuals report...";
+  
+  try {
+    const reportData = gatherJobActualsDataForEmail();
+    const aiAnalysis = document.getElementById('jaAiAnalysisContent')?.textContent || '';
+    
+    statusEl.textContent = "Sending email...";
+    
+    const response = await fetch('/api/email-job-actuals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: toEmail, reportData: reportData, aiAnalysis: aiAnalysis })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      statusEl.textContent = "Email sent successfully!";
+      statusEl.className = "email-status success";
+      setTimeout(closeEmailModal, 2000);
+    } else {
+      statusEl.textContent = "Error: " + (result.error || "Failed to send email");
+      statusEl.className = "email-status error";
+    }
+  } catch (e) {
+    statusEl.textContent = "Error sending email: " + e.message;
+    statusEl.className = "email-status error";
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+function gatherJobActualsDataForEmail() {
+  const pmFilter = document.querySelector('#jobActuals .pm-tab-btn.active')?.textContent.trim() || 'All';
+  const jobs = [];
+  
+  document.querySelectorAll('#jobActualsTable tbody tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 3) {
+      jobs.push({
+        jobNo: cells[0]?.textContent.trim() || '',
+        jobName: cells[1]?.textContent.trim() || '',
+        actual: cells[2]?.textContent.trim() || '',
+        period: cells[3]?.textContent.trim() || ''
+      });
+    }
+  });
+  
+  return {
+    pmFilter: pmFilter,
+    summary: {
+      totalActual: document.getElementById('jaTotalActual')?.textContent || '--',
+      jobCount: jobs.length
+    },
+    jobs: jobs.slice(0, 20)
+  };
+}
+
+
 
 // ============================================================
 // AGING EMAIL MODAL FUNCTIONS

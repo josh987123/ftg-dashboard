@@ -1417,6 +1417,757 @@ def generate_ap_aging_html_email(report_data):
 # AR AGING EMAIL ENDPOINT
 # ============================================================
 
+@app.route('/api/email-balance-sheet', methods=['POST', 'OPTIONS'])
+def api_email_balance_sheet():
+    """Send Balance Sheet as HTML email"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        to_email = data.get('to')
+        report_data = data.get('reportData')
+        ai_analysis = data.get('aiAnalysis', '')
+        
+        if not to_email:
+            return jsonify({'error': 'Recipient email is required'}), 400
+        if not report_data:
+            return jsonify({'error': 'Report data is required'}), 400
+        
+        html_content = generate_balance_sheet_html_email(report_data, ai_analysis)
+        
+        from datetime import datetime
+        today = datetime.now().strftime('%m/%d/%y')
+        subject = f"FTG Builders Balance Sheet: {today}"
+        
+        result = send_gmail(to_email, subject, html_content)
+        return jsonify({'success': True, 'messageId': result.get('id')})
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+def generate_balance_sheet_html_email(report_data, ai_analysis=''):
+    from datetime import datetime
+    
+    period = report_data.get('period', '--')
+    summary = report_data.get('summary', {})
+    line_items = report_data.get('lineItems', [])
+    
+    report_date = datetime.now().strftime('%B %d, %Y')
+    gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    total_assets = summary.get('totalAssets', '--')
+    total_liabilities = summary.get('totalLiabilities', '--')
+    total_equity = summary.get('totalEquity', '--')
+    
+    rows_html = ''
+    for item in line_items[:40]:
+        name = html_escape(str(item.get('name', '')))
+        amount = item.get('amount', '--')
+        indent = item.get('indent', 0)
+        is_total = item.get('isTotal', False)
+        padding_left = 12 + (indent * 16)
+        font_weight = '700' if is_total else '400'
+        bg_color = '#f8fafc' if is_total else '#ffffff'
+        amount_color = '#dc2626' if (isinstance(amount, str) and (amount.startswith('-') or amount.startswith('('))) else '#1e293b'
+        
+        rows_html += '<tr style="background-color:' + bg_color + ';">'
+        rows_html += '<td style="padding:8px 12px;padding-left:' + str(padding_left) + 'px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;font-weight:' + font_weight + ';">' + name + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:' + amount_color + ';text-align:right;font-weight:' + font_weight + ';">' + str(amount) + '</td></tr>'
+    
+    ai_section = ''
+    if ai_analysis:
+        ai_section = '<tr><td style="padding:16px 32px;"><table width="100%" style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px;border-radius:4px;"><tr><td style="font-size:12px;font-weight:600;color:#16a34a;padding-bottom:8px;">AI Analysis</td></tr><tr><td style="font-size:14px;color:#1e293b;line-height:1.5;">' + html_escape(ai_analysis) + '</td></tr></table></td></tr>'
+    
+    html = '''<!DOCTYPE html><html><head><meta charset="utf-8"><title>Balance Sheet</title></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9"><tr><td align="center" style="padding:20px;">
+<table width="650" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="border-radius:12px;">
+<tr><td bgcolor="#1e3a5f" style="padding:24px 32px;border-radius:12px 12px 0 0;">
+<table width="100%"><tr><td style="font-size:24px;font-weight:700;color:#ffffff;">FTG Builders Dashboard</td>
+<td align="right" style="font-size:14px;color:#94a3b8;">''' + report_date + '''</td></tr></table></td></tr>
+<tr><td style="padding:24px 32px 8px 32px;"><h1 style="margin:0;font-size:28px;font-weight:700;color:#22c55e;">Balance Sheet</h1>
+<p style="margin:8px 0 0 0;font-size:14px;color:#64748b;">Period: ''' + period + '''</p></td></tr>
+<tr><td style="padding:16px 32px;"><table width="100%"><tr>
+<td width="33%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Total Assets</div><div style="font-size:18px;font-weight:700;color:#1e293b;margin-top:4px;">''' + total_assets + '''</div></div></td>
+<td width="33%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Total Liabilities</div><div style="font-size:18px;font-weight:700;color:#dc2626;margin-top:4px;">''' + total_liabilities + '''</div></div></td>
+<td width="33%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Total Equity</div><div style="font-size:18px;font-weight:700;color:#16a34a;margin-top:4px;">''' + total_equity + '''</div></div></td>
+</tr></table></td></tr>''' + ai_section + '''
+<tr><td style="padding:16px 32px;"><table width="100%" style="border:1px solid #e2e8f0;border-radius:8px;">
+<tr bgcolor="#f1f5f9"><th style="padding:12px;text-align:left;font-size:12px;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;">Account</th>
+<th style="padding:12px;text-align:right;font-size:12px;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;">Balance</th></tr>''' + rows_html + '''</table></td></tr>
+<tr><td style="padding:24px 32px;border-top:1px solid #e2e8f0;"><p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
+Report generated on ''' + gen_date + '''<br>FTG Builders Financial Dashboard</p></td></tr></table></td></tr></table></body></html>'''
+    return html
+
+@app.route('/api/email-cash-flow', methods=['POST', 'OPTIONS'])
+def api_email_cash_flow():
+    """Send Cash Flow Statement as HTML email"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        to_email = data.get('to')
+        report_data = data.get('reportData')
+        ai_analysis = data.get('aiAnalysis', '')
+        
+        if not to_email:
+            return jsonify({'error': 'Recipient email is required'}), 400
+        if not report_data:
+            return jsonify({'error': 'Report data is required'}), 400
+        
+        html_content = generate_cash_flow_html_email(report_data, ai_analysis)
+        
+        from datetime import datetime
+        today = datetime.now().strftime('%m/%d/%y')
+        subject = f"FTG Builders Cash Flow Statement: {today}"
+        
+        result = send_gmail(to_email, subject, html_content)
+        return jsonify({'success': True, 'messageId': result.get('id')})
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+def generate_cash_flow_html_email(report_data, ai_analysis=''):
+    from datetime import datetime
+    
+    period = report_data.get('period', '--')
+    summary = report_data.get('summary', {})
+    line_items = report_data.get('lineItems', [])
+    
+    report_date = datetime.now().strftime('%B %d, %Y')
+    gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    operating = summary.get('operating', '--')
+    investing = summary.get('investing', '--')
+    financing = summary.get('financing', '--')
+    net_change = summary.get('netChange', '--')
+    
+    rows_html = ''
+    for item in line_items[:40]:
+        name = html_escape(str(item.get('name', '')))
+        amount = item.get('amount', '--')
+        indent = item.get('indent', 0)
+        is_total = item.get('isTotal', False)
+        padding_left = 12 + (indent * 16)
+        font_weight = '700' if is_total else '400'
+        bg_color = '#f8fafc' if is_total else '#ffffff'
+        amount_color = '#dc2626' if (isinstance(amount, str) and (amount.startswith('-') or amount.startswith('('))) else '#1e293b'
+        
+        rows_html += '<tr style="background-color:' + bg_color + ';">'
+        rows_html += '<td style="padding:8px 12px;padding-left:' + str(padding_left) + 'px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;font-weight:' + font_weight + ';">' + name + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:' + amount_color + ';text-align:right;font-weight:' + font_weight + ';">' + str(amount) + '</td></tr>'
+    
+    ai_section = ''
+    if ai_analysis:
+        ai_section = '<tr><td style="padding:16px 32px;"><table width="100%" style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px;border-radius:4px;"><tr><td style="font-size:12px;font-weight:600;color:#16a34a;padding-bottom:8px;">AI Analysis</td></tr><tr><td style="font-size:14px;color:#1e293b;line-height:1.5;">' + html_escape(ai_analysis) + '</td></tr></table></td></tr>'
+    
+    html = '''<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cash Flow</title></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9"><tr><td align="center" style="padding:20px;">
+<table width="650" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="border-radius:12px;">
+<tr><td bgcolor="#1e3a5f" style="padding:24px 32px;border-radius:12px 12px 0 0;">
+<table width="100%"><tr><td style="font-size:24px;font-weight:700;color:#ffffff;">FTG Builders Dashboard</td>
+<td align="right" style="font-size:14px;color:#94a3b8;">''' + report_date + '''</td></tr></table></td></tr>
+<tr><td style="padding:24px 32px 8px 32px;"><h1 style="margin:0;font-size:28px;font-weight:700;color:#22c55e;">Statement of Cash Flows</h1>
+<p style="margin:8px 0 0 0;font-size:14px;color:#64748b;">Period: ''' + period + '''</p></td></tr>
+<tr><td style="padding:16px 32px;"><table width="100%"><tr>
+<td width="25%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Operating</div><div style="font-size:16px;font-weight:700;color:#1e293b;margin-top:4px;">''' + operating + '''</div></div></td>
+<td width="25%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Investing</div><div style="font-size:16px;font-weight:700;color:#1e293b;margin-top:4px;">''' + investing + '''</div></div></td>
+<td width="25%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Financing</div><div style="font-size:16px;font-weight:700;color:#1e293b;margin-top:4px;">''' + financing + '''</div></div></td>
+<td width="25%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Net Change</div><div style="font-size:16px;font-weight:700;color:#16a34a;margin-top:4px;">''' + net_change + '''</div></div></td>
+</tr></table></td></tr>''' + ai_section + '''
+<tr><td style="padding:16px 32px;"><table width="100%" style="border:1px solid #e2e8f0;border-radius:8px;">
+<tr bgcolor="#f1f5f9"><th style="padding:12px;text-align:left;font-size:12px;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;">Item</th>
+<th style="padding:12px;text-align:right;font-size:12px;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;">Amount</th></tr>''' + rows_html + '''</table></td></tr>
+<tr><td style="padding:24px 32px;border-top:1px solid #e2e8f0;"><p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
+Report generated on ''' + gen_date + '''<br>FTG Builders Financial Dashboard</p></td></tr></table></td></tr></table></body></html>'''
+    return html
+
+@app.route('/api/email-job-budgets', methods=['POST', 'OPTIONS'])
+def api_email_job_budgets():
+    """Send Job Budgets as HTML email"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        to_email = data.get('to')
+        report_data = data.get('reportData')
+        ai_analysis = data.get('aiAnalysis', '')
+        
+        if not to_email:
+            return jsonify({'error': 'Recipient email is required'}), 400
+        if not report_data:
+            return jsonify({'error': 'Report data is required'}), 400
+        
+        html_content = generate_job_budgets_html_email(report_data, ai_analysis)
+        
+        from datetime import datetime
+        today = datetime.now().strftime('%m/%d/%y')
+        subject = f"FTG Builders Job Budgets Report: {today}"
+        
+        result = send_gmail(to_email, subject, html_content)
+        return jsonify({'success': True, 'messageId': result.get('id')})
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+def generate_job_budgets_html_email(report_data, ai_analysis=''):
+    from datetime import datetime
+    
+    summary = report_data.get('summary', {})
+    jobs = report_data.get('jobs', [])
+    pm_filter = report_data.get('pmFilter', 'All')
+    
+    report_date = datetime.now().strftime('%B %d, %Y')
+    gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    total_budget = summary.get('totalBudget', '--')
+    total_actual = summary.get('totalActual', '--')
+    variance = summary.get('variance', '--')
+    
+    rows_html = ''
+    for job in jobs[:20]:
+        job_no = html_escape(str(job.get('jobNo', '')))
+        job_name = html_escape(str(job.get('jobName', '')))[:35]
+        budget = job.get('budget', '--')
+        actual = job.get('actual', '--')
+        var = job.get('variance', '--')
+        var_color = '#dc2626' if (isinstance(var, str) and var.startswith('-')) else '#16a34a'
+        
+        rows_html += '<tr>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;">' + job_no + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;">' + job_name + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;text-align:right;">' + str(budget) + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;text-align:right;">' + str(actual) + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:' + var_color + ';text-align:right;font-weight:600;">' + str(var) + '</td>'
+        rows_html += '</tr>'
+    
+    ai_section = ''
+    if ai_analysis:
+        ai_section = '<tr><td style="padding:16px 32px;"><table width="100%" style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px;"><tr><td style="font-size:12px;font-weight:600;color:#16a34a;padding-bottom:8px;">AI Analysis</td></tr><tr><td style="font-size:14px;color:#1e293b;line-height:1.5;">' + html_escape(ai_analysis) + '</td></tr></table></td></tr>'
+    
+    html = '''<!DOCTYPE html><html><head><meta charset="utf-8"><title>Job Budgets</title></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f1f5f9"><tr><td align="center" style="padding:20px;">
+<table width="650" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border-radius:12px;">
+<tr><td bgcolor="#1e3a5f" style="padding:24px 32px;border-radius:12px 12px 0 0;">
+<table width="100%"><tr><td style="font-size:24px;font-weight:700;color:#ffffff;">FTG Builders Dashboard</td>
+<td align="right" style="font-size:14px;color:#94a3b8;">''' + report_date + '''</td></tr></table></td></tr>
+<tr><td style="padding:24px 32px 8px 32px;"><h1 style="margin:0;font-size:28px;font-weight:700;color:#22c55e;">Job Budgets</h1>
+<p style="margin:8px 0 0 0;font-size:14px;color:#64748b;">PM Filter: ''' + pm_filter + '''</p></td></tr>
+<tr><td style="padding:16px 32px;"><table width="100%"><tr>
+<td width="33%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Total Budget</div><div style="font-size:18px;font-weight:700;color:#1e293b;margin-top:4px;">''' + total_budget + '''</div></div></td>
+<td width="33%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Total Actual</div><div style="font-size:18px;font-weight:700;color:#1e293b;margin-top:4px;">''' + total_actual + '''</div></div></td>
+<td width="33%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Variance</div><div style="font-size:18px;font-weight:700;color:#16a34a;margin-top:4px;">''' + variance + '''</div></div></td>
+</tr></table></td></tr>''' + ai_section + '''
+<tr><td style="padding:16px 32px;"><table width="100%" style="border:1px solid #e2e8f0;border-radius:8px;">
+<tr bgcolor="#f1f5f9"><th style="padding:12px;text-align:left;font-size:12px;font-weight:600;color:#475569;">Job #</th>
+<th style="padding:12px;text-align:left;font-size:12px;font-weight:600;color:#475569;">Job Name</th>
+<th style="padding:12px;text-align:right;font-size:12px;font-weight:600;color:#475569;">Budget</th>
+<th style="padding:12px;text-align:right;font-size:12px;font-weight:600;color:#475569;">Actual</th>
+<th style="padding:12px;text-align:right;font-size:12px;font-weight:600;color:#475569;">Variance</th></tr>
+''' + rows_html + '''</table></td></tr>
+<tr><td style="padding:24px 32px;border-top:1px solid #e2e8f0;"><p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
+Report generated on ''' + gen_date + '''<br>FTG Builders Financial Dashboard</p></td></tr></table></td></tr></table></body></html>'''
+    return html
+
+@app.route('/api/email-job-actuals', methods=['POST', 'OPTIONS'])
+def api_email_job_actuals():
+    """Send Job Actuals as HTML email"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        to_email = data.get('to')
+        report_data = data.get('reportData')
+        ai_analysis = data.get('aiAnalysis', '')
+        
+        if not to_email:
+            return jsonify({'error': 'Recipient email is required'}), 400
+        if not report_data:
+            return jsonify({'error': 'Report data is required'}), 400
+        
+        html_content = generate_job_actuals_html_email(report_data, ai_analysis)
+        
+        from datetime import datetime
+        today = datetime.now().strftime('%m/%d/%y')
+        subject = f"FTG Builders Job Actuals Report: {today}"
+        
+        result = send_gmail(to_email, subject, html_content)
+        return jsonify({'success': True, 'messageId': result.get('id')})
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+def generate_job_actuals_html_email(report_data, ai_analysis=''):
+    from datetime import datetime
+    
+    summary = report_data.get('summary', {})
+    jobs = report_data.get('jobs', [])
+    pm_filter = report_data.get('pmFilter', 'All')
+    
+    report_date = datetime.now().strftime('%B %d, %Y')
+    gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    total_actual = summary.get('totalActual', '--')
+    job_count = summary.get('jobCount', 0)
+    
+    rows_html = ''
+    for job in jobs[:20]:
+        job_no = html_escape(str(job.get('jobNo', '')))
+        job_name = html_escape(str(job.get('jobName', '')))[:35]
+        actual = job.get('actual', '--')
+        period = job.get('period', '--')
+        
+        rows_html += '<tr>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;">' + job_no + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;">' + job_name + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;text-align:right;">' + str(actual) + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;text-align:right;">' + str(period) + '</td>'
+        rows_html += '</tr>'
+    
+    ai_section = ''
+    if ai_analysis:
+        ai_section = '<tr><td style="padding:16px 32px;"><table width="100%" style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px;"><tr><td style="font-size:12px;font-weight:600;color:#16a34a;padding-bottom:8px;">AI Analysis</td></tr><tr><td style="font-size:14px;color:#1e293b;line-height:1.5;">' + html_escape(ai_analysis) + '</td></tr></table></td></tr>'
+    
+    html = '''<!DOCTYPE html><html><head><meta charset="utf-8"><title>Job Actuals</title></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f1f5f9"><tr><td align="center" style="padding:20px;">
+<table width="650" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border-radius:12px;">
+<tr><td bgcolor="#1e3a5f" style="padding:24px 32px;border-radius:12px 12px 0 0;">
+<table width="100%"><tr><td style="font-size:24px;font-weight:700;color:#ffffff;">FTG Builders Dashboard</td>
+<td align="right" style="font-size:14px;color:#94a3b8;">''' + report_date + '''</td></tr></table></td></tr>
+<tr><td style="padding:24px 32px 8px 32px;"><h1 style="margin:0;font-size:28px;font-weight:700;color:#22c55e;">Job Actuals</h1>
+<p style="margin:8px 0 0 0;font-size:14px;color:#64748b;">PM Filter: ''' + pm_filter + ''' | Jobs: ''' + str(job_count) + '''</p></td></tr>
+<tr><td style="padding:16px 32px;"><table width="100%"><tr>
+<td width="50%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Total Actual Costs</div><div style="font-size:18px;font-weight:700;color:#1e293b;margin-top:4px;">''' + total_actual + '''</div></div></td>
+<td width="50%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Job Count</div><div style="font-size:18px;font-weight:700;color:#3b82f6;margin-top:4px;">''' + str(job_count) + '''</div></div></td>
+</tr></table></td></tr>''' + ai_section + '''
+<tr><td style="padding:16px 32px;"><table width="100%" style="border:1px solid #e2e8f0;border-radius:8px;">
+<tr bgcolor="#f1f5f9"><th style="padding:12px;text-align:left;font-size:12px;font-weight:600;color:#475569;">Job #</th>
+<th style="padding:12px;text-align:left;font-size:12px;font-weight:600;color:#475569;">Job Name</th>
+<th style="padding:12px;text-align:right;font-size:12px;font-weight:600;color:#475569;">Actual Cost</th>
+<th style="padding:12px;text-align:right;font-size:12px;font-weight:600;color:#475569;">Period</th></tr>
+''' + rows_html + '''</table></td></tr>
+<tr><td style="padding:24px 32px;border-top:1px solid #e2e8f0;"><p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
+Report generated on ''' + gen_date + '''<br>FTG Builders Financial Dashboard</p></td></tr></table></td></tr></table></body></html>'''
+    return html
+
+
+
+@app.route('/api/email-job-overview', methods=['POST', 'OPTIONS'])
+def api_email_job_overview():
+    """Send Job Overview as HTML email"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        to_email = data.get('to')
+        report_data = data.get('reportData')
+        ai_analysis = data.get('aiAnalysis', '')
+        
+        if not to_email:
+            return jsonify({'error': 'Recipient email is required'}), 400
+        if not report_data:
+            return jsonify({'error': 'Report data is required'}), 400
+        
+        html_content = generate_job_overview_html_email(report_data, ai_analysis)
+        
+        from datetime import datetime
+        today = datetime.now().strftime('%m/%d/%y')
+        subject = f"FTG Builders Job Overview: {today}"
+        
+        result = send_gmail(to_email, subject, html_content)
+        return jsonify({'success': True, 'messageId': result.get('id')})
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+def generate_job_overview_html_email(report_data, ai_analysis=''):
+    from datetime import datetime
+    
+    summary = report_data.get('summary', {})
+    jobs = report_data.get('jobs', [])
+    pm_filter = report_data.get('pmFilter', 'All')
+    
+    report_date = datetime.now().strftime('%B %d, %Y')
+    gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    total_contract = summary.get('totalContract', '--')
+    total_billed = summary.get('totalBilled', '--')
+    backlog = summary.get('backlog', '--')
+    job_count = summary.get('jobCount', 0)
+    
+    rows_html = ''
+    for job in jobs[:20]:
+        job_no = html_escape(str(job.get('jobNo', '')))
+        job_name = html_escape(str(job.get('jobName', '')))[:40]
+        contract = job.get('contract', '--')
+        billed = job.get('billed', '--')
+        pct_complete = job.get('percentComplete', '--')
+        
+        rows_html += '<tr>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;">' + job_no + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;">' + job_name + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;text-align:right;">' + str(contract) + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;text-align:right;">' + str(billed) + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;text-align:right;">' + str(pct_complete) + '</td>'
+        rows_html += '</tr>'
+    
+    ai_section = ''
+    if ai_analysis:
+        ai_section = '<tr><td style="padding:16px 32px;"><table width="100%" style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px;border-radius:4px;"><tr><td style="font-size:12px;font-weight:600;color:#16a34a;padding-bottom:8px;">AI Analysis</td></tr><tr><td style="font-size:14px;color:#1e293b;line-height:1.5;">' + html_escape(ai_analysis) + '</td></tr></table></td></tr>'
+    
+    html = '''<!DOCTYPE html><html><head><meta charset="utf-8"><title>Job Overview</title></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9"><tr><td align="center" style="padding:20px;">
+<table width="650" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="border-radius:12px;">
+<tr><td bgcolor="#1e3a5f" style="padding:24px 32px;border-radius:12px 12px 0 0;">
+<table width="100%"><tr><td style="font-size:24px;font-weight:700;color:#ffffff;">FTG Builders Dashboard</td>
+<td align="right" style="font-size:14px;color:#94a3b8;">''' + report_date + '''</td></tr></table></td></tr>
+<tr><td style="padding:24px 32px 8px 32px;"><h1 style="margin:0;font-size:28px;font-weight:700;color:#22c55e;">Job Overview</h1>
+<p style="margin:8px 0 0 0;font-size:14px;color:#64748b;">PM Filter: ''' + pm_filter + ''' | Jobs: ''' + str(job_count) + '''</p></td></tr>
+<tr><td style="padding:16px 32px;"><table width="100%"><tr>
+<td width="33%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Total Contract</div><div style="font-size:18px;font-weight:700;color:#1e293b;margin-top:4px;">''' + total_contract + '''</div></div></td>
+<td width="33%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Total Billed</div><div style="font-size:18px;font-weight:700;color:#16a34a;margin-top:4px;">''' + total_billed + '''</div></div></td>
+<td width="33%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;">Backlog</div><div style="font-size:18px;font-weight:700;color:#3b82f6;margin-top:4px;">''' + backlog + '''</div></div></td>
+</tr></table></td></tr>''' + ai_section + '''
+<tr><td style="padding:16px 32px;"><table width="100%" style="border:1px solid #e2e8f0;border-radius:8px;">
+<tr bgcolor="#f1f5f9"><th style="padding:12px;text-align:left;font-size:12px;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;">Job #</th>
+<th style="padding:12px;text-align:left;font-size:12px;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;">Job Name</th>
+<th style="padding:12px;text-align:right;font-size:12px;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;">Contract</th>
+<th style="padding:12px;text-align:right;font-size:12px;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;">Billed</th>
+<th style="padding:12px;text-align:right;font-size:12px;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;">% Complete</th></tr>
+''' + rows_html + '''</table></td></tr>
+<tr><td style="padding:24px 32px;border-top:1px solid #e2e8f0;"><p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
+Report generated on ''' + gen_date + '''<br>FTG Builders Financial Dashboard</p></td></tr></table></td></tr></table></body></html>'''
+    return html
+
+
+
+@app.route('/api/email-income-statement', methods=['POST', 'OPTIONS'])
+def api_email_income_statement():
+    """Send Income Statement as HTML email with content embedded in body"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        to_email = data.get('to')
+        report_data = data.get('reportData')
+        ai_analysis = data.get('aiAnalysis', '')
+        
+        if not to_email:
+            return jsonify({'error': 'Recipient email is required'}), 400
+        
+        if not report_data:
+            return jsonify({'error': 'Report data is required'}), 400
+        
+        html_content = generate_income_statement_html_email(report_data, ai_analysis)
+        
+        from datetime import datetime
+        today = datetime.now().strftime('%m/%d/%y')
+        period = report_data.get('period', '')
+        subject = f"FTG Builders Income Statement ({period}): {today}"
+        
+        result = send_gmail(to_email, subject, html_content)
+        
+        return jsonify({'success': True, 'messageId': result.get('id')})
+        
+    except Exception as e:
+        import traceback
+        print(f"Income Statement email error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+def generate_income_statement_html_email(report_data, ai_analysis=''):
+    """Generate HTML email content for Income Statement"""
+    from datetime import datetime
+    
+    period = report_data.get('period', '--')
+    summary = report_data.get('summary', {})
+    line_items = report_data.get('lineItems', [])
+    
+    report_date = datetime.now().strftime('%B %d, %Y')
+    gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    revenue = summary.get('revenue', '--')
+    gross_profit = summary.get('grossProfit', '--')
+    operating_income = summary.get('operatingIncome', '--')
+    net_income = summary.get('netIncome', '--')
+    
+    # Build line items table
+    rows_html = ''
+    for item in line_items[:30]:
+        name = html_escape(str(item.get('name', '')))
+        amount = item.get('amount', '--')
+        indent = item.get('indent', 0)
+        is_total = item.get('isTotal', False)
+        
+        padding_left = 12 + (indent * 16)
+        font_weight = '700' if is_total else '400'
+        bg_color = '#f8fafc' if is_total else '#ffffff'
+        amount_color = '#dc2626' if (isinstance(amount, str) and (amount.startswith('-') or amount.startswith('('))) else '#1e293b'
+        
+        rows_html += '<tr style="background-color:' + bg_color + ';">'
+        rows_html += '<td style="padding:8px 12px;padding-left:' + str(padding_left) + 'px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#1e293b;font-weight:' + font_weight + ';">' + name + '</td>'
+        rows_html += '<td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:' + amount_color + ';text-align:right;font-weight:' + font_weight + ';">' + str(amount) + '</td>'
+        rows_html += '</tr>'
+    
+    # AI Analysis section
+    ai_section = ''
+    if ai_analysis:
+        ai_section = '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;"><tr>'
+        ai_section += '<td style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px;border-radius:4px;">'
+        ai_section += '<table width="100%" cellpadding="0" cellspacing="0" border="0">'
+        ai_section += '<tr><td style="font-size:12px;font-weight:600;color:#16a34a;text-transform:uppercase;letter-spacing:0.5px;padding-bottom:8px;">AI Analysis</td></tr>'
+        ai_section += '<tr><td style="font-size:14px;color:#1e293b;line-height:1.5;">' + html_escape(ai_analysis) + '</td></tr>'
+        ai_section += '</table></td></tr></table>'
+    
+    html = '''<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Income Statement</title></head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9">
+<tr><td align="center" style="padding:20px;">
+<table width="650" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:12px;">
+<tr><td bgcolor="#1e3a5f" style="background-color:#1e3a5f;padding:24px 32px;border-radius:12px 12px 0 0;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="font-size:24px;font-weight:700;color:#ffffff;">FTG Builders Dashboard</td>
+<td align="right" style="font-size:14px;color:#94a3b8;">''' + report_date + '''</td></tr>
+</table></td></tr>
+<tr><td style="padding:24px 32px 8px 32px;">
+<h1 style="margin:0;font-size:28px;font-weight:700;color:#22c55e;">Income Statement</h1>
+<p style="margin:8px 0 0 0;font-size:14px;color:#64748b;">Period: ''' + period + '''</p>
+</td></tr>
+<tr><td style="padding:16px 32px;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td width="25%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;text-transform:uppercase;">Revenue</div>
+<div style="font-size:18px;font-weight:700;color:#16a34a;margin-top:4px;">''' + revenue + '''</div></div></td>
+<td width="25%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;text-transform:uppercase;">Gross Profit</div>
+<div style="font-size:18px;font-weight:700;color:#1e293b;margin-top:4px;">''' + gross_profit + '''</div></div></td>
+<td width="25%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;text-transform:uppercase;">Operating Income</div>
+<div style="font-size:18px;font-weight:700;color:#1e293b;margin-top:4px;">''' + operating_income + '''</div></div></td>
+<td width="25%" style="padding:8px;text-align:center;"><div style="background-color:#f8fafc;border-radius:8px;padding:16px;">
+<div style="font-size:11px;color:#64748b;text-transform:uppercase;">Net Income</div>
+<div style="font-size:18px;font-weight:700;color:#1e293b;margin-top:4px;">''' + net_income + '''</div></div></td>
+</tr></table></td></tr>
+''' + ai_section + '''
+<tr><td style="padding:16px 32px;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:8px;">
+<tr bgcolor="#f1f5f9"><th style="padding:12px;text-align:left;font-size:12px;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;">Account</th>
+<th style="padding:12px;text-align:right;font-size:12px;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0;">Amount</th></tr>
+''' + rows_html + '''
+</table></td></tr>
+<tr><td style="padding:24px 32px;border-top:1px solid #e2e8f0;">
+<p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
+Report generated on ''' + gen_date + '''<br>FTG Builders Financial Dashboard</p>
+</td></tr></table></td></tr></table>
+</body></html>'''
+    
+    return html
+
+
+
+@app.route('/api/email-overview', methods=['POST', 'OPTIONS'])
+def api_email_overview():
+    """Send Executive Overview as HTML email with content embedded in body"""
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'})
+    
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+        
+        to_email = data.get('to')
+        report_data = data.get('reportData')
+        ai_analysis = data.get('aiAnalysis', '')
+        
+        if not to_email:
+            return jsonify({'error': 'Recipient email is required'}), 400
+        
+        if not report_data:
+            return jsonify({'error': 'Report data is required'}), 400
+        
+        html_content = generate_overview_html_email(report_data, ai_analysis)
+        
+        from datetime import datetime
+        today = datetime.now().strftime('%m/%d/%y')
+        subject = f"FTG Builders Executive Overview: {today}"
+        
+        result = send_gmail(to_email, subject, html_content)
+        
+        return jsonify({'success': True, 'messageId': result.get('id')})
+        
+    except Exception as e:
+        import traceback
+        print(f"Overview email error: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+def generate_overview_html_email(report_data, ai_analysis=''):
+    """Generate HTML email content for Executive Overview"""
+    from datetime import datetime
+    
+    tiles = report_data.get('tiles', [])
+    data_as_of = report_data.get('dataAsOf', '--')
+    
+    report_date = datetime.now().strftime('%B %d, %Y')
+    gen_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    # Build tile rows (2 tiles per row)
+    tiles_html = ''
+    for i in range(0, len(tiles), 2):
+        tiles_html += '<tr>'
+        for j in range(2):
+            if i + j < len(tiles):
+                tile = tiles[i + j]
+                title = html_escape(str(tile.get('title', '')))
+                stats_html = ''
+                for stat in tile.get('stats', []):
+                    label = html_escape(str(stat.get('label', '')))
+                    value = html_escape(str(stat.get('value', '')))
+                    color = '#1e293b'
+                    if 'negative' in str(stat.get('class', '')).lower() or value.startswith('-'):
+                        color = '#dc2626'
+                    elif 'positive' in str(stat.get('class', '')).lower():
+                        color = '#16a34a'
+                    stats_html += '<tr><td style="padding:4px 0;font-size:12px;color:#64748b;">' + label + '</td><td style="padding:4px 0;font-size:14px;font-weight:600;color:' + color + ';text-align:right;">' + value + '</td></tr>'
+                
+                tiles_html += '<td width="48%" style="padding:8px;">'
+                tiles_html += '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff;border-radius:8px;border:1px solid #e2e8f0;">'
+                tiles_html += '<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;font-weight:600;color:#1e293b;">' + title + '</td></tr>'
+                tiles_html += '<tr><td style="padding:12px 16px;"><table width="100%" cellpadding="0" cellspacing="0" border="0">' + stats_html + '</table></td></tr>'
+                tiles_html += '</table></td>'
+            else:
+                tiles_html += '<td width="48%"></td>'
+        tiles_html += '</tr>'
+    
+    # AI Analysis section
+    ai_section = ''
+    if ai_analysis:
+        ai_section = '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;"><tr>'
+        ai_section += '<td style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px;border-radius:4px;">'
+        ai_section += '<table width="100%" cellpadding="0" cellspacing="0" border="0">'
+        ai_section += '<tr><td style="font-size:12px;font-weight:600;color:#16a34a;text-transform:uppercase;letter-spacing:0.5px;padding-bottom:8px;">AI Analysis</td></tr>'
+        ai_section += '<tr><td style="font-size:14px;color:#1e293b;line-height:1.5;">' + html_escape(ai_analysis) + '</td></tr>'
+        ai_section += '</table></td></tr></table>'
+    
+    html = '''<!DOCTYPE html>
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTG Builders Executive Overview</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9" style="background-color:#f1f5f9;">
+        <tr>
+            <td align="center" style="padding:20px;">
+                <table width="650" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td bgcolor="#1e3a5f" style="background-color:#1e3a5f;padding:24px 32px;border-radius:12px 12px 0 0;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="font-size:24px;font-weight:700;color:#ffffff;">FTG Builders Dashboard</td>
+                                    <td align="right" style="font-size:14px;color:#94a3b8;">'''+ report_date +'''</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Title -->
+                    <tr>
+                        <td style="padding:24px 32px 8px 32px;">
+                            <h1 style="margin:0;font-size:28px;font-weight:700;color:#22c55e;">Executive Overview</h1>
+                            <p style="margin:8px 0 0 0;font-size:14px;color:#64748b;">Data as of: ''' + data_as_of + '''</p>
+                        </td>
+                    </tr>
+                    
+                    ''' + ai_section + '''
+                    
+                    <!-- Metric Tiles -->
+                    <tr>
+                        <td style="padding:16px 24px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                ''' + tiles_html + '''
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:24px 32px;border-top:1px solid #e2e8f0;">
+                            <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
+                                Report generated on ''' + gen_date + '''<br>
+                                FTG Builders Financial Dashboard
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>'''
+    
+    return html
+
+
+
 @app.route('/api/email-ar-aging', methods=['POST', 'OPTIONS'])
 def api_email_ar_aging():
     """Send AR Aging Report as HTML email with content embedded in body"""
