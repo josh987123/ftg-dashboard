@@ -1839,6 +1839,58 @@ def api_analyze_financial_data():
         if not data:
             return jsonify({'error': 'Invalid JSON data'}), 400
         
+        endpoint = request.path
+        
+        # Handle AR/AP aging separately - they use agingData, not statementData
+        if 'ar-aging' in endpoint:
+            aging_data = data.get('agingData', '')
+            period_info = data.get('periodInfo', 'Current')
+            if not aging_data:
+                return jsonify({'error': 'Missing aging data'}), 400
+            
+            client = get_anthropic_client()
+            system_prompt = """You are a CFO analyzing a construction company's Accounts Receivable Aging report.
+Provide a BRIEF 2-3 sentence executive summary. Focus on total receivables, concentration issues, and aging trends.
+STRICT RULES:
+- Return ONLY plain text (no JSON, no markdown headers, no bullet points)
+- Keep it to 2-3 concise sentences maximum
+- Use specific dollar amounts, round to K/M suffixes"""
+            
+            user_prompt = f"Summarize this AR Aging report:\n\nPeriod: {period_info}\n\n{aging_data}"
+            
+            message = client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=300,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}]
+            )
+            return jsonify({'success': True, 'analysis': message.content[0].text})
+        
+        if 'ap-aging' in endpoint:
+            aging_data = data.get('agingData', '')
+            period_info = data.get('periodInfo', 'Current')
+            if not aging_data:
+                return jsonify({'error': 'Missing aging data'}), 400
+            
+            client = get_anthropic_client()
+            system_prompt = """You are a CFO analyzing a construction company's Accounts Payable Aging report.
+Provide a BRIEF 2-3 sentence executive summary. Focus on total payables, vendor concentration, and aging trends.
+STRICT RULES:
+- Return ONLY plain text (no JSON, no markdown headers, no bullet points)
+- Keep it to 2-3 concise sentences maximum
+- Use specific dollar amounts, round to K/M suffixes"""
+            
+            user_prompt = f"Summarize this AP Aging report:\n\nPeriod: {period_info}\n\n{aging_data}"
+            
+            message = client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=300,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}]
+            )
+            return jsonify({'success': True, 'analysis': message.content[0].text})
+        
+        # For other endpoints, use statementData
         statement_data = data.get('statementData') or data.get('chartData')
         period_info = data.get('periodInfo', '')
         
@@ -1846,8 +1898,6 @@ def api_analyze_financial_data():
             return jsonify({'error': 'Missing data'}), 400
         
         client = get_anthropic_client()
-        
-        endpoint = request.path
         if 'ai-insights' in endpoint:
             title = "Comprehensive Business Analysis"
             focus = """strategic business intelligence including:
@@ -1868,54 +1918,6 @@ def api_analyze_financial_data():
         elif 'pm-report' in endpoint:
             title = "PM Report"
             focus = "project manager performance, job portfolio, over/under billing, missing budgets, and client relationships"
-        elif 'ar-aging' in endpoint:
-            title = "AR Aging Report"
-            focus = "accounts receivable aging, collection risk, customer concentration"
-            # Use simpler prompt for AR aging - just 2-3 sentences
-            aging_data = data.get('agingData', '')
-            period_info = data.get('periodInfo', 'Current')
-            
-            system_prompt = """You are a CFO analyzing a construction company's Accounts Receivable Aging report.
-Provide a BRIEF 2-3 sentence executive summary. Focus on total receivables, concentration issues, and aging trends.
-STRICT RULES:
-- Return ONLY plain text (no JSON, no markdown headers, no bullet points)
-- Keep it to 2-3 concise sentences maximum
-- Use specific dollar amounts, round to K/M suffixes"""
-            
-            user_prompt = f"Summarize this AR Aging report:\n\nPeriod: {period_info}\n\n{aging_data}"
-            
-            message = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=300,
-                system=system_prompt,
-                messages=[{"role": "user", "content": user_prompt}]
-            )
-            analysis = message.content[0].text
-            return jsonify({'success': True, 'analysis': analysis})
-        elif 'ap-aging' in endpoint:
-            title = "AP Aging Report"
-            focus = "accounts payable aging, payment obligations, vendor concentration"
-            # Use simpler prompt for AP aging - just 2-3 sentences
-            aging_data = data.get('agingData', '')
-            period_info = data.get('periodInfo', 'Current')
-            
-            system_prompt = """You are a CFO analyzing a construction company's Accounts Payable Aging report.
-Provide a BRIEF 2-3 sentence executive summary. Focus on total payables, vendor concentration, and aging trends.
-STRICT RULES:
-- Return ONLY plain text (no JSON, no markdown headers, no bullet points)
-- Keep it to 2-3 concise sentences maximum
-- Use specific dollar amounts, round to K/M suffixes"""
-            
-            user_prompt = f"Summarize this AP Aging report:\n\nPeriod: {period_info}\n\n{aging_data}"
-            
-            message = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=300,
-                system=system_prompt,
-                messages=[{"role": "user", "content": user_prompt}]
-            )
-            analysis = message.content[0].text
-            return jsonify({'success': True, 'analysis': analysis})
         elif 'jobs' in endpoint:
             title = "Job Overview"
             focus = "job performance, contract values, billing status, and profit margins by project manager and client"
