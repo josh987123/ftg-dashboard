@@ -7568,75 +7568,8 @@ async function universalExportToPdf() {
   loadingOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100000;';
   document.body.appendChild(loadingOverlay);
   
-  // Add pdf-export-mode class to body - this uses the comprehensive CSS rules
-  document.body.classList.add('pdf-export-mode');
-  
-  // Also inject temporary style for additional overrides
-  const pdfStyle = document.createElement('style');
-  pdfStyle.id = 'pdf-export-style';
-  pdfStyle.textContent = `
-    /* Override CSS variables to solid colors */
-    :root, body, html {
-      --glass-bg: #ffffff !important;
-      --glass-border: #e2e8f0 !important;
-      --glass-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
-      --bg-primary: #ffffff !important;
-      --bg-secondary: #f8fafc !important;
-    }
-    
-    /* Kill ALL pseudo-elements */
-    *::before, *::after {
-      content: none !important;
-      display: none !important;
-      background: transparent !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      opacity: 0 !important;
-    }
-    
-    /* Force solid backgrounds on major containers */
-    body, html, .main-content, .dashboard-section, .sidebar,
-    #arAging, #apAging, #overview, #incomeStatement, #balanceSheet,
-    #cashFlow, #cashBalances, #jobOverview, #jobBudgets, #jobActuals,
-    #costCodes, #overUnderBilling, #pmReport, #adminDashboard {
-      background: #f8fafc !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      filter: none !important;
-      opacity: 1 !important;
-    }
-    
-    /* Force solid on all card/panel elements */
-    .welcome-card, .summary-card, .metric-tile, .chart-card,
-    .glass-panel, .config-panel, .glass-card,
-    .pm-tabs-bar, .pm-tab-btn, .pm-tabs-container,
-    .ap-aging-summary, .ap-aging-chart-section, .ap-aging-chart-wrapper,
-    .chart-wrapper, table, .job-budgets-table, thead, tbody, tr, td, th {
-      background: #ffffff !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      filter: none !important;
-      opacity: 1 !important;
-    }
-    
-    /* Ensure text is visible */
-    .summary-label, .metric-label, h1, h2, h3, h4, h5, h6, p, span, label {
-      opacity: 1 !important;
-    }
-    
-    .pm-tab-btn {
-      background: #e2e8f0 !important;
-      color: #1e293b !important;
-    }
-    .pm-tab-btn.active {
-      background: #3b82f6 !important;
-      color: #ffffff !important;
-    }
-  `;
-  document.head.appendChild(pdfStyle);
-  
-  // Hide elements that shouldn't be in PDF
-  const hideSelectors = '.config-panel, .config-header, .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay:not(#pdfLoadingOverlay), .loading-spinner, .skeleton, .table-export-btn-row';
+  // Hide elements that shouldn't be in PDF from the original section
+  const hideSelectors = '.config-panel, .config-header, .ai-run-btn, .export-bar, .saved-views-row, .chart-expand-btn, .page-chart-expand-btn, .loading-overlay:not(#pdfLoadingOverlay), .loading-spinner, .skeleton, .table-export-btn-row, .ai-analysis-section, .ai-button-container';
   const hiddenEls = [];
   section.querySelectorAll(hideSelectors).forEach(el => {
     if (el.style.display !== 'none') {
@@ -7647,17 +7580,92 @@ async function universalExportToPdf() {
   
   try {
     await LazyLoader.loadMultiple(['html2canvas', 'jspdf']);
+    await new Promise(r => setTimeout(r, 150));
     
-    // Wait for styles to apply
-    await new Promise(r => setTimeout(r, 200));
+    // Create a clean container for PDF export with forced desktop width
+    const pdfContainer = document.createElement('div');
+    const desktopWidth = Math.max(1200, section.scrollWidth);
+    pdfContainer.style.cssText = 'position:absolute;left:-9999px;top:0;background:#fff;width:' + desktopWidth + 'px;min-width:1200px;';
+    document.body.appendChild(pdfContainer);
     
-    // Capture the LIVE section (preserves charts and data)
-    const canvas = await html2canvas(section, {
-      scale: 2,
+    // Clone the section
+    const cleanClone = section.cloneNode(true);
+    cleanClone.style.width = desktopWidth + 'px';
+    cleanClone.style.minWidth = '1200px';
+    cleanClone.style.maxWidth = 'none';
+    pdfContainer.appendChild(cleanClone);
+    
+    // Force solid backgrounds on all elements in the clone - removes glassmorphism haze
+    const allElements = cleanClone.querySelectorAll('*');
+    allElements.forEach(el => {
+      const style = el.style;
+      style.backdropFilter = 'none';
+      style.webkitBackdropFilter = 'none';
+      style.filter = 'none';
+      
+      // Check if element has translucent background
+      const computed = window.getComputedStyle(el);
+      const bg = computed.backgroundColor;
+      if (bg && bg.includes('rgba')) {
+        style.backgroundColor = '#ffffff';
+      }
+      // Force backgrounds for common glass elements
+      if (el.classList.contains('summary-card') || 
+          el.classList.contains('metric-tile') ||
+          el.classList.contains('chart-card') ||
+          el.classList.contains('pm-tab-btn') ||
+          el.classList.contains('glass-panel') ||
+          el.classList.contains('overview-tile') ||
+          el.classList.contains('glass-card') ||
+          el.classList.contains('welcome-card') ||
+          el.classList.contains('config-panel') ||
+          el.classList.contains('chart-wrapper') ||
+          el.classList.contains('ap-aging-summary') ||
+          el.classList.contains('ar-aging-summary')) {
+        style.backgroundColor = '#ffffff';
+        style.backgroundImage = 'none';
+      }
+    });
+    
+    // Set solid background on the clone itself
+    cleanClone.style.backgroundColor = '#ffffff';
+    cleanClone.style.backgroundImage = 'none';
+    
+    // Copy canvas elements (charts) as images
+    const originalCanvases = section.querySelectorAll('canvas');
+    const clonedCanvases = cleanClone.querySelectorAll('canvas');
+    originalCanvases.forEach((origCanvas, idx) => {
+      if (clonedCanvases[idx]) {
+        try {
+          const dataUrl = origCanvas.toDataURL();
+          const img = document.createElement('img');
+          img.src = dataUrl;
+          img.style.cssText = origCanvas.style.cssText;
+          img.style.width = origCanvas.offsetWidth + 'px';
+          img.style.height = origCanvas.offsetHeight + 'px';
+          clonedCanvases[idx].parentNode.replaceChild(img, clonedCanvases[idx]);
+        } catch (e) {
+          console.log('Could not convert canvas to image:', e);
+        }
+      }
+    });
+    
+    // Capture the clean clone
+    const canvas = await html2canvas(cleanClone, {
+      scale: 1.5,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
-      logging: false
+      logging: false,
+      windowWidth: Math.max(1200, cleanClone.scrollWidth),
+      windowHeight: cleanClone.scrollHeight,
+      ignoreElements: (el) => {
+        return el.classList && (
+          el.classList.contains('loading-overlay') ||
+          el.classList.contains('loading-spinner') ||
+          el.id?.includes('Loading')
+        );
+      }
     });
     
     // Generate PDF
@@ -7670,23 +7678,23 @@ async function universalExportToPdf() {
     const pdf = new jsPDF({
       orientation: isLandscape ? 'landscape' : 'portrait',
       unit: 'px',
-      format: [imgWidth / 2 + 40, imgHeight / 2 + 80]
+      format: [imgWidth / 1.5 + 40, imgHeight / 1.5 + 80]
     });
     
     pdf.setFontSize(10);
     pdf.setTextColor(100);
     pdf.text('FTG Builders Dashboard', 20, 20);
     pdf.text(new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }), pdf.internal.pageSize.getWidth() - 20, 20, { align: 'right' });
-    pdf.addImage(imgData, 'PNG', 20, 40, imgWidth / 2, imgHeight / 2);
+    pdf.addImage(imgData, 'PNG', 20, 40, imgWidth / 1.5, imgHeight / 1.5);
     pdf.save(filename);
     
   } catch (err) {
     console.error('PDF export error:', err);
     alert('PDF export failed: ' + err.message);
   } finally {
-    // Clean up: remove class and injected style
-    document.body.classList.remove('pdf-export-mode');
-    pdfStyle.remove();
+    // Clean up PDF container if it exists
+    const pdfCont = document.querySelector('div[style*="left:-9999px"]');
+    if (pdfCont) pdfCont.remove();
     
     // Restore hidden elements
     hiddenEls.forEach(({ el, display }) => {
