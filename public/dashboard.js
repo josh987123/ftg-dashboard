@@ -7596,6 +7596,12 @@ async function universalExportToPdf() {
     cleanClone.style.width = desktopWidth + 'px';
     cleanClone.style.minWidth = '1200px';
     cleanClone.style.maxWidth = 'none';
+    // CRITICAL: Force visibility on clone - the original has opacity:0 from CSS animation
+    cleanClone.style.display = 'block';
+    cleanClone.style.opacity = '1';
+    cleanClone.style.transform = 'none';
+    cleanClone.style.visibility = 'visible';
+    cleanClone.style.animation = 'none';
     pdfContainer.appendChild(cleanClone);
     
     // Force solid backgrounds on all elements in the clone - removes glassmorphism haze
@@ -7605,6 +7611,9 @@ async function universalExportToPdf() {
       style.backdropFilter = 'none';
       style.webkitBackdropFilter = 'none';
       style.filter = 'none';
+      // Force visibility on all elements in case they have opacity: 0 or are hidden
+      style.opacity = '1';
+      style.visibility = 'visible';
       
       // Check if element has translucent background
       const computed = window.getComputedStyle(el);
@@ -8415,6 +8424,12 @@ async function captureVisibleSectionAsImage() {
     cleanClone.style.width = desktopWidth + 'px';
     cleanClone.style.minWidth = '1200px';
     cleanClone.style.maxWidth = 'none';
+    // CRITICAL: Force visibility on clone - the original has opacity:0 from CSS animation
+    cleanClone.style.display = 'block';
+    cleanClone.style.opacity = '1';
+    cleanClone.style.transform = 'none';
+    cleanClone.style.visibility = 'visible';
+    cleanClone.style.animation = 'none';
     pdfContainer.appendChild(cleanClone);
     
     // Force solid backgrounds on all elements in the clone
@@ -8424,6 +8439,9 @@ async function captureVisibleSectionAsImage() {
       style.backdropFilter = 'none';
       style.webkitBackdropFilter = 'none';
       style.filter = 'none';
+      // Force visibility on all elements in case they have opacity: 0 or are hidden
+      style.opacity = '1';
+      style.visibility = 'visible';
       
       // Check if element has translucent background
       const computed = window.getComputedStyle(el);
