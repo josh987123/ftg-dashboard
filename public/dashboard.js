@@ -2219,6 +2219,12 @@ function initAllAiPanelToggles() {
   const jaBtn = document.getElementById('jaAiAnalyzeBtn');
   if (jaBtn) jaBtn.addEventListener('click', performJobActualsAiAnalysis);
   
+  const arAiBtn = document.getElementById('arAiAnalyzeBtn');
+  if (arAiBtn) arAiBtn.addEventListener('click', performARAgingAiAnalysis);
+  
+  const apAiBtn = document.getElementById('apAiAnalyzeBtn');
+  if (apAiBtn) apAiBtn.addEventListener('click', performAPAgingAiAnalysis);
+  
   const dcrBtn = document.getElementById('dcrAiAnalyzeBtn');
   if (dcrBtn) dcrBtn.addEventListener('click', performCashReportAiAnalysis);
   
@@ -2512,6 +2518,142 @@ async function performJobActualsAiAnalysis() {
     btn.textContent = 'Run Analysis';
   }
 }
+
+async function performARAgingAiAnalysis() {
+  const btn = document.getElementById('arAiAnalyzeBtn');
+  const panel = document.getElementById('arAiAnalysisPanel');
+  const content = document.getElementById('arAiAnalysisContent');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  panel.classList.remove('collapsed');
+  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing AR aging...</div>';
+  try {
+    const agingData = extractARAgingData();
+    const periodInfo = document.getElementById('arAgingDataAsOf')?.textContent || 'Current';
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/analyze-ar-aging' : '/.netlify/functions/analyze-ar-aging';
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({agingData, periodInfo})
+    });
+    const result = await response.json();
+    if (result.success) {
+      content.innerHTML = '<p style="margin:0;line-height:1.6;">' + result.analysis + '</p>';
+      panel.classList.add('has-analysis');
+    } else {
+      content.innerHTML = '<div style="color: #dc2626;">Error: ' + result.error + '</div>';
+    }
+  } catch (e) {
+    content.innerHTML = '<div style="color: #dc2626;">Error: ' + e.message + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis';
+  }
+}
+
+function extractARAgingData() {
+  let text = "AR Aging Summary:\n";
+  text += "Total Due: " + (document.getElementById('arAgingTotalDue')?.textContent || '$0') + "\n";
+  text += "Total Retainage: " + (document.getElementById('arAgingRetainage')?.textContent || '$0') + "\n";
+  text += "Current (0-30 Days): " + (document.getElementById('arAgingCurrent')?.textContent || '$0') + "\n";
+  text += "31-60 Days: " + (document.getElementById('arAging31to60')?.textContent || '$0') + "\n";
+  text += "61-90 Days: " + (document.getElementById('arAging61to90')?.textContent || '$0') + "\n";
+  text += "90+ Days: " + (document.getElementById('arAging90plus')?.textContent || '$0') + "\n\n";
+  
+  // Get top customers from table
+  const table = document.getElementById('arAgingTable');
+  if (table) {
+    const rows = table.querySelectorAll('tbody tr:not(.customer-detail-row)');
+    text += "Top Customers by Total Due:\n";
+    let count = 0;
+    rows.forEach(row => {
+      if (count < 5) {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 2) {
+          const customer = cells[0]?.textContent.trim() || '';
+          const totalDue = cells[1]?.textContent.trim() || '$0';
+          if (customer) {
+            text += "- " + customer + ": " + totalDue + "\n";
+            count++;
+          }
+        }
+      }
+    });
+  }
+  
+  return text;
+}
+
+async function performAPAgingAiAnalysis() {
+  const btn = document.getElementById('apAiAnalyzeBtn');
+  const panel = document.getElementById('apAiAnalysisPanel');
+  const content = document.getElementById('apAiAnalysisContent');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+  panel.classList.remove('collapsed');
+  content.innerHTML = '<div class="ai-analysis-loading"><div class="ai-spinner"></div>Analyzing AP aging...</div>';
+  try {
+    const agingData = extractAPAgingData();
+    const periodInfo = document.getElementById('apAgingDataAsOf')?.textContent || 'Current';
+    const hostname = window.location.hostname;
+    const isReplit = hostname.includes('replit') || hostname.includes('127.0.0.1') || hostname === 'localhost';
+    const apiUrl = isReplit ? '/api/analyze-ap-aging' : '/.netlify/functions/analyze-ap-aging';
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({agingData, periodInfo})
+    });
+    const result = await response.json();
+    if (result.success) {
+      content.innerHTML = '<p style="margin:0;line-height:1.6;">' + result.analysis + '</p>';
+      panel.classList.add('has-analysis');
+    } else {
+      content.innerHTML = '<div style="color: #dc2626;">Error: ' + result.error + '</div>';
+    }
+  } catch (e) {
+    content.innerHTML = '<div style="color: #dc2626;">Error: ' + e.message + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Analysis';
+  }
+}
+
+function extractAPAgingData() {
+  let text = "AP Aging Summary:\n";
+  text += "Total Due: " + (document.getElementById('apAgingTotalDue')?.textContent || '$0') + "\n";
+  text += "Total Retainage: " + (document.getElementById('apAgingRetainage')?.textContent || '$0') + "\n";
+  text += "Current (0-30 Days): " + (document.getElementById('apAgingCurrent')?.textContent || '$0') + "\n";
+  text += "31-60 Days: " + (document.getElementById('apAging31to60')?.textContent || '$0') + "\n";
+  text += "61-90 Days: " + (document.getElementById('apAging61to90')?.textContent || '$0') + "\n";
+  text += "90+ Days: " + (document.getElementById('apAging90plus')?.textContent || '$0') + "\n\n";
+  
+  // Get top vendors from table
+  const table = document.getElementById('apAgingTable');
+  if (table) {
+    const rows = table.querySelectorAll('tbody tr:not(.vendor-detail-row)');
+    text += "Top Vendors by Total Due:\n";
+    let count = 0;
+    rows.forEach(row => {
+      if (count < 5) {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 2) {
+          const vendor = cells[0]?.textContent.trim() || '';
+          const totalDue = cells[1]?.textContent.trim() || '$0';
+          if (vendor) {
+            text += "- " + vendor + ": " + totalDue + "\n";
+            count++;
+          }
+        }
+      }
+    });
+  }
+  
+  return text;
+}
+
+
 
 function extractJobActualsData() {
   let text = "Job Actuals Analysis:\n\n";
