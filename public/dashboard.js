@@ -851,7 +851,9 @@ function openChartFullscreen(chartId, title) {
       ...ds,
       backgroundColor: ds.type === "line" ? "transparent" : ds.backgroundColor,
       borderColor: ds.borderColor,
-      data: [...ds.data]
+      data: [...ds.data],
+      // Force white datalabels for fullscreen (override dataset-level dark colors)
+      datalabels: { ...(ds.datalabels || {}), color: "#fff" }
     }))
   };
   
@@ -1060,7 +1062,8 @@ function openPageChartFullscreen(chartId, title) {
           ...ds,
           data: [...ds.data],
           borderColor: '#1e293b',
-          borderWidth: 3
+          borderWidth: 3,
+          datalabels: { ...(ds.datalabels || {}), color: "#fff" }
         }))
       },
       options: {
@@ -1121,7 +1124,8 @@ function openPageChartFullscreen(chartId, title) {
         labels: [...sourceChart.data.labels],
         datasets: sourceChart.data.datasets.map(ds => ({
           ...ds,
-          data: [...ds.data]
+          data: [...ds.data],
+          datalabels: { ...(ds.datalabels || {}), color: "#fff" }
         }))
       },
       plugins: [ChartDataLabels],
@@ -1192,7 +1196,8 @@ function openPageChartFullscreen(chartId, title) {
           ...ds,
           backgroundColor: ds.type === "line" ? "transparent" : ds.backgroundColor,
           borderColor: ds.borderColor,
-          data: [...ds.data]
+          data: [...ds.data],
+          datalabels: { ...(ds.datalabels || {}), color: "#fff" }
         }))
       },
       plugins: isCashChart ? [] : [ChartDataLabels],
