@@ -19330,16 +19330,10 @@ body.dark-mode .pmr-legend-item {
   font-size: 14px;
 }
 
-/* Detail rows hidden by default, shown when table has .expanded class */
+/* Detail rows visible by default for pagination */
 .pmr-over-under-table tr.jo-detail-row,
 .pmr-missing-budgets-table tr.jo-detail-row,
 .pmr-client-summary-table tr.jo-detail-row {
-  display: none;
-}
-
-.pmr-over-under-table.expanded tr.jo-detail-row,
-.pmr-missing-budgets-table.expanded tr.jo-detail-row,
-.pmr-client-summary-table.expanded tr.jo-detail-row {
   display: table-row;
 }
 
@@ -22817,3 +22811,69 @@ body.pdf-export-mode * {
   print-color-adjust: exact !important;
 }
 
+
+/* Job Overview Table Pagination Controls */
+.jo-pagination-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 12px;
+}
+
+.jo-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jo-page-size-select {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--card-background, #fff);
+  color: var(--text-color, #111827);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.jo-page-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--card-background, #fff);
+  color: var(--text-color, #111827);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.jo-page-btn:hover:not(:disabled) {
+  background: var(--hover-background, #f3f4f6);
+}
+
+.jo-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jo-page-info {
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Dark mode support for pagination */
+.dark-mode .jo-page-size-select,
+.dark-mode .jo-page-btn {
+  border-color: #374151;
+  background: #1f2937;
+  color: #e5e7eb;
+}
+
+.dark-mode .jo-page-btn:hover:not(:disabled) {
+  background: #374151;
+}
+
+.dark-mode .jo-page-info {
+  color: #9ca3af;
+}

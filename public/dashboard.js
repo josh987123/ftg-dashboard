@@ -20389,7 +20389,6 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
 
 function renderJoClientSummaryTable(jobs) {
   const tbody = document.getElementById('joClientSummaryTableBody');
-  const countEl = document.getElementById('joClientSummaryCount');
   if (!tbody) return;
   
   // Calculate last month date range
@@ -20423,7 +20422,6 @@ function renderJoClientSummaryTable(jobs) {
     clientMap[client].profit += (job.contract || 0) - (job.revised_cost || 0);
     clientMap[client].billedToDate += job.billed_revenue || 0;
     clientMap[client].costToDate += job.actual_cost || 0;
-    // Add billedLastMonth from AR invoices data
     clientMap[client].billedLastMonth = billedLastMonthByClient[client] || 0;
   });
   
@@ -20433,7 +20431,7 @@ function renderJoClientSummaryTable(jobs) {
     margin: data.contract > 0 ? (data.profit / data.contract * 100) : 0
   })).sort((a, b) => b.contract - a.contract);
   
-  // Calculate totals for subtotal row
+  // Calculate totals
   const totals = clients.reduce((acc, c) => ({
     contract: acc.contract + c.contract,
     cost: acc.cost + c.cost,
@@ -20442,23 +20440,39 @@ function renderJoClientSummaryTable(jobs) {
     billedToDate: acc.billedToDate + c.billedToDate,
     costToDate: acc.costToDate + c.costToDate
   }), { contract: 0, cost: 0, profit: 0, billedLastMonth: 0, billedToDate: 0, costToDate: 0 });
-  const avgMargin = totals.contract > 0 ? (totals.profit / totals.contract * 100) : 0;
+  totals.avgMargin = totals.contract > 0 ? (totals.profit / totals.contract * 100) : 0;
+  totals.count = clients.length;
   
-  // Subtotal row first
+  // Store in pagination state
+  const state = joTablePagination.clientSummary;
+  state.data = clients;
+  state.totals = totals;
+  state.page = 1;
+  state.totalPages = Math.ceil(clients.length / state.pageSize);
+  
+  joRenderClientSummaryRows(clients.slice(0, state.pageSize), state);
+  joTableUpdatePaginationControls('clientSummary');
+}
+
+function joRenderClientSummaryRows(pageData, state) {
+  const tbody = document.getElementById('joClientSummaryTableBody');
+  if (!tbody) return;
+  const totals = state.totals;
+  
   let html = `
     <tr class="pmr-subtotal-row">
-      <td>TOTAL (${clients.length})</td>
+      <td>TOTAL (${totals.count})</td>
       <td class="text-right">${formatCurrencyCompact(totals.contract)}</td>
       <td class="text-right">${formatCurrencyCompact(totals.cost)}</td>
       <td class="text-right">${formatCurrencyCompact(totals.profit)}</td>
-      <td class="text-right" style="color:${avgMargin >= 0 ? '#10b981' : '#ef4444'}">${avgMargin.toFixed(1)}%</td>
+      <td class="text-right" style="color:${totals.avgMargin >= 0 ? '#10b981' : '#ef4444'}">${totals.avgMargin.toFixed(1)}%</td>
       <td class="text-right">${formatCurrencyCompact(totals.billedLastMonth)}</td>
       <td class="text-right">${formatCurrencyCompact(totals.billedToDate)}</td>
       <td class="text-right">${formatCurrencyCompact(totals.costToDate)}</td>
     </tr>
   `;
   
-  html += clients.map(c => `
+  html += pageData.map(c => `
     <tr class="jo-detail-row">
       <td>${c.name}</td>
       <td class="text-right">${formatCurrencyCompact(c.contract)}</td>
@@ -20472,13 +20486,10 @@ function renderJoClientSummaryTable(jobs) {
   `).join('');
   
   tbody.innerHTML = html;
-  
-  if (countEl) countEl.textContent = `${clients.length} clients`;
 }
 
 function renderJoOverUnderTable(jobs) {
   const tbody = document.getElementById('joOverUnderTableBody');
-  const countEl = document.getElementById('joOverUnderCount');
   if (!tbody) return;
   
   const jobsWithOverUnder = jobs.filter(j => j.revised_contract > 0).map(j => ({
@@ -20487,7 +20498,7 @@ function renderJoOverUnderTable(jobs) {
     pctComplete: j.revised_contract > 0 ? ((j.earned_revenue || 0) / j.revised_contract * 100) : 0
   })).sort((a, b) => Math.abs(b.overUnder) - Math.abs(a.overUnder));
   
-  // Calculate totals for subtotal row
+  // Calculate totals
   const totals = jobsWithOverUnder.reduce((acc, j) => ({
     contract: acc.contract + (j.revised_contract || 0),
     actualCost: acc.actualCost + (j.actual_cost || 0),
@@ -20495,22 +20506,38 @@ function renderJoOverUnderTable(jobs) {
     billedRevenue: acc.billedRevenue + (j.billed_revenue || 0),
     overUnder: acc.overUnder + j.overUnder
   }), { contract: 0, actualCost: 0, earnedRevenue: 0, billedRevenue: 0, overUnder: 0 });
-  const avgPctComplete = totals.contract > 0 ? (totals.earnedRevenue / totals.contract * 100) : 0;
+  totals.avgPctComplete = totals.contract > 0 ? (totals.earnedRevenue / totals.contract * 100) : 0;
+  totals.count = jobsWithOverUnder.length;
   
-  // Subtotal row first
+  // Store in pagination state
+  const state = joTablePagination.overUnder;
+  state.data = jobsWithOverUnder;
+  state.totals = totals;
+  state.page = 1;
+  state.totalPages = Math.ceil(jobsWithOverUnder.length / state.pageSize);
+  
+  joRenderOverUnderRows(jobsWithOverUnder.slice(0, state.pageSize), state);
+  joTableUpdatePaginationControls('overUnder');
+}
+
+function joRenderOverUnderRows(pageData, state) {
+  const tbody = document.getElementById('joOverUnderTableBody');
+  if (!tbody) return;
+  const totals = state.totals;
+  
   let html = `
     <tr class="pmr-subtotal-row">
-      <td colspan="3">TOTAL (${jobsWithOverUnder.length} jobs)</td>
+      <td colspan="3">TOTAL (${totals.count} jobs)</td>
       <td class="text-right">${formatCurrencyCompact(totals.contract)}</td>
       <td class="text-right">${formatCurrencyCompact(totals.actualCost)}</td>
-      <td class="text-right">${avgPctComplete.toFixed(1)}%</td>
+      <td class="text-right">${totals.avgPctComplete.toFixed(1)}%</td>
       <td class="text-right">${formatCurrencyCompact(totals.earnedRevenue)}</td>
       <td class="text-right">${formatCurrencyCompact(totals.billedRevenue)}</td>
       <td class="text-right" style="color:${totals.overUnder >= 0 ? '#10b981' : '#ef4444'};font-weight:600;">${formatCurrencyCompact(totals.overUnder)}</td>
     </tr>
   `;
   
-  html += jobsWithOverUnder.map(j => `
+  html += pageData.map(j => `
     <tr class="jo-detail-row">
       <td>${j.job_no}</td>
       <td>${j.job_description || '-'}</td>
@@ -20525,13 +20552,10 @@ function renderJoOverUnderTable(jobs) {
   `).join('');
   
   tbody.innerHTML = html;
-  
-  if (countEl) countEl.textContent = `${jobsWithOverUnder.length} jobs`;
 }
 
 function renderJoMissingBudgetsTable(jobs) {
   const tbody = document.getElementById('joMissingBudgetsTableBody');
-  const countEl = document.getElementById('joMissingBudgetsCount');
   if (!tbody) return;
   
   // Jobs with >$2500 actual cost but missing budget
@@ -20542,17 +20566,33 @@ function renderJoMissingBudgetsTable(jobs) {
     return actualCost > 2500 && (budgetedRev === 0 || budgetedCost === 0);
   }).sort((a, b) => (b.actual_cost || 0) - (a.actual_cost || 0));
   
-  // Calculate totals for subtotal row
+  // Calculate totals
   const totals = missingBudgets.reduce((acc, j) => ({
     actualCost: acc.actualCost + (j.actual_cost || 0),
     budgetedRev: acc.budgetedRev + (j.revised_contract || 0),
     budgetedCost: acc.budgetedCost + (j.revised_cost || 0)
   }), { actualCost: 0, budgetedRev: 0, budgetedCost: 0 });
+  totals.count = missingBudgets.length;
   
-  // Subtotal row first
+  // Store in pagination state
+  const state = joTablePagination.missingBudgets;
+  state.data = missingBudgets;
+  state.totals = totals;
+  state.page = 1;
+  state.totalPages = Math.ceil(missingBudgets.length / state.pageSize);
+  
+  joRenderMissingBudgetsRows(missingBudgets.slice(0, state.pageSize), state);
+  joTableUpdatePaginationControls('missingBudgets');
+}
+
+function joRenderMissingBudgetsRows(pageData, state) {
+  const tbody = document.getElementById('joMissingBudgetsTableBody');
+  if (!tbody) return;
+  const totals = state.totals;
+  
   let html = `
     <tr class="pmr-subtotal-row">
-      <td colspan="2">TOTAL (${missingBudgets.length} jobs)</td>
+      <td colspan="2">TOTAL (${totals.count} jobs)</td>
       <td>-</td>
       <td>-</td>
       <td class="text-right">${formatCurrencyCompact(totals.actualCost)}</td>
@@ -20562,7 +20602,7 @@ function renderJoMissingBudgetsTable(jobs) {
     </tr>
   `;
   
-  html += missingBudgets.map(j => {
+  html += pageData.map(j => {
     const issue = [];
     if (!j.revised_contract) issue.push('No Revenue');
     if (!j.revised_cost) issue.push('No Cost');
@@ -20581,8 +20621,6 @@ function renderJoMissingBudgetsTable(jobs) {
   }).join('');
   
   tbody.innerHTML = html;
-  
-  if (countEl) countEl.textContent = `${missingBudgets.length} jobs`;
 }
 
 // Toggle functions for the migrated tables
@@ -20620,6 +20658,61 @@ function toggleJoMissingBudgetsDetail() {
 let pmRadarChart = null;
 let pmRadarData = null;
 
+// Pagination state for Job Overview tables
+const joTablePagination = {
+  clientSummary: { page: 1, pageSize: 10, data: [], totalPages: 1, totals: null },
+  overUnder: { page: 1, pageSize: 10, data: [], totalPages: 1, totals: null },
+  missingBudgets: { page: 1, pageSize: 10, data: [], totalPages: 1, totals: null }
+};
+
+function joTableChangePage(tableKey, delta) {
+  const state = joTablePagination[tableKey];
+  const newPage = state.page + delta;
+  if (newPage >= 1 && newPage <= state.totalPages) {
+    state.page = newPage;
+    joTableRenderPage(tableKey);
+  }
+}
+
+function joTableChangePageSize(tableKey, newSize) {
+  const state = joTablePagination[tableKey];
+  state.pageSize = parseInt(newSize);
+  state.page = 1;
+  state.totalPages = Math.ceil(state.data.length / state.pageSize);
+  joTableRenderPage(tableKey);
+}
+
+function joTableUpdatePaginationControls(tableKey) {
+  const state = joTablePagination[tableKey];
+  const prevBtn = document.getElementById(`jo${tableKey.charAt(0).toUpperCase() + tableKey.slice(1)}PrevBtn`);
+  const nextBtn = document.getElementById(`jo${tableKey.charAt(0).toUpperCase() + tableKey.slice(1)}NextBtn`);
+  const pageInfo = document.getElementById(`jo${tableKey.charAt(0).toUpperCase() + tableKey.slice(1)}PageInfo`);
+  
+  if (prevBtn) prevBtn.disabled = state.page <= 1;
+  if (nextBtn) nextBtn.disabled = state.page >= state.totalPages;
+  if (pageInfo) {
+    const start = (state.page - 1) * state.pageSize + 1;
+    const end = Math.min(state.page * state.pageSize, state.data.length);
+    pageInfo.textContent = `${start}-${end} of ${state.data.length}`;
+  }
+}
+
+
+function joTableRenderPage(tableKey) {
+  const state = joTablePagination[tableKey];
+  const start = (state.page - 1) * state.pageSize;
+  const end = start + state.pageSize;
+  const pageData = state.data.slice(start, end);
+  
+  if (tableKey === 'clientSummary') {
+    joRenderClientSummaryRows(pageData, state);
+  } else if (tableKey === 'overUnder') {
+    joRenderOverUnderRows(pageData, state);
+  } else if (tableKey === 'missingBudgets') {
+    joRenderMissingBudgetsRows(pageData, state);
+  }
+  joTableUpdatePaginationControls(tableKey);
+}
 function initPmRadarSelect() {
   // Radar chart now uses pmrSelectedPm from main config - no separate dropdown needed
   // This function is kept for compatibility but does nothing
