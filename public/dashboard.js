@@ -859,6 +859,7 @@ function openChartFullscreen(chartId, title) {
     ...sourceChart.options,
     responsive: true,
     maintainAspectRatio: false,
+    color: "#fff",
     layout: { padding: { top: 30 } },
     plugins: {
       ...sourceChart.options.plugins,

@@ -22877,3 +22877,41 @@ body.pdf-export-mode * {
 .dark-mode .jo-page-info {
   color: #9ca3af;
 }
+
+/* ============================================================
+   FULLSCREEN CHART - FORCE WHITE TEXT IN DAY MODE
+   Since fullscreen always has dark background, force white text
+   ============================================================ */
+
+/* Force white text color on all chart text elements in fullscreen */
+.chart-fullscreen-modal .chartjs-render-monitor,
+.chart-fullscreen-modal canvas {
+  --chart-text-color: #ffffff !important;
+}
+
+/* Override day mode dark text in fullscreen modal */
+.chart-fullscreen-modal .chart-legend,
+.chart-fullscreen-modal .chart-legend *,
+.chart-fullscreen-modal .chart-title,
+.chart-fullscreen-modal .chart-subtitle,
+.chart-fullscreen-modal label,
+.chart-fullscreen-modal span:not(.stat-label):not(.stat-value):not(.stat-period),
+.chart-fullscreen-modal p,
+.chart-fullscreen-modal .text-muted,
+.chart-fullscreen-modal .chart-container label,
+.chart-fullscreen-modal .chart-container span {
+  color: #ffffff !important;
+}
+
+/* Fullscreen header and title always white */
+.chart-fullscreen-header,
+.chart-fullscreen-header h3,
+.chart-fullscreen-header * {
+  color: #ffffff !important;
+}
+
+/* Force axis labels white in fullscreen (for Chart.js elements not in canvas) */
+.chart-fullscreen-body .chart-axis-label,
+.chart-fullscreen-body .chart-label {
+  color: #ffffff !important;
+}
