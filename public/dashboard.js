@@ -19930,26 +19930,62 @@ function renderJoPmrBudgetActualChart(jobs) {
   
   const totalBudget = jobs.reduce((sum, j) => sum + (j.revised_cost || 0), 0);
   const totalActual = jobs.reduce((sum, j) => sum + (j.actual_cost || 0), 0);
+  const remaining = Math.max(0, totalBudget - totalActual);
   
   const ctx = canvas.getContext('2d');
   joPmrBudgetActualChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Budgeted Cost', 'Actual Cost'],
-      datasets: [{
-        data: [totalBudget, totalActual],
-        backgroundColor: totalActual <= totalBudget ? ['#3b82f6', '#10b981'] : ['#3b82f6', '#ef4444'],
-        borderRadius: 4
-      }]
+      labels: ['Budget vs Actual'],
+      datasets: [
+        {
+          label: 'Actual Cost',
+          data: [totalActual],
+          backgroundColor: totalActual <= totalBudget ? '#10b981' : '#ef4444',
+          borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 }
+        },
+        {
+          label: 'Remaining Budget',
+          data: [remaining],
+          backgroundColor: '#e2e8f0',
+          borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 }
+        }
+      ]
     },
     options: {
-      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { boxWidth: 12, padding: 8, color: 'var(--text-secondary)' } },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.dataset.label || '';
+              const value = context.raw || 0;
+              return label + ': ' + formatCurrencyCompact(value);
+            },
+            afterBody: function() {
+              return 'Total Budget: ' + formatCurrencyCompact(totalBudget);
+            }
+          }
+        }
+      },
       scales: {
-        x: { beginAtZero: true, ticks: { callback: v => formatCurrencyCompact(v), color: 'var(--text-secondary)' }, grid: { color: 'var(--border-color)' } },
-        y: { ticks: { color: 'var(--text-secondary)' }, grid: { display: false } }
+        x: { 
+          stacked: true,
+          ticks: { display: false },
+          grid: { display: false }
+        },
+        y: { 
+          stacked: true,
+          beginAtZero: true,
+          ticks: { 
+            callback: v => '$' + Math.round(v / 1000000) + 'M',
+            color: 'var(--text-secondary)',
+            stepSize: 25000000
+          },
+          grid: { color: 'var(--border-color)' }
+        }
       }
     }
   });
