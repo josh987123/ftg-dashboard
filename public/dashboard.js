@@ -859,6 +859,7 @@ function openChartFullscreen(chartId, title) {
   
   config.options = {
     ...sourceChart.options,
+    _isFullscreen: true,
     responsive: true,
     maintainAspectRatio: false,
     color: "#fff",
@@ -1069,6 +1070,7 @@ function openPageChartFullscreen(chartId, title) {
         }))
       },
       options: {
+        _isFullscreen: true,
         responsive: true,
         maintainAspectRatio: false,
         color: fullscreenWhite,
@@ -1132,6 +1134,7 @@ function openPageChartFullscreen(chartId, title) {
       },
       plugins: [ChartDataLabels],
       options: {
+        _isFullscreen: true,
         responsive: true,
         maintainAspectRatio: false,
         indexAxis: 'y',
@@ -1204,6 +1207,7 @@ function openPageChartFullscreen(chartId, title) {
       },
       plugins: isCashChart ? [] : [ChartDataLabels],
       options: {
+        _isFullscreen: true,
         responsive: true,
         maintainAspectRatio: false,
         color: fullscreenWhite,
@@ -1765,6 +1769,9 @@ const ChartThemePlugin = {
 function applyThemeToChart(chart) {
   const p = ChartThemeManager.getPalette();
   if (!p || !chart || !chart.options) return;
+  
+  // Skip theme application for fullscreen charts (they have forced white colors)
+  if (chart.options._isFullscreen) return;
   
   // Update scales only for cartesian charts (bar, line, etc.)
   // Skip for pie, doughnut, polarArea, radar which don't have x/y scales
