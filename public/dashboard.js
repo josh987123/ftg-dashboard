@@ -20735,6 +20735,8 @@ function renderPmRadarChart() {
     normalizeValue(portfolio.avgJobSize, 'avgJobSize'),
     normalizeValue(portfolio.overUnderPct, 'overUnderPct')
   ];
+  console.log('[Radar] Portfolio raw:', portfolio);
+  console.log('[Radar] Portfolio normalized (should all be 50):', portfolioData);
   
   // PM specific data
   const pmChartData = pmInfo ? [
