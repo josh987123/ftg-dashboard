@@ -20158,23 +20158,26 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
   const totalContractWithBudget = Object.values(pmStats).reduce((s, p) => s + p.contractWithBudget, 0);
   const avgJobSize = totalJobsWithBudget > 0 ? (totalContractWithBudget / totalJobsWithBudget) : 0;
   
-  // Normalize to 0-100 scale relative to max PM values
-  const maxJobs = Math.max(...Object.values(pmStats).map(p => p.jobs));
-  const maxContract = Math.max(...Object.values(pmStats).map(p => p.contract));
-  const maxMargin = Math.max(...Object.values(pmStats).map(p => p.contract > 0 ? ((p.contract - p.cost) / p.contract * 100) : 0));
-  // Max job size: use contractWithBudget (not total contract) for proper comparison
-  const maxJobSize = Math.max(...Object.values(pmStats).map(p => p.jobsWithBudget > 0 ? (p.contractWithBudget / p.jobsWithBudget) : 0));
+  // Normalize so COMPANY AVERAGE = 50 (halfway between center and outer edge)
+  // PM values are scaled relative to company average: value/avg * 50
+  // At average = 50, at 2x average = 100, at 0 = 0
   
-  const normalize = (val, max) => max > 0 ? Math.min(100, (val / max * 100)) : 0;
+  const normalizeToAvg = (val, avg) => {
+    if (avg === 0 || avg === undefined) return val > 0 ? 75 : 50;
+    return Math.max(0, Math.min(100, (val / avg) * 50));
+  };
   
-  // Company average data (always shown)
-  const avgData = [
-    normalize(avgJobs, maxJobs),
-    normalize(avgContract, maxContract),
-    normalize(avgMargin, Math.max(maxMargin, 30)),
-    normalize(avgJobSize, maxJobSize),
-    Math.min(100, avgBillingPosition)
-  ];
+  // Company average data - all values are exactly 50 (the midpoint)
+  const avgData = [50, 50, 50, 50, 50];
+  
+  // Store actual average values for normalization of PM data
+  const avgValues = {
+    jobs: avgJobs,
+    contract: avgContract,
+    margin: avgMargin,
+    jobSize: avgJobSize,
+    billingPosition: avgBillingPosition
+  };
   
   const datasets = [];
   let legendHtml = '';
@@ -20203,11 +20206,11 @@ function renderJoPmRadarChart(jobs, selectedPm, isAllPms) {
       const pmJobSize = pmJobsWithBudgetArr.length > 0 ? (pmContractWithBudget / pmJobsWithBudgetArr.length) : 0;
       
       const pmData = [
-        normalize(pmJobs.length, maxJobs),
-        normalize(pmContract, maxContract),
-        normalize(pmMargin, Math.max(maxMargin, 30)),
-        normalize(pmJobSize, maxJobSize),
-        Math.min(100, pmBillingPosition)
+        normalizeToAvg(pmJobs.length, avgValues.jobs),
+        normalizeToAvg(pmContract, avgValues.contract),
+        normalizeToAvg(pmMargin, avgValues.margin),
+        normalizeToAvg(pmJobSize, avgValues.jobSize),
+        normalizeToAvg(pmBillingPosition, avgValues.billingPosition)
       ];
       
       // Generate point colors based on comparison to company average
