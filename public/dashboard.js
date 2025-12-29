@@ -20569,16 +20569,38 @@ function joRenderOverUnderRows(pageData, state) {
   tbody.innerHTML = html;
 }
 
+// State for Missing Budgets filter
+let joMbFilterMode = 'all'; // 'all' or 'cost2500'
+let joMbAllJobs = []; // Store all jobs data for re-filtering
+
+function joMbSetFilter(mode) {
+  joMbFilterMode = mode;
+  // Update button states
+  document.getElementById('joMbFilterAll')?.classList.toggle('active', mode === 'all');
+  document.getElementById('joMbFilterCost')?.classList.toggle('active', mode === 'cost2500');
+  // Re-render with current jobs data
+  if (joMbAllJobs.length > 0) {
+    renderJoMissingBudgetsTable(joMbAllJobs);
+  }
+}
+
 function renderJoMissingBudgetsTable(jobs) {
   const tbody = document.getElementById('joMissingBudgetsTableBody');
   if (!tbody) return;
   
-  // Jobs with >$2500 actual cost but missing budget
+  // Store jobs for re-filtering
+  joMbAllJobs = jobs;
+  
+  // Jobs missing budgeted revenue or cost (filter by actual cost if mode is 'cost2500')
   const missingBudgets = jobs.filter(j => {
     const actualCost = j.actual_cost || 0;
     const budgetedRev = j.revised_contract || 0;
     const budgetedCost = j.revised_cost || 0;
-    return actualCost > 2500 && (budgetedRev === 0 || budgetedCost === 0);
+    // Must be missing either budgeted revenue or budgeted cost
+    if (budgetedRev !== 0 && budgetedCost !== 0) return false;
+    // Apply cost filter if in cost2500 mode
+    if (joMbFilterMode === 'cost2500' && actualCost <= 2500) return false;
+    return true;
   }).sort((a, b) => (b.actual_cost || 0) - (a.actual_cost || 0));
   
   // Calculate totals

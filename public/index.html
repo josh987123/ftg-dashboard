@@ -1707,9 +1707,12 @@
           <div class="pmr-section-header">
             <div>
               <h3 class="pmr-section-title">Missing Budgets</h3>
-              <div class="pmr-section-desc">Jobs with &gt;$2,500 actual cost but missing budgeted revenue or cost</div>
+              <div class="pmr-section-desc">Jobs missing budgeted revenue or cost</div>
             </div>
-
+          </div>
+          <div class="jo-mb-filter-bar" style="margin-bottom: 12px; display: flex; gap: 8px;">
+            <button id="joMbFilterAll" class="jo-mb-filter-btn active" onclick="joMbSetFilter('all')">All</button>
+            <button id="joMbFilterCost" class="jo-mb-filter-btn" onclick="joMbSetFilter('cost2500')">Actual Costs &gt;$2,500</button>
           </div>
           <div class="table-container pmr-table-container">
             <table class="data-table pmr-missing-budgets-table" id="joMissingBudgetsTable">
@@ -3831,7 +3834,7 @@
   </div>
 
   <!-- MAIN SCRIPT -->
-  <script defer src="dashboard.js?v=20251229k"></script>
+  <script defer src="dashboard.js?v=20251229m"></script>
   
   <!-- PWA Service Worker Registration with Aggressive Cache Busting -->
   <script>

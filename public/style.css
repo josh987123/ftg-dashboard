@@ -22915,3 +22915,25 @@ body.pdf-export-mode * {
 .chart-fullscreen-body .chart-label {
   color: #ffffff !important;
 }
+
+/* Missing Budgets Filter Buttons */
+.jo-mb-filter-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.jo-mb-filter-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.jo-mb-filter-btn.active {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+}
