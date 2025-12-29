@@ -891,25 +891,27 @@ function openChartFullscreen(chartId, title) {
         }
       }
     },
-    scales: {
-      x: { 
-        grid: { color: "rgba(255,255,255,0.1)" },
-        ticks: { color: "#fff", font: { size: 12 } }
-      },
-      y: {
-        grid: { color: "rgba(255,255,255,0.1)" },
-        ticks: { 
-          color: "#fff",
-          font: { size: 12 },
-          callback: v => {
-            const isPercent = title.includes("%");
-            if (isPercent) return v.toFixed(0) + "%";
-            if (Math.abs(v) >= 1000000) return "$" + (v / 1000000).toFixed(1) + "M";
-            return "$" + (v / 1000).toFixed(0) + "K";
-          }
+    scales: Object.fromEntries(
+      Object.entries(sourceChart.options?.scales || { x: {}, y: {} }).map(([key, scale]) => [
+        key,
+        {
+          ...scale,
+          grid: { ...(scale.grid || {}), color: "rgba(255,255,255,0.1)" },
+          ticks: { 
+            ...(scale.ticks || {}), 
+            color: "#fff", 
+            font: { size: 12 },
+            callback: scale.ticks?.callback || (key === 'y' ? (v => {
+              const isPercent = title.includes("%");
+              if (isPercent) return v.toFixed(0) + "%";
+              if (Math.abs(v) >= 1000000) return "$" + (v / 1000000).toFixed(1) + "M";
+              return "$" + (v / 1000).toFixed(0) + "K";
+            }) : undefined)
+          },
+          title: scale.title ? { ...scale.title, color: "#fff" } : undefined
         }
-      }
-    }
+      ])
+    )
   };
   
   fullscreenChartInstance = new Chart(ctx, {
