@@ -20392,6 +20392,25 @@ function renderJoClientSummaryTable(jobs) {
   const countEl = document.getElementById('joClientSummaryCount');
   if (!tbody) return;
   
+  // Calculate last month date range
+  const now = new Date();
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+  const lastMonthStart = new Date(lastMonthEnd.getFullYear(), lastMonthEnd.getMonth(), 1);
+  const excelEpoch = new Date(1899, 11, 30);
+  
+  // Build map of billedLastMonth by customer from AR invoices
+  const billedLastMonthByClient = {};
+  if (joArInvoices && joArInvoices.length > 0) {
+    joArInvoices.forEach(inv => {
+      const invoiceDateSerial = parseFloat(inv.invoice_date) || 0;
+      const invoiceDate = new Date(excelEpoch.getTime() + invoiceDateSerial * 24 * 60 * 60 * 1000);
+      if (invoiceDate >= lastMonthStart && invoiceDate <= lastMonthEnd) {
+        const client = inv.customer_name || 'Unknown';
+        billedLastMonthByClient[client] = (billedLastMonthByClient[client] || 0) + (parseFloat(inv.invoice_amount) || 0);
+      }
+    });
+  }
+  
   // Group by client
   const clientMap = {};
   jobs.forEach(job => {
@@ -20404,6 +20423,8 @@ function renderJoClientSummaryTable(jobs) {
     clientMap[client].profit += (job.contract || 0) - (job.revised_cost || 0);
     clientMap[client].billedToDate += job.billed_revenue || 0;
     clientMap[client].costToDate += job.actual_cost || 0;
+    // Add billedLastMonth from AR invoices data
+    clientMap[client].billedLastMonth = billedLastMonthByClient[client] || 0;
   });
   
   const clients = Object.entries(clientMap).map(([name, data]) => ({
@@ -20417,9 +20438,10 @@ function renderJoClientSummaryTable(jobs) {
     contract: acc.contract + c.contract,
     cost: acc.cost + c.cost,
     profit: acc.profit + c.profit,
+    billedLastMonth: acc.billedLastMonth + c.billedLastMonth,
     billedToDate: acc.billedToDate + c.billedToDate,
     costToDate: acc.costToDate + c.costToDate
-  }), { contract: 0, cost: 0, profit: 0, billedToDate: 0, costToDate: 0 });
+  }), { contract: 0, cost: 0, profit: 0, billedLastMonth: 0, billedToDate: 0, costToDate: 0 });
   const avgMargin = totals.contract > 0 ? (totals.profit / totals.contract * 100) : 0;
   
   // Subtotal row first
@@ -20430,7 +20452,7 @@ function renderJoClientSummaryTable(jobs) {
       <td class="text-right">${formatCurrencyCompact(totals.cost)}</td>
       <td class="text-right">${formatCurrencyCompact(totals.profit)}</td>
       <td class="text-right" style="color:${avgMargin >= 0 ? '#10b981' : '#ef4444'}">${avgMargin.toFixed(1)}%</td>
-      <td class="text-right">-</td>
+      <td class="text-right">${formatCurrencyCompact(totals.billedLastMonth)}</td>
       <td class="text-right">${formatCurrencyCompact(totals.billedToDate)}</td>
       <td class="text-right">${formatCurrencyCompact(totals.costToDate)}</td>
     </tr>
@@ -20443,7 +20465,7 @@ function renderJoClientSummaryTable(jobs) {
       <td class="text-right">${formatCurrencyCompact(c.cost)}</td>
       <td class="text-right">${formatCurrencyCompact(c.profit)}</td>
       <td class="text-right" style="color:${c.margin >= 0 ? '#10b981' : '#ef4444'}">${c.margin.toFixed(1)}%</td>
-      <td class="text-right">-</td>
+      <td class="text-right">${formatCurrencyCompact(c.billedLastMonth)}</td>
       <td class="text-right">${formatCurrencyCompact(c.billedToDate)}</td>
       <td class="text-right">${formatCurrencyCompact(c.costToDate)}</td>
     </tr>
