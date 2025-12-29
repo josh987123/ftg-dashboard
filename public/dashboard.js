@@ -20698,24 +20698,33 @@ function renderPmRadarChart() {
   // Define metrics for radar (all normalized 0-100 for comparison)
   const metrics = ['Profit Margin', 'Job Count', 'Contract Value', 'Avg Job Size', 'Billing Position'];
   
-  // Normalize values for radar chart (scale each metric to 0-100 range)
-  // Higher is better for all metrics
-  const maxValues = {
-    profitMargin: Math.max(...pmRadarData.pms.map(p => p.profitMargin), 40),
-    jobCount: Math.max(...pmRadarData.pms.map(p => p.jobCount), 10),
-    contractValue: Math.max(...pmRadarData.pms.map(p => p.contractValue), 1000000),
-    avgJobSize: Math.max(...pmRadarData.pms.map(p => p.avgJobSize), 500000),
-    overUnderPct: 20 // Normalize billing position around 0
-  };
+  // Normalize values for radar chart - COMPANY AVERAGE = 50 (halfway)
+  // Each metric is scaled so company average is always at 50%
+  // Values above average go toward 100, below average go toward 0
   
   function normalizeValue(value, metric) {
-    if (metric === 'overUnderPct') {
-      // Billing position: 0 is ideal, positive is overbilled (good), negative is underbilled (bad)
-      // Normalize so 0 = 50, +20% = 100, -20% = 0
-      return Math.max(0, Math.min(100, 50 + (value / 20) * 50));
+    // Get the company average for this metric
+    let avg;
+    if (metric === 'profitMargin') avg = portfolio.profitMargin;
+    else if (metric === 'jobCount') avg = portfolio.jobCount;
+    else if (metric === 'contractValue') avg = portfolio.contractValue;
+    else if (metric === 'avgJobSize') avg = portfolio.avgJobSize;
+    else if (metric === 'overUnderPct') avg = portfolio.overUnderPct;
+    else avg = 50;
+    
+    // Handle edge case where average is 0 or very small
+    if (Math.abs(avg) < 0.001) {
+      // If average is ~0, use absolute scaling
+      if (Math.abs(value) < 0.001) return 50;
+      return value > 0 ? 75 : 25;
     }
-    const max = maxValues[metric] || 100;
-    return Math.max(0, Math.min(100, (value / max) * 100));
+    
+    // Scale so that average = 50
+    // value/avg * 50 means: at avg, result is 50; at 2x avg, result is 100; at 0, result is 0
+    const normalized = (value / avg) * 50;
+    
+    // Clamp to 0-100 range
+    return Math.max(0, Math.min(100, normalized));
   }
   
   // Portfolio average data
