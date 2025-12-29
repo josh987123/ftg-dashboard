@@ -21851,7 +21851,7 @@ function renderJoPmContractChart(data, textColor, gridColor, showDataLabels) {
       layout: { padding: { top: showDataLabels ? 20 : 0 } },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => formatCurrency(ctx.raw) } },
+        tooltip: { callbacks: { label: (ctx) => '$' + (ctx.raw / 1000000).toFixed(1) + 'M' } },
         datalabels: showDataLabels ? {
           display: true, anchor: 'end', align: 'top', offset: 2,
           font: { weight: 'bold', size: 10 },
@@ -21860,7 +21860,7 @@ function renderJoPmContractChart(data, textColor, gridColor, showDataLabels) {
       },
       scales: {
         x: { ticks: { maxRotation: 45, minRotation: 45 }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M' } }
+        y: { beginAtZero: true, ticks: { callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M' } }
       }
     }
   });
@@ -22003,7 +22003,7 @@ function renderJoClientContractChart(data, textColor, gridColor, showDataLabels)
       layout: { padding: { top: showDataLabels ? 20 : 0 } },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => formatCurrency(ctx.raw) } },
+        tooltip: { callbacks: { label: (ctx) => '$' + (ctx.raw / 1000000).toFixed(1) + 'M' } },
         datalabels: showDataLabels ? {
           display: true, anchor: 'end', align: 'top', offset: 2,
           font: { weight: 'bold', size: 10 },
@@ -22012,7 +22012,7 @@ function renderJoClientContractChart(data, textColor, gridColor, showDataLabels)
       },
       scales: {
         x: { ticks: { maxRotation: 45, minRotation: 45 }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M' } }
+        y: { beginAtZero: true, ticks: { callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M' } }
       }
     }
   });
