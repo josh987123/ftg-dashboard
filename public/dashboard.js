@@ -20672,6 +20672,7 @@ function calculatePmRadarData() {
 }
 
 function renderPmRadarChart() {
+  console.log('[RADAR DEBUG] renderPmRadarChart v2 called - Dec 29');
   const canvas = document.getElementById('pmRadarChart');
   const legendBox = document.getElementById('radarLegendBox');
   if (!canvas) return;
